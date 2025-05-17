@@ -1,8 +1,8 @@
 from datetime import timedelta
 from typing import Optional
 from domain.models.user import User, UserCreate
-from domain.ports.auth_port import AuthPort
-from domain.ports.user_repository_port import UserRepositoryPort
+from domain.ports.auth.auth_port import AuthPort
+from domain.ports.user.user_repository_port import UserRepositoryPort
 
 class AuthService:
     def __init__(self, auth_port: AuthPort, user_repository: UserRepositoryPort):

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import Optional
 from domain.models.user import User, UserCreate
-from domain.ports.user_repository_port import UserRepositoryPort
+from domain.ports.user.user_repository_port import UserRepositoryPort
 from infrastructure.models.user_model import UserModel
 
 class SqlAlchemyUserRepository(UserRepositoryPort):

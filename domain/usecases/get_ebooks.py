@@ -1,6 +1,6 @@
 from typing import List, Optional
 from domain.entities.ebook import Ebook, EbookStatus
-from domain.ports.ebook_repository import EbookRepository
+from domain.ports.ebook.ebook_port import EbookRepository
 
 class GetEbooksUseCase:
     def __init__(self, ebook_repository: EbookRepository):

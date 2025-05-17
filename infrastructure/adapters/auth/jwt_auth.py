@@ -4,8 +4,8 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import HTTPException, status
 from domain.models.user import User
-from domain.ports.auth_port import AuthPort
-from domain.ports.user_repository_port import UserRepositoryPort
+from domain.ports.auth.auth_port import AuthPort
+from domain.ports.user.user_repository_port import UserRepositoryPort
 
 class JwtAuthAdapter(AuthPort):
     def __init__(self, user_repository: UserRepositoryPort, secret_key: str, algorithm: str = "HS256"):

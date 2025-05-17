@@ -6,7 +6,7 @@ from infrastructure.services.auth_service import AuthService
 from infrastructure.database import get_db
 
 router = APIRouter(
-    prefix="/auth",
+    prefix="/api/auth",
     tags=["Authentication"]
 )
 

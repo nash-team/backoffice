@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 from domain.entities.ebook import Ebook, EbookStatus
-from domain.ports.ebook_repository import EbookRepository
+from domain.ports.ebook.ebook_port import EbookRepository
 
 @dataclass
 class Stats:

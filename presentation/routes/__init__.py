@@ -3,7 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from .auth import router as auth_router
 from .dashboard import router as dashboard_router
-from .drive_routes import router as drive_router
+from .ebook_routes import router as ebook_router
 
 # Router pour les pages web
 pages_router = APIRouter(tags=["Pages"])
@@ -29,5 +29,5 @@ def init_routes(app):
     app.include_router(pages_router)
     app.include_router(auth_router)
     app.include_router(dashboard_router)
-    app.include_router(drive_router)
+    app.include_router(ebook_router)
     app.include_router(redirect_router)
