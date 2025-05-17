@@ -26,7 +26,7 @@ async def get_ebook(
     try:
         logger.info(f"Tentative de récupération de l'ebook {ebook_id}")
         ebook = await ebook_source.get_ebook(ebook_id)
-        if not ebook:
+        if ebook is None:
             logger.warning(f"Ebook {ebook_id} non trouvé")
             raise HTTPException(status_code=404, detail="Ebook non trouvé")
         logger.info(f"Ebook {ebook_id} récupéré avec succès")
@@ -34,6 +34,8 @@ async def get_ebook(
     except GoogleDriveError as e:
         logger.error(f"Erreur Google Drive: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Erreur inattendue: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erreur inattendue: {str(e)}") 
