@@ -1,7 +1,14 @@
 from fastapi import Depends
-from infrastructure.services.google_auth_service import GoogleAuthService
-from infrastructure.adapters.google_drive_repository import GoogleDriveRepository
-from config import CREDENTIALS_PATH
+import os
+from dotenv import load_dotenv
+from infrastructure.adapters.auth.google_auth import GoogleAuthService
+from infrastructure.adapters.repositories.drive_repository import GoogleDriveRepository
+
+# Charger les variables d'environnement
+load_dotenv()
+
+# Récupérer le chemin des credentials depuis les variables d'environnement
+CREDENTIALS_PATH = os.getenv("GOOGLE_CREDENTIALS_PATH", "credentials/google_credentials.json")
 
 # Initialisation du service d'authentification
 auth_service = GoogleAuthService(CREDENTIALS_PATH)

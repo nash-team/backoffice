@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from infrastructure.adapters.google_drive_repository import GoogleDriveRepository, GoogleDriveError
+from infrastructure.adapters.repositories.drive_repository import GoogleDriveRepository, GoogleDriveError
 from domain.entities.ebook import Ebook
 from presentation.routes.dependencies import get_drive_repository
 

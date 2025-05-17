@@ -5,7 +5,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from domain.entities.ebook import Ebook, EbookStatus
 from domain.ports.drive_repository import DriveRepository
-from infrastructure.services.google_auth_service import GoogleAuthService
+from infrastructure.adapters.auth.google_auth import GoogleAuthService
 
 class GoogleDriveError(Exception):
     """Exception personnalisée pour les erreurs Google Drive"""
