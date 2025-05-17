@@ -36,3 +36,6 @@ credentials/
 
 # Environment variables
 .env 
+
+# Scripts
+scripts/

@@ -1,10 +1,7 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from infrastructure.api.routes import auth_router
-from infrastructure.adapters.fastapi_dashboard import router as dashboard_router
-from infrastructure.api.routes.drive_routes import router as drive_router
+from presentation.routes import init_routes
 
 app = FastAPI(title="Backoffice")
 
@@ -17,22 +14,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configuration des fichiers statiques et templates
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+# Configuration des fichiers statiques
+app.mount("/presentation/static", StaticFiles(directory="presentation/static"), name="static")
 
-# Inclusion des routes
-app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
-app.include_router(dashboard_router, prefix="/api", tags=["Dashboard"])
-app.include_router(drive_router, prefix="/api", tags=["Drive"])
-
-@app.get("/")
-async def root(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
-
-@app.get("/login")
-async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+# Initialisation des routes
+init_routes(app)
 
 if __name__ == "__main__":
     import uvicorn

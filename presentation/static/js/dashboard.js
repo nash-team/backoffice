@@ -31,7 +31,7 @@ async function loadDashboardData() {
         document.getElementById('validatedEbooks').textContent = stats.validated_ebooks;
 
         // Charger la liste des ebooks depuis la BDD
-        const ebooksResponse = await fetch('/api/ebooks', {
+        const ebooksResponse = await fetch('/api/dashboard/ebooks', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -104,7 +104,7 @@ function deleteEbook(id) {
 async function filterEbooks(status) {
     const token = checkAuth();
     try {
-        const response = await fetch(`/api/ebooks${status ? `?status=${status}` : ''}`, {
+        const response = await fetch(`/api/dashboard/ebooks${status ? `?status=${status}` : ''}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

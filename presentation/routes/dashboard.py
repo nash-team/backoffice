@@ -5,7 +5,10 @@ from infrastructure.adapters.in_memory_ebook_repository import InMemoryEbookRepo
 from domain.entities.ebook import Ebook, EbookStatus
 from datetime import datetime
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/api/dashboard",
+    tags=["Dashboard"]
+)
 
 # Repo et usecases (singleton pour garder les données en mémoire)
 repo = InMemoryEbookRepository()
@@ -20,7 +23,7 @@ if not repo.ebooks:
         Ebook(3, "Django REST", "Alice Johnson", datetime.now(), EbookStatus.PENDING, drive_id="1FoBXPTsVO1GQ-WDLCAgGAuJm8jfMXjsS")
     ])
 
-@router.get("/dashboard/stats")
+@router.get("/stats")
 async def get_stats():
     stats = await get_stats_usecase.execute()
     return stats.__dict__

@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from infrastructure.adapters.google_drive_repository import GoogleDriveRepository, GoogleDriveError
 from domain.entities.ebook import Ebook
-from infrastructure.api.dependencies import get_drive_repository
+from presentation.routes.dependencies import get_drive_repository
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/api/drive",
+    tags=["Drive"]
+)
 
-@router.get("/drive/ebooks", response_model=list[Ebook])
+@router.get("/ebooks", response_model=list[Ebook])
 async def list_ebooks(drive_repository: GoogleDriveRepository = Depends(get_drive_repository)):
     """Liste tous les ebooks disponibles dans le Drive"""
     try:
@@ -19,7 +22,7 @@ async def list_ebooks(drive_repository: GoogleDriveRepository = Depends(get_driv
             }
         )
 
-@router.get("/drive/ebooks/{file_id}", response_model=Ebook)
+@router.get("/ebooks/{file_id}", response_model=Ebook)
 async def get_ebook(
     file_id: str,
     drive_repository: GoogleDriveRepository = Depends(get_drive_repository)
@@ -42,7 +45,7 @@ async def get_ebook(
             }
         )
 
-@router.put("/drive/ebooks/{file_id}/status")
+@router.put("/ebooks/{file_id}/status")
 async def update_ebook_status(
     file_id: str,
     status: str,
