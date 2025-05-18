@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Request, Response, Form
 from fastapi.templating import Jinja2Templates
 from domain.usecases.get_stats import GetStatsUseCase
 from domain.usecases.get_ebooks import GetEbooksUseCase
@@ -73,4 +73,33 @@ async def get_ebooks(request: Request, status: str = None):
 async def get_ebook_preview(drive_id: str):
     # Simuler une URL de prévisualisation Google Drive
     preview_url = f"https://drive.google.com/file/d/{drive_id}/preview"
-    return Response(content=preview_url, media_type="text/plain") 
+    return Response(content=preview_url, media_type="text/plain")
+
+@router.get("/ebooks/new")
+async def get_new_ebook_form(request: Request):
+    """Affiche le formulaire de création d'un nouvel ebook."""
+    return templates.TemplateResponse(
+        "partials/new_ebook_form.html",
+        {"request": request}
+    )
+
+@router.post("/ebooks")
+async def create_ebook(request: Request, prompt: str = Form(...)):
+    """Crée un nouvel ebook à partir du prompt."""
+    # TODO: Implémenter la création de l'ebook
+    # Pour l'instant, on retourne juste la liste des ebooks
+    ebooks = await get_ebooks_usecase.execute()
+    ebooks_data = [
+        {
+            "id": e.id,
+            "title": e.title,
+            "author": e.author,
+            "created_at": e.created_at,
+            "status": e.status.value,
+            "drive_id": e.drive_id
+        } for e in ebooks
+    ]
+    return templates.TemplateResponse(
+        "partials/ebooks_table.html",
+        {"request": request, "ebooks": ebooks_data}
+    ) 
