@@ -1,13 +1,15 @@
-from datetime import datetime, timedelta, UTC
+import os
+from datetime import UTC, datetime, timedelta
 from typing import Optional
+
+from dotenv import load_dotenv
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
-from domain.models.user import User, UserCreate, UserInDB
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-import os
-from dotenv import load_dotenv
+
+from domain.models.user import User, UserCreate
 from infrastructure.models.user_model import UserModel
 
 # Charger les variables d'environnement
@@ -23,6 +25,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
 
 class AuthService:
     def __init__(self, db: Session):
@@ -41,30 +44,27 @@ class AuthService:
         else:
             expire = datetime.now(UTC) + timedelta(minutes=15)
         to_encode.update({"exp": expire})
+        if not SECRET_KEY:
+            raise ValueError("SECRET_KEY n'est pas définie")
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
 
     def _convert_to_user(self, db_user: UserModel) -> User:
-        return User(
-            id=db_user.id,
-            email=db_user.email,
-            username=db_user.username,
-            is_active=db_user.is_active,
-            created_at=db_user.created_at,
-            updated_at=db_user.updated_at if hasattr(db_user, 'updated_at') else None
-        )
+        return User(**dict(db_user.__dict__))
 
     def authenticate_user(self, email: str, password: str) -> Optional[User]:
         db_user = self.db.query(UserModel).filter(UserModel.email == email).first()
         if not db_user:
             return None
-        if not self.verify_password(password, db_user.hashed_password):
+        if not self.verify_password(password, str(db_user.hashed_password)):
             return None
         return self._convert_to_user(db_user)
 
     def register_user(self, user_create: UserCreate) -> User:
         # Vérifier si l'utilisateur existe déjà
-        existing_user = self.db.query(UserModel).filter(UserModel.email == user_create.email).first()
+        existing_user = (
+            self.db.query(UserModel).filter(UserModel.email == user_create.email).first()
+        )
         if existing_user:
             raise ValueError("Un utilisateur avec cet email existe déjà")
 
@@ -74,7 +74,7 @@ class AuthService:
             email=user_create.email,
             username=user_create.username,
             hashed_password=hashed_password,
-            is_active=True
+            is_active=True,
         )
         self.db.add(db_user)
         self.db.commit()
@@ -88,14 +88,16 @@ class AuthService:
             headers={"WWW-Authenticate": "Bearer"},
         )
         try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            email: str = payload.get("sub")
-            if email is None:
+            if not SECRET_KEY:
                 raise credentials_exception
-        except JWTError:
-            raise credentials_exception
-        
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            email = payload.get("sub")
+            if not isinstance(email, str):
+                raise credentials_exception
+        except JWTError as e:
+            raise credentials_exception from e
+
         db_user = self.db.query(UserModel).filter(UserModel.email == email).first()
         if db_user is None:
             raise credentials_exception
-        return self._convert_to_user(db_user) 
+        return self._convert_to_user(db_user)

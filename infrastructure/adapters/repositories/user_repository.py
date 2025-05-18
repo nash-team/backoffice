@@ -1,8 +1,11 @@
-from sqlalchemy.orm import Session
 from typing import Optional
+
+from sqlalchemy.orm import Session
+
 from domain.models.user import User, UserCreate
 from domain.ports.user.user_repository_port import UserRepositoryPort
 from infrastructure.models.user_model import UserModel
+
 
 class SqlAlchemyUserRepository(UserRepositoryPort):
     def __init__(self, db: Session):
@@ -18,7 +21,7 @@ class SqlAlchemyUserRepository(UserRepositoryPort):
         db_user = UserModel(
             email=user.email,
             username=user.username,
-            hashed_password=user.password  # Le mot de passe doit être hashé avant
+            hashed_password=user.password,  # Le mot de passe doit être hashé avant
         )
         self.db.add(db_user)
         self.db.commit()
@@ -27,9 +30,7 @@ class SqlAlchemyUserRepository(UserRepositoryPort):
 
     def save(self, user: User) -> User:
         db_user = UserModel(
-            email=user.email,
-            username=user.username,
-            hashed_password=user.hashed_password
+            email=user.email, username=user.username, hashed_password=user.hashed_password
         )
         self.db.add(db_user)
         self.db.commit()
@@ -43,5 +44,5 @@ class SqlAlchemyUserRepository(UserRepositoryPort):
             username=db_user.username,
             hashed_password=db_user.hashed_password,
             created_at=db_user.created_at,
-            updated_at=db_user.updated_at
-        ) 
+            updated_at=db_user.updated_at,
+        )

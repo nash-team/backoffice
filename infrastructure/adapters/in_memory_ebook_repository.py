@@ -6,23 +6,26 @@ L'implémentation stocke les ebooks dans une liste en mémoire et fournit
 des méthodes CRUD basiques.
 """
 from typing import List, Optional
-from domain.entities.ebook import Ebook, EbookStatus
-from infrastructure.ports.repositories.in_memory_repository_port import InMemoryRepositoryPort
 
-class InMemoryEbookRepository(InMemoryRepositoryPort[Ebook]):
+from domain.entities.ebook import Ebook, EbookStatus
+from infrastructure.ports.exceptions import DuplicateEntityError, EntityNotFoundError
+from infrastructure.ports.repositories.ebook_repository_port import EbookRepositoryPort
+
+
+class InMemoryEbookRepository(EbookRepositoryPort):
     def __init__(self):
         self.ebooks: List[Ebook] = []
 
     async def create(self, ebook: Ebook) -> Ebook:
         """
         Crée un nouvel ebook en mémoire.
-        
+
         Args:
             ebook: L'ebook à créer
-            
+
         Returns:
             Ebook: L'ebook créé
-            
+
         Raises:
             DuplicateEntityError: Si un ebook avec le même ID existe déjà
         """
@@ -34,10 +37,10 @@ class InMemoryEbookRepository(InMemoryRepositoryPort[Ebook]):
     async def get_by_id(self, id: int) -> Optional[Ebook]:
         """
         Récupère un ebook par son ID.
-        
+
         Args:
             id: L'ID de l'ebook à rechercher
-            
+
         Returns:
             Optional[Ebook]: L'ebook trouvé ou None
         """
@@ -46,13 +49,13 @@ class InMemoryEbookRepository(InMemoryRepositoryPort[Ebook]):
     async def update(self, ebook: Ebook) -> Ebook:
         """
         Met à jour un ebook existant.
-        
+
         Args:
             ebook: L'ebook à mettre à jour
-            
+
         Returns:
             Ebook: L'ebook mis à jour
-            
+
         Raises:
             EntityNotFoundError: Si l'ebook n'existe pas
         """
@@ -66,10 +69,10 @@ class InMemoryEbookRepository(InMemoryRepositoryPort[Ebook]):
     async def delete(self, id: int) -> None:
         """
         Supprime un ebook.
-        
+
         Args:
             id: L'ID de l'ebook à supprimer
-            
+
         Raises:
             EntityNotFoundError: Si l'ebook n'existe pas
         """
@@ -81,7 +84,7 @@ class InMemoryEbookRepository(InMemoryRepositoryPort[Ebook]):
     async def list_all(self) -> List[Ebook]:
         """
         Liste tous les ebooks.
-        
+
         Returns:
             List[Ebook]: La liste de tous les ebooks
         """
@@ -90,7 +93,7 @@ class InMemoryEbookRepository(InMemoryRepositoryPort[Ebook]):
     async def get_all(self) -> List[Ebook]:
         """
         Alias de list_all() pour maintenir la compatibilité avec l'interface existante.
-        
+
         Returns:
             List[Ebook]: La liste de tous les ebooks
         """
@@ -106,10 +109,10 @@ class InMemoryEbookRepository(InMemoryRepositoryPort[Ebook]):
     async def get_by_status(self, status: EbookStatus) -> List[Ebook]:
         """
         Récupère tous les ebooks avec un statut spécifique.
-        
+
         Args:
             status: Le statut à rechercher
-            
+
         Returns:
             List[Ebook]: La liste des ebooks avec le statut spécifié
         """
@@ -118,10 +121,10 @@ class InMemoryEbookRepository(InMemoryRepositoryPort[Ebook]):
     async def save(self, ebook: Ebook) -> Ebook:
         """
         Sauvegarde un ebook dans le repository.
-        
+
         Args:
             ebook: L'ebook à sauvegarder
-            
+
         Returns:
             Ebook: L'ebook sauvegardé
         """

@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+
 from domain.entities.ebook import Ebook
+
 
 class EbookRepositoryPort(ABC):
     @abstractmethod

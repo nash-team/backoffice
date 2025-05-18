@@ -1,14 +1,22 @@
 from datetime import datetime, timedelta
 from typing import Optional
+
+from fastapi import HTTPException, status
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import HTTPException, status
+
 from domain.models.user import User
 from domain.ports.auth.auth_port import AuthPort
 from domain.ports.user.user_repository_port import UserRepositoryPort
 
+
 class JwtAuthAdapter(AuthPort):
-    def __init__(self, user_repository: UserRepositoryPort, secret_key: str, algorithm: str = "HS256"):
+    def __init__(
+        self,
+        user_repository: UserRepositoryPort,
+        secret_key: str,
+        algorithm: str = "HS256",
+    ):
         self.user_repository = user_repository
         self.secret_key = secret_key
         self.algorithm = algorithm
@@ -42,13 +50,13 @@ class JwtAuthAdapter(AuthPort):
         )
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
-            email: str = payload.get("sub")
-            if email is None:
+            email = payload.get("sub")
+            if not isinstance(email, str):
                 raise credentials_exception
-        except JWTError:
-            raise credentials_exception
-        
+        except JWTError as e:
+            raise credentials_exception from e
+
         user = self.user_repository.get_by_email(email)
         if user is None:
             raise credentials_exception
-        return user 
+        return user

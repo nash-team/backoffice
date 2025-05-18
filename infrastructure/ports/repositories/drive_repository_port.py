@@ -8,17 +8,19 @@ que le domaine peut utiliser sans connaître les détails d'implémentation de l
 """
 from abc import ABC, abstractmethod
 from typing import List, Optional
+
 from domain.entities.ebook import Ebook
+
 
 class DriveRepositoryPort(ABC):
     @abstractmethod
     async def list_ebooks(self) -> List[Ebook]:
         """
         Liste tous les ebooks disponibles dans le Drive.
-        
+
         Returns:
             List[Ebook]: La liste des ebooks trouvés
-            
+
         Raises:
             DriveError: Si une erreur survient lors de l'accès au Drive
         """
@@ -28,13 +30,13 @@ class DriveRepositoryPort(ABC):
     async def get_ebook(self, file_id: str) -> Optional[Ebook]:
         """
         Récupère un ebook spécifique par son ID.
-        
+
         Args:
             file_id: L'ID du fichier dans Google Drive
-            
+
         Returns:
             Optional[Ebook]: L'ebook trouvé ou None
-            
+
         Raises:
             DriveError: Si une erreur survient lors de l'accès au Drive
         """
@@ -44,11 +46,11 @@ class DriveRepositoryPort(ABC):
     async def update_ebook_status(self, file_id: str, status: str) -> None:
         """
         Met à jour le statut d'un ebook dans le Drive.
-        
+
         Args:
             file_id: L'ID du fichier dans Google Drive
             status: Le nouveau statut à appliquer
-            
+
         Raises:
             DriveError: Si une erreur survient lors de la mise à jour
         """
@@ -58,13 +60,13 @@ class DriveRepositoryPort(ABC):
     async def get_preview_url(self, file_id: str) -> str:
         """
         Récupère l'URL de prévisualisation d'un ebook.
-        
+
         Args:
             file_id: L'ID du fichier dans Google Drive
-            
+
         Returns:
             str: L'URL de prévisualisation
-            
+
         Raises:
             DriveError: Si une erreur survient lors de la récupération de l'URL
         """

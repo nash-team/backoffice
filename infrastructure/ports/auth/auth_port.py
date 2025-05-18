@@ -7,18 +7,20 @@ Le port suit le principe d'inversion de dépendance en définissant une abstract
 que le domaine peut utiliser sans connaître les détails d'implémentation.
 """
 from abc import ABC, abstractmethod
+
 from domain.entities.user import User
+
 
 class AuthPort(ABC):
     @abstractmethod
     async def authenticate_user(self, email: str, password: str) -> User | None:
         """
         Authentifie un utilisateur avec son email et son mot de passe.
-        
+
         Args:
             email: L'email de l'utilisateur
             password: Le mot de passe en clair
-            
+
         Returns:
             User | None: L'utilisateur authentifié ou None si l'authentification échoue
         """
@@ -28,10 +30,10 @@ class AuthPort(ABC):
     async def create_access_token(self, data: dict) -> str:
         """
         Crée un token d'accès pour un utilisateur authentifié.
-        
+
         Args:
             data: Les données à encoder dans le token (typiquement l'ID ou l'email de l'utilisateur)
-            
+
         Returns:
             str: Le token d'accès généré
         """
@@ -41,13 +43,13 @@ class AuthPort(ABC):
     async def verify_token(self, token: str) -> dict:
         """
         Vérifie la validité d'un token d'accès.
-        
+
         Args:
             token: Le token à vérifier
-            
+
         Returns:
             dict: Les données décodées du token
-            
+
         Raises:
             InvalidTokenError: Si le token est invalide ou expiré
         """

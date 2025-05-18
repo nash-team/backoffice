@@ -1,3 +1,9 @@
+# Environnement virtuel
+monenv/
+venv/
+env/
+.env
+
 # Python
 __pycache__/
 *.py[cod]
@@ -20,22 +26,29 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
-venv/
-ENV/
-
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
 
+# Logs
+*.log
+
+# Base de données
+*.db
+*.sqlite3
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Virtual Environment
+ENV/
+
 # Credentials
 credentials/
 *.json
-
-# Environment variables
-.env 
 
 # Scripts
 scripts/

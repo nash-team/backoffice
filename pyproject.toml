@@ -1,0 +1,49 @@
+[project]
+name = "backoffice"
+version = "0.1.0"
+description = "Backoffice pour la gestion des ebooks"
+dependencies = [
+    "fastapi>=0.104.1",
+    "uvicorn>=0.24.0",
+    "jinja2>=3.1.2",
+    "python-multipart>=0.0.6",
+    "httpx>=0.25.1",
+    "email-validator>=2.1.0.post1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+# Activer les règles de Ruff
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = []
+
+# Longueur maximale des lignes
+line-length = 100
+
+# Exclure certains fichiers/répertoires
+exclude = [
+    ".git",
+    ".ruff_cache",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+[tool.ruff.isort]
+known-first-party = ["domain", "infrastructure", "presentation"]
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+include = '\.pyi?$' 

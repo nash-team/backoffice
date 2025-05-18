@@ -1,12 +1,13 @@
-from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Optional
+
 
 class EbookStatus(Enum):
     PENDING = "pending"
     VALIDATED = "validated"
+
 
 @dataclass
 class Ebook:
@@ -16,4 +17,4 @@ class Ebook:
     created_at: datetime
     status: EbookStatus = EbookStatus.PENDING
     preview_url: Optional[str] = None
-    drive_id: Optional[str] = None  # ID du fichier dans Google Drive 
+    drive_id: Optional[str] = None  # ID du fichier dans Google Drive

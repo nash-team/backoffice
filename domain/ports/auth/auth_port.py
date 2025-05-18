@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional
-from domain.models.user import User, UserCreate
+
+from domain.models.user import User
+
 
 class AuthPort(ABC):
     @abstractmethod
@@ -21,4 +23,4 @@ class AuthPort(ABC):
 
     @abstractmethod
     def get_current_user(self, token: str) -> User:
-        pass 
+        pass

@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional
+
 from domain.models.user import User, UserCreate
+
 
 class UserRepositoryPort(ABC):
     @abstractmethod
@@ -13,4 +15,4 @@ class UserRepositoryPort(ABC):
 
     @abstractmethod
     def save(self, user: User) -> User:
-        pass 
+        pass

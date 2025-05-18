@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
+
 from domain.entities.ebook import Ebook, EbookStatus
+
 
 class EbookRepository(ABC):
     @abstractmethod
@@ -17,4 +19,4 @@ class EbookRepository(ABC):
 
     @abstractmethod
     async def save(self, ebook: Ebook) -> Ebook:
-        pass 
+        pass

@@ -7,14 +7,14 @@ Le port suit le principe d'inversion de dépendance en définissant une abstract
 que le domaine peut utiliser sans connaître les détails d'implémentation de l'API Google.
 """
 from abc import ABC, abstractmethod
-from typing import Optional
+
 
 class GoogleAuthPort(ABC):
     @abstractmethod
     async def get_credentials(self) -> dict:
         """
         Récupère les credentials d'authentification Google.
-        
+
         Returns:
             dict: Les credentials nécessaires pour accéder aux API Google
         """
@@ -33,7 +33,7 @@ class GoogleAuthPort(ABC):
     async def get_access_token(self) -> str:
         """
         Récupère le token d'accès actuel.
-        
+
         Returns:
             str: Le token d'accès pour l'API Google
         """

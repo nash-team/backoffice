@@ -1,6 +1,7 @@
-from fastapi import Depends
 import os
+
 from dotenv import load_dotenv
+
 from infrastructure.adapters.auth.google_auth import GoogleAuthService
 
 # Charger les variables d'environnement
@@ -10,4 +11,4 @@ load_dotenv()
 CREDENTIALS_PATH = os.getenv("GOOGLE_CREDENTIALS_PATH", "credentials/google_credentials.json")
 
 # Initialisation du service d'authentification
-auth_service = GoogleAuthService(CREDENTIALS_PATH) 
+auth_service = GoogleAuthService(CREDENTIALS_PATH)
