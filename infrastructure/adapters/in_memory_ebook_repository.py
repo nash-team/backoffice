@@ -113,4 +113,17 @@ class InMemoryEbookRepository(InMemoryRepositoryPort[Ebook]):
         Returns:
             List[Ebook]: La liste des ebooks avec le statut spécifié
         """
-        return [ebook for ebook in self.ebooks if ebook.status == status] 
+        return [ebook for ebook in self.ebooks if ebook.status == status]
+
+    async def save(self, ebook: Ebook) -> Ebook:
+        """
+        Sauvegarde un ebook dans le repository.
+        
+        Args:
+            ebook: L'ebook à sauvegarder
+            
+        Returns:
+            Ebook: L'ebook sauvegardé
+        """
+        self.ebooks.append(ebook)
+        return ebook
