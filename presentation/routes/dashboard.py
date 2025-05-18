@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+from fastapi.templating import Jinja2Templates
 from domain.usecases.get_stats import GetStatsUseCase
 from domain.usecases.get_ebooks import GetEbooksUseCase
 from infrastructure.adapters.in_memory_ebook_repository import InMemoryEbookRepository
@@ -9,6 +10,8 @@ router = APIRouter(
     prefix="/api/dashboard",
     tags=["Dashboard"]
 )
+
+templates = Jinja2Templates(directory="presentation/templates")
 
 # Repo et usecases (singleton pour garder les données en mémoire)
 repo = InMemoryEbookRepository()
@@ -24,9 +27,12 @@ if not repo.ebooks:
     ])
 
 @router.get("/stats")
-async def get_stats():
+async def get_stats(request: Request):
     stats = await get_stats_usecase.execute()
-    return stats.__dict__
+    return templates.TemplateResponse(
+        "partials/stats.html",
+        {"request": request, "stats": stats.__dict__}
+    )
 
 @router.get("/ebooks")
 async def get_ebooks(status: str = None):

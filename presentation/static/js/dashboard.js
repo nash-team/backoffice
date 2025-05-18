@@ -18,18 +18,6 @@ async function loadDashboardData() {
     const token = checkAuth();
     
     try {
-        // Charger les statistiques
-        const statsResponse = await fetch('/api/dashboard/stats', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        const stats = await statsResponse.json();
-        
-        document.getElementById('totalEbooks').textContent = stats.total_ebooks;
-        document.getElementById('pendingEbooks').textContent = stats.pending_ebooks;
-        document.getElementById('validatedEbooks').textContent = stats.validated_ebooks;
-
         // Charger la liste des ebooks depuis la BDD
         const ebooksResponse = await fetch('/api/dashboard/ebooks', {
             headers: {
