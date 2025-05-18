@@ -47,7 +47,9 @@
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">Dashboard</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="logout()">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                hx-post="/api/auth/logout"
+                                hx-on::after-request="if(event.detail.successful) { localStorage.removeItem('token'); window.location.href = '/login'; }">
                             <i class="fas fa-sign-out-alt"></i> Déconnexion
                         </button>
                     </div>
@@ -66,9 +68,24 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Liste des Ebooks</h5>
                         <div class="btn-group">
-                            <button type="button" class="btn btn-outline-secondary active" onclick="filterEbooks()">Tous</button>
-                            <button type="button" class="btn btn-outline-secondary" onclick="filterEbooks('pending')">En attente</button>
-                            <button type="button" class="btn btn-outline-secondary" onclick="filterEbooks('validated')">Validés</button>
+                            <button type="button" class="btn btn-outline-secondary active" 
+                                    hx-get="/api/dashboard/ebooks"
+                                    hx-target="#ebooksTable"
+                                    hx-swap="innerHTML">
+                                Tous
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary"
+                                    hx-get="/api/dashboard/ebooks?status=pending"
+                                    hx-target="#ebooksTable"
+                                    hx-swap="innerHTML">
+                                En attente
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary"
+                                    hx-get="/api/dashboard/ebooks?status=validated"
+                                    hx-target="#ebooksTable"
+                                    hx-swap="innerHTML">
+                                Validés
+                            </button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -84,10 +101,28 @@
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="ebooksTable">
+                                <tbody id="ebooksTable"
+                                       hx-get="/api/dashboard/ebooks"
+                                       hx-trigger="load"
+                                       hx-swap="innerHTML">
                                     <!-- Les données seront chargées dynamiquement -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal pour la prévisualisation -->
+                <div class="modal fade" id="previewModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Prévisualisation</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <!-- Le contenu sera chargé dynamiquement -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -96,6 +131,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/presentation/static/js/dashboard.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 </body>
 </html> 

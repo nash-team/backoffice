@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 from fastapi.templating import Jinja2Templates
 from domain.usecases.get_stats import GetStatsUseCase
 from domain.usecases.get_ebooks import GetEbooksUseCase
@@ -12,6 +12,14 @@ router = APIRouter(
 )
 
 templates = Jinja2Templates(directory="presentation/templates")
+
+# Ajout du filtre de date
+def format_date(value):
+    if isinstance(value, datetime):
+        return value.strftime("%d/%m/%Y")
+    return value
+
+templates.env.filters["date"] = format_date
 
 # Repo et usecases (singleton pour garder les données en mémoire)
 repo = InMemoryEbookRepository()
@@ -35,7 +43,7 @@ async def get_stats(request: Request):
     )
 
 @router.get("/ebooks")
-async def get_ebooks(status: str = None):
+async def get_ebooks(request: Request, status: str = None):
     from typing import Optional
     ebook_status = None
     if status == "pending":
@@ -43,14 +51,26 @@ async def get_ebooks(status: str = None):
     elif status == "validated":
         ebook_status = EbookStatus.VALIDATED
     ebooks = await get_ebooks_usecase.execute(ebook_status)
-    # Sérialisation simple
-    return [
+    
+    # Sérialisation pour le template
+    ebooks_data = [
         {
             "id": e.id,
             "title": e.title,
             "author": e.author,
-            "created_at": e.created_at.isoformat(),
+            "created_at": e.created_at,
             "status": e.status.value,
             "drive_id": e.drive_id
         } for e in ebooks
-    ] 
+    ]
+    
+    return templates.TemplateResponse(
+        "partials/ebooks_table.html",
+        {"request": request, "ebooks": ebooks_data}
+    )
+
+@router.get("/drive/ebooks/{drive_id}")
+async def get_ebook_preview(drive_id: str):
+    # Simuler une URL de prévisualisation Google Drive
+    preview_url = f"https://drive.google.com/file/d/{drive_id}/preview"
+    return Response(content=preview_url, media_type="text/plain") 

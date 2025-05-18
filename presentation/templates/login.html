@@ -6,6 +6,7 @@
     <title>Connexion - Backoffice</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/presentation/static/css/login.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 </head>
 <body>
     <div class="container">
@@ -14,14 +15,22 @@
                 <div class="card shadow">
                     <div class="card-body">
                         <h2 class="text-center mb-4">Connexion</h2>
-                        <form id="loginForm" onsubmit="return handleLogin(event)">
+                        <form hx-post="/api/auth/token"
+                              hx-target="body"
+                              hx-swap="none"
+                              hx-on::after-request="if(event.detail.successful) { 
+                                  localStorage.setItem('token', event.detail.xhr.response.access_token);
+                                  window.location.href = '/';
+                              } else {
+                                  alert('Identifiants incorrects');
+                              }">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="username" required>
+                                <input type="email" class="form-control" id="username" name="username" required>
                             </div>
                             <div class="mb-3">
                                 <label for="password" class="form-label">Mot de passe</label>
-                                <input type="password" class="form-control" id="password" required>
+                                <input type="password" class="form-control" id="password" name="password" required>
                             </div>
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary">Se connecter</button>
@@ -34,6 +43,5 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/presentation/static/js/login.js"></script>
 </body>
 </html> 
