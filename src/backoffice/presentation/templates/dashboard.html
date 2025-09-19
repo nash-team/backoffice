@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Backoffice</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/presentation/static/css/dashboard.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        <h4 class="text-white">Backoffice</h4>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active text-white" href="/dashboard">
+                                <i class="fas fa-home me-2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Dashboard</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button id="logoutBtn" type="button" class="btn btn-sm btn-outline-secondary"
+                                hx-post="/api/auth/logout"
+                                hx-indicator="#logoutSpinner"
+                                hx-disabled-elt="this"
+                                aria-label="Se déconnecter">
+                            <span id="logoutSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Déconnexion
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row mb-4"
+                     data-testid="stats-section"
+                     hx-get="/api/dashboard/stats"
+                     hx-trigger="load"
+                     hx-swap="innerHTML">
+                    <!-- Les statistiques seront chargées dynamiquement par HTMX -->
+                </div>
+
+                <!-- Ebooks Table -->
+                <div class="card" data-testid="ebooks-section">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <h5 class="mb-0 me-3">Liste des Ebooks</h5>
+                            <button id="newEbookBtn" type="button" class="btn btn-primary btn-sm"
+                                    data-testid="new-ebook-btn"
+                                    hx-get="/api/dashboard/ebooks/new"
+                                    hx-target="#previewModal .modal-body"
+                                    hx-trigger="click"
+                                    hx-indicator="#newEbookSpinner"
+                                    hx-disabled-elt="this"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#previewModal"
+                                    aria-label="Créer un nouvel ebook">
+                                <span id="newEbookSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+                                <i class="fas fa-plus me-1" aria-hidden="true"></i>
+                                Nouvel Ebook
+                            </button>
+                        </div>
+                        <div class="btn-group" role="group" aria-label="Filtres d'ebooks">
+                            <button id="filterAllBtn" type="button" class="btn btn-outline-secondary active filter-btn"
+                                    data-testid="filter-all-btn"
+                                    hx-get="/api/dashboard/ebooks"
+                                    hx-target="#ebooksTable"
+                                    hx-swap="innerHTML"
+                                    hx-indicator="#filterAllSpinner"
+                                    hx-disabled-elt="this"
+                                    aria-label="Afficher tous les ebooks">
+                                <span id="filterAllSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+                                Tous
+                            </button>
+                            <button id="filterPendingBtn" type="button" class="btn btn-outline-secondary filter-btn"
+                                    data-testid="filter-pending-btn"
+                                    hx-get="/api/dashboard/ebooks?status=pending"
+                                    hx-target="#ebooksTable"
+                                    hx-swap="innerHTML"
+                                    hx-indicator="#filterPendingSpinner"
+                                    hx-disabled-elt="this"
+                                    aria-label="Afficher les ebooks en attente">
+                                <span id="filterPendingSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+                                En attente
+                            </button>
+                            <button id="filterValidatedBtn" type="button" class="btn btn-outline-secondary filter-btn"
+                                    data-testid="filter-validated-btn"
+                                    hx-get="/api/dashboard/ebooks?status=validated"
+                                    hx-target="#ebooksTable"
+                                    hx-swap="innerHTML"
+                                    hx-indicator="#filterValidatedSpinner"
+                                    hx-disabled-elt="this"
+                                    aria-label="Afficher les ebooks validés">
+                                <span id="filterValidatedSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+                                Validés
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Titre</th>
+                                        <th>Auteur</th>
+                                        <th>Date de création</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ebooksTable"
+                                       data-testid="ebooks-table"
+                                       hx-get="/api/dashboard/ebooks"
+                                       hx-trigger="load"
+                                       hx-swap="innerHTML">
+                                    <!-- Les données seront chargées dynamiquement -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal pour la prévisualisation -->
+                <div class="modal fade" id="previewModal" data-testid="ebook-modal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalTitle">Création d'un nouvel ebook</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" data-testid="modal-close-btn" aria-label="Fermer"></button>
+                            </div>
+                            <div class="modal-body" data-testid="modal-body">
+                                <!-- Le contenu sera chargé dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    <script src="/presentation/static/js/dashboard.js"></script>
+</body>
+</html> 

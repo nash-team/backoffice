@@ -1,0 +1,1 @@
+/Users/blacksun/Dev/sandbox/IA/generatorEbook/backoffice/aidd/prompts/ide/05_review/review_code.md

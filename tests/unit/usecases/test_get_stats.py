@@ -2,9 +2,9 @@ from datetime import datetime
 
 import pytest
 
-from domain.entities.ebook import Ebook, EbookStatus
-from domain.usecases.get_stats import GetStatsUseCase
-from infrastructure.adapters.in_memory_ebook_repository import InMemoryEbookRepository
+from backoffice.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.domain.usecases.get_stats import GetStatsUseCase
+from backoffice.infrastructure.adapters.in_memory_ebook_repository import InMemoryEbookRepository
 
 
 @pytest.fixture

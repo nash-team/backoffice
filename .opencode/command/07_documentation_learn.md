@@ -1,0 +1,1 @@
+/Users/blacksun/Dev/sandbox/IA/generatorEbook/backoffice/aidd/prompts/ide/07_documentation/learn.md

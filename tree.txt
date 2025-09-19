@@ -1,0 +1,304 @@
+.
+├── CLAUDE.md -> /Users/blacksun/Dev/sandbox/IA/generatorEbook/backoffice/aidd-docs/AGENTS.md
+├── E2E_TESTS_STATUS_REPORT.md
+├── IMPLEMENTED_E2E_TESTS.md
+├── Makefile
+├── README.md
+├── SECURITY.md
+├── aidd
+│   ├── agents
+│   │   ├── dev.md
+│   │   └── lead.md
+│   ├── aidd-docs
+│   │   └── logs
+│   │       └── security.log
+│   ├── assets
+│   │   ├── audio
+│   │   │   ├── finish.mp3
+│   │   │   └── need-human.mp3
+│   │   ├── docs
+│   │   │   └── prompts-documentation.md
+│   │   └── scripts
+│   │       ├── aidd-generate-docs.sh
+│   │       └── cli
+│   │           ├── merge.js
+│   │           └── tree.sh
+│   ├── docs
+│   │   ├── aidd
+│   │   │   ├── agents.md
+│   │   │   └── rules.md
+│   │   ├── aidd.mmd
+│   │   ├── ide
+│   │   │   ├── README.md
+│   │   │   └── claude-code.md
+│   │   ├── mcp.md
+│   │   ├── method
+│   │   │   ├── clean_code.md
+│   │   │   ├── developer-rules.md
+│   │   │   ├── good_practices.md
+│   │   │   └── manifest.md
+│   │   ├── methodology.md
+│   │   ├── presentation.md
+│   │   ├── prompt_engineering
+│   │   │   ├── how_to_create_prompt.md
+│   │   │   ├── prompt_engineering.md
+│   │   │   └── summary.md
+│   │   ├── prompts-documentation.md
+│   │   ├── recommended_tools.md
+│   │   ├── rules.md
+│   │   ├── sdlc.mmd
+│   │   └── vibe-coding.md
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── prompts
+│   │   └── ide
+│   │       ├── 01_onboard
+│   │       │   ├── generate_agent.md
+│   │       │   ├── generate_command.md
+│   │       │   ├── generate_prd.md
+│   │       │   ├── generate_readme.md
+│   │       │   └── generate_rules.md
+│   │       ├── 02_context
+│   │       │   ├── create_user_stories.md
+│   │       │   ├── flows
+│   │       │   │   ├── execute.md
+│   │       │   │   ├── extract_custom.md
+│   │       │   │   ├── generate_flow.md
+│   │       │   │   └── research_flow.md
+│   │       │   └── tech_research.md
+│   │       ├── 03_plan
+│   │       │   ├── elaborate.md
+│   │       │   └── tasks.md
+│   │       ├── 04_code
+│   │       │   └── implement.md
+│   │       ├── 05_review
+│   │       │   ├── review_code.md
+│   │       │   └── review_functional.md
+│   │       ├── 06_tests
+│   │       │   ├── gherkinize.md
+│   │       │   ├── list_untested.md
+│   │       │   ├── tdd.md
+│   │       │   └── write.md
+│   │       ├── 07_documentation
+│   │       │   ├── jira_info.md
+│   │       │   ├── learn.md
+│   │       │   ├── mermaid.md
+│   │       │   └── refresh_memory_bank.md
+│   │       ├── 08_deploy
+│   │       │   ├── commit.md
+│   │       │   ├── create_github_pull_request.md
+│   │       │   └── tag.md
+│   │       ├── 09_refactor
+│   │       │   ├── performance.md
+│   │       │   └── security.md
+│   │       └── 10_maintenance
+│   │           ├── add_logging.md
+│   │           ├── assert.md
+│   │           ├── audit.md
+│   │           ├── bug_finder.md
+│   │           ├── debug.md
+│   │           ├── new_issue.md
+│   │           └── reflect.txt
+│   ├── rules
+│   │   └── 03-frameworks-and-libraries
+│   │       └── htmx
+│   │           └── 3-htmx@1.9-fastapi-templates.mdc
+│   ├── supports
+│   │   ├── gitignore.template
+│   │   ├── lefthook.yml
+│   │   └── mcps
+│   │       ├── automation.json
+│   │       ├── browse.json
+│   │       ├── code.json
+│   │       └── content.json
+│   └── templates
+│       ├── AGENTS.md
+│       ├── README.md
+│       ├── code_review.md
+│       ├── flow.md
+│       ├── memory-bank
+│       │   ├── ADR.md
+│       │   ├── DESIGN.md
+│       │   ├── PRD.md
+│       │   └── base
+│       │       ├── ARCHITECTURE.md
+│       │       ├── CODEBASE_STRUCTURE.md
+│       │       ├── CODING.md
+│       │       ├── DEPLOYMENT.md
+│       │       ├── INFRASTRUCTURE.md
+│       │       └── PROJECT_BRIEF.md
+│       ├── plan.md
+│       ├── prompts
+│       │   ├── prompt.assistant.txt
+│       │   ├── prompt.md
+│       │   ├── prompt.system.txt
+│       │   └── prompt.user.txt
+│       ├── rule.md
+│       ├── starters
+│       │   ├── README.md
+│       │   ├── claude.md
+│       │   └── typescript-next-tailwind.md
+│       ├── task.md
+│       ├── tech-choice.md
+│       └── user_story.md
+├── aidd-docs
+│   ├── AGENTS.md
+│   ├── flows
+│   │   └── entity_creation_with_external_processing.md
+│   ├── logs
+│   ├── memory-bank
+│   │   ├── ARCHITECTURE.md
+│   │   ├── CODEBASE_STRUCTURE.md
+│   │   ├── CODING.md
+│   │   ├── INFRASTRUCTURE.md
+│   │   └── PROJECT_BRIEF.md
+│   ├── rules
+│   │   ├── 00-architecture
+│   │   │   └── 0-hexagonal-architecture.mdc
+│   │   ├── 01-standards
+│   │   │   └── 1-python-standards.mdc
+│   │   ├── 02-programming-languages
+│   │   ├── 03-frameworks-and-libraries
+│   │   │   ├── 3-fastapi.mdc
+│   │   │   ├── 3-htmx.mdc
+│   │   │   └── 3-sqlalchemy-postgresql.mdc
+│   │   ├── 04-tools-and-configurations
+│   │   │   ├── 4-alembic.mdc
+│   │   │   ├── 4-black.mdc
+│   │   │   ├── 4-pre-commit.mdc
+│   │   │   ├── 4-pyright.mdc
+│   │   │   └── 4-ruff.mdc
+│   │   └── 07-quality-assurance
+│   │       ├── 7-coverage.mdc
+│   │       ├── 7-e2e-testing.mdc
+│   │       ├── 7-performance.mdc
+│   │       ├── 7-pytest.mdc
+│   │       └── 7-security.mdc
+│   └── tasks
+│       ├── 2025_01_19_critical_fixes_review.review.md
+│       ├── 2025_01_19_e2e_tests_review.review.md
+│       ├── 2025_01_19_global_code_review.review.md
+│       ├── 2025_01_19_htmx_refactoring.review.md
+│       ├── 2025_01_19_packaging_fix_updated.review.md
+│       ├── 2025_01_19_template_fixes_refactoring.review.md
+│       └── 2025_09_18-makefile_basic_commands.md
+├── aidd-generated
+├── alembic.ini
+├── credentials
+│   ├── credentials.json
+│   └── google_credentials.json
+├── opencode.jsonc
+├── pyproject.toml
+├── pyrightconfig.json
+├── pytest.ini
+├── run-e2e-tests.sh
+├── scripts
+│   └── create_admin.py
+├── src
+│   └── backoffice
+│       ├── __init__.py
+│       ├── domain
+│       │   ├── __init__.py
+│       │   ├── entities
+│       │   │   ├── __init__.py
+│       │   │   ├── ebook.py
+│       │   │   └── user.py
+│       │   ├── models
+│       │   │   └── user.py
+│       │   ├── ports
+│       │   │   ├── __init__.py
+│       │   │   ├── auth
+│       │   │   │   └── auth_port.py
+│       │   │   ├── ebook
+│       │   │   │   └── ebook_port.py
+│       │   │   └── user
+│       │   │       └── user_repository_port.py
+│       │   ├── services
+│       │   │   └── auth_service.py
+│       │   └── usecases
+│       │       ├── __init__.py
+│       │       ├── create_ebook.py
+│       │       ├── get_ebooks.py
+│       │       └── get_stats.py
+│       ├── infrastructure
+│       │   ├── __init__.py
+│       │   ├── adapters
+│       │   │   ├── __init__.py
+│       │   │   ├── auth
+│       │   │   │   ├── google_auth.py
+│       │   │   │   └── jwt_auth.py
+│       │   │   ├── in_memory_ebook_repository.py
+│       │   │   ├── openai_ebook_processor.py
+│       │   │   ├── repositories
+│       │   │   │   ├── ebook_repository.py
+│       │   │   │   └── user_repository.py
+│       │   │   └── sources
+│       │   │       └── google_drive_adapter.py
+│       │   ├── database.py
+│       │   ├── exceptions.py
+│       │   ├── factories
+│       │   │   └── repository_factory.py
+│       │   ├── logging.py
+│       │   ├── models
+│       │   │   ├── ebook_model.py
+│       │   │   └── user_model.py
+│       │   ├── ports
+│       │   │   ├── auth
+│       │   │   │   ├── auth_port.py
+│       │   │   │   └── google_auth_port.py
+│       │   │   ├── exceptions.py
+│       │   │   └── repositories
+│       │   │       ├── drive_repository_port.py
+│       │   │       ├── ebook_repository_port.py
+│       │   │       ├── in_memory_repository_port.py
+│       │   │       └── user_repository_port.py
+│       │   └── services
+│       │       ├── auth_service.py
+│       │       └── openai_service.py
+│       ├── main.py
+│       └── presentation
+│           ├── __init__.py
+│           ├── routes
+│           │   ├── __init__.py
+│           │   ├── auth.py
+│           │   ├── dashboard.py
+│           │   ├── dependencies.py
+│           │   ├── ebook_routes.py
+│           │   └── templates.py
+│           ├── static
+│           │   ├── css
+│           │   │   ├── dashboard.css
+│           │   │   └── login.css
+│           │   └── js
+│           │       ├── dashboard.js
+│           │       └── ebook-form.js
+│           └── templates
+│               ├── dashboard.html
+│               ├── login.html
+│               └── partials
+│                   ├── ebooks_table.html
+│                   ├── error_message.html
+│                   ├── new_ebook_form.html
+│                   └── stats.html
+├── test-reports
+├── tests
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── e2e
+│   │   ├── README.md
+│   │   ├── __init__.py
+│   │   ├── conftest.py
+│   │   ├── scenarios_helpers.py
+│   │   └── test_user_scenarios_e2e.py
+│   ├── integration
+│   │   ├── test_dashboard_routes.py
+│   │   └── test_ebook_routes.py
+│   └── unit
+│       ├── __init__.py
+│       └── usecases
+│           ├── __init__.py
+│           ├── test_get_ebooks.py
+│           └── test_get_stats.py
+└── tree.txt
+
+88 directories, 214 files

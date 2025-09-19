@@ -1,0 +1,66 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "autoupdate": true,
+  "permission": {
+    "bash": "allow",
+    "webfetch": "allow",
+    "edit": "allow"
+  },
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": [
+        "npx",
+        "@playwright/mcp@latest"
+      ],
+      "environment": {},
+      "enabled": true
+    },
+    "browser-tools": {
+      "type": "local",
+      "command": [
+        "npx",
+        "@agentdeskai/browser-tools-mcp"
+      ],
+      "enabled": false
+    },
+    "perplexity-ask": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "server-perplexity-ask"
+      ],
+      "environment": {
+        "PERPLEXITY_API_KEY": "YOUR_API_KEY_HERE"
+      },
+      "enabled": false
+    },
+    "firecrawl": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "firecrawl-mcp"
+      ],
+      "environment": {
+        "FIRECRAWL_API_KEY": "fc-1f271075ebfe4f628b31de888162c20c"
+      },
+      "enabled": true
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": false
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "enabled": true
+    }
+  }
+}

@@ -1,0 +1,28 @@
+<!-- Zone d'erreur OOB (ciblée par le serveur si erreur) -->
+<div id="ebookFormErrors" class="mb-3" aria-live="assertive" data-testid="error-container"></div>
+
+<form id="ebookForm"
+      data-testid="ebook-form"
+      hx-post="/api/dashboard/ebooks"
+      hx-target="#ebooksTable"
+      hx-swap="innerHTML"
+      hx-disabled-elt="#createBtn"
+      hx-indicator="#createBtnSpinner">
+  <div class="mb-3">
+    <label for="prompt" class="form-label">Prompt pour la génération de l'ebook</label>
+    <textarea class="form-control" id="prompt" name="prompt" rows="10" required
+      data-testid="prompt-textarea"
+      placeholder="Ex: Génère un ebook de type 'recueil d'exercices' sur le sujet 'JavaScript pour débutant', structuré en 10 sections. Chaque section doit contenir un exercice, une consigne claire, une solution détaillée, et une explication pédagogique. L'ensemble doit être adapté à un public novice, avec un ton accessible. Le document doit commencer par une brève introduction et finir par une conclusion motivante."></textarea>
+  </div>
+  <div class="d-flex justify-content-end">
+    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" data-testid="cancel-btn">Annuler</button>
+    <button id="createBtn" type="submit" class="btn btn-primary" data-testid="create-btn">
+      <span id="createBtnSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+      <i class="fas fa-plus me-2" aria-hidden="true"></i>
+      Créer l'ebook
+    </button>
+  </div>
+</form>
+
+<!-- JavaScript minimal externalisé -->
+<script src="/presentation/static/js/ebook-form.js"></script>

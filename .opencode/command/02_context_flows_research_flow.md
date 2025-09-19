@@ -1,0 +1,1 @@
+/Users/blacksun/Dev/sandbox/IA/generatorEbook/backoffice/aidd/prompts/ide/02_context/flows/research_flow.md

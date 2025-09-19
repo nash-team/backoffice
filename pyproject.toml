@@ -2,48 +2,145 @@
 name = "backoffice"
 version = "0.1.0"
 description = "Backoffice pour la gestion des ebooks"
+
+# === Dépendances runtime (tout ce que ton app importe en prod) ===
 dependencies = [
-    "fastapi>=0.104.1",
-    "uvicorn>=0.24.0",
-    "jinja2>=3.1.2",
-    "python-multipart>=0.0.6",
-    "httpx>=0.25.1",
-    "email-validator>=2.1.0.post1",
+  # API & serveur
+  "fastapi>=0.104.1",
+  "uvicorn>=0.24.0",
+
+  # Templating & uploads (utilisées indirectement par Starlette)
+  "jinja2>=3.1.2",
+  "python-multipart>=0.0.6",
+  "aiofiles>=23.2.1",
+
+  # Modèles & validation
+  "pydantic[email]>=2.4.2",
+
+  # Authentification & sécurité
+  "python-jose[cryptography]>=3.3.0",
+  "passlib[bcrypt]>=1.7.4",
+  "python-dotenv>=1.0.0",
+
+  # Base de données (driver utilisé via l’URL SQLAlchemy)
+  "sqlalchemy>=2.0.23",
+  "psycopg2-binary>=2.9.9",
+
+  # Clients externes (tu les utilises côté app)
+  "openai>=1.6.1",
+  "google-auth>=2.27.0",
+  "google-api-python-client>=2.118.0",
+  # NOTE: ajoute "google-auth-oauthlib" seulement si tu fais un vrai flow OAuth web.
 ]
+
+[project.optional-dependencies]
+dev = [
+  # Lint / format / type / analyse
+  "ruff==0.7.1",
+  "mypy==1.18.1",
+  "vulture==2.14",
+  "deptry==0.23.1",
+
+  # Stubs (typing only)
+  "types-psutil",
+  "types-python-jose",
+  "types-passlib",
+  "types-requests",
+  "types-python-dateutil",
+
+  # Tests & e2e
+  "pytest==7.4.3",
+  "pytest-asyncio==0.21.1",
+  "playwright==1.55.0",
+  "pytest-playwright==0.7.1",
+  "testcontainers>=4.0.0",
+
+  # Outils dev
+  "pre-commit==3.5.0",
+
+  # Libs utilisées seulement en dev/tests
+  "httpx>=0.25.1",      # health-check dans conftest
+  "psutil>=7.0.0",      # utilitaires tests
+  "alembic==1.12.1",    # migrations via CLI (pas besoin en runtime si pas appelées in-app)
+  # "google-auth-oauthlib>=1.2.0",  # active-la ici si tu testes un flow OAuth en dev
+]
+
+# --- BUILD (Hatch) ---
+[tool.hatch.build.targets.wheel]
+packages = ["src/backoffice"]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
+# --- Ruff (≥0.4) ---
 [tool.ruff]
-# Activer les règles de Ruff
-select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # pyflakes
-    "I",   # isort
-    "B",   # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "UP",  # pyupgrade
-]
+target-version = "py311"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.format]
+
+[tool.ruff.lint]
+select = ["E","W","F","I","B","C4","UP","S"]
 ignore = []
 
-# Longueur maximale des lignes
-line-length = 100
 
-# Exclure certains fichiers/répertoires
-exclude = [
-    ".git",
-    ".ruff_cache",
-    "__pycache__",
-    "build",
-    "dist",
+[tool.ruff.lint.isort]
+known-first-party = ["backoffice"]
+combine-as-imports = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S603", "S607", "S104", "E501", "E402", "I001"]  # Allow subprocess usage, binding, long lines, imports after code and import sorting in tests
+"src/backoffice/main.py" = ["S104"]  # Allow 0.0.0.0 binding when explicitly configured
+
+# --- Mypy ---
+[tool.mypy]
+python_version = "3.11"
+plugins = ["pydantic.mypy"]
+mypy_path = "src"
+namespace_packages = true
+explicit_package_bases = true
+exclude = ["scripts/", "tests/"]
+disallow_untyped_defs = false
+warn_unused_ignores = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_return_any = true
+show_error_codes = true
+pretty = true
+
+[[tool.mypy.overrides]]
+module = ["googleapiclient.*", "google.oauth2", "google.oauth2.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["backoffice.infrastructure.adapters.repositories.*"]
+disable_error_code = ["assignment"]
+
+# --- Deptry ---
+[tool.deptry]
+exclude = ["tests", "migrations", "scripts", "alembic", ".venv", "venv", "monenv", ".pytest_cache", ".mypy_cache", "build", "dist", "node_modules"]
+
+# Specify dev dependency groups (so deptry ignores them)
+pep621_dev_dependency_groups = ["dev"]
+
+# Ignore internal package imports
+known_first_party = ["backoffice"]
+
+# Per-rule ignores for dependencies used indirectly by frameworks
+[tool.deptry.per_rule_ignores]
+DEP002 = [
+    "jinja2",           # Used by FastAPI for templating
+    "python-multipart", # Used by FastAPI for form data
+    "aiofiles",         # Used by FastAPI for static files
+    "psycopg2-binary",  # Used by SQLAlchemy via connection string
+]
+DEP004 = [
+    "alembic",          # Used in migrations (dev tool but imported in migration files)
 ]
 
-[tool.ruff.isort]
-known-first-party = ["domain", "infrastructure", "presentation"]
-
-[tool.black]
-line-length = 100
-target-version = ['py311']
-include = '\.pyi?$' 
+# Déclare les mappings nom PyPI -> package importable
+[tool.deptry.package_module_name_map]
+"google-api-python-client" = "googleapiclient"
+"python-jose"              = "jose"
+"psycopg2-binary"          = "psycopg2"

@@ -1,0 +1,24 @@
+{% for ebook in ebooks %}
+<tr data-testid="ebook-row-{{ ebook.id }}">
+    <td>{{ ebook.id }}</td>
+    <td>{{ ebook.title }}</td>
+    <td>{{ ebook.author }}</td>
+    <td>{{ ebook.created_at|date }}</td>
+    <td>
+        <span class="badge {{ 'bg-warning' if ebook.status == 'pending' else 'bg-success' }}">
+            {{ 'En attente' if ebook.status == 'pending' else 'Validé' }}
+        </span>
+    </td>
+    <td>
+        <button class="btn btn-sm btn-primary btn-action" 
+                hx-get="/api/dashboard/drive/ebooks/{{ ebook.drive_id }}"
+                hx-target="body"
+                hx-swap="none"
+                hx-trigger="click"
+                hx-on::after-request="if(event.detail.successful) window.open(event.detail.xhr.response, '_blank')"
+                aria-label="Voir l'ebook {{ ebook.title }}">
+            Voir
+        </button>
+    </td>
+</tr>
+{% endfor %} 
