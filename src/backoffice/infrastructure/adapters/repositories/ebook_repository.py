@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
@@ -31,7 +31,7 @@ class SqlAlchemyEbookRepository(EbookRepositoryPort):
             status=ebook.status.value,
             preview_url=ebook.preview_url,
             drive_id=ebook.drive_id,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
         self.db.add(db_ebook)
         self.db.commit()
