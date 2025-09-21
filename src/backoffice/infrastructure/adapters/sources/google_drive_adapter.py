@@ -106,3 +106,50 @@ class GoogleDriveAdapter:
         except Exception as e:
             logger.error(f"Erreur lors de l'upload de l'ebook '{title}': {str(e)}")
             raise GoogleDriveError(f"Erreur lors de l'upload de l'ebook: {str(e)}") from e
+
+    async def upload_pdf_ebook(
+        self, title: str, pdf_bytes: bytes, author: str = "Assistant IA"
+    ) -> dict:
+        """Upload un ebook PDF vers Google Drive"""
+        try:
+            logger.info(f"Upload du PDF '{title}' vers Google Drive")
+
+            # Créer le média upload pour PDF
+            media = MediaIoBaseUpload(
+                BytesIO(pdf_bytes), mimetype="application/pdf", resumable=True
+            )
+
+            # Métadonnées du fichier
+            file_metadata = {
+                "name": f"{title}.pdf",
+                "description": f"Ebook généré par l'Assistant IA - Auteur: {author}",
+                "parents": [],  # Racine du Drive, ou spécifier un dossier
+            }
+
+            # Upload vers Google Drive
+            file = (
+                self.drive_service.files()
+                .create(body=file_metadata, media_body=media, fields="id")
+                .execute()
+            )
+
+            drive_id = file.get("id")
+
+            # Rendre le fichier accessible publiquement
+            permission = {"role": "reader", "type": "anyone"}
+            self.drive_service.permissions().create(fileId=drive_id, body=permission).execute()
+
+            preview_url = f"https://drive.google.com/file/d/{drive_id}/preview"
+
+            logger.info(f"PDF uploadé avec succès et rendu public. Drive ID: {drive_id}")
+
+            return {
+                "title": title,
+                "author": author,
+                "drive_id": drive_id,
+                "preview_url": preview_url,
+            }
+
+        except Exception as e:
+            logger.error(f"Erreur lors de l'upload du PDF '{title}': {str(e)}")
+            raise GoogleDriveError(f"Erreur lors de l'upload du PDF: {str(e)}") from e

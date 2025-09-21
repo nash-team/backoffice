@@ -30,6 +30,10 @@ dependencies = [
   "openai>=1.6.1",
   "google-auth>=2.27.0",
   "google-api-python-client>=2.118.0",
+
+  # PDF Generation
+  "weasyprint>=61.0",
+
   # NOTE: ajoute "google-auth-oauthlib" seulement si tu fais un vrai flow OAuth web.
 ]
 

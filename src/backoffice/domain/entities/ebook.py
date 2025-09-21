@@ -9,6 +9,16 @@ class EbookStatus(Enum):
 
 
 @dataclass
+class EbookConfig:
+    toc: bool = True
+    toc_title: str = "Sommaire"
+    chapter_numbering: bool = False
+    chapter_numbering_style: str = "arabic"
+    engine: str = "weasyprint"
+    format: str = "pdf"
+
+
+@dataclass
 class Ebook:
     id: int
     title: str
@@ -17,3 +27,4 @@ class Ebook:
     status: EbookStatus = EbookStatus.PENDING
     preview_url: str | None = None
     drive_id: str | None = None  # ID du fichier dans Google Drive
+    config: EbookConfig | None = None

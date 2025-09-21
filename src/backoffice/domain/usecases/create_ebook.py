@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from backoffice.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.domain.entities.ebook import Ebook, EbookConfig, EbookStatus
 from backoffice.infrastructure.ports.repositories.ebook_repository_port import (
     EbookRepositoryPort as EbookRepository,
 )
@@ -9,7 +9,9 @@ from backoffice.infrastructure.ports.repositories.ebook_repository_port import (
 class EbookProcessor(Protocol):
     """Protocol for external ebook processing services."""
 
-    async def generate_ebook_from_prompt(self, prompt: str) -> dict:
+    async def generate_ebook_from_prompt(
+        self, prompt: str, config: EbookConfig | None = None
+    ) -> dict:
         """Generate ebook content and upload to external storage.
 
         Returns:
@@ -25,11 +27,12 @@ class CreateEbookUseCase:
         self.ebook_repository = ebook_repository
         self.ebook_processor = ebook_processor
 
-    async def execute(self, prompt: str) -> Ebook:
+    async def execute(self, prompt: str, config: EbookConfig | None = None) -> Ebook:
         """Execute ebook creation workflow.
 
         Args:
             prompt: User prompt for ebook generation
+            config: Optional ebook configuration
 
         Returns:
             Ebook: Created ebook entity with PENDING status
@@ -45,8 +48,12 @@ class CreateEbookUseCase:
         if len(prompt) > 2000:
             raise ValueError("Le prompt ne peut pas dépasser 2000 caractères")
 
+        # Use default config if none provided
+        if config is None:
+            config = EbookConfig()
+
         # Create ebook with initial PENDING status
-        ebook_data = await self.ebook_processor.generate_ebook_from_prompt(prompt)
+        ebook_data = await self.ebook_processor.generate_ebook_from_prompt(prompt, config)
 
         # Create ebook entity
         ebook = Ebook(
@@ -57,6 +64,7 @@ class CreateEbookUseCase:
             drive_id=ebook_data.get("drive_id"),
             preview_url=ebook_data.get("preview_url"),
             created_at=None,  # Will be set by repository
+            config=config,
         )
 
         # Persist ebook

@@ -1,0 +1,365 @@
+/* Ebook Styles for PDF Generation with WeasyPrint */
+
+/* Page setup */
+@page {
+    size: A4;
+    margin: 2cm;
+
+    @top-center {
+        content: string(book-title);
+        font-size: 10pt;
+        color: #666;
+        font-family: "Georgia", serif;
+    }
+
+    @bottom-center {
+        content: counter(page);
+        font-size: 10pt;
+        color: #666;
+        font-family: "Georgia", serif;
+    }
+}
+
+/* Title page styling */
+@page :first {
+    @top-center { content: none; }
+    @bottom-center { content: none; }
+}
+
+/* TOC page */
+@page toc {
+    @top-center { content: "Table des matières"; }
+}
+
+/* Chapter pages */
+@page chapter {
+    @top-center { content: string(chapter-title); }
+}
+
+/* String sets for running headers */
+h1 {
+    string-set: chapter-title content();
+}
+
+.title-page h1 {
+    string-set: book-title content();
+}
+
+/* Base typography */
+body {
+    font-family: "Georgia", "Times New Roman", serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    hyphens: auto;
+}
+
+/* Title page */
+.title-page {
+    page-break-after: always;
+    text-align: center;
+    padding-top: 30%;
+    page: :first;
+}
+
+.title-page h1 {
+    font-size: 2.5em;
+    margin-bottom: 0.5em;
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+.title-page .author {
+    font-size: 1.2em;
+    font-style: italic;
+    color: #7f8c8d;
+    margin-top: 2em;
+}
+
+/* Table of Contents */
+.toc {
+    page-break-before: always;
+    page-break-after: always;
+    page: toc;
+}
+
+.toc h2 {
+    font-size: 1.8em;
+    margin-bottom: 1em;
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.2em;
+}
+
+.toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.toc-item {
+    display: block;
+    margin-bottom: 0.8em;
+    font-size: 1.1em;
+    overflow: hidden;
+}
+
+.toc-link {
+    display: block;
+    text-decoration: none;
+    color: #2c3e50;
+    position: relative;
+}
+
+.toc-link:hover {
+    color: #3498db;
+}
+
+.toc-link::after {
+    content: leader(dotted) target-counter(attr(href), page);
+    float: right;
+}
+
+/* Chapter styling */
+.chapter {
+    page-break-before: always;
+    page: chapter;
+    margin-bottom: 2em;
+    orphans: 3;
+    widows: 3;
+}
+
+.chapter h1 {
+    font-size: 2em;
+    color: #2c3e50;
+    margin-bottom: 1em;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 0.3em;
+    page-break-after: avoid;
+}
+
+.chapter h2 {
+    font-size: 1.5em;
+    color: #34495e;
+    margin-top: 1.5em;
+    margin-bottom: 0.8em;
+    page-break-after: avoid;
+}
+
+.chapter h3 {
+    font-size: 1.2em;
+    color: #7f8c8d;
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+    page-break-after: avoid;
+}
+
+.chapter h4, .chapter h5, .chapter h6 {
+    font-size: 1em;
+    color: #95a5a6;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    page-break-after: avoid;
+}
+
+/* Paragraph and text styling */
+.chapter p {
+    margin-bottom: 1em;
+    text-align: justify;
+    orphans: 2;
+    widows: 2;
+}
+
+.chapter p:first-of-type {
+    text-indent: 0;
+}
+
+.chapter p + p {
+    text-indent: 1.2em;
+}
+
+/* Lists */
+.chapter ul, .chapter ol {
+    margin-bottom: 1em;
+    padding-left: 2em;
+}
+
+.chapter li {
+    margin-bottom: 0.3em;
+}
+
+.chapter li p {
+    margin-bottom: 0.5em;
+}
+
+/* Blockquotes */
+.chapter blockquote {
+    border-left: 4px solid #3498db;
+    margin: 1.5em 0;
+    padding-left: 1em;
+    color: #555;
+    font-style: italic;
+    page-break-inside: avoid;
+}
+
+/* Code styling */
+.chapter code {
+    background-color: #f8f9fa;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: "Courier New", "Monaco", monospace;
+    font-size: 0.9em;
+    color: #e74c3c;
+}
+
+.chapter pre {
+    background-color: #f8f9fa;
+    padding: 1em;
+    border-radius: 5px;
+    border: 1px solid #e9ecef;
+    font-family: "Courier New", "Monaco", monospace;
+    font-size: 0.9em;
+    line-height: 1.4;
+    page-break-inside: avoid;
+    overflow-x: visible;
+}
+
+.chapter pre code {
+    background: none;
+    padding: 0;
+    color: #333;
+}
+
+/* Tables */
+.chapter table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    page-break-inside: avoid;
+}
+
+.chapter th, .chapter td {
+    border: 1px solid #ddd;
+    padding: 0.5em;
+    text-align: left;
+}
+
+.chapter th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* Images */
+.chapter img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1em auto;
+    page-break-inside: avoid;
+}
+
+/* Horizontal rules */
+.chapter hr {
+    border: none;
+    border-top: 1px solid #bdc3c7;
+    margin: 2em 0;
+    page-break-after: avoid;
+}
+
+/* Special content blocks */
+.chapter .note, .chapter .warning, .chapter .tip {
+    padding: 1em;
+    margin: 1em 0;
+    border-radius: 5px;
+    page-break-inside: avoid;
+}
+
+.chapter .note {
+    background-color: #e8f4fd;
+    border-left: 4px solid #3498db;
+}
+
+.chapter .warning {
+    background-color: #fdf2e8;
+    border-left: 4px solid #e67e22;
+}
+
+.chapter .tip {
+    background-color: #e8f8f2;
+    border-left: 4px solid #27ae60;
+}
+
+/* Chapter numbering styles */
+.chapter-numbered h1::before {
+    content: "Chapitre " counter(chapter, decimal) " – ";
+    color: #3498db;
+    font-weight: bold;
+}
+
+.chapter-numbered.roman h1::before {
+    content: "Chapitre " counter(chapter, upper-roman) " – ";
+    color: #3498db;
+    font-weight: bold;
+}
+
+.chapter {
+    counter-increment: chapter;
+}
+
+/* Reset chapter counter for non-numbered chapters */
+.chapter:not(.chapter-numbered) {
+    counter-increment: none;
+}
+
+/* Ensure proper page breaks and spacing */
+.chapter {
+    page-break-before: always;
+    margin-bottom: 2em;
+    orphans: 3;
+    widows: 3;
+}
+
+.chapter:first-of-type {
+    page-break-before: auto;
+}
+
+/* Section styling (H2, H3, etc. dans le même chapitre) */
+.section {
+    margin-top: 1.5em;
+    margin-bottom: 1em;
+}
+
+.section h2 {
+    font-size: 1.5em;
+    color: #34495e;
+    margin-top: 1.5em;
+    margin-bottom: 0.8em;
+    page-break-after: avoid;
+}
+
+.section h3 {
+    font-size: 1.2em;
+    color: #7f8c8d;
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+    page-break-after: avoid;
+}
+
+.section h4, .section h5, .section h6 {
+    font-size: 1em;
+    color: #95a5a6;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    page-break-after: avoid;
+}
+
+/* Print optimizations */
+@media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+}
