@@ -17,13 +17,18 @@ repos:
         pass_filenames: false
         args:
           - src
-          - --ignore-missing-imports
           - --install-types
           - --non-interactive
         additional_dependencies:
           - pydantic
           - pydantic[mypy]
           - sqlalchemy
+          - fastapi
+          - python-dotenv
+          - jinja2
+          - openai
+          - alembic
+          - uvicorn
           - types-requests
           - types-python-dateutil
           - types-python-jose

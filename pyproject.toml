@@ -118,6 +118,10 @@ module = ["googleapiclient.*", "google.oauth2", "google.oauth2.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+module = ["weasyprint"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = ["backoffice.infrastructure.adapters.repositories.*"]
 disable_error_code = ["assignment"]
 
