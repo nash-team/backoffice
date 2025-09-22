@@ -69,9 +69,11 @@
                                     data-bs-toggle="modal"
                                     data-bs-target="#previewModal"
                                     aria-label="Créer un nouvel ebook">
-                                <span id="newEbookSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
-                                <i class="fas fa-plus me-1" aria-hidden="true"></i>
-                                Nouvel Ebook
+                                <span id="newEbookSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
+                                <span class="button-content">
+                                    <i class="fas fa-plus me-1" aria-hidden="true"></i>
+                                    Nouvel Ebook
+                                </span>
                             </button>
                         </div>
                         <div class="btn-group" role="group" aria-label="Filtres d'ebooks">
@@ -83,8 +85,8 @@
                                     hx-indicator="#filterAllSpinner"
                                     hx-disabled-elt="this"
                                     aria-label="Afficher tous les ebooks">
-                                <span id="filterAllSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
-                                Tous
+                                <span id="filterAllSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
+                                <span class="button-content">Tous</span>
                             </button>
                             <button id="filterPendingBtn" type="button" class="btn btn-outline-secondary filter-btn"
                                     data-testid="filter-pending-btn"
@@ -94,8 +96,8 @@
                                     hx-indicator="#filterPendingSpinner"
                                     hx-disabled-elt="this"
                                     aria-label="Afficher les ebooks en attente">
-                                <span id="filterPendingSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
-                                En attente
+                                <span id="filterPendingSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
+                                <span class="button-content">En attente</span>
                             </button>
                             <button id="filterValidatedBtn" type="button" class="btn btn-outline-secondary filter-btn"
                                     data-testid="filter-validated-btn"
@@ -105,8 +107,8 @@
                                     hx-indicator="#filterValidatedSpinner"
                                     hx-disabled-elt="this"
                                     aria-label="Afficher les ebooks validés">
-                                <span id="filterValidatedSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
-                                Validés
+                                <span id="filterValidatedSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
+                                <span class="button-content">Validés</span>
                             </button>
                         </div>
                     </div>

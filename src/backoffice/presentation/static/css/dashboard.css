@@ -70,9 +70,33 @@
     color: #0a3622;
 }
 
-.btn-group .btn {
+/* Button alignment fixes */
+.btn-group .btn,
+.btn {
     border-radius: 0.25rem;
     margin: 0 0.25rem;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    position: relative;
+}
+
+/* Button content wrapper for proper centering */
+.btn .button-content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+/* Spinner positioning */
+.btn .htmx-indicator {
+    position: absolute;
+    left: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .btn-group .btn.active {
