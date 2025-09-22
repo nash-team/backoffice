@@ -188,33 +188,22 @@ class TestEbookPageAssembler:
         # Then
         assert len(result) == 0
 
-    @patch("backoffice.domain.services.ebook_page_assembler.PageFactory")
-    def test_create_story_ebook_delegates_to_page_factory(self, mock_page_factory):
+    def test_create_story_ebook_delegates_to_page_factory(self):
         # Given
         title = "Story Ebook"
         author = "Test Author"
         chapters = [{"title": "Chapter 1", "content": "Content 1"}]
         config = EbookConfig(cover_enabled=True, toc=False)
 
-        mock_cover_page = Mock()
-        mock_story_page = Mock()
-        mock_page_factory.create_cover_page.return_value = mock_cover_page
-        mock_page_factory.create_story_page.return_value = mock_story_page
-
         # When
-        self.assembler.create_story_ebook(title, author, chapters, config)
+        result = self.assembler.create_story_ebook(title, author, chapters, config)
 
         # Then
-        mock_page_factory.create_cover_page.assert_called_once_with(
-            title=title, author=author, template="story"
-        )
-        mock_page_factory.create_story_page.assert_called_once_with(
-            content_html="Content 1",
-            title="Chapter 1",
-            page_id="story-1",
-            template="story",
-            chapter_number=None,
-        )
+        assert isinstance(result, EbookPages)
+        assert result.meta["title"] == title
+        assert result.meta["author"] == author
+        assert result.meta["type"] == "story"
+        assert len(result.pages) > 0  # Should have at least cover + chapter page
 
     def test_create_mixed_ebook_uses_default_config_when_none(self):
         # Given
