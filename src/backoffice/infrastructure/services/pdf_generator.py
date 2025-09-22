@@ -16,7 +16,7 @@ class PDFGenerationError(Exception):
 class PDFGenerator:
     def __init__(self, templates_dir: Path | None = None):
         if templates_dir is None:
-            templates_dir = Path(__file__).parent.parent / "templates"
+            templates_dir = Path(__file__).parent.parent.parent / "presentation" / "templates"
 
         self.templates_dir = templates_dir
         self.jinja_env = Environment(loader=FileSystemLoader(self.templates_dir), autoescape=True)

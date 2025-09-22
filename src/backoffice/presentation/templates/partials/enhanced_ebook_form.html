@@ -1,0 +1,224 @@
+<!-- Zone d'erreur OOB (ciblée par le serveur si erreur) -->
+<div id="ebookFormErrors" class="mb-3" aria-live="assertive" data-testid="error-container"></div>
+
+<form id="ebookForm"
+      data-testid="ebook-form"
+      hx-post="/api/dashboard/ebooks"
+      hx-target="#ebooksTable"
+      hx-swap="innerHTML"
+      hx-disabled-elt="#createBtn"
+      hx-indicator="#createBtnSpinner">
+
+  <!-- Étape 1: Type d'ebook -->
+  <div class="mb-4">
+    <h6 class="fw-bold text-primary">
+      <i class="fas fa-book me-2"></i>
+      1. Type d'ebook
+    </h6>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card h-100 ebook-type-card" data-type="story" data-testid="ebook-type-card-story">
+          <div class="card-body text-center">
+            <i class="fas fa-feather-alt fa-2x text-primary mb-2"></i>
+            <h6 class="card-title">Histoire</h6>
+            <p class="card-text small">Livre d'histoire avec chapitres</p>
+            <input type="radio" name="ebook_type" value="story" class="d-none" required>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 ebook-type-card" data-type="coloring" data-testid="ebook-type-card-coloring">
+          <div class="card-body text-center">
+            <i class="fas fa-palette fa-2x text-success mb-2"></i>
+            <h6 class="card-title">Coloriage</h6>
+            <p class="card-text small">Livre de coloriage avec images</p>
+            <input type="radio" name="ebook_type" value="coloring" class="d-none">
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 ebook-type-card" data-type="mixed" data-testid="ebook-type-card-mixed">
+          <div class="card-body text-center">
+            <i class="fas fa-magic fa-2x text-warning mb-2"></i>
+            <h6 class="card-title">Mixte</h6>
+            <p class="card-text small">Histoire + coloriage</p>
+            <input type="radio" name="ebook_type" value="mixed" class="d-none">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Étape 2: Thème (se charge dynamiquement) -->
+  <div class="mb-4" id="themeSection" style="display: none;">
+    <h6 class="fw-bold text-primary">
+      <i class="fas fa-paint-brush me-2"></i>
+      2. Thème visuel
+    </h6>
+    <div id="themesContainer">
+      <!-- Les thèmes seront chargés ici via HTMX -->
+    </div>
+  </div>
+
+  <!-- Étape 3: Contenu -->
+  <div class="mb-4" id="contentSection" style="display: none;">
+    <h6 class="fw-bold text-primary">
+      <i class="fas fa-edit me-2"></i>
+      3. Contenu à générer
+    </h6>
+    <div class="mb-3">
+      <label for="prompt" class="form-label">
+        <strong>Prompt de génération</strong>
+        <small class="text-muted">(Décrivez ce que l'IA doit créer)</small>
+      </label>
+      <textarea class="form-control" id="prompt" name="prompt" rows="8" required
+        data-testid="prompt-textarea"
+        placeholder="Ex: Génère une histoire pour enfants sur une petite fille qui découvre un jardin magique peuplé de créatures fantastiques. L'histoire doit comporter 3 chapitres courts et être adaptée aux enfants de 6-10 ans."></textarea>
+      <div class="form-text">
+        💡 <strong>Tip :</strong> Plus votre prompt est détaillé, meilleur sera le résultat.
+        Spécifiez le style, la longueur, le public cible, etc.
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label for="title" class="form-label">Titre de l'ebook <small class="text-muted">(optionnel)</small></label>
+          <input type="text" class="form-control" id="title" name="title"
+                 placeholder="Ex: Les Aventures de Luna (généré automatiquement si vide)">
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label for="author" class="form-label">Auteur</label>
+          <input type="text" class="form-control" id="author" name="author" value="Assistant IA">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Étape 4: Options avancées (optionnel) -->
+  <div class="mb-4" id="advancedSection" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="fw-bold text-primary mb-0">
+        <i class="fas fa-cog me-2"></i>
+        4. Options avancées
+      </h6>
+      <button type="button" class="btn btn-sm btn-outline-secondary" id="toggleAdvanced">
+        <i class="fas fa-chevron-down"></i>
+      </button>
+    </div>
+    <div id="advancedOptions" style="display: none;">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" value="true" id="cover_enabled" name="cover_enabled" checked>
+            <label class="form-check-label" for="cover_enabled">
+              Inclure une page de couverture
+            </label>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" value="true" id="toc" name="toc" checked>
+            <label class="form-check-label" for="toc">
+              Inclure une table des matières
+            </label>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="mb-3">
+            <label for="format" class="form-label">Format</label>
+            <select class="form-select" id="format" name="format">
+              <option value="pdf" selected>PDF</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Champs cachés pour les templates sélectionnés -->
+  <input type="hidden" id="theme_name" name="theme_name">
+  <input type="hidden" id="cover_template" name="cover_template">
+  <input type="hidden" id="toc_template" name="toc_template">
+  <input type="hidden" id="text_template" name="text_template">
+  <input type="hidden" id="image_template" name="image_template">
+
+  <!-- Boutons -->
+  <div class="d-flex justify-content-between">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-testid="cancel-btn">
+      Annuler
+    </button>
+    <button id="createBtn" type="submit" class="btn btn-primary" data-testid="create-btn" disabled>
+      <span id="createBtnSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+      <i class="fas fa-plus me-2" aria-hidden="true"></i>
+      Créer l'ebook
+    </button>
+  </div>
+</form>
+
+<style>
+.ebook-type-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  position: relative;
+}
+
+.ebook-type-card:hover {
+  border-color: #0d6efd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.ebook-type-card.selected {
+  border-color: #0d6efd;
+  background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
+  box-shadow: 0 6px 12px rgba(13, 110, 253, 0.2);
+}
+
+.ebook-type-card.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: #0d6efd;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.theme-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.theme-card:hover {
+  border-color: #198754;
+  transform: translateY(-2px);
+}
+
+.theme-card.selected {
+  border-color: #198754;
+  background-color: #f8fff9;
+}
+
+.form-step {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.form-step.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+</style>
+
+<!-- JavaScript externalisé -->
+<script src="/presentation/static/js/enhanced-ebook-form.js"></script>

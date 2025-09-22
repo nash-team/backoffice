@@ -58,6 +58,27 @@ document.body.addEventListener('htmx:sendError', (e) => {
     createToast('Problème de connexion. Vérifiez votre réseau.', 'warning');
 });
 
+// === Ebook Creation Success - Close Modal ===
+document.body.addEventListener('ebook:created', (e) => {
+    console.log('Ebook créé avec succès, fermeture de la modal...');
+
+    // Fermer la modal
+    const modal = document.getElementById('previewModal');
+    if (modal) {
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        if (modalInstance) {
+            modalInstance.hide();
+        } else {
+            // Fallback: create instance and hide
+            const newModalInstance = new bootstrap.Modal(modal);
+            newModalInstance.hide();
+        }
+    }
+
+    // Afficher un toast de succès
+    createToast('Ebook créé avec succès !', 'success');
+});
+
 // === Modal Keyboard Support (Bootstrap API) ===
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {

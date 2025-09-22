@@ -40,6 +40,7 @@ class FakeOpenAIClient:
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.chat = FakeChat()
+        self.client = self  # Add client attribute for compatibility
 
 
 class FakeChatCompletions:
@@ -80,12 +81,12 @@ class FakeChatCompletions:
                     {
                         "type": "chapter",
                         "title": "Chapitre 1 — Introduction",
-                        "content_md": "Contenu du chapitre 1 en markdown...",
+                        "content": "Contenu du chapitre 1 en markdown...",
                     },
                     {
                         "type": "chapter",
                         "title": "Chapitre 2 — Développement",
-                        "content_md": "Contenu du chapitre 2 en markdown...",
+                        "content": "Contenu du chapitre 2 en markdown...",
                     },
                 ],
                 "back_cover": {
@@ -201,6 +202,7 @@ class TestOpenAIService:
         class FailingOpenAIClient:
             def __init__(self, api_key: str):
                 self.api_key = api_key
+                self.client = self  # Add client attribute for compatibility
 
             @property
             def chat(self):
@@ -235,6 +237,7 @@ class TestOpenAIService:
             def __init__(self, api_key: str):
                 self.api_key = api_key
                 self.chat = InvalidChatCompletions()
+                self.client = self  # Add client attribute for compatibility
 
         class InvalidChatCompletions:
             async def create(self, **kwargs):
@@ -313,6 +316,7 @@ class TestOpenAIService:
         class FailingOpenAIClient:
             def __init__(self, api_key: str):
                 self.api_key = api_key
+                self.client = self  # Add client attribute for compatibility
 
             @property
             def chat(self):
@@ -411,7 +415,7 @@ class TestOpenAIService:
         for section in sections:
             assert "type" in section
             assert "title" in section
-            assert "content_md" in section
+            assert "content" in section
             assert section["type"] == "chapter"
 
     @pytest.mark.asyncio

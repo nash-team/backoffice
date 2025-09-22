@@ -8,7 +8,7 @@ class EbookGeneratorPort(ABC):
     """Port for ebook generation in different formats (PDF, EPUB, etc.)"""
 
     @abstractmethod
-    def generate_ebook(self, ebook_structure: EbookStructure, config: EbookConfig) -> bytes:
+    async def generate_ebook(self, ebook_structure: EbookStructure, config: EbookConfig) -> bytes:
         """Generate ebook bytes from structure and configuration
 
         Args:

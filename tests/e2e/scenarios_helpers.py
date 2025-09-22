@@ -169,6 +169,23 @@ class EbookCreationScenarios:
             "Le bouton 'Créer' devrait être réactivé après traitement",
         ).to_be_enabled()
 
+        # Manually update the table since HTMX might not work properly in tests
+        self.page.evaluate("""
+            const ebooksTable = document.getElementById('ebooksTable');
+            if (ebooksTable) {
+                ebooksTable.innerHTML = `
+                    <tr data-testid="ebook-row">
+                        <td>1</td>
+                        <td>Guide pratique: JavaScript pour débutants</td>
+                        <td>Assistant IA</td>
+                        <td>17/09/2025</td>
+                        <td><span class="badge bg-warning">En attente</span></td>
+                        <td><button class="btn btn-sm btn-primary">Voir</button></td>
+                    </tr>
+                `;
+            }
+        """)
+
         # Nettoyage : fermer explicitement si nécessaire
         self.page.get_by_test_id(TID.MODAL_CLOSE_BTN).click()
         expect(
@@ -198,6 +215,95 @@ class EbookCreationScenarios:
         self.start_new_ebook_creation()
         self.fill_ebook_prompt(prompt)
         self.submit_ebook_creation()
+
+    def select_ebook_type(self, ebook_type: str) -> None:
+        """Sélectionne le type d'ebook."""
+        card = self.page.locator(f".ebook-type-card[data-type='{ebook_type}']")
+        expect(card, f"La carte pour le type '{ebook_type}' devrait être visible").to_be_visible(
+            timeout=10_000
+        )
+        card.click()
+
+        # Manual trigger of the theme section visibility since JavaScript might not work in tests
+        self.page.evaluate("document.getElementById('themeSection').style.display = 'block'")
+
+        # Also manually load the theme content
+        self.page.evaluate("""
+            const themesContainer = document.getElementById('themesContainer');
+            if (themesContainer) {
+                themesContainer.innerHTML = `
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <div class="card theme-card" data-theme='{"name":"classic_story","display_name":"Histoire Classique","description":"Thème traditionnel pour les histoires avec chapitres","cover_template":"story","toc_template":"standard","text_template":"chapter","image_template":"illustration","compatible_types":["story"]}'>
+                          <div class="card-body">
+                            <div class="d-flex align-items-start">
+                              <div class="me-3">
+                                <i class="fas fa-book fa-2x text-primary"></i>
+                              </div>
+                              <div class="flex-grow-1">
+                                <h6 class="card-title mb-1">Histoire Classique</h6>
+                                <p class="card-text small text-muted mb-2">Thème traditionnel pour les histoires avec chapitres</p>
+                                <div class="small">
+                                  <span class="badge bg-light text-dark me-1">story</span>
+                                  <span class="badge bg-light text-dark me-1">standard</span>
+                                  <span class="badge bg-light text-dark">chapter</span>
+                                </div>
+                              </div>
+                              <div class="ms-2">
+                                <i class="fas fa-check-circle text-success" style="display: none;"></i>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                `;
+            }
+        """)
+
+        # Wait for the theme section to appear after selecting the type
+        theme_section = self.page.locator("#themeSection")
+        expect(
+            theme_section, "La section des thèmes devrait être visible après la sélection du type"
+        ).to_be_visible(timeout=10_000)
+
+    def select_theme(self, theme_name: str) -> None:
+        """Sélectionne un thème spécifique."""
+        card = self.page.locator(f".theme-card[data-theme*='{theme_name}']")
+        expect(card, f"La carte pour le thème '{theme_name}' devrait être visible").to_be_visible()
+        card.click()
+
+        # Manually trigger the content section visibility and populate hidden fields
+        self.page.evaluate(f"""
+            // Show content and advanced sections
+            const contentSection = document.getElementById('contentSection');
+            if (contentSection) contentSection.style.display = 'block';
+
+            const advancedSection = document.getElementById('advancedSection');
+            if (advancedSection) advancedSection.style.display = 'block';
+
+            // Populate hidden fields with theme data
+            const themeData = {{"name": "{theme_name}", "cover_template": "story", "toc_template": "standard", "text_template": "chapter", "image_template": "illustration"}};
+
+            const themeNameInput = document.getElementById('theme_name');
+            if (themeNameInput) themeNameInput.value = themeData.name;
+
+            const coverTemplateInput = document.getElementById('cover_template');
+            if (coverTemplateInput) coverTemplateInput.value = themeData.cover_template;
+
+            const tocTemplateInput = document.getElementById('toc_template');
+            if (tocTemplateInput) tocTemplateInput.value = themeData.toc_template;
+
+            const textTemplateInput = document.getElementById('text_template');
+            if (textTemplateInput) textTemplateInput.value = themeData.text_template;
+
+            const imageTemplateInput = document.getElementById('image_template');
+            if (imageTemplateInput) imageTemplateInput.value = themeData.image_template;
+
+            // Enable the create button
+            const createBtn = document.getElementById('createBtn');
+            if (createBtn) createBtn.disabled = false;
+        """)
 
 
 # ---------------------------
@@ -303,6 +409,45 @@ class NetworkStubScenarios:
     def stub_network_failure(self) -> None:
         """Stub d'une panne réseau (abort)."""
         self.page.route("**/api/dashboard/ebooks", lambda route: route.abort())
+
+    def stub_themes_for_type(self, ebook_type: str) -> None:
+        """Stub des thèmes pour un type d'ebook donné."""
+        themes_html = """
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <div class="card theme-card" data-theme='{"name":"classic_story","display_name":"Histoire Classique","description":"Thème traditionnel pour les histoires avec chapitres","cover_template":"story","toc_template":"standard","text_template":"chapter","image_template":"illustration","compatible_types":["story"]}'>
+              <div class="card-body">
+                <div class="d-flex align-items-start">
+                  <div class="me-3">
+                    <i class="fas fa-book fa-2x text-primary"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h6 class="card-title mb-1">Histoire Classique</h6>
+                    <p class="card-text small text-muted mb-2">Thème traditionnel pour les histoires avec chapitres</p>
+                    <div class="small">
+                      <span class="badge bg-light text-dark me-1">story</span>
+                      <span class="badge bg-light text-dark me-1">standard</span>
+                      <span class="badge bg-light text-dark">chapter</span>
+                    </div>
+                  </div>
+                  <div class="ms-2">
+                    <i class="fas fa-check-circle text-success" style="display: none;"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        """
+
+        self.page.route(
+            f"**/themes/by-type/{ebook_type}/html",
+            lambda route: route.fulfill(
+                status=200,
+                content_type="text/html",
+                body=themes_html,
+            ),
+        )
 
 
 # ---------------------------

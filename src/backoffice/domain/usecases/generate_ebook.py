@@ -23,8 +23,13 @@ class GenerateEbookUseCase:
         logger.info("GenerateEbookUseCase initialized with injected dependencies")
 
     async def execute(
-        self, prompt: str, config: EbookConfig | None = None
-    ) -> dict[str, str | int | bool | None]:
+        self,
+        prompt: str,
+        config: EbookConfig | None = None,
+        title: str | None = None,
+        ebook_type: str | None = None,
+        theme_name: str | None = None,
+    ) -> dict[str, str | int | bool | None | list[str]]:
         """Execute the ebook generation workflow
 
         Args:
@@ -58,10 +63,10 @@ class GenerateEbookUseCase:
 
             # Step 2: Generate ebook file
             logger.info(f"Generating {config.format.upper()} file...")
-            ebook_bytes = self.ebook_generator.generate_ebook(ebook_structure, config)
+            ebook_bytes = await self.ebook_generator.generate_ebook(ebook_structure, config)
 
             # Step 3: Upload to storage (if available)
-            result: dict[str, str | int | bool | None] = {
+            result: dict[str, str | int | bool | None | list[str]] = {
                 "title": ebook_structure.meta.title,
                 "author": ebook_structure.meta.author,
                 "format": config.format,

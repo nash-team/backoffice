@@ -25,7 +25,7 @@ class EbookCover:
 class EbookSection:
     type: str  # "chapter", "section", "epilogue", etc.
     title: str
-    content_md: str
+    content: str
 
 
 @dataclass

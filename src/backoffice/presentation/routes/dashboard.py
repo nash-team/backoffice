@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Form, Request, Response
 from fastapi.responses import HTMLResponse
 
 from backoffice.domain.entities.ebook import EbookStatus
+from backoffice.domain.entities.ebook_theme import EbookType, ExtendedEbookConfig
 from backoffice.domain.usecases.create_ebook import CreateEbookUseCase
 from backoffice.domain.usecases.get_ebooks import GetEbooksUseCase
 from backoffice.domain.usecases.get_stats import GetStatsUseCase
@@ -74,8 +75,9 @@ async def get_ebook_preview(drive_id: str) -> Response:
 
 @router.get("/ebooks/new")
 async def get_new_ebook_form(request: Request) -> Response:
-    """Affiche le formulaire de création d'un nouvel ebook."""
-    return templates.TemplateResponse("partials/new_ebook_form.html", {"request": request})
+    """Affiche le formulaire de création d'un nouvel ebook avec sélection de thèmes."""
+    logger.info("Loading enhanced ebook form")
+    return templates.TemplateResponse("partials/enhanced_ebook_form.html", {"request": request})
 
 
 @router.post("/ebooks")
@@ -83,18 +85,56 @@ async def create_ebook(
     request: Request,
     factory: RepositoryFactoryDep,
     prompt: str = Form(...),
+    ebook_type: str = Form(...),
+    theme_name: str = Form(None),
+    cover_template: str = Form(None),
+    toc_template: str = Form(None),
+    text_template: str = Form(None),
+    image_template: str = Form(None),
+    title: str = Form(None),
+    author: str = Form("Assistant IA"),
+    cover_enabled: bool = Form(True),
+    toc: bool = Form(True),
+    format: str = Form("pdf"),
 ) -> Response:
-    """Crée un nouvel ebook à partir du prompt."""
-    logger.info(f"Creating ebook with prompt: {prompt[:50]}...")
+    """Crée un nouvel ebook à partir du prompt et de la configuration."""
+    logger.info(
+        f"Creating ebook - Type: {ebook_type}, Theme: {theme_name}, " f"Prompt: {prompt[:50]}..."
+    )
     try:
+        # Valider le type d'ebook
+        try:
+            parsed_ebook_type = EbookType(ebook_type)
+        except ValueError as e:
+            raise ValueError(f"Type d'ebook invalide: {ebook_type}") from e
+
+        # Créer la configuration étendue
+        extended_config = ExtendedEbookConfig(
+            ebook_type=parsed_ebook_type,
+            theme_name=theme_name,
+            cover_template=cover_template,
+            toc_template=toc_template,
+            text_template=text_template,
+            image_template=image_template,
+            cover_enabled=cover_enabled,
+            toc=toc,
+            format=format,
+        )
+
         # Use case execution
         ebook_repo = factory.get_ebook_repository()
         ebook_processor = factory.get_ebook_processor()
 
         create_ebook_usecase = CreateEbookUseCase(ebook_repo, ebook_processor)
 
-        # Create new ebook
-        new_ebook = await create_ebook_usecase.execute(prompt)
+        # Create new ebook with extended config
+        new_ebook = await create_ebook_usecase.execute(
+            prompt=prompt,
+            config=extended_config,
+            title=title,
+            ebook_type=ebook_type,
+            theme_name=theme_name,
+        )
         logger.info(f"Ebook created successfully: {new_ebook.title} (ID: {new_ebook.id})")
 
         # Get updated ebooks list

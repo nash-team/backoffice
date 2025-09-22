@@ -57,8 +57,8 @@ class GoogleDriveStorageAdapter(FileStoragePort):
 
             # Type safe result construction
             result: dict[str, str] = {
-                "storage_id": str(upload_result.get("id", "")),
-                "storage_url": str(upload_result.get("url", "")),
+                "storage_id": str(upload_result.get("drive_id", "")),
+                "storage_url": str(upload_result.get("preview_url", "")),
                 "storage_status": "uploaded",
             }
 
@@ -71,9 +71,8 @@ class GoogleDriveStorageAdapter(FileStoragePort):
                 }
             )
 
-            logger.info(
-                f"Successfully uploaded ebook to Google Drive: {result.get('id', 'unknown_id')}"
-            )
+            storage_id = result.get("storage_id", "unknown_id")
+            logger.info(f"Successfully uploaded ebook to Google Drive: {storage_id}")
             return result
 
         except Exception as e:

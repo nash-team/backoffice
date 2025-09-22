@@ -83,7 +83,7 @@ class FakeContentParser:
             ),
             cover=EbookCover(title="Test Cover"),
             toc=data.get("toc", True),
-            sections=[EbookSection(type="chapter", title="Chapter 1", content_md="Content 1")],
+            sections=[EbookSection(type="chapter", title="Chapter 1", content="Content 1")],
         )
 
     def generate_html_from_structure(
@@ -102,7 +102,7 @@ class FakeContentParser:
                     chapter_class += " roman"
 
             html_parts.append(
-                f'<div class="{chapter_class}"><h1>{section.title}</h1><p>{section.content_md}</p></div>'
+                f'<div class="{chapter_class}"><h1>{section.title}</h1><p>{section.content}</p></div>'
             )
 
         return "\n".join(html_parts)
@@ -146,12 +146,15 @@ class TestPDFGeneratorAdapter:
         # Then
         assert formats == ["pdf"]
 
-    def test_given_valid_structure_when_generating_pdf_then_returns_pdf_bytes(self, monkeypatch):
+    @pytest.mark.asyncio
+    async def test_given_valid_structure_when_generating_pdf_then_returns_pdf_bytes(
+        self, monkeypatch
+    ):
         # Given
         structure = EbookStructure(
             meta=EbookMeta(title="Test Book", author="Test Author"),
             cover=EbookCover(title="Test Cover"),
-            sections=[EbookSection(type="chapter", title="Chapter 1", content_md="Content 1")],
+            sections=[EbookSection(type="chapter", title="Chapter 1", content="Content 1")],
         )
         config = EbookConfig(format="pdf", toc_title="Contents")
 
@@ -163,14 +166,15 @@ class TestPDFGeneratorAdapter:
         adapter.content_parser = FakeContentParser()
 
         # When
-        result = adapter.generate_ebook(structure, config)
+        result = await adapter.generate_ebook(structure, config)
 
         # Then
         assert isinstance(result, bytes)
         assert result.startswith(b"%PDF-1.4")
         assert b"fake pdf content from string" in result
 
-    def test_given_wrong_format_when_generating_ebook_then_raises_error(self, monkeypatch):
+    @pytest.mark.asyncio
+    async def test_given_wrong_format_when_generating_ebook_then_raises_error(self, monkeypatch):
         # Given
         structure = EbookStructure(
             meta=EbookMeta(title="Test Book", author="Test Author"),
@@ -183,14 +187,17 @@ class TestPDFGeneratorAdapter:
 
         # When/Then
         with pytest.raises(PDFGenerationError, match="PDF adapter cannot generate format: epub"):
-            adapter.generate_ebook(structure, config)
+            await adapter.generate_ebook(structure, config)
 
-    def test_given_chapter_numbering_when_generating_pdf_then_applies_numbering(self, monkeypatch):
+    @pytest.mark.asyncio
+    async def test_given_chapter_numbering_when_generating_pdf_then_applies_numbering(
+        self, monkeypatch
+    ):
         # Given
         structure = EbookStructure(
             meta=EbookMeta(title="Test Book", author="Test Author"),
             cover=EbookCover(title="Test Cover"),
-            sections=[EbookSection(type="chapter", title="Chapter 1", content_md="Content 1")],
+            sections=[EbookSection(type="chapter", title="Chapter 1", content="Content 1")],
         )
         config = EbookConfig(format="pdf", chapter_numbering=True, chapter_numbering_style="roman")
 
@@ -202,19 +209,20 @@ class TestPDFGeneratorAdapter:
         adapter.content_parser = FakeContentParser()
 
         # When
-        result = adapter.generate_ebook(structure, config)
+        result = await adapter.generate_ebook(structure, config)
 
         # Then
         assert isinstance(result, bytes)
         assert result.startswith(b"%PDF-1.4")
 
-    def test_given_toc_disabled_when_generating_pdf_then_no_toc_in_output(self, monkeypatch):
+    @pytest.mark.asyncio
+    async def test_given_toc_disabled_when_generating_pdf_then_no_toc_in_output(self, monkeypatch):
         # Given
         structure = EbookStructure(
             meta=EbookMeta(title="Test Book", author="Test Author"),
             cover=EbookCover(title="Test Cover"),
             toc=False,
-            sections=[EbookSection(type="chapter", title="Chapter 1", content_md="Content 1")],
+            sections=[EbookSection(type="chapter", title="Chapter 1", content="Content 1")],
         )
         config = EbookConfig(format="pdf", toc=False)
 
@@ -226,13 +234,14 @@ class TestPDFGeneratorAdapter:
         adapter.content_parser = FakeContentParser()
 
         # When
-        result = adapter.generate_ebook(structure, config)
+        result = await adapter.generate_ebook(structure, config)
 
         # Then
         assert isinstance(result, bytes)
         assert result.startswith(b"%PDF-1.4")
 
-    def test_given_weasyprint_error_when_generating_pdf_then_raises_pdf_generation_error(
+    @pytest.mark.asyncio
+    async def test_given_weasyprint_error_when_generating_pdf_then_raises_pdf_generation_error(
         self, monkeypatch
     ):
         # Given
@@ -255,7 +264,7 @@ class TestPDFGeneratorAdapter:
 
         # When/Then
         with pytest.raises(PDFGenerationError, match="Failed to generate PDF"):
-            adapter.generate_ebook(structure, config)
+            await adapter.generate_ebook(structure, config)
 
     def test_given_custom_templates_dir_when_initializing_then_uses_custom_path(self, monkeypatch):
         # Given
@@ -271,7 +280,8 @@ class TestPDFGeneratorAdapter:
         # Then
         assert adapter.templates_dir == custom_templates_dir
 
-    def test_given_legacy_json_when_generating_pdf_from_json_then_returns_pdf_bytes(
+    @pytest.mark.asyncio
+    async def test_given_legacy_json_when_generating_pdf_from_json_then_returns_pdf_bytes(
         self, monkeypatch
     ):
         # Given
@@ -279,7 +289,7 @@ class TestPDFGeneratorAdapter:
             {
                 "meta": {"title": "Legacy Test", "author": "Legacy Author"},
                 "cover": {"title": "Legacy Cover"},
-                "sections": [{"type": "chapter", "title": "Chapter 1", "content_md": "Content"}],
+                "sections": [{"type": "chapter", "title": "Chapter 1", "content": "Content"}],
             }
         )
 
@@ -291,7 +301,7 @@ class TestPDFGeneratorAdapter:
         adapter.content_parser = FakeContentParser()
 
         # When
-        result = adapter.generate_pdf_from_json(json_content)
+        result = await adapter.generate_pdf_from_json(json_content)
 
         # Then
         assert isinstance(result, bytes)

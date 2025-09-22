@@ -20,7 +20,7 @@ class TestContentParser:
             "cover": {"title": "Test Cover", "subtitle": "A test book"},
             "toc": True,
             "sections": [
-                {"type": "chapter", "title": "Chapter 1", "content_md": "Content of chapter 1"}
+                {"type": "chapter", "title": "Chapter 1", "content": "Content of chapter 1"}
             ],
             "back_cover": {"blurb": "A test blurb", "about_author": "About the author"},
         }
@@ -71,8 +71,8 @@ class TestContentParser:
             meta=EbookMeta(title="Test Book"),
             cover=EbookCover(title="Test Cover"),
             sections=[
-                EbookSection(type="chapter", title="Chapter 1", content_md="Content 1"),
-                EbookSection(type="chapter", title="Chapter 2", content_md="Content 2"),
+                EbookSection(type="chapter", title="Chapter 1", content="Content 1"),
+                EbookSection(type="chapter", title="Chapter 2", content="Content 2"),
             ],
         )
         parser = ContentParser()
@@ -92,7 +92,7 @@ class TestContentParser:
         structure = EbookStructure(
             meta=EbookMeta(title="Test Book"),
             cover=EbookCover(title="Test Cover"),
-            sections=[EbookSection(type="chapter", title="Chapter 1", content_md="Content 1")],
+            sections=[EbookSection(type="chapter", title="Chapter 1", content="Content 1")],
         )
         parser = ContentParser()
 
@@ -109,7 +109,7 @@ class TestContentParser:
         structure = EbookStructure(
             meta=EbookMeta(title="Test Book"),
             cover=EbookCover(title="Test Cover"),
-            sections=[EbookSection(type="chapter", title="Chapter 1", content_md="Content 1")],
+            sections=[EbookSection(type="chapter", title="Chapter 1", content="Content 1")],
         )
         parser = ContentParser()
 
@@ -127,12 +127,8 @@ class TestContentParser:
             meta=EbookMeta(title="Test Book"),
             cover=EbookCover(title="Test Cover"),
             sections=[
-                EbookSection(
-                    type="chapter", title="Chapter 1 — Introduction", content_md="Content 1"
-                ),
-                EbookSection(
-                    type="chapter", title="Chapter 2 — Development", content_md="Content 2"
-                ),
+                EbookSection(type="chapter", title="Chapter 1 — Introduction", content="Content 1"),
+                EbookSection(type="chapter", title="Chapter 2 — Development", content="Content 2"),
             ],
         )
         parser = ContentParser()
@@ -153,7 +149,7 @@ class TestContentParser:
             meta=EbookMeta(title="Test Book"),
             cover=EbookCover(title="Test Cover"),
             toc=False,
-            sections=[EbookSection(type="chapter", title="Chapter 1", content_md="Content 1")],
+            sections=[EbookSection(type="chapter", title="Chapter 1", content="Content 1")],
         )
         parser = ContentParser()
 
@@ -169,9 +165,9 @@ class TestContentParser:
             meta=EbookMeta(title="Test Book"),
             cover=EbookCover(title="Test Cover"),
             sections=[
-                EbookSection(type="chapter", title="Chapter 1", content_md="Content 1"),
-                EbookSection(type="epilogue", title="Epilogue", content_md="End content"),
-                EbookSection(type="chapter", title="Chapter 2", content_md="Content 2"),
+                EbookSection(type="chapter", title="Chapter 1", content="Content 1"),
+                EbookSection(type="epilogue", title="Epilogue", content="End content"),
+                EbookSection(type="chapter", title="Chapter 2", content="Content 2"),
             ],
         )
         parser = ContentParser()
@@ -193,7 +189,7 @@ class TestContentParser:
                 EbookSection(
                     type="chapter",
                     title="Chapter 1",
-                    content_md="**Bold text** and *italic text* and `code`",
+                    content="**Bold text** and *italic text* and `code`",
                 )
             ],
         )

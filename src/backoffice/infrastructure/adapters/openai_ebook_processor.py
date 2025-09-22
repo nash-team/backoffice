@@ -35,8 +35,13 @@ class OpenAIEbookProcessor(EbookProcessor):
         )
 
     async def generate_ebook_from_prompt(
-        self, prompt: str, config: EbookConfig | None = None
-    ) -> dict[str, str | int | bool | None]:
+        self,
+        prompt: str,
+        config: EbookConfig | None = None,
+        title: str | None = None,
+        ebook_type: str | None = None,
+        theme_name: str | None = None,
+    ) -> dict[str, str | int | bool | None | list[str]]:
         """Generate ebook using the new hexagonal architecture.
 
         Args:
@@ -50,10 +55,25 @@ class OpenAIEbookProcessor(EbookProcessor):
             if config is None:
                 config = EbookConfig()
 
-            logger.info(f"Using hexagonal architecture for ebook generation: {prompt[:50]}...")
+            logger.info(
+                f"Using hexagonal architecture for ebook generation - "
+                f"Type: {ebook_type}, Theme: {theme_name}, Prompt: {prompt[:50]}..."
+            )
 
-            # Delegate to the use case
-            result = await self.generate_ebook_use_case.execute(prompt, config)
+            # Delegate to the use case with new parameters
+            result = await self.generate_ebook_use_case.execute(
+                prompt=prompt,
+                config=config,
+                title=title,
+                ebook_type=ebook_type,
+                theme_name=theme_name,
+            )
+
+            # Map storage fields to expected ebook fields
+            if "storage_id" in result:
+                result["drive_id"] = result["storage_id"]
+            if "storage_url" in result:
+                result["preview_url"] = result["storage_url"]
 
             logger.info(
                 f"Ebook generation completed via use case: '{result.get('title', 'Unknown')}'"

@@ -54,9 +54,9 @@ Le JSON doit strictement suivre ce format :
   "toc": true,
   "sections": [
     {"type": "chapter", "title": "Chapitre 1 — Titre",
-     "content_md": "Contenu en markdown du chapitre..."},
+     "content": "Contenu en markdown du chapitre..."},
     {"type": "chapter", "title": "Chapitre 2 — Titre",
-     "content_md": "Contenu en markdown du chapitre..."}
+     "content": "Contenu en markdown du chapitre..."}
   ],
   "back_cover": {
     "blurb": "Résumé de l'ebook...",
@@ -66,7 +66,7 @@ Le JSON doit strictement suivre ce format :
 
 IMPORTANT:
 - Chaque "chapter" doit être un chapitre complet avec tout son contenu
-- Le content_md contient TOUT le texte du chapitre (pas juste le titre)
+- Le content contient TOUT le texte du chapitre (pas juste le titre)
 - Assure-toi que chaque chapitre soit substantiel et autonome
 - Réponds UNIQUEMENT avec le JSON valide, sans préambule ni explication"""
 
@@ -243,7 +243,7 @@ deserunt mollit anim id est laborum.
                 {
                     "type": "chapter",
                     "title": "Chapitre 1 — Introduction",
-                    "content_md": f"""Ce guide a été généré à partir de votre demande : "{prompt}"
+                    "content": f"""Ce guide a été généré à partir de votre demande : "{prompt}"
 
 ## Présentation du sujet
 
@@ -261,7 +261,7 @@ Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.""",
                 {
                     "type": "chapter",
                     "title": "Chapitre 2 — Concepts Fondamentaux",
-                    "content_md": """## Les bases essentielles
+                    "content": """## Les bases essentielles
 
 Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
 eu fugiat nulla pariatur.
@@ -279,7 +279,7 @@ doloremque laudantium.""",
                 {
                     "type": "chapter",
                     "title": "Chapitre 3 — Applications Pratiques",
-                    "content_md": """## Mise en pratique
+                    "content": """## Mise en pratique
 
 Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi
 architecto beatae vitae dicta sunt explicabo.

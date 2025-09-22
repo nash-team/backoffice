@@ -79,7 +79,7 @@ class FakeContentParser:
             ),
             cover=EbookCover(title="Test Cover"),
             toc=data.get("toc", True),
-            sections=[EbookSection(type="chapter", title="Chapter 1", content_md="Content 1")],
+            sections=[EbookSection(type="chapter", title="Chapter 1", content="Content 1")],
         )
 
     def generate_html_from_structure(
@@ -98,7 +98,7 @@ class FakeContentParser:
                     chapter_class += " roman"
 
             html_parts.append(
-                f'<div class="{chapter_class}"><h1>{section.title}</h1><p>{section.content_md}</p></div>'
+                f'<div class="{chapter_class}"><h1>{section.title}</h1><p>{section.content}</p></div>'
             )
 
         return "\n".join(html_parts)
@@ -146,7 +146,7 @@ class TestPDFGenerator:
             "meta": {"title": "Test Book", "author": "Test Author"},
             "cover": {"title": "Test Cover"},
             "toc": True,
-            "sections": [{"type": "chapter", "title": "Chapter 1", "content_md": "Content 1"}],
+            "sections": [{"type": "chapter", "title": "Chapter 1", "content": "Content 1"}],
         }
         json_content = json.dumps(valid_json)
 
@@ -173,7 +173,7 @@ class TestPDFGenerator:
             "meta": {"title": "Test Book", "author": "Test Author"},
             "cover": {"title": "Test Cover"},
             "toc": False,
-            "sections": [{"type": "chapter", "title": "Chapter 1", "content_md": "Content 1"}],
+            "sections": [{"type": "chapter", "title": "Chapter 1", "content": "Content 1"}],
         }
         json_content = json.dumps(json_without_toc)
 
@@ -198,7 +198,7 @@ class TestPDFGenerator:
         valid_json = {
             "meta": {"title": "Test Book", "author": "Test Author"},
             "cover": {"title": "Test Cover"},
-            "sections": [{"type": "chapter", "title": "Chapter 1", "content_md": "Content 1"}],
+            "sections": [{"type": "chapter", "title": "Chapter 1", "content": "Content 1"}],
         }
         json_content = json.dumps(valid_json)
 
@@ -241,7 +241,7 @@ class TestPDFGenerator:
         valid_json = {
             "meta": {"title": "Test Book", "author": "Test Author"},
             "cover": {"title": "Test Cover"},
-            "sections": [{"type": "chapter", "title": "Chapter 1", "content_md": "Content 1"}],
+            "sections": [{"type": "chapter", "title": "Chapter 1", "content": "Content 1"}],
         }
         json_content = json.dumps(valid_json)
 
@@ -376,7 +376,7 @@ class TestPDFGenerator:
             "meta": {"title": "Test Book", "author": "Test Author"},
             "cover": {"title": "Test Cover"},
             "toc": True,
-            "sections": [{"type": "chapter", "title": "Chapter 1", "content_md": "Content 1"}],
+            "sections": [{"type": "chapter", "title": "Chapter 1", "content": "Content 1"}],
         }
         json_content = json.dumps(valid_json)
         custom_toc_title = "Table des Matières"

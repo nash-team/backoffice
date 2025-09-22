@@ -1,0 +1,158 @@
+<div class="page toc {{ page.layout }} {% if page.page_break_before %}page-break-before{% endif %} {% if page.page_break_after %}page-break-after{% endif %}">
+    <div class="toc-container" id="{{ page.id }}">
+        <header class="toc-header">
+            <h1 class="toc-title">{{ page.data.title or 'Sommaire' }}</h1>
+        </header>
+
+        <div class="toc-content">
+            {% if page.data.entries %}
+            <ul class="toc-list">
+                {% for entry in page.data.entries %}
+                <li class="toc-item">
+                    <div class="toc-entry">
+                        <span class="toc-entry-title">
+                            {% if entry.anchor %}
+                            <a href="#{{ entry.anchor }}" class="toc-link">{{ entry.title|safe }}</a>
+                            {% else %}
+                            {{ entry.title|safe }}
+                            {% endif %}
+                        </span>
+                        <span class="toc-dots"></span>
+                        <span class="toc-page-number">
+                            {% if entry.anchor %}
+                            <span class="page-ref" data-target="{{ entry.anchor }}"></span>
+                            {% else %}
+                            {{ entry.page_number or '' }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="toc-empty">
+                <p>Aucun contenu à afficher dans le sommaire.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .toc-container {
+        padding: 2rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .toc-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        border-bottom: 3px solid #3498db;
+        padding-bottom: 1rem;
+    }
+
+    .toc-title {
+        font-size: 2.5rem;
+        color: #2c3e50;
+        margin: 0;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .toc-content {
+        margin-top: 2rem;
+    }
+
+    .toc-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .toc-item {
+        margin-bottom: 1rem;
+        page-break-inside: avoid;
+    }
+
+    .toc-entry {
+        display: flex;
+        align-items: baseline;
+        font-size: 1.1rem;
+        line-height: 1.4;
+    }
+
+    .toc-entry-title {
+        flex-shrink: 0;
+        margin-right: 0.5rem;
+    }
+
+    .toc-link {
+        text-decoration: none;
+        color: #2c3e50;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    .toc-link:hover {
+        color: #3498db;
+    }
+
+    .toc-dots {
+        flex-grow: 1;
+        border-bottom: 1px dotted #bdc3c7;
+        margin: 0 0.5rem;
+        height: 1em;
+        min-width: 2rem;
+    }
+
+    .toc-page-number {
+        flex-shrink: 0;
+        font-weight: bold;
+        color: #7f8c8d;
+        margin-left: 0.5rem;
+        min-width: 2rem;
+        text-align: right;
+    }
+
+    /* Styles spéciaux pour les différents types de contenu */
+    .toc-item[data-type="story"] .toc-entry-title {
+        color: #2c3e50;
+    }
+
+    .toc-item[data-type="coloring"] .toc-entry-title {
+        color: #8e44ad;
+        font-style: italic;
+    }
+
+    .toc-item[data-type="coloring"] .toc-entry-title::before {
+        content: "🎨 ";
+        margin-right: 0.5rem;
+    }
+
+    /* Référence automatique aux numéros de page (WeasyPrint) */
+    .page-ref::after {
+        content: target-counter('#' attr(data-target), page);
+    }
+
+    .toc-empty {
+        text-align: center;
+        color: #7f8c8d;
+        font-style: italic;
+        padding: 3rem;
+    }
+
+    /* Éviter les coupures de page malheureuses */
+    .toc-item {
+        orphans: 2;
+        widows: 2;
+    }
+
+    /* Styles pour l'impression */
+    @media print {
+        .toc-link {
+            color: #2c3e50 !important;
+        }
+    }
+</style>

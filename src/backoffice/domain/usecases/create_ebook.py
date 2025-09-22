@@ -10,7 +10,12 @@ class EbookProcessor(Protocol):
     """Protocol for external ebook processing services."""
 
     async def generate_ebook_from_prompt(
-        self, prompt: str, config: EbookConfig | None = None
+        self,
+        prompt: str,
+        config: EbookConfig | None = None,
+        title: str | None = None,
+        ebook_type: str | None = None,
+        theme_name: str | None = None,
     ) -> dict:
         """Generate ebook content and upload to external storage.
 
@@ -27,7 +32,14 @@ class CreateEbookUseCase:
         self.ebook_repository = ebook_repository
         self.ebook_processor = ebook_processor
 
-    async def execute(self, prompt: str, config: EbookConfig | None = None) -> Ebook:
+    async def execute(
+        self,
+        prompt: str,
+        config: EbookConfig | None = None,
+        title: str | None = None,
+        ebook_type: str | None = None,
+        theme_name: str | None = None,
+    ) -> Ebook:
         """Execute ebook creation workflow.
 
         Args:
@@ -53,7 +65,9 @@ class CreateEbookUseCase:
             config = EbookConfig()
 
         # Create ebook with initial PENDING status
-        ebook_data = await self.ebook_processor.generate_ebook_from_prompt(prompt, config)
+        ebook_data = await self.ebook_processor.generate_ebook_from_prompt(
+            prompt=prompt, config=config, title=title, ebook_type=ebook_type, theme_name=theme_name
+        )
 
         # Create ebook entity
         ebook = Ebook(

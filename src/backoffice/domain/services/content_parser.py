@@ -275,7 +275,7 @@ class ContentParser:
             chapter_html += f"<h1>{section.title}</h1>"
 
             # Convertir le contenu markdown en HTML
-            chapter_content = self._markdown_to_html(section.content_md)
+            chapter_content = self._markdown_to_html(section.content)
             chapter_html += chapter_content
             chapter_html += "</div>"
 

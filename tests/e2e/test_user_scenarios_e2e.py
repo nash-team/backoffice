@@ -27,7 +27,18 @@ def test_creator_can_successfully_generate_first_ebook(
 
     # Stub côté réseau pour rendre le test instantané et déterministe
     user.network_stubs.stub_successful_ebook_creation({"title": expected_title})
+    user.network_stubs.stub_themes_for_type("story")
+
+    # Open the ebook creation modal first
     user.ebook_creation.start_new_ebook_creation()
+
+    # Simulate selecting ebook type
+    user.ebook_creation.select_ebook_type("story")
+
+    # Simulate selecting a theme
+    user.ebook_creation.select_theme("classic_story")
+
+    # Fill the prompt and submit
     user.ebook_creation.fill_ebook_prompt(prompt)
     user.ebook_creation.submit_ebook_creation()
 
