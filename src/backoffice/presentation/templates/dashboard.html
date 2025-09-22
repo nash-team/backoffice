@@ -78,7 +78,7 @@
                             <button id="filterAllBtn" type="button" class="btn btn-outline-secondary active filter-btn"
                                     data-testid="filter-all-btn"
                                     hx-get="/api/dashboard/ebooks"
-                                    hx-target="#ebooksTable"
+                                    hx-target="#ebooksTableContainer"
                                     hx-swap="innerHTML"
                                     hx-indicator="#filterAllSpinner"
                                     hx-disabled-elt="this"
@@ -89,7 +89,7 @@
                             <button id="filterPendingBtn" type="button" class="btn btn-outline-secondary filter-btn"
                                     data-testid="filter-pending-btn"
                                     hx-get="/api/dashboard/ebooks?status=pending"
-                                    hx-target="#ebooksTable"
+                                    hx-target="#ebooksTableContainer"
                                     hx-swap="innerHTML"
                                     hx-indicator="#filterPendingSpinner"
                                     hx-disabled-elt="this"
@@ -100,7 +100,7 @@
                             <button id="filterValidatedBtn" type="button" class="btn btn-outline-secondary filter-btn"
                                     data-testid="filter-validated-btn"
                                     hx-get="/api/dashboard/ebooks?status=validated"
-                                    hx-target="#ebooksTable"
+                                    hx-target="#ebooksTableContainer"
                                     hx-swap="innerHTML"
                                     hx-indicator="#filterValidatedSpinner"
                                     hx-disabled-elt="this"
@@ -111,26 +111,11 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Titre</th>
-                                        <th>Auteur</th>
-                                        <th>Date de création</th>
-                                        <th>Statut</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="ebooksTable"
-                                       data-testid="ebooks-table"
-                                       hx-get="/api/dashboard/ebooks"
-                                       hx-trigger="load"
-                                       hx-swap="innerHTML">
-                                    <!-- Les données seront chargées dynamiquement -->
-                                </tbody>
-                            </table>
+                        <div id="ebooksTableContainer"
+                             hx-get="/api/dashboard/ebooks"
+                             hx-trigger="load"
+                             hx-swap="innerHTML">
+                            <!-- Content will be loaded dynamically -->
                         </div>
                     </div>
                 </div>

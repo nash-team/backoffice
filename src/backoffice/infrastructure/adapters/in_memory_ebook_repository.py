@@ -6,7 +6,10 @@ L'implémentation stocke les ebooks dans une liste en mémoire et fournit
 des méthodes CRUD basiques.
 """
 
+from datetime import datetime
+
 from backoffice.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.domain.entities.pagination import PaginatedResult, PaginationParams
 from backoffice.infrastructure.ports.exceptions import DuplicateEntityError, EntityNotFoundError
 from backoffice.infrastructure.ports.repositories.ebook_repository_port import EbookRepositoryPort
 
@@ -129,3 +132,71 @@ class InMemoryEbookRepository(EbookRepositoryPort):
         """
         self.ebooks.append(ebook)
         return ebook
+
+    async def get_paginated(self, params: PaginationParams) -> PaginatedResult[Ebook]:
+        """
+        Récupère une page d'ebooks avec pagination.
+
+        Args:
+            params: Paramètres de pagination (page, size)
+
+        Returns:
+            PaginatedResult: Résultats paginés avec métadonnées
+        """
+        # Trier par date de création décroissante (comme dans la vraie implémentation)
+        # Les ebooks sans date sont placés à la fin
+        sorted_ebooks = sorted(
+            self.ebooks,
+            key=lambda x: x.created_at or datetime.min.replace(tzinfo=None),
+            reverse=True,
+        )
+
+        total_count = len(sorted_ebooks)
+        start_index = params.offset
+        end_index = start_index + params.size
+
+        # Slice pour obtenir la page demandée
+        page_items = sorted_ebooks[start_index:end_index]
+
+        return PaginatedResult(
+            items=page_items,
+            total_count=total_count,
+            page=params.page,
+            size=params.size,
+        )
+
+    async def get_paginated_by_status(
+        self, status: EbookStatus, params: PaginationParams
+    ) -> PaginatedResult[Ebook]:
+        """
+        Récupère une page d'ebooks filtrés par statut avec pagination.
+
+        Args:
+            status: Statut des ebooks à récupérer
+            params: Paramètres de pagination (page, size)
+
+        Returns:
+            PaginatedResult: Résultats paginés avec métadonnées
+        """
+        # Filtrer par statut puis trier par date de création décroissante
+        filtered_ebooks = [ebook for ebook in self.ebooks if ebook.status == status]
+        # Les ebooks sans date sont placés à la fin
+        sorted_ebooks = sorted(
+            filtered_ebooks,
+            key=lambda x: x.created_at or datetime.min.replace(tzinfo=None),
+            reverse=True,
+        )
+
+        total_count = len(sorted_ebooks)
+        start_index = params.offset
+        end_index = start_index + params.size
+
+        # Slice pour obtenir la page demandée
+        page_items = sorted_ebooks[start_index:end_index]
+
+        return PaginatedResult(
+            items=page_items,
+            total_count=total_count,
+            page=params.page,
+            size=params.size,
+        )

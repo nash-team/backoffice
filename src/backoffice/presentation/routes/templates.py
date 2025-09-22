@@ -19,4 +19,24 @@ def format_date(value):
     return value
 
 
+# Configuration des statuts ebook
+EBOOK_STATUS_CONFIG = {
+    "PENDING": {"label": "En attente", "css_class": "bg-warning text-dark"},
+    "VALIDATED": {"label": "Validé", "css_class": "bg-success"},
+}
+
+
+def format_ebook_status_label(status_value):
+    """Retourne le label traduit du statut."""
+    return EBOOK_STATUS_CONFIG.get(status_value, {}).get("label", status_value)
+
+
+def format_ebook_status_class(status_value):
+    """Retourne la classe CSS pour le statut."""
+    return EBOOK_STATUS_CONFIG.get(status_value, {}).get("css_class", "bg-secondary")
+
+
+# Enregistrement des filtres
 templates.env.filters["date"] = format_date
+templates.env.filters["ebook_status_label"] = format_ebook_status_label
+templates.env.filters["ebook_status_class"] = format_ebook_status_class

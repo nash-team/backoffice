@@ -1,0 +1,116 @@
+{% if pagination.total_pages > 1 %}
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <!-- Results info -->
+    <div class="text-muted">
+        Affichage de {{ pagination.start_item }} à {{ pagination.end_item }} sur {{ pagination.total_count }} ebooks
+    </div>
+
+    <!-- Pagination controls -->
+    <nav aria-label="Navigation des pages d'ebooks">
+        <ul class="pagination pagination-sm mb-0">
+            <!-- Previous button -->
+            <li class="page-item {{ 'disabled' if not pagination.has_previous else '' }}">
+                {% if pagination.has_previous %}
+                    <button class="page-link"
+                            hx-get="/api/dashboard/ebooks?page={{ pagination.previous_page }}&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
+                            hx-target="#ebooksTableContainer"
+                            hx-swap="innerHTML"
+                            hx-indicator="#paginationSpinner"
+                            aria-label="Page précédente">
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                    </button>
+                {% else %}
+                    <span class="page-link" aria-label="Page précédente (désactivée)">
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                    </span>
+                {% endif %}
+            </li>
+
+            <!-- Page numbers -->
+            {% set start_page = 1 if (pagination.current_page - 2) < 1 else (pagination.current_page - 2) %}
+            {% set end_page = pagination.total_pages if (pagination.current_page + 2) > pagination.total_pages else (pagination.current_page + 2) %}
+
+            <!-- First page if not in range -->
+            {% if start_page > 1 %}
+                <li class="page-item">
+                    <button class="page-link"
+                            hx-get="/api/dashboard/ebooks?page=1&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
+                            hx-target="#ebooksTableContainer"
+                            hx-swap="innerHTML"
+                            hx-indicator="#paginationSpinner"
+                            aria-label="Page 1">
+                        1
+                    </button>
+                </li>
+                {% if start_page > 2 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endif %}
+
+            <!-- Page range -->
+            {% for page_num in range(start_page, end_page + 1) %}
+                <li class="page-item {{ 'active' if page_num == pagination.current_page else '' }}">
+                    {% if page_num == pagination.current_page %}
+                        <span class="page-link" aria-current="page" aria-label="Page {{ page_num }} (actuelle)">
+                            {{ page_num }}
+                        </span>
+                    {% else %}
+                        <button class="page-link"
+                                hx-get="/api/dashboard/ebooks?page={{ page_num }}&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
+                                hx-target="#ebooksTableContainer"
+                                hx-swap="innerHTML"
+                                hx-indicator="#paginationSpinner"
+                                aria-label="Page {{ page_num }}">
+                            {{ page_num }}
+                        </button>
+                    {% endif %}
+                </li>
+            {% endfor %}
+
+            <!-- Last page if not in range -->
+            {% if end_page < pagination.total_pages %}
+                {% if end_page < pagination.total_pages - 1 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+                <li class="page-item">
+                    <button class="page-link"
+                            hx-get="/api/dashboard/ebooks?page={{ pagination.total_pages }}&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
+                            hx-target="#ebooksTableContainer"
+                            hx-swap="innerHTML"
+                            hx-indicator="#paginationSpinner"
+                            aria-label="Page {{ pagination.total_pages }}">
+                        {{ pagination.total_pages }}
+                    </button>
+                </li>
+            {% endif %}
+
+            <!-- Next button -->
+            <li class="page-item {{ 'disabled' if not pagination.has_next else '' }}">
+                {% if pagination.has_next %}
+                    <button class="page-link"
+                            hx-get="/api/dashboard/ebooks?page={{ pagination.next_page }}&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
+                            hx-target="#ebooksTableContainer"
+                            hx-swap="innerHTML"
+                            hx-indicator="#paginationSpinner"
+                            aria-label="Page suivante">
+                        <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                    </button>
+                {% else %}
+                    <span class="page-link" aria-label="Page suivante (désactivée)">
+                        <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                    </span>
+                {% endif %}
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Loading spinner -->
+    <div id="paginationSpinner" class="spinner-border spinner-border-sm text-primary htmx-indicator" role="status" aria-hidden="true">
+        <span class="visually-hidden">Chargement...</span>
+    </div>
+</div>
+{% endif %}

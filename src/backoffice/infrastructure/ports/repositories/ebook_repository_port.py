@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 from backoffice.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.domain.entities.pagination import PaginatedResult, PaginationParams
 
 
 class EbookRepositoryPort(ABC):
@@ -14,6 +15,35 @@ class EbookRepositoryPort(ABC):
 
     @abstractmethod
     async def get_by_status(self, status: EbookStatus) -> list[Ebook]:
+        pass
+
+    @abstractmethod
+    async def get_paginated(self, params: PaginationParams) -> PaginatedResult[Ebook]:
+        """
+        Récupère une page d'ebooks avec pagination.
+
+        Args:
+            params: Paramètres de pagination (page, size)
+
+        Returns:
+            PaginatedResult: Résultats paginés avec métadonnées
+        """
+        pass
+
+    @abstractmethod
+    async def get_paginated_by_status(
+        self, status: EbookStatus, params: PaginationParams
+    ) -> PaginatedResult[Ebook]:
+        """
+        Récupère une page d'ebooks filtrés par statut avec pagination.
+
+        Args:
+            status: Statut des ebooks à récupérer
+            params: Paramètres de pagination (page, size)
+
+        Returns:
+            PaginatedResult: Résultats paginés avec métadonnées
+        """
         pass
 
     @abstractmethod

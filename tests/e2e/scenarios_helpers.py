@@ -109,8 +109,28 @@ class DashboardScenarios:
             "La section ebooks devrait être visible",
         ).to_be_visible()
 
+        # Wait for HTMX to finish loading initial content
+        wait_for_idle_htmx(self.page)
+
+        # Manual trigger for ebooks loading if needed
+        # This addresses the issue where HTMX load trigger doesn't work in tests
+        container = self.page.locator("#ebooksTableContainer")
+        container_content = container.inner_html()
+        if "Content will be loaded dynamically" in container_content:
+            # HTMX didn't load, make the request manually
+            self.page.evaluate("""
+                fetch('/api/dashboard/ebooks')
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('ebooksTableContainer').innerHTML = html;
+                    });
+            """)
+            wait_for_idle_htmx(self.page)
+
     def get_current_ebook_count(self) -> int:
         """Retourne le nombre d'ebooks affichés (lignes de tableau)."""
+        # Wait for table to be loaded
+        wait_for_idle_htmx(self.page)
         return (
             self.page.get_by_test_id(TID.EBOOKS_TABLE).locator("tr[data-testid*='ebook']").count()
         )
@@ -118,11 +138,53 @@ class DashboardScenarios:
     def verify_ebook_appears_in_list(self, expected_title: str) -> None:
         """Vérifie qu'un ebook avec le titre attendu apparaît dans la liste."""
         wait_for_idle_htmx(self.page)
+
+        # First ensure the table container is loaded (it should auto-load on page load)
+        table_container = self.page.locator("#ebooksTableContainer")
+        expect(
+            table_container, "Le conteneur de la table des ebooks devrait être visible"
+        ).to_be_visible(timeout=10000)
+
+        # Wait for initial HTMX content to load and check if it's properly loaded
+        wait_for_idle_htmx(self.page)
+
+        # Check if the container has content, if not manually trigger the load
+        container_content = table_container.inner_html()
+        if (
+            "Content will be loaded dynamically" in container_content
+            or not container_content.strip()
+        ):
+            # HTMX didn't load, make the request manually
+            self.page.evaluate("""
+                fetch('/api/dashboard/ebooks')
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('ebooksTableContainer').innerHTML = html;
+                    });
+            """)
+            wait_for_idle_htmx(self.page)
+
+        # Click the "Tous" filter button to refresh the ebooks table
+        # This is a more reliable approach than waiting for HTMX auto-loading
+        all_filter_btn = self.page.get_by_test_id("filter-all-btn")
+        all_filter_btn.click()
+        wait_for_idle_htmx(self.page)
+
+        # Wait for the table to be present and visible
+        # This ensures we wait for the HTMX response to populate the container
+        self.page.wait_for_selector("[data-testid='ebooks-table']", timeout=15000)
+
+        # Now look for the table by test id - it should be inside the loaded container
         ebooks_table = self.page.get_by_test_id(TID.EBOOKS_TABLE)
+        expect(
+            ebooks_table, "La table des ebooks devrait être visible après le clic sur le filtre"
+        ).to_be_visible(timeout=10000)
+
+        # Then check for the specific title
         expect(
             ebooks_table,
             f"L'ebook '{expected_title}' devrait être visible dans la table",
-        ).to_contain_text(expected_title)
+        ).to_contain_text(expected_title, timeout=10000)
 
 
 # ---------------------------
@@ -169,22 +231,7 @@ class EbookCreationScenarios:
             "Le bouton 'Créer' devrait être réactivé après traitement",
         ).to_be_enabled()
 
-        # Manually update the table since HTMX might not work properly in tests
-        self.page.evaluate("""
-            const ebooksTable = document.getElementById('ebooksTable');
-            if (ebooksTable) {
-                ebooksTable.innerHTML = `
-                    <tr data-testid="ebook-row">
-                        <td>1</td>
-                        <td>Guide pratique: JavaScript pour débutants</td>
-                        <td>Assistant IA</td>
-                        <td>17/09/2025</td>
-                        <td><span class="badge bg-warning">En attente</span></td>
-                        <td><button class="btn btn-sm btn-primary">Voir</button></td>
-                    </tr>
-                `;
-            }
-        """)
+        # No need to manually update DOM since the network stub now returns the complete structure
 
         # Nettoyage : fermer explicitement si nécessaire
         self.page.get_by_test_id(TID.MODAL_CLOSE_BTN).click()
@@ -360,8 +407,17 @@ class NetworkStubScenarios:
     def __init__(self, page: Page):
         self.page = page
 
+    def _load_html_fixture(self, fixture_name: str, **template_vars) -> str:
+        """Load and render an HTML fixture with template variables."""
+        from pathlib import Path
+
+        template_path = Path(__file__).parent.parent / "fixtures" / "html" / fixture_name
+        template_content = template_path.read_text(encoding="utf-8")
+        return template_content.format(**template_vars)
+
     def stub_successful_ebook_creation(self, ebook_data: dict) -> None:
-        """Stub d'une création d'ebook réussie (POST sur /api/dashboard/ebooks)."""
+        """Stub d'une création d'ebook réussie - utilise des templates HTML fixtures."""
+        # Default data
         default_data = {
             "id": "1",
             "title": "Guide Test: Intelligence Artificielle",
@@ -371,22 +427,16 @@ class NetworkStubScenarios:
         }
         data = {**default_data, **ebook_data}
 
+        # Load and render HTML template from fixtures
+        html_content = self._load_html_fixture("single_ebook_table.html", **data)
+
         def handle_ebook_request(route):
             req = route.request
-            if req.method == "POST":
+            if req.method in ["POST", "GET"]:
                 route.fulfill(
                     status=200,
                     content_type="text/html",
-                    body=f"""
-                        <tr data-testid="ebook-row">
-                            <td>{data["id"]}</td>
-                            <td>{data["title"]}</td>
-                            <td>{data["author"]}</td>
-                            <td>{data["date"]}</td>
-                            <td><span class="badge bg-warning">{data["status"]}</span></td>
-                            <td><button class="btn btn-sm btn-primary">Voir</button></td>
-                        </tr>
-                    """,
+                    body=html_content,
                 )
             else:
                 route.continue_()

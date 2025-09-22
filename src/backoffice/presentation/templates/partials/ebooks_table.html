@@ -1,24 +1,45 @@
-{% for ebook in ebooks %}
-<tr data-testid="ebook-row-{{ ebook.id }}">
-    <td>{{ ebook.id }}</td>
-    <td>{{ ebook.title }}</td>
-    <td>{{ ebook.author }}</td>
-    <td>{{ ebook.created_at|date }}</td>
-    <td>
-        <span class="badge {{ 'bg-warning' if ebook.status == 'pending' else 'bg-success' }}">
-            {{ 'En attente' if ebook.status == 'pending' else 'Validé' }}
-        </span>
-    </td>
-    <td>
-        <button class="btn btn-sm btn-primary btn-action" 
-                hx-get="/api/dashboard/drive/ebooks/{{ ebook.drive_id }}"
-                hx-target="body"
-                hx-swap="none"
-                hx-trigger="click"
-                hx-on::after-request="if(event.detail.successful) window.open(event.detail.xhr.response, '_blank')"
-                aria-label="Voir l'ebook {{ ebook.title }}">
-            Voir
-        </button>
-    </td>
-</tr>
-{% endfor %} 
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Titre</th>
+                <th>Auteur</th>
+                <th>Date de création</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="ebooksTable" data-testid="ebooks-table">
+            {% for ebook in ebooks %}
+            <tr data-testid="ebook-row-{{ ebook.id }}">
+                <td>{{ ebook.id }}</td>
+                <td>{{ ebook.title }}</td>
+                <td>{{ ebook.author }}</td>
+                <td>{{ ebook.created_at|date }}</td>
+                <td>
+                    <span class="badge {{ ebook.status|ebook_status_class }}">
+                        {{ ebook.status|ebook_status_label }}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-primary btn-action"
+                            hx-get="/api/dashboard/drive/ebooks/{{ ebook.drive_id }}"
+                            hx-target="body"
+                            hx-swap="none"
+                            hx-trigger="click"
+                            hx-on::after-request="if(event.detail.successful) window.open(event.detail.xhr.response, '_blank')"
+                            aria-label="Voir l'ebook {{ ebook.title }}">
+                        Voir
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Include pagination if available -->
+{% if pagination %}
+    {% include "partials/pagination.html" %}
+{% endif %} 

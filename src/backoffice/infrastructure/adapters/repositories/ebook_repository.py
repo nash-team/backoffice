@@ -3,13 +3,23 @@ from datetime import UTC, datetime
 from sqlalchemy.orm import Session
 
 from backoffice.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.domain.entities.pagination import PaginatedResult, PaginationParams
+from backoffice.domain.ports.ebook_query_port import EbookQueryPort
 from backoffice.infrastructure.models.ebook_model import EbookModel
 from backoffice.infrastructure.ports.repositories.ebook_repository_port import EbookRepositoryPort
 
 
 class SqlAlchemyEbookRepository(EbookRepositoryPort):
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, query_port: EbookQueryPort | None = None):
         self.db = db
+        # Use dependency injection with fallback for backward compatibility
+        if query_port is None:
+            from backoffice.infrastructure.adapters.queries.sqlalchemy_ebook_query import (
+                SqlAlchemyEbookQuery,
+            )
+
+            query_port = SqlAlchemyEbookQuery(db)
+        self.query_port = query_port
 
     async def get_all(self) -> list[Ebook]:
         db_ebooks = self.db.query(EbookModel).all()
@@ -22,6 +32,16 @@ class SqlAlchemyEbookRepository(EbookRepositoryPort):
     async def get_by_status(self, status: EbookStatus) -> list[Ebook]:
         db_ebooks = self.db.query(EbookModel).filter(EbookModel.status == status.value).all()
         return [self._to_domain(ebook) for ebook in db_ebooks]
+
+    async def get_paginated(self, params: PaginationParams) -> PaginatedResult[Ebook]:
+        """Récupère une page d'ebooks avec pagination."""
+        return await self.query_port.list_paginated(params)
+
+    async def get_paginated_by_status(
+        self, status: EbookStatus, params: PaginationParams
+    ) -> PaginatedResult[Ebook]:
+        """Récupère une page d'ebooks filtrés par statut avec pagination."""
+        return await self.query_port.list_paginated_by_status(status, params)
 
     async def create(self, ebook: Ebook) -> Ebook:
         """Crée un nouvel ebook."""

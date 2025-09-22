@@ -1,0 +1,48 @@
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Titre</th>
+                <th>Auteur</th>
+                <th>Date de création</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="ebooksTable" data-testid="ebooks-table">
+            <tr data-testid="ebook-row-{id}">
+                <td>{id}</td>
+                <td>{title}</td>
+                <td>{author}</td>
+                <td>{date}</td>
+                <td><span class="badge bg-warning text-dark">{status}</span></td>
+                <td><button class="btn btn-sm btn-primary btn-action">Voir</button></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Include pagination for single item -->
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <div class="text-muted">
+        Affichage de 1 à 1 sur 1 ebook
+    </div>
+    <nav aria-label="Navigation des pages d'ebooks">
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="fas fa-chevron-left"></i>
+                </span>
+            </li>
+            <li class="page-item active">
+                <span class="page-link">1</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="fas fa-chevron-right"></i>
+                </span>
+            </li>
+        </ul>
+    </nav>
+</div>

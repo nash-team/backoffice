@@ -55,7 +55,14 @@ def test_db_session(test_engine):
     try:
         yield session
     finally:
+        # Clean up all data to ensure test isolation
+        # This handles both committed and uncommitted data
         session.rollback()
+        # Truncate all tables to ensure clean state for next test
+        from src.backoffice.infrastructure.models.ebook_model import EbookModel
+
+        session.query(EbookModel).delete()
+        session.commit()
         session.close()
 
 
@@ -90,3 +97,13 @@ def test_client(postgres_container, test_db_session):
         os.environ.pop("DATABASE_URL", None)
     else:
         os.environ["DATABASE_URL"] = original_db_url
+
+
+# Automatically apply asyncio marker to all async test functions
+def pytest_collection_modifyitems(config, items):
+    """Automatically add asyncio marker to async test functions"""
+    for item in items:
+        if (
+            hasattr(item.function, "__code__") and item.function.__code__.co_flags & 0x80
+        ):  # CO_COROUTINE
+            item.add_marker(pytest.mark.asyncio)
