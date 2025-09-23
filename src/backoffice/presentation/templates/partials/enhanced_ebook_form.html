@@ -1,6 +1,7 @@
 <!-- Zone d'erreur OOB (ciblée par le serveur si erreur) -->
 <div id="ebookFormErrors" class="mb-3" aria-live="assertive" data-testid="error-container"></div>
 
+<div x-data="ebookForm()" x-init="init()">
 <form id="ebookForm"
       data-testid="ebook-form"
       hx-post="/api/dashboard/ebooks"
@@ -18,79 +19,58 @@
     <div class="row">
       <div class="col-md-4">
         <div class="card h-100 ebook-type-card"
+             :class="{ 'selected': selectedType === 'story' }"
              data-type="story"
              data-testid="ebook-type-card-story"
              hx-get="/themes/by-type/story/html"
              hx-target="#themesContainer"
              hx-trigger="click"
              hx-swap="innerHTML"
-             _="on click
-                remove .selected from .ebook-type-card
-                then add .selected to me
-                then set my.querySelector('input[type=radio]').checked to true
-                then call updatePromptPlaceholder('story')
-                then show #themeSection
-                then if (#prompt.value.length > 0) and (.theme-card.selected exists)
-                     then remove @disabled from #createBtn
-                     else add @disabled to #createBtn
-                     end">
+             x-on:click="selectType('story')"
+             hx-on:htmx:after-request="onThemesLoaded()">
           <div class="card-body text-center">
             <i class="fas fa-feather-alt fa-2x text-primary mb-2"></i>
             <h6 class="card-title">Histoire</h6>
             <p class="card-text small">Livre d'histoire avec chapitres</p>
-            <input type="radio" name="ebook_type" value="story" class="d-none" required>
+            <input type="radio" name="ebook_type" value="story" class="d-none" :checked="selectedType === 'story'" required>
           </div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="card h-100 ebook-type-card"
+             :class="{ 'selected': selectedType === 'coloring' }"
              data-type="coloring"
              data-testid="ebook-type-card-coloring"
              hx-get="/themes/by-type/coloring/html"
              hx-target="#themesContainer"
              hx-trigger="click"
              hx-swap="innerHTML"
-             _="on click
-                remove .selected from .ebook-type-card
-                then add .selected to me
-                then set my.querySelector('input[type=radio]').checked to true
-                then call updatePromptPlaceholder('coloring')
-                then show #themeSection
-                then if (#prompt.value.length > 0) and (.theme-card.selected exists)
-                     then remove @disabled from #createBtn
-                     else add @disabled to #createBtn
-                     end">
+             x-on:click="selectType('coloring')"
+             hx-on:htmx:after-request="onThemesLoaded()">
           <div class="card-body text-center">
             <i class="fas fa-palette fa-2x text-success mb-2"></i>
             <h6 class="card-title">Coloriage</h6>
             <p class="card-text small">Livre de coloriage avec images</p>
-            <input type="radio" name="ebook_type" value="coloring" class="d-none">
+            <input type="radio" name="ebook_type" value="coloring" class="d-none" :checked="selectedType === 'coloring'">
           </div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="card h-100 ebook-type-card"
+             :class="{ 'selected': selectedType === 'mixed' }"
              data-type="mixed"
              data-testid="ebook-type-card-mixed"
              hx-get="/themes/by-type/mixed/html"
              hx-target="#themesContainer"
              hx-trigger="click"
              hx-swap="innerHTML"
-             _="on click
-                remove .selected from .ebook-type-card
-                then add .selected to me
-                then set my.querySelector('input[type=radio]').checked to true
-                then call updatePromptPlaceholder('mixed')
-                then show #themeSection
-                then if (#prompt.value.length > 0) and (.theme-card.selected exists)
-                     then remove @disabled from #createBtn
-                     else add @disabled to #createBtn
-                     end">
+             x-on:click="selectType('mixed')"
+             hx-on:htmx:after-request="onThemesLoaded()">
           <div class="card-body text-center">
             <i class="fas fa-magic fa-2x text-warning mb-2"></i>
             <h6 class="card-title">Mixte</h6>
             <p class="card-text small">Histoire + coloriage</p>
-            <input type="radio" name="ebook_type" value="mixed" class="d-none">
+            <input type="radio" name="ebook_type" value="mixed" class="d-none" :checked="selectedType === 'mixed'">
           </div>
         </div>
       </div>
@@ -98,24 +78,18 @@
   </div>
 
   <!-- Étape 2: Thème (se charge dynamiquement) -->
-  <div class="mb-4" id="themeSection" style="display: none;">
+  <div class="mb-4" id="themeSection" x-show="showThemeSection">
     <h6 class="fw-bold text-primary">
       <i class="fas fa-paint-brush me-2"></i>
       2. Thème visuel
     </h6>
-    <div id="themesContainer"
-         _="on htmx:afterSettle
-            make an Array from (.theme-card in me) called themeCards
-            for themeCard in themeCards
-              set themeCard's onclick to
-                'remove .selected from .theme-card; add .selected to me; call setupThemeFromCard(me); trigger input on #prompt'
-            end">
+    <div id="themesContainer">
       <!-- Les thèmes seront chargés ici via HTMX -->
     </div>
   </div>
 
   <!-- Étape 3: Contenu -->
-  <div class="mb-4" id="contentSection" style="display: none;">
+  <div class="mb-4" id="contentSection" x-show="showContentSection">
     <h6 class="fw-bold text-primary">
       <i class="fas fa-edit me-2"></i>
       3. Contenu à générer
@@ -127,14 +101,9 @@
       </label>
       <textarea class="form-control" id="prompt" name="prompt" rows="8" required
         data-testid="prompt-textarea"
-        placeholder="Ex: Génère une histoire pour enfants sur une petite fille qui découvre un jardin magique peuplé de créatures fantastiques. L'histoire doit comporter 3 chapitres courts et être adaptée aux enfants de 6-10 ans."
-        _="on input
-           if (the value of input[name='ebook_type']:checked exists) and
-              (.theme-card.selected exists) and
-              (my value's length > 0)
-           then remove @disabled from #createBtn
-           else add @disabled to #createBtn
-           end"></textarea>
+        :placeholder="promptPlaceholder"
+        x-model="promptText"
+        x-on:input="validateForm"></textarea>
       <div class="form-text">
         💡 <strong>Tip :</strong> Plus votre prompt est détaillé, meilleur sera le résultat.
         Spécifiez le style, la longueur, le public cible, etc.
@@ -159,25 +128,18 @@
   </div>
 
   <!-- Étape 4: Options avancées (optionnel) -->
-  <div class="mb-4" id="advancedSection" style="display: none;">
+  <div class="mb-4" id="advancedSection" x-show="showAdvancedSection">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h6 class="fw-bold text-primary mb-0">
         <i class="fas fa-cog me-2"></i>
         4. Options avancées
       </h6>
-      <button type="button" class="btn btn-sm btn-outline-secondary" id="toggleAdvanced"
-              _="on click
-                 if #advancedOptions.style.display is 'none'
-                   show #advancedOptions
-                   put `<i class='fas fa-chevron-up'></i>` into me
-                 else
-                   hide #advancedOptions
-                   put `<i class='fas fa-chevron-down'></i>` into me
-                 end">
-        <i class="fas fa-chevron-down"></i>
+      <button type="button" class="btn btn-sm btn-outline-secondary"
+              x-on:click="showAdvancedOptions = !showAdvancedOptions">
+        <i class="fas" :class="showAdvancedOptions ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
       </button>
     </div>
-    <div id="advancedOptions" style="display: none;">
+    <div id="advancedOptions" x-show="showAdvancedOptions">
       <div class="row">
         <div class="col-md-6">
           <div class="form-check mb-2">
@@ -217,13 +179,14 @@
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-testid="cancel-btn">
       Annuler
     </button>
-    <button id="createBtn" type="submit" class="btn btn-primary" data-testid="create-btn" disabled>
+    <button id="createBtn" type="submit" class="btn btn-primary" data-testid="create-btn" :disabled="!isFormValid">
       <span id="createBtnSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
       <i class="fas fa-plus me-2" aria-hidden="true"></i>
       Créer l'ebook
     </button>
   </div>
 </form>
+</div>
 
 <style>
 .ebook-type-card {
@@ -278,16 +241,5 @@
   background-color: #f8fff9;
 }
 
-.form-step {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.form-step.active {
-  opacity: 1;
-  pointer-events: auto;
-}
 </style>
 
-<!-- JavaScript externalisé -->
-<script src="/presentation/static/js/enhanced-ebook-form.js"></script>

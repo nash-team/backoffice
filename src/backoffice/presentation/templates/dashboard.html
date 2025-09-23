@@ -66,22 +66,21 @@
                                     hx-trigger="click"
                                     hx-indicator="#newEbookSpinner"
                                     hx-disabled-elt="this"
-                                    _="on htmx:afterRequest from me
-                                       js
-                                         const modal = document.getElementById('previewModal');
-                                         if (modal) {
-                                           let modalInstance = bootstrap.Modal.getInstance(modal);
-                                           if (!modalInstance) {
-                                             modalInstance = new bootstrap.Modal(modal);
-                                           }
-                                           modalInstance.show();
-                                           setTimeout(() => {
-                                             if (window.initializeEnhancedEbookForm) {
-                                               window.initializeEnhancedEbookForm();
-                                             }
-                                           }, 100);
-                                         }
-                                       end"
+                                    hx-on:htmx:after-request="
+                                        const modal = document.getElementById('previewModal');
+                                        if (modal) {
+                                          let modalInstance = bootstrap.Modal.getInstance(modal);
+                                          if (!modalInstance) {
+                                            modalInstance = new bootstrap.Modal(modal);
+                                          }
+                                          modalInstance.show();
+                                          setTimeout(() => {
+                                            if (window.initializeEnhancedEbookForm) {
+                                              window.initializeEnhancedEbookForm();
+                                            }
+                                          }, 100);
+                                        }
+                                    "
                                     aria-label="Créer un nouvel ebook">
                                 <span id="newEbookSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
                                 <span class="button-content">
@@ -156,8 +155,140 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <script src="/presentation/static/js/dashboard.js"></script>
+
+    <!-- Alpine.js Ebook Form Component -->
+    <script>
+    function ebookForm() {
+      return {
+        selectedType: '',
+        selectedTheme: null,
+        promptText: '',
+        showThemeSection: false,
+        showContentSection: false,
+        showAdvancedSection: false,
+        showAdvancedOptions: false,
+
+        placeholders: {
+          'story': 'Ex: Génère une histoire pour enfants sur une petite fille qui découvre un jardin magique peuplé de créatures fantastiques. L\'histoire doit comporter 3 chapitres courts et être adaptée aux enfants de 6-10 ans.',
+          'coloring': 'Ex: Génère un livre de coloriage sur le thème des animaux de la forêt. Créer 8 pages avec des illustrations simples et amusantes : un écureuil, un lapin, un hibou, etc. Chaque image doit être adaptée au coloriage par des enfants de 4-8 ans.',
+          'mixed': 'Ex: Génère une aventure interactive combinant histoire et coloriage sur le thème des pirates. 2 chapitres d\'histoire alternés avec 2 pages de coloriage (bateau pirate, trésor). Pour enfants de 5-9 ans.'
+        },
+
+        get promptPlaceholder() {
+          return this.placeholders[this.selectedType] || '';
+        },
+
+        get isFormValid() {
+          return this.selectedType && this.selectedTheme && this.promptText.length > 0;
+        },
+
+        init() {
+          console.log('Alpine.js ebook form initialized');
+
+          // Listen for theme selection events from HTMX loaded content
+          document.addEventListener('click', (e) => {
+            if (e.target.closest('.theme-card')) {
+              this.selectTheme(e.target.closest('.theme-card'));
+            }
+          });
+        },
+
+        selectType(type) {
+          console.log('Selecting type:', type);
+          this.selectedType = type;
+          this.showThemeSection = true;
+          this.selectedTheme = null; // Reset theme selection
+          this.showContentSection = false;
+          this.showAdvancedSection = false;
+          this.validateForm();
+        },
+
+        onThemesLoaded() {
+          console.log('Themes loaded via HTMX');
+          // Setup click handlers for dynamically loaded theme cards
+          setTimeout(() => {
+            const themeCards = document.querySelectorAll('.theme-card');
+            themeCards.forEach(card => {
+              // Remove any existing onclick to avoid duplicates
+              card.onclick = null;
+            });
+          }, 100);
+        },
+
+        selectTheme(themeCard) {
+          console.log('Selecting theme:', themeCard);
+
+          // Remove selected class from all theme cards
+          document.querySelectorAll('.theme-card').forEach(card =>
+            card.classList.remove('selected')
+          );
+
+          // Add selected class to clicked card
+          themeCard.classList.add('selected');
+
+          // Parse theme data and populate hidden fields
+          try {
+            const themeData = JSON.parse(themeCard.dataset.theme);
+            this.selectedTheme = themeData;
+
+            // Update hidden fields
+            const fieldMappings = {
+              'theme_name': 'name',
+              'cover_template': 'cover_template',
+              'toc_template': 'toc_template',
+              'text_template': 'text_template',
+              'image_template': 'image_template'
+            };
+
+            Object.entries(fieldMappings).forEach(([fieldId, dataKey]) => {
+              const input = document.getElementById(fieldId);
+              if (input && themeData[dataKey]) {
+                input.value = themeData[dataKey];
+              }
+            });
+
+            // Show content and advanced sections
+            this.showContentSection = true;
+            this.showAdvancedSection = true;
+
+            this.validateForm();
+          } catch (e) {
+            console.error('Error parsing theme data:', e);
+          }
+        },
+
+        validateForm() {
+          // This is automatically computed via the isFormValid getter
+          console.log('Form validation:', {
+            type: this.selectedType,
+            theme: !!this.selectedTheme,
+            prompt: this.promptText.length,
+            valid: this.isFormValid
+          });
+        }
+      };
+    }
+
+    // Global function for backward compatibility
+    window.initializeEnhancedEbookForm = function() {
+      console.log('Legacy form initialization called');
+    };
+
+    // Global function to handle themes loaded from HTMX
+    window.onThemesLoaded = function() {
+      console.log('Themes loaded via HTMX - global handler');
+      // Find the Alpine.js component and call its method
+      const formComponent = document.querySelector('[x-data]');
+      if (formComponent && formComponent._x_dataStack && formComponent._x_dataStack[0]) {
+        const alpineData = formComponent._x_dataStack[0];
+        if (alpineData.onThemesLoaded) {
+          alpineData.onThemesLoaded();
+        }
+      }
+    };
+    </script>
 </body>
 </html> 
