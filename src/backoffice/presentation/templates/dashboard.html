@@ -67,9 +67,21 @@
                                     hx-indicator="#newEbookSpinner"
                                     hx-disabled-elt="this"
                                     _="on htmx:afterRequest from me
-                                       call bootstrap.Modal.getOrCreateInstance(#previewModal).show()
-                                       then wait 100ms
-                                       then call initializeEnhancedEbookForm()"
+                                       js
+                                         const modal = document.getElementById('previewModal');
+                                         if (modal) {
+                                           let modalInstance = bootstrap.Modal.getInstance(modal);
+                                           if (!modalInstance) {
+                                             modalInstance = new bootstrap.Modal(modal);
+                                           }
+                                           modalInstance.show();
+                                           setTimeout(() => {
+                                             if (window.initializeEnhancedEbookForm) {
+                                               window.initializeEnhancedEbookForm();
+                                             }
+                                           }, 100);
+                                         }
+                                       end"
                                     aria-label="Créer un nouvel ebook">
                                 <span id="newEbookSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
                                 <span class="button-content">
