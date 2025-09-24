@@ -4,12 +4,12 @@ from sqlalchemy.orm import Session
 
 from backoffice.domain.entities.ebook import Ebook, EbookStatus
 from backoffice.domain.entities.pagination import PaginatedResult, PaginationParams
+from backoffice.domain.ports.ebook.ebook_port import EbookPort
 from backoffice.domain.ports.ebook_query_port import EbookQueryPort
 from backoffice.infrastructure.models.ebook_model import EbookModel
-from backoffice.infrastructure.ports.repositories.ebook_repository_port import EbookRepositoryPort
 
 
-class SqlAlchemyEbookRepository(EbookRepositoryPort):
+class SqlAlchemyEbookRepository(EbookPort):
     def __init__(self, db: Session, query_port: EbookQueryPort | None = None):
         self.db = db
         # Use dependency injection with fallback for backward compatibility
@@ -73,6 +73,13 @@ class SqlAlchemyEbookRepository(EbookRepositoryPort):
         self.db.commit()
         self.db.refresh(db_ebook)
         return self._to_domain(db_ebook)
+
+    async def save(self, ebook: Ebook) -> Ebook:
+        """Sauvegarde un ebook (create ou update selon qu'il existe déjà)."""
+        if ebook.id is None:
+            return await self.create(ebook)
+        else:
+            return await self.update(ebook)
 
     def _to_domain(self, db_ebook: EbookModel) -> Ebook:
         return Ebook(

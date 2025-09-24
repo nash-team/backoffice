@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 
 from backoffice.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.domain.entities.pagination import PaginatedResult, PaginationParams
 
 
-class EbookRepository(ABC):
+class EbookPort(ABC):
     @abstractmethod
     async def get_all(self) -> list[Ebook]:
         pass
@@ -42,5 +43,47 @@ class EbookRepository(ABC):
 
         Raises:
             EbookNotFoundError: Si l'ebook n'existe pas
+        """
+        pass
+
+    @abstractmethod
+    async def save(self, ebook: Ebook) -> Ebook:
+        """
+        Sauvegarde un ebook (create ou update selon qu'il existe déjà).
+
+        Args:
+            ebook: L'ebook à sauvegarder
+
+        Returns:
+            Ebook: L'ebook sauvegardé
+        """
+        pass
+
+    @abstractmethod
+    async def get_paginated(self, params: PaginationParams) -> PaginatedResult[Ebook]:
+        """
+        Récupère une page d'ebooks avec pagination.
+
+        Args:
+            params: Paramètres de pagination
+
+        Returns:
+            PaginatedResult[Ebook]: Résultat paginé
+        """
+        pass
+
+    @abstractmethod
+    async def get_paginated_by_status(
+        self, status: EbookStatus, params: PaginationParams
+    ) -> PaginatedResult[Ebook]:
+        """
+        Récupère une page d'ebooks filtrés par statut avec pagination.
+
+        Args:
+            status: Statut à filtrer
+            params: Paramètres de pagination
+
+        Returns:
+            PaginatedResult[Ebook]: Résultat paginé filtré
         """
         pass

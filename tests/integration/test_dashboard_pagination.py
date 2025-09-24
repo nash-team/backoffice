@@ -17,7 +17,7 @@ class TestDashboardPagination:
             ebook = EbookModel(
                 title=f"Test Ebook {i+1}",
                 author=f"Test Author {i+1}",
-                status=EbookStatus.PENDING.value if i % 2 == 0 else EbookStatus.VALIDATED.value,
+                status=EbookStatus.PENDING.value if i % 2 == 0 else EbookStatus.APPROVED.value,
                 created_at=datetime.now(UTC),
             )
             test_db_session.add(ebook)

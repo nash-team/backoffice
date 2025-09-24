@@ -24,7 +24,7 @@ class EbookModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column(String(255))
     author: Mapped[str] = mapped_column(String(255))
-    status: Mapped[str] = mapped_column(String(20), default=EbookStatus.PENDING.value)
+    status: Mapped[str] = mapped_column(String(20), default=EbookStatus.DRAFT.value)
     preview_url: Mapped[str | None]
     drive_id: Mapped[str | None]
     created_at: Mapped[datetime]

@@ -59,7 +59,7 @@ class TestSqlAlchemyEbookRepositoryPagination:
         assert result == expected_result
         assert params.offset == expected_offset
 
-    @pytest.mark.parametrize("status", [EbookStatus.PENDING, EbookStatus.VALIDATED])
+    @pytest.mark.parametrize("status", [EbookStatus.PENDING, EbookStatus.APPROVED])
     async def test_get_paginated_by_status_delegates_correctly(self, status: EbookStatus):
         """Test that status filtering is properly delegated"""
         # Given
@@ -95,7 +95,7 @@ class TestSqlAlchemyEbookRepositoryPagination:
                 id=2,
                 title="Test 2",
                 author="Author 2",
-                status=EbookStatus.VALIDATED,
+                status=EbookStatus.APPROVED,
                 created_at=datetime.now(UTC),
             ),
         ]

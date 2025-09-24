@@ -104,7 +104,7 @@ class TestSqlAlchemyEbookRepositoryPagination:
     @pytest.mark.asyncio
     async def test_get_paginated_by_status_applies_pagination_after_filter(self):
         # Given
-        status = EbookStatus.VALIDATED
+        status = EbookStatus.APPROVED
         params = PaginationParams(page=2, size=3)
 
         # Mock database responses

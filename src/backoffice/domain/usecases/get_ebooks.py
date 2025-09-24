@@ -1,12 +1,10 @@
 from backoffice.domain.entities.ebook import Ebook, EbookStatus
 from backoffice.domain.entities.pagination import PaginatedResult, PaginationParams
-from backoffice.infrastructure.ports.repositories.ebook_repository_port import (
-    EbookRepositoryPort as EbookRepository,
-)
+from backoffice.domain.ports.ebook.ebook_port import EbookPort
 
 
 class GetEbooksUseCase:
-    def __init__(self, ebook_repository: EbookRepository) -> None:
+    def __init__(self, ebook_repository: EbookPort) -> None:
         self.ebook_repository = ebook_repository
 
     async def execute(self, status: EbookStatus | None = None) -> list[Ebook]:

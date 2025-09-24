@@ -80,7 +80,7 @@ class TestSqlAlchemyEbookQuery:
         query_chain.order_by.return_value.offset.assert_called_with(expected_offset)
         query_chain.order_by.return_value.offset.return_value.limit.assert_called_with(size)
 
-    @pytest.mark.parametrize("status", [EbookStatus.PENDING, EbookStatus.VALIDATED])
+    @pytest.mark.parametrize("status", [EbookStatus.PENDING, EbookStatus.APPROVED])
     async def test_list_paginated_by_status_filters_correctly(self, status: EbookStatus):
         """Test that status filtering is applied correctly"""
         # Given
@@ -136,7 +136,7 @@ class TestSqlAlchemyEbookQuery:
         assert isinstance(ebook_2, Ebook)
         assert ebook_2.id == 2
         assert ebook_2.title == "Title 2"
-        assert ebook_2.status == EbookStatus.VALIDATED
+        assert ebook_2.status == EbookStatus.APPROVED
 
     async def test_empty_results_handled_correctly(self):
         """Test that empty results are handled gracefully"""

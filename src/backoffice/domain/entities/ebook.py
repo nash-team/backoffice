@@ -21,8 +21,10 @@ from backoffice.domain.constants import (
 
 
 class EbookStatus(Enum):
+    DRAFT = "DRAFT"
     PENDING = "PENDING"
-    VALIDATED = "VALIDATED"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
 
 
 @dataclass
@@ -82,7 +84,7 @@ class Ebook:
     title: str
     author: str
     created_at: datetime | None
-    status: EbookStatus = EbookStatus.PENDING
+    status: EbookStatus = EbookStatus.DRAFT
     preview_url: str | None = None
     drive_id: str | None = None  # ID du fichier dans Google Drive
     config: EbookConfig | None = None

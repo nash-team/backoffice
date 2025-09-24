@@ -1,9 +1,7 @@
 from typing import Protocol
 
 from backoffice.domain.entities.ebook import Ebook, EbookConfig, EbookStatus
-from backoffice.infrastructure.ports.repositories.ebook_repository_port import (
-    EbookRepositoryPort as EbookRepository,
-)
+from backoffice.domain.ports.ebook.ebook_port import EbookPort
 
 
 class EbookProcessor(Protocol):
@@ -28,7 +26,7 @@ class EbookProcessor(Protocol):
 class CreateEbookUseCase:
     """Use case for creating a new ebook from a prompt."""
 
-    def __init__(self, ebook_repository: EbookRepository, ebook_processor: EbookProcessor) -> None:
+    def __init__(self, ebook_repository: EbookPort, ebook_processor: EbookProcessor) -> None:
         self.ebook_repository = ebook_repository
         self.ebook_processor = ebook_processor
 
@@ -47,7 +45,7 @@ class CreateEbookUseCase:
             config: Optional ebook configuration
 
         Returns:
-            Ebook: Created ebook entity with PENDING status
+            Ebook: Created ebook entity with DRAFT status
 
         Raises:
             ValueError: If prompt is invalid
@@ -74,7 +72,7 @@ class CreateEbookUseCase:
             id=0,  # Will be set by repository
             title=ebook_data["title"],
             author=ebook_data["author"],
-            status=EbookStatus.PENDING,
+            status=EbookStatus.DRAFT,
             drive_id=ebook_data.get("drive_id"),
             preview_url=ebook_data.get("preview_url"),
             created_at=None,  # Will be set by repository

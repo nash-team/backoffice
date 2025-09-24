@@ -16,7 +16,7 @@ def sample_ebooks(test_db_session):
     ebook2 = EbookModel(
         title="Test Ebook 2",
         author="Test Author 2",
-        status=EbookStatus.VALIDATED.value,
+        status=EbookStatus.APPROVED.value,
         created_at=datetime.now(),
     )
 

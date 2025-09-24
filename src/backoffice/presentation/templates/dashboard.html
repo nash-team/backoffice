@@ -101,6 +101,17 @@
                                 <span id="filterAllSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
                                 <span class="button-content">Tous</span>
                             </button>
+                            <button id="filterDraftBtn" type="button" class="btn btn-outline-secondary filter-btn"
+                                    data-testid="filter-draft-btn"
+                                    hx-get="/api/dashboard/ebooks?status=draft"
+                                    hx-target="#ebooksTableContainer"
+                                    hx-swap="innerHTML"
+                                    hx-indicator="#filterDraftSpinner"
+                                    hx-disabled-elt="this"
+                                    aria-label="Afficher les ebooks en brouillon">
+                                <span id="filterDraftSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
+                                <span class="button-content">Brouillons</span>
+                            </button>
                             <button id="filterPendingBtn" type="button" class="btn btn-outline-secondary filter-btn"
                                     data-testid="filter-pending-btn"
                                     hx-get="/api/dashboard/ebooks?status=pending"
@@ -112,16 +123,27 @@
                                 <span id="filterPendingSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
                                 <span class="button-content">En attente</span>
                             </button>
-                            <button id="filterValidatedBtn" type="button" class="btn btn-outline-secondary filter-btn"
-                                    data-testid="filter-validated-btn"
-                                    hx-get="/api/dashboard/ebooks?status=validated"
+                            <button id="filterApprovedBtn" type="button" class="btn btn-outline-secondary filter-btn"
+                                    data-testid="filter-approved-btn"
+                                    hx-get="/api/dashboard/ebooks?status=approved"
                                     hx-target="#ebooksTableContainer"
                                     hx-swap="innerHTML"
-                                    hx-indicator="#filterValidatedSpinner"
+                                    hx-indicator="#filterApprovedSpinner"
                                     hx-disabled-elt="this"
-                                    aria-label="Afficher les ebooks validés">
-                                <span id="filterValidatedSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
-                                <span class="button-content">Validés</span>
+                                    aria-label="Afficher les ebooks approuvés">
+                                <span id="filterApprovedSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
+                                <span class="button-content">Approuvés</span>
+                            </button>
+                            <button id="filterRejectedBtn" type="button" class="btn btn-outline-secondary filter-btn"
+                                    data-testid="filter-rejected-btn"
+                                    hx-get="/api/dashboard/ebooks?status=rejected"
+                                    hx-target="#ebooksTableContainer"
+                                    hx-swap="innerHTML"
+                                    hx-indicator="#filterRejectedSpinner"
+                                    hx-disabled-elt="this"
+                                    aria-label="Afficher les ebooks rejetés">
+                                <span id="filterRejectedSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
+                                <span class="button-content">Rejetés</span>
                             </button>
                         </div>
                     </div>

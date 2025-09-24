@@ -25,15 +25,15 @@ class TestEbookStatusFilters:
         # Then
         assert result == "En attente"
 
-    def test_format_ebook_status_label_validated(self):
+    def test_format_ebook_status_label_approved(self):
         # Given
-        status = "VALIDATED"
+        status = "APPROVED"
 
         # When
         result = format_ebook_status_label(status)
 
         # Then
-        assert result == "Validé"
+        assert result == "Approuvé"
 
     def test_format_ebook_status_label_unknown(self):
         # Given
@@ -55,9 +55,9 @@ class TestEbookStatusFilters:
         # Then
         assert result == "bg-warning text-dark"
 
-    def test_format_ebook_status_class_validated(self):
+    def test_format_ebook_status_class_approved(self):
         # Given
-        status = "VALIDATED"
+        status = "APPROVED"
 
         # When
         result = format_ebook_status_class(status)

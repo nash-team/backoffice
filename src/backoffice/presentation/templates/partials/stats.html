@@ -1,4 +1,4 @@
-<div class="col-md-4">
+<div class="col-md-3">
     <div class="card">
         <div class="card-body">
             <h5 class="card-title">Total Ebooks</h5>
@@ -6,19 +6,27 @@
         </div>
     </div>
 </div>
-<div class="col-md-4">
+<div class="col-md-3">
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">Ebooks en attente</h5>
+            <h5 class="card-title">Brouillons</h5>
+            <p class="card-text display-4">{{ stats.draft_ebooks }}</p>
+        </div>
+    </div>
+</div>
+<div class="col-md-3">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">En attente</h5>
             <p class="card-text display-4">{{ stats.pending_ebooks }}</p>
         </div>
     </div>
 </div>
-<div class="col-md-4">
+<div class="col-md-3">
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">Ebooks validés</h5>
-            <p class="card-text display-4">{{ stats.validated_ebooks }}</p>
+            <h5 class="card-title">Approuvés</h5>
+            <p class="card-text display-4">{{ stats.approved_ebooks }}</p>
         </div>
     </div>
 </div> 
