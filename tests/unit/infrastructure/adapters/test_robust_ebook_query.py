@@ -116,7 +116,7 @@ class TestSqlAlchemyEbookQuery:
         params = PaginationParams(page=1, size=2)
         mock_models = [
             self._create_mock_ebook_model(1, "Title 1", "PENDING"),
-            self._create_mock_ebook_model(2, "Title 2", "VALIDATED"),
+            self._create_mock_ebook_model(2, "Title 2", "APPROVED"),
         ]
         self._setup_pagination_mocks_with_models(2, mock_models)
 

@@ -31,8 +31,8 @@ def test_get_stats(test_client, sample_ebooks):
     """Test de récupération des statistiques"""
     response = test_client.get("/api/dashboard/stats")
     assert response.status_code == 200
-    assert "Ebooks en attente" in response.text
-    assert "Ebooks validés" in response.text
+    assert "En attente" in response.text
+    assert "Approuvés" in response.text
     assert "1" in response.text  # 1 ebook en attente
     assert "1" in response.text  # 1 ebook validé
 

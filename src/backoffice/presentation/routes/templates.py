@@ -21,7 +21,7 @@ def format_date(value):
 
 # Configuration des statuts ebook
 EBOOK_STATUS_CONFIG = {
-    "DRAFT": {"label": "Brouillon", "css_class": "bg-secondary"},
+    "DRAFT": {"label": "Brouillon", "css_class": "bg-info"},
     "PENDING": {"label": "En attente", "css_class": "bg-warning text-dark"},
     "APPROVED": {"label": "Approuvé", "css_class": "bg-success"},
     "REJECTED": {"label": "Rejeté", "css_class": "bg-danger"},
