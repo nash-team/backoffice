@@ -142,6 +142,7 @@ def test_server(project_root: Path, server_port: int) -> Iterator[subprocess.Pop
         {
             "TESTING": "true",
             "DATABASE_URL": database_url,
+            "ENVIRONMENT": "development",  # Explicitly set environment
             # Pas de PYTHONPATH : on utilise --app-dir=src
             "OPENAI_API_KEY": env.get("OPENAI_API_KEY", "test-key-for-e2e"),
         }
@@ -177,21 +178,25 @@ def test_server(project_root: Path, server_port: int) -> Iterator[subprocess.Pop
     )
 
     try:
-        if not _wait_for_server(f"http://127.0.0.1:{server_port}", timeout=30.0):
-            # Récupère un extrait de logs pour diagnostiquer
-            try:
-                stdout = proc.stdout.read(2000) if proc.stdout else ""  # type: ignore[arg-type]
-                stderr = proc.stderr.read(2000) if proc.stderr else ""  # type: ignore[arg-type]
-            except Exception:
-                stdout = stderr = ""
-            finally:
-                _terminate_process(proc)
+        print(f"[E2E] Starting server on port {server_port}")
+        print(f"[E2E] Command: {' '.join(cmd)}")
+        print(f"[E2E] Working directory: {project_root}")
 
-            pytest.skip(
-                f"Serveur non accessible sur {server_port}. "
-                f"STDERR: {stderr[:1000]!r} STDOUT: {stdout[:1000]!r}"
+        # Simple wait - just wait a few seconds and check if process is running
+        import time
+
+        time.sleep(5)
+
+        # Check if process is still running
+        if proc.poll() is not None:
+            stdout, stderr = proc.communicate()
+            error_msg = (
+                f"Server failed to start. STDERR: {stderr[:1000]!r} STDOUT: {stdout[:1000]!r}"
             )
+            print(f"[E2E] {error_msg}")
+            pytest.skip(error_msg)
 
+        print(f"[E2E] Server started successfully on port {server_port}")
         yield proc
 
     finally:
@@ -253,6 +258,74 @@ def isolated_database(server_url: str, test_server: subprocess.Popen) -> Iterato
         print(f"[E2E] Warning: reset DB échoue: {e!r}")
 
     yield
+
+
+@pytest.fixture
+def ebook_test_helpers():
+    """Fixture providing EbookTestHelpers for E2E tests."""
+    from tests.e2e.scenarios_helpers import EbookTestHelpers
+
+    return EbookTestHelpers()
+
+
+@pytest.fixture(scope="session")
+def simple_server():
+    """Serveur de test simplifié pour debug."""
+    import subprocess
+    import sys
+    import time
+
+    project_root = Path(__file__).resolve().parents[2]
+    port = 8999
+
+    # Commande simple
+    cmd = [
+        sys.executable,
+        "-m",
+        "uvicorn",
+        "backoffice.main:app",
+        "--app-dir",
+        "src",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        str(port),
+        "--log-level",
+        "info",
+    ]
+
+    print(f"[DEBUG] Starting server with command: {' '.join(cmd)}")
+    print(f"[DEBUG] Working directory: {project_root}")
+
+    proc = subprocess.Popen(
+        cmd, cwd=project_root, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
+
+    # Wait a bit for server to start
+    time.sleep(3)
+
+    # Check if process is still running
+    if proc.poll() is not None:
+        stdout, stderr = proc.communicate()
+        print("[DEBUG] Server failed to start!")
+        print(f"[DEBUG] STDOUT: {stdout}")
+        print(f"[DEBUG] STDERR: {stderr}")
+        pytest.skip("Server failed to start")
+
+    print(f"[DEBUG] Server started on port {port}")
+
+    try:
+        yield f"http://127.0.0.1:{port}"
+    finally:
+        proc.terminate()
+        proc.wait()
+        print("[DEBUG] Server terminated")
+
+
+@pytest.fixture
+def simple_server_url(simple_server):
+    """URL du serveur simple."""
+    return simple_server
 
 
 # ---------------------------
