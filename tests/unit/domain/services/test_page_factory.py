@@ -114,6 +114,45 @@ class TestPageFactory:
         assert page.data["alt_text"] == alt_text
         assert page.display_in_toc == display_in_toc
 
+    def test_create_coloring_page_with_data_url_base64(self):
+        # Given - AI generated image with data URL
+        data_url = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        page_id = "coloring-ai-1"
+        title = "AI Generated Coloring"
+
+        # When
+        page = PageFactory.create_coloring_page(data_url, page_id, title)
+
+        # Then
+        assert page.type == ContentType.FULL_PAGE_IMAGE
+        assert page.template == "coloring"
+        assert page.layout == PageLayout.FULL_BLEED
+        assert page.id == page_id
+        assert page.title == title
+        # Should extract base64 data and format
+        assert "image_data" in page.data
+        assert "image_format" in page.data
+        assert page.data["image_format"] == "png"
+        assert (
+            page.data["image_data"]
+            == "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        )
+        # Should not have image_url when using data URL
+        assert "image_url" not in page.data
+
+    def test_create_coloring_page_with_malformed_data_url_fallback(self):
+        # Given - Malformed data URL should fallback to regular URL handling
+        malformed_data_url = "data:image/png"  # Missing ;base64, part
+        page_id = "coloring-malformed-1"
+
+        # When
+        page = PageFactory.create_coloring_page(malformed_data_url, page_id)
+
+        # Then - Should fallback to regular URL handling
+        assert "image_url" in page.data
+        assert page.data["image_url"] == malformed_data_url
+        assert "image_data" not in page.data
+
     def test_create_cover_from_structure_uses_structure_data(self):
         # Given
         meta = EbookMeta(title="Structure Title", author="Structure Author")

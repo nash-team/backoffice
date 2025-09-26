@@ -192,6 +192,10 @@ async def create_ebook(
     cover_enabled: bool = Form(True),
     toc: bool = Form(True),
     format: str = Form("pdf"),
+    image_urls: str = Form(""),
+    convert_to_svg: bool = Form(True),
+    number_of_chapters: int = Form(None),
+    number_of_pages: int = Form(None),
 ) -> Response:
     """Crée un nouvel ebook à partir du prompt et de la configuration."""
     logger.info(
@@ -223,6 +227,20 @@ async def create_ebook(
 
         create_ebook_usecase = CreateEbookUseCase(ebook_repo, ebook_processor)
 
+        # Process coloring pages if needed
+        image_pages = []
+        if ebook_type in ["coloring", "mixed"] and image_urls.strip():
+            logger.info("Processing coloring pages from provided URLs")
+            coloring_usecase = factory.get_coloring_pages_usecase()
+            coloring_requests = coloring_usecase.parse_image_urls(image_urls)
+
+            if coloring_requests:
+                image_pages = await coloring_usecase.execute(
+                    coloring_requests,
+                    convert_to_svg=convert_to_svg,
+                )
+                logger.info(f"Generated {len(image_pages)} coloring pages")
+
         # Create new ebook with extended config
         new_ebook = await create_ebook_usecase.execute(
             prompt=prompt,
@@ -230,6 +248,9 @@ async def create_ebook(
             title=title,
             ebook_type=ebook_type,
             theme_name=theme_name,
+            image_pages=image_pages,
+            number_of_chapters=number_of_chapters,
+            number_of_pages=number_of_pages,
         )
         logger.info(f"Ebook created successfully: {new_ebook.title} (ID: {new_ebook.id})")
 

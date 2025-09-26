@@ -52,7 +52,7 @@ class FakeOpenAIService:
     def __init__(self):
         self.client = self  # Add client attribute for compatibility
 
-    async def generate_ebook_json(self, prompt: str) -> dict[str, str]:
+    async def generate_ebook_json(self, prompt: str, config=None) -> dict[str, str]:
         """Generate fake ebook JSON structure"""
         # Extract topic from prompt for realistic titles
         words = prompt.split()[:3]

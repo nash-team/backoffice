@@ -29,6 +29,7 @@ class TemplateRegistry:
             "standard": "pages/toc/toc_standard.html",
             "mixed": "pages/toc/toc_mixed.html",
             "detailed": "pages/toc/toc_detailed.html",
+            "coloring": "pages/toc/toc_coloring.html",
         },
         ContentType.TEXT: {
             "chapter": "pages/text/text_chapter.html",

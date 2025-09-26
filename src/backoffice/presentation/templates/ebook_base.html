@@ -22,6 +22,22 @@
             }
         }
 
+        /* Full-bleed page styles for image pages */
+        @page full-bleed {
+            size: A4;
+            margin: 0;
+        }
+
+        .full-page-image {
+            page: full-bleed;
+            width: 100%;
+            height: auto;
+            margin: 0;
+            padding: 0;
+            page-break-before: always;
+            page-break-after: always;
+        }
+
         body {
             font-family: "Georgia", "Times New Roman", serif;
             line-height: 1.6;
@@ -96,11 +112,11 @@
         }
 
         .toc-page {
-            target-counter: attr(href), page;
+            target-counter: attr(href url), page;
         }
 
         .toc-page::before {
-            content: target-counter(attr(href), page);
+            content: target-counter(attr(href url), page);
         }
 
         /* Chapters */

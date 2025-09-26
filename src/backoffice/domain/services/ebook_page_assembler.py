@@ -51,7 +51,6 @@ class EbookPageAssembler:
             pages.append(cover_page)
 
         # 2. TOC placeholder
-        toc_placeholder = None
         if config.toc:
             toc_placeholder = len(pages)
 
@@ -98,7 +97,6 @@ class EbookPageAssembler:
             config = EbookConfig(cover_enabled=True, toc=True)
 
         pages: list[PageContent] = []
-        toc_placeholder = None
 
         # 1. Cover page
         if config.cover_enabled:
@@ -145,6 +143,7 @@ class EbookPageAssembler:
         author: str,
         images: list[dict],
         config: EbookConfig | None = None,
+        cover_image_url: str | None = None,
     ) -> EbookPages:
         """
         Create a pure coloring ebook
@@ -162,18 +161,29 @@ class EbookPageAssembler:
             config = EbookConfig(cover_enabled=True, toc=True)
 
         pages: list[PageContent] = []
-        toc_placeholder = None
 
         # 1. Cover page
         if config.cover_enabled:
+            # Use provided cover image or fall back to first coloring image
+            final_cover_image_url = cover_image_url
+            if (
+                not final_cover_image_url
+                and images
+                and images[0].get("url")
+                and images[0]["url"] != "placeholder"
+            ):
+                final_cover_image_url = images[0]["url"]
+                cover_url_len = len(final_cover_image_url or "")
+                logger.info(f"Fallback: Using first coloring image as cover: {cover_url_len} chars")
+            elif final_cover_image_url:
+                logger.info(f"Using dedicated cover image: {len(final_cover_image_url)} chars")
+
             cover_page = self.page_factory.create_cover_page(
-                title=title, author=author, template="coloring"
+                title=title, author=author, template="coloring", image_url=final_cover_image_url
             )
             pages.append(cover_page)
 
-        # 2. TOC placeholder
-        if config.toc:
-            toc_placeholder = len(pages)
+        # 2. TOC placeholder - disabled for coloring books (only cover + images needed)
 
         # 3. Coloring images
         for i, image in enumerate(images, 1):
@@ -182,15 +192,9 @@ class EbookPageAssembler:
                 page_id=f"coloring-{i}",
                 title=image.get("title", f"Coloriage {i}"),
                 alt_text=image.get("alt_text", "Image à colorier"),
-                display_in_toc=image.get("display_in_toc", True),
+                display_in_toc=False,  # No TOC for coloring books
             )
             pages.append(coloring_page)
-
-        # 4. Create TOC
-        if toc_placeholder is not None:
-            temp_ebook = EbookPages(meta={"title": title}, pages=pages)
-            toc_page = create_auto_toc_page(temp_ebook, variant="coloring")
-            pages.insert(toc_placeholder, toc_page)
 
         return EbookPages(
             meta={

@@ -64,6 +64,12 @@ MAX_TITLE_LENGTH = 200
 MAX_AUTHOR_LENGTH = 100
 MIN_CONTENT_LENGTH = 10
 
+# Ebook configuration validation
+MIN_CHAPTERS = 1
+MAX_CHAPTERS = 15
+MIN_PAGES = 1
+MAX_PAGES = 30
+
 # Error messages
 ERROR_MSG_TEMPLATE_NOT_FOUND = "Template not found: {template_path}"
 ERROR_MSG_INVALID_CONTENT_TYPE = "Content type not supported: {content_type}"

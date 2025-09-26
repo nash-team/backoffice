@@ -110,6 +110,113 @@
       </div>
     </div>
 
+    <!-- Section Images pour coloriage -->
+    <div x-show="selectedType === 'coloring' || selectedType === 'mixed'" class="mb-4">
+      <h6 class="fw-bold text-success">
+        <i class="fas fa-images me-2"></i>
+        Images pour coloriage
+      </h6>
+      <div class="mb-3">
+        <label class="form-label">
+          <strong>URLs des images</strong>
+          <small class="text-muted">(Une URL par ligne, optionnel)</small>
+        </label>
+        <textarea class="form-control" name="image_urls" rows="4"
+          placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.png&#10;..."
+          x-model="imageUrls"
+          x-on:input="onImageUrlsChange"></textarea>
+        <div class="form-text">
+          💡 <strong>Tip :</strong> Laissez vide pour générer des images automatiquement avec l'IA,
+          ou fournissez des URLs d'images existantes qui seront converties en pages de coloriage.
+        </div>
+      </div>
+
+      <!-- Prévisualisation des images -->
+      <div x-show="imagePreviews.length > 0" class="mb-3">
+        <label class="form-label"><strong>Aperçu des images</strong></label>
+        <div class="row g-3">
+          <template x-for="(preview, index) in imagePreviews" :key="index">
+            <div class="col-md-4">
+              <div class="card">
+                <div class="image-preview-container" style="height: 200px; overflow: hidden;">
+                  <img :src="preview.url"
+                       :alt="'Aperçu image ' + (index + 1)"
+                       class="card-img-top h-100 object-fit-cover"
+                       style="object-fit: cover;">
+                </div>
+                <div class="card-body p-2">
+                  <p class="card-text small text-muted mb-1" x-text="'Image ' + (index + 1)"></p>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-success">
+                      <i class="fas fa-check me-1"></i>Chargée
+                    </small>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            x-on:click="removeImagePreview(index)"
+                            title="Supprimer cette image">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Options SVG -->
+      <div class="mb-3">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="convert_to_svg" name="convert_to_svg" checked>
+          <label class="form-check-label" for="convert_to_svg">
+            <strong>Convertir en SVG vectoriel</strong>
+            <small class="text-muted d-block">Recommandé pour une meilleure qualité d'impression</small>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Structure du contenu -->
+    <div class="mb-4">
+      <!-- Nombre de chapitres pour histoires -->
+      <div x-show="selectedType === 'story' || selectedType === 'mixed'" class="mb-3">
+        <label for="number_of_chapters" class="form-label">
+          <strong>Nombre de chapitres</strong>
+          <small class="text-muted">(1 à 15)</small>
+        </label>
+        <input type="number"
+               class="form-control"
+               id="number_of_chapters"
+               name="number_of_chapters"
+               min="1"
+               max="15"
+               value="5"
+               data-testid="chapters-input">
+        <div class="form-text">
+          💡 <strong>Tip :</strong> Plus il y a de chapitres, plus l'histoire sera développée.
+        </div>
+      </div>
+
+      <!-- Nombre de pages pour coloriage -->
+      <div x-show="selectedType === 'coloring'" class="mb-3">
+        <label for="number_of_pages" class="form-label">
+          <strong>Nombre de pages de coloriage</strong>
+          <small class="text-muted">(1 à 30)</small>
+        </label>
+        <input type="number"
+               class="form-control"
+               id="number_of_pages"
+               name="number_of_pages"
+               min="1"
+               max="30"
+               value="8"
+               data-testid="pages-input">
+        <div class="form-text">
+          💡 <strong>Tip :</strong> Chaque page contiendra une image différente à colorier.
+        </div>
+      </div>
+    </div>
+
     <div class="row">
       <div class="col-md-6">
         <div class="mb-3">

@@ -188,6 +188,8 @@
         selectedType: '',
         selectedTheme: null,
         promptText: '',
+        imageUrls: '',
+        imagePreviews: [],
         showThemeSection: false,
         showContentSection: false,
         showAdvancedSection: false,
@@ -290,6 +292,80 @@
             prompt: this.promptText.length,
             valid: this.isFormValid
           });
+        },
+
+        onImageUrlsChange() {
+          console.log('Image URLs changed:', this.imageUrls);
+          this.updateImagePreviews();
+        },
+
+        updateImagePreviews() {
+          // Clear existing previews
+          this.imagePreviews = [];
+
+          if (!this.imageUrls.trim()) {
+            return;
+          }
+
+          // Parse URLs (one per line)
+          const urls = this.imageUrls
+            .split('\n')
+            .map(url => url.trim())
+            .filter(url => url.length > 0);
+
+          // Create previews for valid URLs
+          urls.forEach((url, index) => {
+            if (this.isValidImageUrl(url)) {
+              this.imagePreviews.push({
+                url: url,
+                index: index,
+                status: 'loading'
+              });
+
+              // Test if the image loads
+              this.testImageLoad(url, index);
+            }
+          });
+        },
+
+        isValidImageUrl(url) {
+          try {
+            new URL(url);
+            return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
+          } catch {
+            return false;
+          }
+        },
+
+        testImageLoad(url, index) {
+          const img = new Image();
+          img.onload = () => {
+            const preview = this.imagePreviews.find(p => p.index === index);
+            if (preview) {
+              preview.status = 'loaded';
+            }
+          };
+          img.onerror = () => {
+            const preview = this.imagePreviews.find(p => p.index === index);
+            if (preview) {
+              preview.status = 'error';
+            }
+          };
+          img.src = url;
+        },
+
+        removeImagePreview(index) {
+          // Remove the preview
+          this.imagePreviews.splice(index, 1);
+
+          // Update the URLs text area
+          const urls = this.imageUrls
+            .split('\n')
+            .map(url => url.trim())
+            .filter(url => url.length > 0);
+
+          urls.splice(index, 1);
+          this.imageUrls = urls.join('\n');
         }
       };
     }

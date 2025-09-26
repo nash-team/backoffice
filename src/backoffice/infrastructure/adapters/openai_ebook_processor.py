@@ -1,6 +1,7 @@
 import logging
 
 from backoffice.domain.entities.ebook import EbookConfig
+from backoffice.domain.entities.image_page import ImagePage
 from backoffice.domain.usecases.create_ebook import EbookProcessor
 from backoffice.domain.usecases.generate_ebook import GenerateEbookUseCase
 from backoffice.infrastructure.adapters.google_drive_storage_adapter import (
@@ -41,6 +42,7 @@ class OpenAIEbookProcessor(EbookProcessor):
         title: str | None = None,
         ebook_type: str | None = None,
         theme_name: str | None = None,
+        image_pages: list[ImagePage] | None = None,
     ) -> dict[str, str | int | bool | None | list[str]]:
         """Generate ebook using the new hexagonal architecture.
 
@@ -67,6 +69,7 @@ class OpenAIEbookProcessor(EbookProcessor):
                 title=title,
                 ebook_type=ebook_type,
                 theme_name=theme_name,
+                image_pages=image_pages,
             )
 
             # Map storage fields to expected ebook fields

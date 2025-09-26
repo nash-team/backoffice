@@ -9,6 +9,10 @@ from backoffice.domain.constants import (
     DEFAULT_EBOOK_FORMAT,
     DEFAULT_PDF_ENGINE,
     DEFAULT_TITLE_FALLBACK,
+    MAX_CHAPTERS,
+    MAX_PAGES,
+    MIN_CHAPTERS,
+    MIN_PAGES,
     REGEX_CLEAN_SLUG,
     REGEX_NORMALIZE_SPACES,
     REGEX_SENTENCE_SPLIT,
@@ -38,6 +42,26 @@ class EbookConfig:
     cover_enabled: bool = True
     cover_title_override: str | None = None
     cover_title_max_lines: int = COVER_TITLE_MAX_LINES_DEFAULT
+    number_of_chapters: int | None = None
+    number_of_pages: int | None = None
+
+    def __post_init__(self):
+        """Validate config values after initialization"""
+        if self.number_of_chapters is not None:
+            if not isinstance(self.number_of_chapters, int):
+                type_name = type(self.number_of_chapters).__name__
+                raise ValueError(f"Number of chapters must be an integer, got {type_name}")
+            if not (MIN_CHAPTERS <= self.number_of_chapters <= MAX_CHAPTERS):
+                raise ValueError(
+                    f"Number of chapters must be between {MIN_CHAPTERS} and {MAX_CHAPTERS}"
+                )
+
+        if self.number_of_pages is not None:
+            if not isinstance(self.number_of_pages, int):
+                type_name = type(self.number_of_pages).__name__
+                raise ValueError(f"Number of pages must be an integer, got {type_name}")
+            if not (MIN_PAGES <= self.number_of_pages <= MAX_PAGES):
+                raise ValueError(f"Number of pages must be between {MIN_PAGES} and {MAX_PAGES}")
 
 
 def generate_title_slug(title: str, max_length: int = SLUG_MAX_LENGTH) -> str:

@@ -116,6 +116,7 @@ class ModularPDFGeneratorAdapter(EbookGeneratorPort):
         author: str,
         coloring_images: list[dict],
         config: EbookConfig | None = None,
+        cover_image_url: str | None = None,
     ) -> bytes:
         """
         Génère un ebook de coloriage pur
@@ -125,6 +126,7 @@ class ModularPDFGeneratorAdapter(EbookGeneratorPort):
             author: Auteur
             coloring_images: Images de coloriage [{"url": str, "title": str?, "alt_text": str?}]
             config: Configuration optionnelle
+            cover_image_url: URL de l'image de couverture (optionnel)
 
         Returns:
             PDF bytes
@@ -133,11 +135,18 @@ class ModularPDFGeneratorAdapter(EbookGeneratorPort):
             if config is None:
                 config = EbookConfig(cover_enabled=True, toc=True)
 
+            # Disable TOC for coloring books - only images needed
+            config.toc = False
+
             logger.info(f"Génération ebook coloriage '{title}' avec {len(coloring_images)} images")
 
             # Créer la structure coloriage pure
             coloring_ebook = self.page_generator.create_coloring_ebook(
-                title=title, author=author, images=coloring_images
+                title=title,
+                author=author,
+                images=coloring_images,
+                config=config,
+                cover_image_url=cover_image_url,
             )
 
             # Générer le PDF

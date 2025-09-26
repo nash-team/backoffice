@@ -31,8 +31,12 @@ dependencies = [
   "google-auth>=2.27.0",
   "google-api-python-client>=2.118.0",
 
-  # PDF Generation
+  # PDF Generation & Image Processing
   "weasyprint>=61.0",
+  "pillow>=10.0.0",
+
+  # HTTP client for external API calls
+  "httpx>=0.25.1",
 
   # NOTE: ajoute "google-auth-oauthlib" seulement si tu fais un vrai flow OAuth web.
 ]
@@ -63,7 +67,6 @@ dev = [
   "pre-commit==3.5.0",
 
   # Libs utilisées seulement en dev/tests
-  "httpx>=0.25.1",      # health-check dans conftest
   "psutil>=7.0.0",      # utilitaires tests
   "alembic==1.12.1",    # migrations via CLI (pas besoin en runtime si pas appelées in-app)
   # "google-auth-oauthlib>=1.2.0",  # active-la ici si tu testes un flow OAuth en dev
@@ -96,6 +99,7 @@ combine-as-imports = true
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S603", "S607", "S104", "E501", "E402", "I001"]  # Allow subprocess usage, binding, long lines, imports after code and import sorting in tests
 "src/backoffice/main.py" = ["S104"]  # Allow 0.0.0.0 binding when explicitly configured
+"src/backoffice/infrastructure/adapters/potrace_vectorizer.py" = ["S603", "S607", "S314"]  # Allow subprocess calls for external tool integration and XML parsing
 
 # --- Mypy ---
 [tool.mypy]
@@ -152,3 +156,4 @@ DEP004 = [
 "google-api-python-client" = "googleapiclient"
 "python-jose"              = "jose"
 "psycopg2-binary"          = "psycopg2"
+"pillow"                   = "PIL"

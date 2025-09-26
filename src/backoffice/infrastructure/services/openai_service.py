@@ -4,6 +4,8 @@ import os
 
 from openai import AsyncOpenAI
 
+from backoffice.domain.entities.ebook import EbookConfig
+
 logger = logging.getLogger(__name__)
 
 
@@ -18,7 +20,9 @@ class OpenAIService:
         else:
             self.client = AsyncOpenAI(api_key=self.api_key)
 
-    async def generate_ebook_json(self, prompt: str) -> dict[str, str]:
+    async def generate_ebook_json(
+        self, prompt: str, config: EbookConfig | None = None
+    ) -> dict[str, str]:
         """Generate ebook content in structured JSON format"""
         try:
             if not self.client:
@@ -70,10 +74,29 @@ IMPORTANT:
 - Assure-toi que chaque chapitre soit substantiel et autonome
 - Réponds UNIQUEMENT avec le JSON valide, sans préambule ni explication"""
 
-            user_prompt = f"""Génère un ebook complet sur le sujet suivant: {prompt}
+            # Build different prompts based on config type
+            if config and config.number_of_pages:
+                # Coloring book prompt
+                user_prompt = f"""Génère un livre de coloriage sur le sujet suivant: {prompt}
+
+Le livre doit contenir:
+- Exactement {config.number_of_pages} pages de coloriage
+- Chaque section doit avoir le type "image_page"
+- Chaque titre doit être TRÈS COURT (3-5 mots max)
+- Chaque contenu doit être UNE SEULE PHRASE SIMPLE décrivant l'image à colorier
+- Pas de texte long, pas d'explication, juste la description visuelle pure
+- Exemple: title: "Licorne magique", content: "Une licorne avec une corne brillante"
+
+Réponds UNIQUEMENT avec le JSON structuré."""
+            else:
+                # Story book prompt
+                chapters_count = (
+                    config.number_of_chapters if config and config.number_of_chapters else "3 à 5"
+                )
+                user_prompt = f"""Génère un ebook complet sur le sujet suivant: {prompt}
 
 L'ebook doit contenir:
-- 3 à 5 chapitres substantiels et bien développés
+- Exactement {chapters_count} chapitres substantiels et bien développés
 - Chaque chapitre doit être complet avec introduction, développement et conclusion
 - Contenu éducatif et adapté au sujet
 - Style engageant et accessible

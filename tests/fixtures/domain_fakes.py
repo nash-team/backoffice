@@ -31,7 +31,9 @@ class FakeContentGenerator(ContentGenerationPort):
     def is_available(self) -> bool:
         return self._available
 
-    async def generate_ebook_structure(self, prompt: str) -> EbookStructure:
+    async def generate_ebook_structure(
+        self, prompt: str, config: EbookConfig | None = None
+    ) -> EbookStructure:
         if self._should_fail:
             raise Exception("Content generation failed")
 
@@ -39,13 +41,39 @@ class FakeContentGenerator(ContentGenerationPort):
         words = prompt.split()[:3]
         title = f"Guide: {' '.join(words).title()}"
 
+        # Create sections based on config if provided
+        sections = []
+        if config and config.number_of_pages:
+            # Generate coloring pages with simple visual descriptions
+            for i in range(config.number_of_pages):
+                sections.append(
+                    EbookSection(
+                        type="image_page",
+                        title=f"Coloring Page {i + 1}",
+                        content=f"A simple illustration perfect for coloring: page {i + 1}",
+                    )
+                )
+        elif config and config.number_of_chapters:
+            # Generate story chapters
+            for i in range(config.number_of_chapters):
+                sections.append(
+                    EbookSection(
+                        type="chapter",
+                        title=f"Chapter {i + 1}",
+                        content=f"Fake content for chapter {i + 1}",
+                    )
+                )
+        else:
+            # Default 2 chapters
+            sections = [
+                EbookSection(type="chapter", title="Chapter 1", content="Fake content 1"),
+                EbookSection(type="chapter", title="Chapter 2", content="Fake content 2"),
+            ]
+
         return EbookStructure(
             meta=EbookMeta(title=title, author="Fake Author"),
             cover=EbookCover(title=title),
-            sections=[
-                EbookSection(type="chapter", title="Chapter 1", content="Fake content 1"),
-                EbookSection(type="chapter", title="Chapter 2", content="Fake content 2"),
-            ],
+            sections=sections,
         )
 
     async def generate_ebook_content_legacy(self, prompt: str) -> dict[str, str]:

@@ -185,11 +185,27 @@ class EbookCreationScenarios:
 
     def start_new_ebook_creation(self) -> None:
         """Ouvre le modal de création d'ebook et attend le formulaire."""
+        # Click the button to open the modal
         self.page.get_by_test_id(TID.NEW_EBOOK_BTN).click()
+
+        # Wait for Bootstrap to initialize and show the modal
+        # Bootstrap adds 'show' class when modal is visible
         expect(
             self.page.get_by_test_id(TID.EBOOK_MODAL),
             "Le modal de création devrait s'afficher",
-        ).to_be_visible()
+        ).to_be_visible(timeout=10_000)
+
+        # Alternative: wait for Bootstrap classes to be applied
+        self.page.wait_for_function(
+            """
+            () => {
+                const modal = document.querySelector('[data-testid="ebook-modal"]');
+                return modal && modal.classList.contains('show');
+            }
+        """,
+            timeout=10_000,
+        )
+
         expect(
             self.page.get_by_test_id(TID.EBOOK_FORM),
             "Le formulaire de création devrait être visible",

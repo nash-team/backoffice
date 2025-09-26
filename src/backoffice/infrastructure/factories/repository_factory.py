@@ -4,8 +4,13 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from backoffice.domain.ports.ebook.ebook_port import EbookPort
+from backoffice.domain.ports.image_generation_port import ImageGenerationPort
+from backoffice.domain.ports.vectorization_port import VectorizationPort
 from backoffice.domain.usecases.create_ebook import EbookProcessor
+from backoffice.domain.usecases.generate_coloring_pages import GenerateColoringPagesUseCase
 from backoffice.infrastructure.adapters.openai_ebook_processor import OpenAIEbookProcessor
+from backoffice.infrastructure.adapters.openai_image_generator import OpenAIImageGenerator
+from backoffice.infrastructure.adapters.potrace_vectorizer import PotraceVectorizer
 from backoffice.infrastructure.adapters.repositories.ebook_repository import (
     SqlAlchemyEbookRepository,
 )
@@ -29,6 +34,18 @@ class RepositoryFactory:
 
     def get_ebook_processor(self) -> EbookProcessor:
         return OpenAIEbookProcessor()
+
+    def get_image_generator(self) -> ImageGenerationPort:
+        return OpenAIImageGenerator()
+
+    def get_vectorizer(self) -> VectorizationPort:
+        return PotraceVectorizer()
+
+    def get_coloring_pages_usecase(self) -> GenerateColoringPagesUseCase:
+        return GenerateColoringPagesUseCase(
+            self.get_image_generator(),
+            self.get_vectorizer(),
+        )
 
 
 def get_repository_factory(db: DatabaseDep) -> RepositoryFactory:

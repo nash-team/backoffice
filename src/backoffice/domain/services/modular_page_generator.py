@@ -94,6 +94,7 @@ class ModularPageGenerator:
         author: str,
         images: list[dict],
         config: EbookConfig | None = None,
+        cover_image_url: str | None = None,
     ) -> EbookPages:
         """
         Create a pure coloring ebook
@@ -107,7 +108,7 @@ class ModularPageGenerator:
         Returns:
             EbookPages containing all ebook pages
         """
-        return self.assembler.create_coloring_ebook(title, author, images, config)
+        return self.assembler.create_coloring_ebook(title, author, images, config, cover_image_url)
 
     def generate_pdf_from_pages(self, ebook: EbookPages) -> bytes:
         """

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+from backoffice.domain.entities.ebook import EbookConfig
 from backoffice.domain.entities.ebook_structure import EbookStructure
 
 
@@ -7,11 +8,14 @@ class ContentGenerationPort(ABC):
     """Port for AI-based ebook content generation"""
 
     @abstractmethod
-    async def generate_ebook_structure(self, prompt: str) -> EbookStructure:
+    async def generate_ebook_structure(
+        self, prompt: str, config: EbookConfig | None = None
+    ) -> EbookStructure:
         """Generate structured ebook content from a user prompt
 
         Args:
             prompt: User input describing the desired ebook content
+            config: Optional configuration including chapter/page counts
 
         Returns:
             EbookStructure: Complete ebook structure with metadata and content

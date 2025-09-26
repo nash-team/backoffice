@@ -71,14 +71,47 @@ class PageFactory:
         display_in_toc: bool = True,
     ) -> PageContent:
         """Create a coloring page with an image"""
+        # Check if image_url is a data URL (base64 encoded)
+        if image_url and image_url.startswith("data:image/"):
+            # Extract base64 data from data URL
+            try:
+                # Format: data:image/png;base64,<base64_data>
+                if "," not in image_url:
+                    raise ValueError("Invalid data URL format")
+
+                mime_part, data_part = image_url.split(",", 1)
+
+                # Extract format more efficiently
+                mime_type = mime_part.split(";")[0]  # data:image/png
+                if "/" not in mime_type:
+                    raise ValueError("Invalid MIME type")
+
+                image_format = mime_type.split("/", 1)[1]  # png, jpeg, etc.
+
+                page_data = {
+                    "image_data": data_part,  # Just the base64 string without prefix
+                    "image_format": image_format,
+                    "alt_text": alt_text,
+                }
+            except (ValueError, IndexError) as e:
+                # Fallback if data URL parsing fails
+                logger.warning(f"Failed to parse data URL: {e}, using as regular URL")
+                page_data = {
+                    "image_url": image_url,
+                    "alt_text": alt_text,
+                }
+        else:
+            # Regular URL
+            page_data = {
+                "image_url": image_url,
+                "alt_text": alt_text,
+            }
+
         return PageContent(
             type=ContentType.FULL_PAGE_IMAGE,
             template="coloring",
             layout=PageLayout.FULL_BLEED,
-            data={
-                "image_url": image_url,
-                "alt_text": alt_text,
-            },
+            data=page_data,
             id=page_id,
             title=title or "Coloriage",
             display_in_toc=display_in_toc,

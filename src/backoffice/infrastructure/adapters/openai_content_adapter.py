@@ -1,5 +1,6 @@
 import logging
 
+from backoffice.domain.entities.ebook import EbookConfig
 from backoffice.domain.entities.ebook_structure import EbookStructure
 from backoffice.domain.ports.content_generation_port import ContentGenerationPort
 from backoffice.domain.services.content_parser import ContentParser
@@ -24,13 +25,15 @@ class OpenAIContentAdapter(ContentGenerationPort):
         """Check if OpenAI service is available"""
         return self.openai_service.client is not None
 
-    async def generate_ebook_structure(self, prompt: str) -> EbookStructure:
+    async def generate_ebook_structure(
+        self, prompt: str, config: EbookConfig | None = None
+    ) -> EbookStructure:
         """Generate structured ebook content from prompt using OpenAI"""
         try:
             logger.info(f"Generating ebook structure from prompt: {prompt[:50]}...")
 
             # Generate JSON content using OpenAI service
-            json_data = await self.openai_service.generate_ebook_json(prompt)
+            json_data = await self.openai_service.generate_ebook_json(prompt, config=config)
 
             # Parse JSON into EbookStructure
             ebook_structure = self.content_parser.parse_ebook_structure(json_data["content"])

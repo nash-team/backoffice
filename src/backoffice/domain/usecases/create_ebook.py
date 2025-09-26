@@ -1,6 +1,7 @@
 from typing import Protocol
 
 from backoffice.domain.entities.ebook import Ebook, EbookConfig, EbookStatus
+from backoffice.domain.entities.image_page import ImagePage
 from backoffice.domain.ports.ebook.ebook_port import EbookPort
 
 
@@ -14,6 +15,7 @@ class EbookProcessor(Protocol):
         title: str | None = None,
         ebook_type: str | None = None,
         theme_name: str | None = None,
+        image_pages: list[ImagePage] | None = None,
     ) -> dict:
         """Generate ebook content and upload to external storage.
 
@@ -37,6 +39,9 @@ class CreateEbookUseCase:
         title: str | None = None,
         ebook_type: str | None = None,
         theme_name: str | None = None,
+        image_pages: list[ImagePage] | None = None,
+        number_of_chapters: int | None = None,
+        number_of_pages: int | None = None,
     ) -> Ebook:
         """Execute ebook creation workflow.
 
@@ -62,9 +67,20 @@ class CreateEbookUseCase:
         if config is None:
             config = EbookConfig()
 
+        # Update config with chapter/page counts if provided
+        if number_of_chapters is not None:
+            config.number_of_chapters = number_of_chapters
+        if number_of_pages is not None:
+            config.number_of_pages = number_of_pages
+
         # Create ebook with initial PENDING status
         ebook_data = await self.ebook_processor.generate_ebook_from_prompt(
-            prompt=prompt, config=config, title=title, ebook_type=ebook_type, theme_name=theme_name
+            prompt=prompt,
+            config=config,
+            title=title,
+            ebook_type=ebook_type,
+            theme_name=theme_name,
+            image_pages=image_pages,
         )
 
         # Create ebook entity

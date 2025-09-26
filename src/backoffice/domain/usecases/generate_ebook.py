@@ -1,6 +1,7 @@
 import logging
 
 from backoffice.domain.entities.ebook import EbookConfig
+from backoffice.domain.entities.image_page import ImagePage
 from backoffice.domain.ports.content_generation_port import ContentGenerationPort
 from backoffice.domain.ports.ebook_generator_port import EbookGeneratorPort
 from backoffice.domain.ports.file_storage_port import FileStoragePort
@@ -29,6 +30,7 @@ class GenerateEbookUseCase:
         title: str | None = None,
         ebook_type: str | None = None,
         theme_name: str | None = None,
+        image_pages: list[ImagePage] | None = None,
     ) -> dict[str, str | int | bool | None | list[str]]:
         """Execute the ebook generation workflow
 
@@ -59,7 +61,16 @@ class GenerateEbookUseCase:
 
             # Step 1: Generate content structure
             logger.info("Generating ebook content structure...")
-            ebook_structure = await self.content_generator.generate_ebook_structure(prompt)
+            ebook_structure = await self.content_generator.generate_ebook_structure(
+                prompt, config=config
+            )
+
+            # Step 1.5: Integrate image pages if provided
+            if image_pages:
+                logger.info(f"Integrating {len(image_pages)} image pages into ebook structure")
+                for image_page in image_pages:
+                    ebook_structure.add_coloring_page_section(image_page)
+                logger.info("Image pages successfully integrated")
 
             # Step 2: Generate ebook file
             logger.info(f"Generating {config.format.upper()} file...")
