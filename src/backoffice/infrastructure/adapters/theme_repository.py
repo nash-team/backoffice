@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 
 from backoffice.domain.entities.theme_profile import ThemeProfile
-from backoffice.domain.services.theme_loader import ThemeLoader
+from backoffice.domain.theme_loader import ThemeLoader
 
 logger = logging.getLogger(__name__)
 

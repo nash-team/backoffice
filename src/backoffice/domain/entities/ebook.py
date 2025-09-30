@@ -50,6 +50,11 @@ class EbookConfig:
     ribbon_theme: str = "licornes"
     show_ribbon: bool = True
 
+    # LLM Model Selection
+    ebook_type: str = "story"  # coloring_book, children_story, professional, story
+    image_model: str | None = None  # None = auto-select, or explicit model ID
+    text_model: str | None = None  # None = use default from env, or explicit model ID
+
     def __post_init__(self):
         """Validate config values after initialization"""
         if self.number_of_chapters is not None:
@@ -122,3 +127,6 @@ class Ebook:
     theme_id: str | None = None
     theme_version: str | None = None
     audience: str | None = None
+
+    # Ebook structure as dict (for regeneration)
+    structure_json: dict | None = None

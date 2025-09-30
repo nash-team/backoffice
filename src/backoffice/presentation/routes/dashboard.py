@@ -5,14 +5,12 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse
 
 from backoffice.domain.entities.ebook import EbookStatus
-from backoffice.domain.entities.ebook_theme import EbookType, ExtendedEbookConfig
 from backoffice.domain.entities.pagination import PaginationParams
-from backoffice.domain.services.prompt_builder import AgeGroup
 from backoffice.domain.usecases.approve_ebook import ApproveEbookUseCase
-from backoffice.domain.usecases.create_ebook import CreateEbookUseCase
 from backoffice.domain.usecases.get_ebooks import GetEbooksUseCase
 from backoffice.domain.usecases.get_stats import GetStatsUseCase
 from backoffice.domain.usecases.reject_ebook import RejectEbookUseCase
+from backoffice.domain.usecases.submit_ebook_for_validation import SubmitEbookForValidationUseCase
 from backoffice.infrastructure.adapters.theme_repository import ThemeRepository
 from backoffice.infrastructure.factories.repository_factory import (
     RepositoryFactory,
@@ -182,134 +180,160 @@ async def get_new_ebook_form(request: Request) -> Response:
 async def create_ebook(
     request: Request,
     factory: RepositoryFactoryDep,
-    prompt: str = Form(""),
-    ebook_type: str = Form(...),
-    theme_id: str = Form(None),
-    audience: str = Form(None),
-    theme_name: str = Form(None),
-    cover_template: str = Form(None),
-    toc_template: str = Form(None),
-    text_template: str = Form(None),
-    image_template: str = Form(None),
+    ebook_type: str = Form("coloring"),
+    theme_id: str = Form(...),  # Required
+    audience: str = Form(...),  # Required
     title: str = Form(None),
     author: str = Form("Assistant IA"),
-    cover_enabled: bool = Form(True),
-    toc: bool = Form(True),
-    format: str = Form("pdf"),
-    image_urls: str = Form(""),
-    convert_to_svg: bool = Form(True),
-    number_of_chapters: int = Form(None),
-    number_of_pages: int = Form(None),
+    number_of_pages: int = Form(8),  # Default 8 pages
 ) -> Response:
-    """Crée un nouvel ebook à partir du prompt et de la configuration."""
-    logger.info(
-        f"Creating ebook - Type: {ebook_type}, Theme: {theme_name}, " f"Prompt: {prompt[:50]}..."
-    )
+    """Crée un nouvel ebook de coloriage (coloring book only)."""
+    logger.info(f"Creating coloring book - Theme: {theme_id}, Audience: {audience}")
     try:
-        # Valider le type d'ebook
-        try:
-            parsed_ebook_type = EbookType(ebook_type)
-        except ValueError as e:
-            raise ValueError(f"Type d'ebook invalide: {ebook_type}") from e
-
-        # Créer la configuration étendue
-        extended_config = ExtendedEbookConfig(
-            ebook_type=parsed_ebook_type,
-            theme_name=theme_name,
-            cover_template=cover_template,
-            toc_template=toc_template,
-            text_template=text_template,
-            image_template=image_template,
-            cover_enabled=cover_enabled,
-            toc=toc,
-            format=format,
-        )
-
-        # Use case execution
-        ebook_repo = factory.get_ebook_repository()
-        ebook_processor = factory.get_ebook_processor()
-
-        create_ebook_usecase = CreateEbookUseCase(ebook_repo, ebook_processor)
+        # Only coloring books are supported
+        if ebook_type != "coloring":
+            raise ValueError(f"Type '{ebook_type}' non supporté. Seul 'coloring' est disponible.")
 
         # Handle theme-based generation for coloring books
-        image_pages = []
         theme_repository = ThemeRepository()
 
-        if ebook_type == "coloring":
-            # For coloring books, validate theme and audience are provided
-            if not theme_id:
-                raise ValueError("Theme ID is required for coloring books")
-            if not audience:
-                raise ValueError("Audience is required for coloring books")
+        # ✨ NEW ARCHITECTURE: Use hexagonal architecture for coloring book generation
+        from backoffice.application.ebook_generation_facade import EbookGenerationFacade
+        from backoffice.domain.entities.generation_request import AgeGroup as NewAgeGroup
 
-            # Load theme and generate theme-based content
-            logger.info(f"Loading theme with ID: {theme_id}")
-            theme = theme_repository.get_theme_by_id(theme_id)
-            age_group = AgeGroup.from_string(audience)
+        # Validate required parameters
+        if not theme_id:
+            raise ValueError("Theme ID is required for coloring books")
+        if not audience:
+            raise ValueError("Audience is required for coloring books")
 
-            logger.info(f"✅ Theme loaded successfully: '{theme.id}' ({theme.label})")
-            logger.info(f"Theme subject: {theme.blocks.subject}")
-            logger.info(
-                f"Generating theme-based coloring book (theme: {theme.id}, "
-                f"age: {age_group.value})"
-            )
+        # Load theme info
+        logger.info(f"Loading theme with ID: {theme_id}")
+        theme = theme_repository.get_theme_by_id(theme_id)
 
-            # Use theme-based generation
-            coloring_usecase = factory.get_coloring_pages_usecase()
-            pages_count = number_of_pages or 8  # Default to 8 pages if not specified
+        # Map form age values to enum values
+        age_mapping = {
+            "3-5": "2-4",  # TODDLER
+            "6-8": "6-8",  # EARLY_ELEMENTARY
+            "9-12": "8-12",  # ELEMENTARY
+        }
 
-            image_pages = await coloring_usecase.execute_with_theme(
-                theme=theme,
-                age_group=age_group,
-                number_of_pages=pages_count,
-                convert_to_svg=convert_to_svg,
-            )
-            logger.info(f"Generated {len(image_pages)} theme-based coloring pages")
+        mapped_audience = age_mapping.get(audience, audience)
+        new_age_group = NewAgeGroup(mapped_audience)
 
-        elif ebook_type in ["coloring", "mixed"] and image_urls.strip():
-            # Legacy URL-based generation for mixed types
-            logger.info("Processing coloring pages from provided URLs")
-            coloring_usecase = factory.get_coloring_pages_usecase()
-            coloring_requests = coloring_usecase.parse_image_urls(image_urls)
+        pages_count = number_of_pages or 8
 
-            if coloring_requests:
-                image_pages = await coloring_usecase.execute(
-                    coloring_requests,
-                    convert_to_svg=convert_to_svg,
-                )
-                logger.info(f"Generated {len(image_pages)} coloring pages")
+        logger.info("🎨 Generating coloring book via NEW ARCHITECTURE")
+        logger.info(f"   Theme: {theme.label} ({theme.blocks.subject})")
+        logger.info(f"   Age group: {new_age_group.value}")
+        logger.info(f"   Pages: {pages_count}")
 
-        # Get theme version and name if theme-based
-        theme_version = None
-        actual_theme_name = None
-        if theme_id:
-            theme_version = theme_repository.get_theme_version(theme_id)
-            # Use the loaded theme's label as the theme_name
-            actual_theme_name = theme.label if "theme" in locals() else None
-            logger.info(f"Using theme name for generation: {actual_theme_name}")
-
-        # Create new ebook with extended config
-        new_ebook = await create_ebook_usecase.execute(
-            prompt=prompt,
-            config=extended_config,
-            title=title,
-            ebook_type=ebook_type,
-            theme_name=actual_theme_name,
-            image_pages=image_pages,
-            number_of_chapters=number_of_chapters,
-            number_of_pages=number_of_pages,
-            theme_id=theme_id,
-            theme_version=theme_version,
-            audience=audience,
+        # 🚀 Call new architecture facade
+        generation_result = await EbookGenerationFacade.generate_coloring_book(
+            title=title or f"Livre de coloriage - {theme.label}",
+            theme=theme.blocks.subject,
+            age_group=new_age_group,
+            page_count=pages_count,
+            seed=None,
         )
-        logger.info(f"Ebook created successfully: {new_ebook.title} (ID: {new_ebook.id})")
 
-        # Get updated ebooks list with pagination (first page)
+        logger.info(f"✅ NEW ARCHITECTURE: PDF generated at {generation_result.pdf_uri}")
+        logger.info(f"   Total pages: {len(generation_result.pages_meta)}")
+
+        # 📤 Upload PDF to Google Drive
+        import pathlib
+
+        pdf_path = pathlib.Path(generation_result.pdf_uri.replace("file://", ""))
+        logger.info(f"📤 Uploading PDF to Google Drive: {pdf_path}")
+
+        # Get file storage adapter
+        file_storage = factory.get_file_storage()
+        drive_id = None
+        drive_preview_url = None
+
+        if file_storage.is_available():
+            try:
+                # Read PDF bytes
+                with open(pdf_path, "rb") as f:
+                    pdf_bytes = f.read()
+
+                # Upload to Drive
+                filename = f"{title or 'coloring_book'}_{theme_id}.pdf"
+                upload_result = await file_storage.upload_ebook(
+                    file_bytes=pdf_bytes,
+                    filename=filename,
+                    metadata={
+                        "title": title or f"Livre de coloriage - {theme.label}",
+                        "author": author or "Auteur Inconnu",
+                        "theme_id": theme_id,
+                        "audience": audience,
+                        "pages": str(pages_count),
+                    },
+                )
+
+                # GoogleDriveStorageAdapter returns "storage_id" and "storage_url"
+                drive_id = upload_result.get("storage_id")
+                drive_preview_url = upload_result.get("storage_url")
+
+                logger.info(f"✅ PDF uploaded to Drive: {drive_id}")
+                logger.info(f"   Preview URL: {drive_preview_url}")
+
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to upload to Drive: {e}")
+        else:
+            logger.warning("⚠️ Google Drive not available, skipping upload")
+
+        # 🎯 NEW ARCHITECTURE SHORTCUT: PDF is already generated, save ebook directly
+        import base64
+
+        from backoffice.domain.entities.ebook import Ebook, EbookStatus
+
+        # Use Drive preview URL if available, otherwise fall back to local file
+        final_preview_url = drive_preview_url if drive_id else generation_result.pdf_uri
+
+        # Build structure_json with pages metadata for regeneration
+        structure_json = {
+            "pages_meta": [
+                {
+                    "page_number": page_meta.page_number,
+                    "title": page_meta.title,
+                    "image_format": page_meta.format,
+                    "image_data_base64": base64.b64encode(page_meta.image_data).decode(),
+                }
+                for page_meta in generation_result.pages_meta
+            ]
+        }
+
+        # Create ebook entity directly with generated PDF
+        # Note: pdf_path and other legacy fields removed from Ebook entity
+        new_ebook = Ebook(
+            id=0,  # Will be set by repository
+            title=title or f"Livre de coloriage - {theme.label}",
+            author=author or "Auteur Inconnu",
+            created_at=None,  # Will be set by repository
+            status=EbookStatus.PENDING,
+            preview_url=final_preview_url,  # Google Drive preview URL
+            drive_id=drive_id,  # Google Drive file ID
+            config=None,  # No config needed for new arch
+            theme_id=theme_id,
+            theme_version=theme_repository.get_theme_version(theme_id),
+            audience=audience,
+            structure_json=structure_json,  # Store pages for regeneration
+        )
+
+        # Save to repository
+        ebook_repo = factory.get_ebook_repository()
+        saved_ebook = await ebook_repo.create(new_ebook)
+        logger.info(f"✅ Ebook saved to database: ID={saved_ebook.id}")
+
+        # Get updated ebooks list for response
+        from backoffice.domain.entities.pagination import PaginationParams
+        from backoffice.domain.usecases.get_ebooks import GetEbooksUseCase
+
         get_ebooks_usecase = GetEbooksUseCase(ebook_repo)
         pagination_params = PaginationParams(page=1, size=15)
         paginated_result = await get_ebooks_usecase.execute_paginated(pagination_params)
 
-        # Format response data
         ebooks_data = [
             {
                 "id": e.id,
@@ -322,7 +346,6 @@ async def create_ebook(
             for e in paginated_result.items
         ]
 
-        # Prepare pagination data for template
         pagination_data = {
             "current_page": paginated_result.page,
             "total_pages": paginated_result.total_pages,
@@ -359,12 +382,22 @@ async def create_ebook(
         </div>"""
         return HTMLResponse(content=error_html, status_code=400)
     except Exception as e:
-        # Generic error handling - return OOB error fragment
+        # Extract user-friendly error message from exception chain
         logger.error(f"Unexpected error in ebook creation: {str(e)}", exc_info=True)
-        error_html = """<div id="ebookFormErrors" hx-swap-oob="true" class="mb-3">
+
+        # Extract the last segment after the last colon (the most specific error message)
+        error_message = str(e)
+        parts = error_message.split(": ")
+        display_message = (
+            parts[-1] if parts else "Erreur lors de la création de l'ebook. Veuillez réessayer."
+        )
+
+        logger.info(f"Returning error message to frontend: {display_message}")
+
+        error_html = f"""<div id="ebookFormErrors" hx-swap-oob="true" class="mb-3">
             <div class="alert alert-danger" role="alert">
                 <i class="fas fa-exclamation-triangle me-2"></i>
-                Erreur lors de la création de l'ebook. Veuillez réessayer.
+                {display_message}
             </div>
         </div>"""
         return HTMLResponse(content=error_html, status_code=500)
@@ -438,5 +471,67 @@ async def reject_ebook(ebook_id: int, request: Request, factory: RepositoryFacto
         error_html = """<div class="alert alert-danger" role="alert">
             <i class="fas fa-exclamation-triangle me-2"></i>
             Erreur lors du rejet de l'ebook. Veuillez réessayer.
+        </div>"""
+        return HTMLResponse(content=error_html, status_code=500)
+
+
+@router.get("/ebooks/{ebook_id}/preview")
+async def get_ebook_preview_modal(
+    ebook_id: int, request: Request, factory: RepositoryFactoryDep
+) -> Response:
+    """Load ebook preview modal content."""
+    try:
+        ebook_repo = factory.get_ebook_repository()
+        ebook = await ebook_repo.get_by_id(ebook_id)
+
+        if not ebook:
+            raise HTTPException(status_code=404, detail=f"Ebook with id {ebook_id} not found")
+
+        return templates.TemplateResponse(
+            "partials/ebook_preview_modal.html", {"request": request, "ebook": ebook}
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error loading ebook preview {ebook_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error loading ebook preview") from e
+
+
+@router.post("/ebooks/{ebook_id}/submit")
+async def submit_ebook_for_validation(
+    ebook_id: int, request: Request, factory: RepositoryFactoryDep
+) -> Response:
+    """Submit an ebook for validation (DRAFT → PENDING transition)."""
+    try:
+        ebook_repo = factory.get_ebook_repository()
+        submit_usecase = SubmitEbookForValidationUseCase(ebook_repo)
+        updated_ebook = await submit_usecase.execute(ebook_id)
+
+        ebook_data = {
+            "id": updated_ebook.id,
+            "title": updated_ebook.title,
+            "author": updated_ebook.author,
+            "created_at": updated_ebook.created_at,
+            "status": updated_ebook.status.value,
+            "preview_url": updated_ebook.preview_url,
+            "drive_id": updated_ebook.drive_id,
+        }
+
+        return templates.TemplateResponse(
+            "partials/ebooks_table_row.html",
+            {"request": request, "ebook": type("Ebook", (), ebook_data)()},
+        )
+    except ValueError as e:
+        logger.warning(f"Validation error submitting ebook {ebook_id}: {str(e)}")
+        error_html = f"""<div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            {str(e)}
+        </div>"""
+        return HTMLResponse(content=error_html, status_code=400)
+    except Exception as e:
+        logger.error(f"Unexpected error submitting ebook {ebook_id}: {str(e)}", exc_info=True)
+        error_html = """<div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Erreur lors de la soumission de l'ebook. Veuillez réessayer.
         </div>"""
         return HTMLResponse(content=error_html, status_code=500)

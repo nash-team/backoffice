@@ -24,6 +24,23 @@ class FileStoragePort(ABC):
         pass
 
     @abstractmethod
+    async def update_ebook(self, file_id: str, file_bytes: bytes, filename: str) -> dict[str, str]:
+        """Update existing ebook file in storage
+
+        Args:
+            file_id: The storage-specific file identifier
+            file_bytes: The new file content as bytes
+            filename: Name for the updated file
+
+        Returns:
+            dict: Update result with storage_url, etc.
+
+        Raises:
+            FileStorageError: If update fails
+        """
+        pass
+
+    @abstractmethod
     async def get_file_info(self, file_id: str) -> dict[str, str]:
         """Get information about a stored file
 

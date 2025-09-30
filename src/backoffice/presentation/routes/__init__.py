@@ -5,9 +5,14 @@ from fastapi.responses import RedirectResponse
 
 from backoffice.presentation.routes.auth import router as auth_router
 from backoffice.presentation.routes.dashboard import router as dashboard_router
-from backoffice.presentation.routes.ebook_routes import router as ebook_router
+from backoffice.presentation.routes.ebook_routes import (
+    operations_router as ebook_operations_router,
+    router as ebook_router,
+)
 from backoffice.presentation.routes.templates import templates
-from backoffice.presentation.routes.theme_routes import router as theme_router
+
+# Legacy theme_routes commented - imports legacy code
+# from backoffice.presentation.routes.theme_routes import router as theme_router
 
 # Router pour les pages web
 pages_router = APIRouter(tags=["Pages"])
@@ -37,5 +42,7 @@ def init_routes(app: FastAPI) -> None:
     app.include_router(auth_router)
     app.include_router(dashboard_router)
     app.include_router(ebook_router)
-    app.include_router(theme_router)
+    app.include_router(ebook_operations_router)  # Ebook operations (regeneration, etc.)
+    # Legacy theme_router disabled
+    # app.include_router(theme_router)
     app.include_router(redirect_router)

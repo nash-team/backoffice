@@ -1,4 +1,6 @@
+import base64
 import logging
+from dataclasses import asdict
 
 from backoffice.domain.entities.ebook import EbookConfig
 from backoffice.domain.entities.image_page import ImagePage
@@ -7,6 +9,24 @@ from backoffice.domain.ports.ebook_generator_port import EbookGeneratorPort
 from backoffice.domain.ports.file_storage_port import FileStoragePort
 
 logger = logging.getLogger(__name__)
+
+
+def serialize_ebook_structure(structure_dict: dict) -> dict:
+    """Convert ebook structure to JSON-serializable format (bytes to base64, enums to values)"""
+    from enum import Enum
+
+    def convert_to_serializable(obj):
+        if isinstance(obj, bytes):
+            return base64.b64encode(obj).decode("utf-8")
+        elif isinstance(obj, Enum):
+            return obj.value
+        elif isinstance(obj, dict):
+            return {k: convert_to_serializable(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [convert_to_serializable(item) for item in obj]
+        return obj
+
+    return convert_to_serializable(structure_dict)
 
 
 class GenerateEbookUseCase:
@@ -77,7 +97,11 @@ class GenerateEbookUseCase:
             ebook_bytes = await self.ebook_generator.generate_ebook(ebook_structure, config)
 
             # Step 3: Upload to storage (if available)
-            result: dict[str, str | int | bool | None | list[str]] = {
+            # Serialize structure with bytes converted to base64
+            structure_dict = asdict(ebook_structure)
+            serializable_structure = serialize_ebook_structure(structure_dict)
+
+            result: dict[str, str | int | bool | None | list[str] | dict] = {
                 "title": ebook_structure.meta.title,
                 "author": ebook_structure.meta.author,
                 "format": config.format,
@@ -86,6 +110,7 @@ class GenerateEbookUseCase:
                 "storage_available": self.file_storage.is_available()
                 if self.file_storage
                 else False,
+                "ebook_structure": serializable_structure,  # Store structure for regeneration
             }
 
             if self.file_storage and self.file_storage.is_available():

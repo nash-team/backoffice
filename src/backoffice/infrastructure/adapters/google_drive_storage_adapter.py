@@ -79,6 +79,37 @@ class GoogleDriveStorageAdapter(FileStoragePort):
             logger.error(f"Error uploading ebook to Google Drive: {str(e)}")
             raise FileStorageError(f"Failed to upload ebook: {str(e)}") from e
 
+    async def update_ebook(self, file_id: str, file_bytes: bytes, filename: str) -> dict[str, str]:
+        """Update existing ebook in Google Drive"""
+        if not self.is_available():
+            raise FileStorageError("Google Drive storage is not available")
+
+        try:
+            logger.info(f"Updating ebook in Google Drive: {file_id}")
+
+            # Use GoogleDriveAdapter to update the file
+            if self.drive_adapter is None:
+                raise FileStorageError("Google Drive adapter not initialized")
+
+            # For now, we'll use the update_pdf_ebook method (to be implemented)
+            # or re-upload with same ID
+            update_result = await self.drive_adapter.update_pdf_ebook(
+                file_id=file_id, pdf_bytes=file_bytes
+            )
+
+            result: dict[str, str] = {
+                "storage_id": str(file_id),
+                "storage_url": str(update_result.get("preview_url", "")),
+                "storage_status": "updated",
+            }
+
+            logger.info(f"Successfully updated ebook in Google Drive: {file_id}")
+            return result
+
+        except Exception as e:
+            logger.error(f"Error updating ebook in Google Drive: {str(e)}")
+            raise FileStorageError(f"Failed to update ebook: {str(e)}") from e
+
     async def get_file_info(self, file_id: str) -> dict[str, str]:
         """Get information about a file stored in Google Drive"""
         if not self.is_available():

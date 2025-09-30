@@ -49,7 +49,30 @@ function createToast(message, type = 'danger') {
 // === Error Handling avec Bootstrap Toasts ===
 document.body.addEventListener('htmx:responseError', (e) => {
     console.error('HTMX Error:', e.detail);
-    createToast('Erreur lors de la requête. Veuillez réessayer.');
+
+    // Try to extract error message from response HTML
+    let errorMessage = 'Erreur lors de la requête. Veuillez réessayer.';
+
+    try {
+        const responseText = e.detail.xhr.responseText;
+        if (responseText) {
+            // Parse the HTML response to extract error message
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(responseText, 'text/html');
+            const alertDiv = doc.querySelector('.alert-danger');
+
+            if (alertDiv) {
+                // Extract text content, removing the icon
+                const icon = alertDiv.querySelector('i');
+                if (icon) icon.remove();
+                errorMessage = alertDiv.textContent.trim();
+            }
+        }
+    } catch (err) {
+        console.error('Error parsing response:', err);
+    }
+
+    createToast(errorMessage);
 });
 
 // === Network Error Handling ===

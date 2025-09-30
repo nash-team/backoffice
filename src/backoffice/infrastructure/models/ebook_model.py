@@ -8,7 +8,7 @@ Il ne doit pas être utilisé directement dans la logique métier ou l'API.
 
 from datetime import datetime
 
-from sqlalchemy import String
+from sqlalchemy import JSON, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from backoffice.domain.entities.ebook import EbookStatus
@@ -33,3 +33,6 @@ class EbookModel(Base):
     theme_id: Mapped[str | None] = mapped_column(String(50))
     theme_version: Mapped[str | None] = mapped_column(String(20))
     audience: Mapped[str | None] = mapped_column(String(10))
+
+    # Ebook structure as JSON (for regeneration)
+    structure_json: Mapped[dict | None] = mapped_column(JSON)

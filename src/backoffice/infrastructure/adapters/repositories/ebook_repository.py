@@ -55,6 +55,7 @@ class SqlAlchemyEbookRepository(EbookPort):
             theme_id=ebook.theme_id,
             theme_version=ebook.theme_version,
             audience=ebook.audience,
+            structure_json=ebook.structure_json,
         )
         self.db.add(db_ebook)
         self.db.commit()
@@ -75,6 +76,7 @@ class SqlAlchemyEbookRepository(EbookPort):
         db_ebook.theme_id = ebook.theme_id
         db_ebook.theme_version = ebook.theme_version
         db_ebook.audience = ebook.audience
+        db_ebook.structure_json = ebook.structure_json
 
         self.db.commit()
         self.db.refresh(db_ebook)
@@ -99,4 +101,5 @@ class SqlAlchemyEbookRepository(EbookPort):
             theme_id=str(db_ebook.theme_id) if db_ebook.theme_id else None,
             theme_version=str(db_ebook.theme_version) if db_ebook.theme_version else None,
             audience=str(db_ebook.audience) if db_ebook.audience else None,
+            structure_json=db_ebook.structure_json,
         )

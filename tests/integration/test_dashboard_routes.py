@@ -56,9 +56,11 @@ def test_get_ebooks_with_status(test_client, sample_ebooks):
 
 
 def test_get_new_ebook_form(test_client):
-    """Test de récupération du formulaire de création d'ebook"""
+    """Test de récupération du formulaire de création d'ebook (coloriage uniquement)"""
     response = test_client.get("/api/dashboard/ebooks/new")
     assert response.status_code == 200
     assert "form" in response.text
-    assert "textarea" in response.text
-    assert "prompt" in response.text
+    # Verify coloring book specific fields
+    assert "theme_id" in response.text
+    assert "audience" in response.text
+    assert "number_of_pages" in response.text

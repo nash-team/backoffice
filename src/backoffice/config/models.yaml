@@ -1,0 +1,16 @@
+# Model mappings for ebook generation (V1)
+# Source of truth for provider selection
+
+models:
+  # Cover generation: colorful, full-bleed
+  cover:
+    provider: openrouter
+    model: google/gemini-2.5-flash-image-preview
+    supports_vectorization: false
+
+  # Content page generation: B&W coloring pages
+  # Using Gemini via OpenRouter (same as cover, reliable and fast)
+  coloring_page:
+    provider: openrouter
+    model: google/gemini-2.5-flash-image-preview
+    supports_vectorization: false

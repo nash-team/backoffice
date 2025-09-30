@@ -153,3 +153,34 @@ class GoogleDriveAdapter:
         except Exception as e:
             logger.error(f"Erreur lors de l'upload du PDF '{title}': {str(e)}")
             raise GoogleDriveError(f"Erreur lors de l'upload du PDF: {str(e)}") from e
+
+    async def update_pdf_ebook(self, file_id: str, pdf_bytes: bytes) -> dict:
+        """Update an existing PDF ebook in Google Drive"""
+        try:
+            logger.info(f"Updating PDF in Google Drive: {file_id}")
+
+            # Create media upload for PDF
+            media = MediaIoBaseUpload(
+                BytesIO(pdf_bytes), mimetype="application/pdf", resumable=True
+            )
+
+            # Update the file content
+            updated_file = (
+                self.drive_service.files()
+                .update(fileId=file_id, media_body=media, fields="id,name")
+                .execute()
+            )
+
+            drive_id = updated_file.get("id")
+            preview_url = f"https://drive.google.com/file/d/{drive_id}/preview"
+
+            logger.info(f"PDF updated successfully. Drive ID: {drive_id}")
+
+            return {
+                "drive_id": drive_id,
+                "preview_url": preview_url,
+            }
+
+        except Exception as e:
+            logger.error(f"Error updating PDF in Google Drive: {str(e)}")
+            raise GoogleDriveError(f"Error updating PDF: {str(e)}") from e

@@ -24,7 +24,7 @@ class EbookGeneratorPort(ABC):
         pass
 
     @abstractmethod
-    def supports_format(self, format_type: str) -> bool:
+    def supports_format(self, format_type: str) -> bool:  # noqa: ARG002
         """Check if this generator supports the given format
 
         Args:

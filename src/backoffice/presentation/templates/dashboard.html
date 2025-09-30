@@ -8,6 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="/presentation/static/css/dashboard.css" rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/json-enc.js"></script>
 </head>
 <body>
     <div class="container-fluid">
@@ -157,7 +158,7 @@
                     </div>
                 </div>
 
-                <!-- Modal pour la prévisualisation -->
+                <!-- Modal pour la création d'ebook -->
                 <div class="modal fade" id="previewModal" data-testid="ebook-modal" tabindex="-1">
                     <div class="modal-dialog modal-lg">
                         <div class="modal-content">
@@ -171,6 +172,15 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Modal pour l'aperçu d'ebook -->
+                <div class="modal fade" id="ebookPreviewModal" data-testid="ebook-preview-modal" tabindex="-1">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <!-- Le contenu sera chargé dynamiquement -->
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
     </div>
@@ -181,233 +191,40 @@
 
     <script src="/presentation/static/js/dashboard.js"></script>
 
-    <!-- Alpine.js Ebook Form Component -->
+    <!-- Alpine.js Ebook Form Component (Coloring books only) -->
     <script>
     function ebookForm() {
       return {
-        selectedType: '',
-        selectedTheme: null,
+        selectedTheme: '',
         selectedAudience: '',
-        promptText: '',
-        imageUrls: '',
-        imagePreviews: [],
-        showThemeSection: false,
-        showContentSection: false,
-        showAdvancedSection: false,
-        showAdvancedOptions: false,
-
-        placeholders: {
-          'story': 'Ex: Génère une histoire pour enfants sur une petite fille qui découvre un jardin magique peuplé de créatures fantastiques. L\'histoire doit comporter 3 chapitres courts et être adaptée aux enfants de 6-10 ans.',
-          'coloring': 'Ex: Génère un livre de coloriage sur le thème des animaux de la forêt. Créer 8 pages avec des illustrations simples et amusantes : un écureuil, un lapin, un hibou, etc. Chaque image doit être adaptée au coloriage par des enfants de 4-8 ans.',
-          'mixed': 'Ex: Génère une aventure interactive combinant histoire et coloriage sur le thème des pirates. 2 chapitres d\'histoire alternés avec 2 pages de coloriage (bateau pirate, trésor). Pour enfants de 5-9 ans.'
-        },
-
-        get promptPlaceholder() {
-          return this.placeholders[this.selectedType] || '';
-        },
 
         get isFormValid() {
-          // Different validation logic for coloring vs other types
-          if (this.selectedType === 'coloring') {
-            return this.selectedType && this.selectedTheme && this.selectedAudience;
-          }
-          return this.selectedType && this.selectedTheme && this.promptText.length > 0;
+          return this.selectedTheme && this.selectedAudience;
         },
 
         init() {
-          console.log('Alpine.js ebook form initialized');
-
-          // Listen for theme selection events from HTMX loaded content
-          document.addEventListener('click', (e) => {
-            if (e.target.closest('.theme-card')) {
-              this.selectTheme(e.target.closest('.theme-card'));
-            }
-          });
-        },
-
-        selectType(type) {
-          console.log('Selecting type:', type);
-          this.selectedType = type;
-          this.selectedTheme = null; // Reset theme selection
-          this.selectedAudience = ''; // Reset audience selection
-
-          if (type === 'coloring') {
-            // For coloring books, show theme section immediately and content section
-            this.showThemeSection = true;
-            this.showContentSection = true;
-            this.showAdvancedSection = true;
-          } else {
-            // For other types, show theme section and prepare for traditional flow
-            this.showThemeSection = true;
-            this.showContentSection = false;
-            this.showAdvancedSection = false;
-          }
-
-          this.validateForm();
-        },
-
-        onThemesLoaded() {
-          console.log('Themes loaded via HTMX');
-          // Setup click handlers for dynamically loaded theme cards
-          setTimeout(() => {
-            const themeCards = document.querySelectorAll('.theme-card');
-            themeCards.forEach(card => {
-              // Remove any existing onclick to avoid duplicates
-              card.onclick = null;
-            });
-          }, 100);
-        },
-
-        selectTheme(themeCard) {
-          console.log('Selecting theme:', themeCard);
-
-          // Remove selected class from all theme cards
-          document.querySelectorAll('.theme-card').forEach(card =>
-            card.classList.remove('selected')
-          );
-
-          // Add selected class to clicked card
-          themeCard.classList.add('selected');
-
-          // Parse theme data and populate hidden fields
-          try {
-            const themeData = JSON.parse(themeCard.dataset.theme);
-            this.selectedTheme = themeData;
-
-            // Update hidden fields
-            const fieldMappings = {
-              'theme_name': 'name',
-              'cover_template': 'cover_template',
-              'toc_template': 'toc_template',
-              'text_template': 'text_template',
-              'image_template': 'image_template'
-            };
-
-            Object.entries(fieldMappings).forEach(([fieldId, dataKey]) => {
-              const input = document.getElementById(fieldId);
-              if (input && themeData[dataKey]) {
-                input.value = themeData[dataKey];
-              }
-            });
-
-            // Show content and advanced sections
-            this.showContentSection = true;
-            this.showAdvancedSection = true;
-
-            this.validateForm();
-          } catch (e) {
-            console.error('Error parsing theme data:', e);
-          }
+          console.log('Alpine.js coloring book form initialized');
         },
 
         validateForm() {
-          // This is automatically computed via the isFormValid getter
           console.log('Form validation:', {
-            type: this.selectedType,
-            theme: !!this.selectedTheme,
-            prompt: this.promptText.length,
+            theme: this.selectedTheme,
+            audience: this.selectedAudience,
             valid: this.isFormValid
           });
-        },
-
-        onImageUrlsChange() {
-          console.log('Image URLs changed:', this.imageUrls);
-          this.updateImagePreviews();
-        },
-
-        updateImagePreviews() {
-          // Clear existing previews
-          this.imagePreviews = [];
-
-          if (!this.imageUrls.trim()) {
-            return;
-          }
-
-          // Parse URLs (one per line)
-          const urls = this.imageUrls
-            .split('\n')
-            .map(url => url.trim())
-            .filter(url => url.length > 0);
-
-          // Create previews for valid URLs
-          urls.forEach((url, index) => {
-            if (this.isValidImageUrl(url)) {
-              this.imagePreviews.push({
-                url: url,
-                index: index,
-                status: 'loading'
-              });
-
-              // Test if the image loads
-              this.testImageLoad(url, index);
-            }
-          });
-        },
-
-        isValidImageUrl(url) {
-          try {
-            new URL(url);
-            return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
-          } catch {
-            return false;
-          }
-        },
-
-        testImageLoad(url, index) {
-          const img = new Image();
-          img.onload = () => {
-            const preview = this.imagePreviews.find(p => p.index === index);
-            if (preview) {
-              preview.status = 'loaded';
-            }
-          };
-          img.onerror = () => {
-            const preview = this.imagePreviews.find(p => p.index === index);
-            if (preview) {
-              preview.status = 'error';
-            }
-          };
-          img.src = url;
-        },
-
-        removeImagePreview(index) {
-          // Remove the preview
-          this.imagePreviews.splice(index, 1);
-
-          // Update the URLs text area
-          const urls = this.imageUrls
-            .split('\n')
-            .map(url => url.trim())
-            .filter(url => url.length > 0);
-
-          urls.splice(index, 1);
-          this.imageUrls = urls.join('\n');
         }
       };
     }
 
     // Global function to initialize Alpine.js for dynamically loaded form
     window.initializeEnhancedEbookForm = function() {
-      console.log('Initializing Alpine.js for dynamically loaded form');
+      console.log('Initializing Alpine.js for coloring book form');
       const modalBody = document.querySelector('#previewModal .modal-body');
       if (modalBody && window.Alpine) {
         Alpine.initTree(modalBody);
         console.log('Alpine.js initialized for modal content');
       } else if (!window.Alpine) {
         console.error('Alpine.js not found - form may not work correctly');
-      }
-    };
-
-    // Global function to handle themes loaded from HTMX
-    window.onThemesLoaded = function() {
-      console.log('Themes loaded via HTMX - global handler');
-      // Find the Alpine.js component and call its method
-      const formComponent = document.querySelector('[x-data]');
-      if (formComponent && formComponent._x_dataStack && formComponent._x_dataStack[0]) {
-        const alpineData = formComponent._x_dataStack[0];
-        if (alpineData.onThemesLoaded) {
-          alpineData.onThemesLoaded();
-        }
       }
     };
     </script>

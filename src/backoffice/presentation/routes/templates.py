@@ -30,11 +30,17 @@ EBOOK_STATUS_CONFIG = {
 
 def format_ebook_status_label(status_value):
     """Retourne le label traduit du statut."""
+    # Handle both string and Enum values
+    if hasattr(status_value, "value"):
+        status_value = status_value.value
     return EBOOK_STATUS_CONFIG.get(status_value, {}).get("label", status_value)
 
 
 def format_ebook_status_class(status_value):
     """Retourne la classe CSS pour le statut."""
+    # Handle both string and Enum values
+    if hasattr(status_value, "value"):
+        status_value = status_value.value
     return EBOOK_STATUS_CONFIG.get(status_value, {}).get("css_class", "bg-secondary")
 
 
