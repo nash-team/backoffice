@@ -386,9 +386,16 @@
       };
     }
 
-    // Global function for backward compatibility
+    // Global function to initialize Alpine.js for dynamically loaded form
     window.initializeEnhancedEbookForm = function() {
-      console.log('Legacy form initialization called');
+      console.log('Initializing Alpine.js for dynamically loaded form');
+      const modalBody = document.querySelector('#previewModal .modal-body');
+      if (modalBody && window.Alpine) {
+        Alpine.initTree(modalBody);
+        console.log('Alpine.js initialized for modal content');
+      } else if (!window.Alpine) {
+        console.error('Alpine.js not found - form may not work correctly');
+      }
     };
 
     // Global function to handle themes loaded from HTMX
