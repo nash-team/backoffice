@@ -231,7 +231,7 @@ async def create_ebook(
         # 🚀 Call new architecture facade
         generation_result = await EbookGenerationFacade.generate_coloring_book(
             title=title or f"Livre de coloriage - {theme.label}",
-            theme=theme.blocks.subject,
+            theme=theme_id,  # Use theme ID for prompt template matching
             age_group=new_age_group,
             page_count=pages_count,
             seed=None,

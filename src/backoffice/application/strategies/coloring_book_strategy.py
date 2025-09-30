@@ -14,6 +14,7 @@ from backoffice.domain.entities.generation_request import (
 from backoffice.domain.page_generation import ContentPageGenerationService
 from backoffice.domain.pdf_assembly import PDFAssemblyService
 from backoffice.domain.ports.assembly_port import AssembledPage
+from backoffice.domain.prompt_template_engine import PromptTemplateEngine
 
 logger = logging.getLogger(__name__)
 
@@ -204,24 +205,23 @@ class ColoringBookStrategy:
         )
 
     def _build_page_prompts(self, request: GenerationRequest) -> list[str]:
-        """Build prompts for content page generation.
+        """Build prompts for content page generation using template engine.
 
         Args:
             request: Generation request
 
         Returns:
-            List of page prompts
+            List of page prompts with varied compositions
         """
-        prompts = []
-        for _ in range(request.page_count):
-            prompt = (
-                f"Simple coloring page for children aged {request.age_group.value}. "
-                f"Theme: {request.theme}. "
-                f"Clean black outlines, white fill areas, suitable for coloring. "
-                f"NO text, NO numbers, just the illustration."
-            )
-            prompts.append(prompt)
+        # Initialize template engine with request seed for reproducibility
+        engine = PromptTemplateEngine(seed=request.seed)
 
+        # Generate varied prompts based on theme
+        prompts = engine.generate_prompts(
+            theme=request.theme, count=request.page_count, age_group=request.age_group.value
+        )
+
+        logger.info(f"Generated {len(prompts)} varied prompts using template engine")
         return prompts
 
     def _generate_output_path(self, request: GenerationRequest) -> str:

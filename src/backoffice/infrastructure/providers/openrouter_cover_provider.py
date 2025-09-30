@@ -123,6 +123,7 @@ class OpenRouterCoverProvider(CoverGenerationPort, ContentPageGenerationPort):
 
         try:
             # Generate via chat endpoint (Gemini-specific approach)
+            # Gemini 2.5 Flash Image Preview requires modalities: ["image", "text"]
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -131,6 +132,13 @@ class OpenRouterCoverProvider(CoverGenerationPort, ContentPageGenerationPort):
                         "content": full_prompt,
                     }
                 ],
+                extra_body={
+                    "modalities": ["image", "text"]  # Required for Gemini image generation
+                },
+                extra_headers={
+                    "HTTP-Referer": "https://ebook-generator.app",
+                    "X-Title": "Ebook Generator Backoffice",
+                },
                 max_tokens=1000,
                 temperature=0.7 if seed is None else 0.3,
                 # Note: OpenRouter doesn't support seed for image generation yet
