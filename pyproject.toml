@@ -38,6 +38,9 @@ dependencies = [
   # HTTP client for external API calls
   "httpx>=0.25.1",
 
+  # YAML parsing for theme configuration
+  "pyyaml>=6.0",
+
   # NOTE: ajoute "google-auth-oauthlib" seulement si tu fais un vrai flow OAuth web.
 ]
 
@@ -55,6 +58,7 @@ dev = [
   "types-passlib",
   "types-requests",
   "types-python-dateutil",
+  "types-pyyaml",
 
   # Tests & e2e
   "pytest==7.4.3",
@@ -128,6 +132,8 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["backoffice.infrastructure.adapters.repositories.*"]
 disable_error_code = ["assignment"]
+
+
 
 # --- Deptry ---
 [tool.deptry]

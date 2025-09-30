@@ -46,14 +46,17 @@ class ImageGenerationPort(ABC):
         pass
 
     @abstractmethod
-    async def generate_coloring_page_from_description(self, description: str) -> bytes:
-        """Generate a coloring page specifically designed for children
+    async def generate_coloring_page_from_description(
+        self, description: str, is_cover: bool = False
+    ) -> bytes:
+        """Generate a coloring page or colorful cover image designed for children
 
         Args:
-            description: Description of what should be in the coloring page
+            description: Description of what should be in the image
+            is_cover: True for colorful cover image, False for black/white coloring page
 
         Returns:
-            bytes: Generated image data in PNG format optimized for coloring
+            bytes: Generated image data in PNG format (colorful for covers, B&W for pages)
 
         Raises:
             ImageGenerationError: If image generation fails

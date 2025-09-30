@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from backoffice.domain.constants import PageFormat
 from backoffice.domain.entities.page_content import EbookPages
 from backoffice.domain.services.pdf_renderer import PdfRenderer, PdfRenderingError
 
@@ -120,7 +121,7 @@ class TestPdfRenderer:
 
     def test_get_global_css_includes_page_types(self):
         # When
-        css = self.renderer._get_global_css()
+        css = self.renderer.css_generator.generate_global_css(PageFormat.A4)
 
         # Then
         assert "@page cover {" in css
@@ -130,7 +131,7 @@ class TestPdfRenderer:
 
     def test_get_global_css_includes_page_breaks(self):
         # When
-        css = self.renderer._get_global_css()
+        css = self.renderer.css_generator.generate_global_css(PageFormat.A4)
 
         # Then
         assert ".page-break-before { page-break-before: always; }" in css
@@ -138,12 +139,12 @@ class TestPdfRenderer:
 
     def test_get_global_css_includes_image_styles(self):
         # When
-        css = self.renderer._get_global_css()
+        css = self.renderer.css_generator.generate_global_css(PageFormat.A4)
 
         # Then
-        assert "img { max-width: 100%; height: auto; }" in css
+        assert "img {" in css and "max-width: 100%;" in css and "height: auto;" in css
         assert ".full-page-image {" in css
-        assert "width: 100vw;" in css
+        assert "width: 100%;" in css
 
     @patch("backoffice.domain.services.pdf_renderer.TemplateRegistry")
     def test_init_creates_template_registry(self, mock_template_registry):

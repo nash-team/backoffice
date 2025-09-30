@@ -84,8 +84,7 @@ class TestEbookPageAssembler:
         assert result.pages[3].type == ContentType.TEXT
         assert result.meta["type"] == "story"
 
-    @patch("backoffice.domain.services.ebook_page_assembler.create_auto_toc_page")
-    def test_create_coloring_ebook_with_custom_config(self, mock_toc):
+    def test_create_coloring_ebook_with_custom_config(self):
         # Given
         title = "Coloring Ebook"
         author = "Test Author"
@@ -95,18 +94,18 @@ class TestEbookPageAssembler:
         ]
         config = EbookConfig(cover_enabled=True, toc=True)
 
-        mock_toc_page = Mock()
-        mock_toc.return_value = mock_toc_page
-
         # When
         result = self.assembler.create_coloring_ebook(title, author, images, config)
 
         # Then
-        assert len(result.pages) == 4  # cover + toc + 2 images
+        # Only cover + 1 coloring image (first image is used as cover, not duplicated)
+        assert len(result.pages) == 2  # cover (with image1) + image2 only
         assert result.pages[0].type == ContentType.COVER
-        assert result.pages[1] == mock_toc_page
-        assert result.pages[2].type == ContentType.FULL_PAGE_IMAGE
-        assert result.pages[3].type == ContentType.FULL_PAGE_IMAGE
+        assert result.pages[0].data["image_url"] == "image1.jpg"  # First image used as cover
+        assert result.pages[1].type == ContentType.FULL_PAGE_IMAGE
+        assert (
+            result.pages[1].data["image_url"] == "image2.jpg"
+        )  # Only second image as coloring page
         assert result.meta["type"] == "coloring"
 
     def test_mix_story_and_coloring_content_equal_length(self):

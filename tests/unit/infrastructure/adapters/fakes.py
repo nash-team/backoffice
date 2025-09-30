@@ -93,8 +93,12 @@ class FakeImageGenerator(ImageGenerationPort):
         self.generate_image_from_prompt_calls.append((prompt, size))
         return b"fake_image_from_prompt"
 
-    async def generate_coloring_page_from_description(self, description: str) -> bytes:
-        self.generate_coloring_page_from_description_calls.append(description)
+    async def generate_coloring_page_from_description(
+        self, description: str, is_cover: bool = False
+    ) -> bytes:
+        self.generate_coloring_page_from_description_calls.append((description, is_cover))
+        if is_cover:
+            return b"fake_colorful_cover"
         return b"fake_coloring_page"
 
 
@@ -143,7 +147,9 @@ class FakeFailingImageGenerator(ImageGenerationPort):
     async def generate_image_from_prompt(self, prompt: str, size: str = "1024x1024") -> bytes:
         raise Exception("Fake prompt generation failure")
 
-    async def generate_coloring_page_from_description(self, description: str) -> bytes:
+    async def generate_coloring_page_from_description(
+        self, description: str, is_cover: bool = False
+    ) -> bytes:
         raise Exception("Fake coloring page failure")
 
 
@@ -159,5 +165,7 @@ class FakeUnavailableImageGenerator(ImageGenerationPort):
     async def generate_image_from_prompt(self, prompt: str, size: str = "1024x1024") -> bytes:
         return b"fallback_image_data"
 
-    async def generate_coloring_page_from_description(self, description: str) -> bytes:
+    async def generate_coloring_page_from_description(
+        self, description: str, is_cover: bool = False
+    ) -> bytes:
         return b"fallback_image_data"

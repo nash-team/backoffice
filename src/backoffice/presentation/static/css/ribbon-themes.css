@@ -1,0 +1,161 @@
+/*
+ * Ribbon Themes for Coloring Book Covers
+ * Provides three preset color schemes for different ebook themes
+ */
+
+/* =============================================================================
+   THEME: LICORNES (Unicorns)
+   Colors: Pink, Purple, Rainbow pastels
+   ============================================================================= */
+.theme-licornes {
+  --ribbon-bg: #FF69B4;
+  --ribbon-text-color: #FFFFFF;
+  --theme-primary: #FF69B4;
+  --theme-secondary: #DA70D6;
+  --theme-accent: #FFB6C1;
+}
+
+.theme-licornes .title-ribbon {
+  background: linear-gradient(135deg,
+    rgba(255, 105, 180, var(--ribbon-alpha)) 0%,
+    rgba(218, 112, 214, var(--ribbon-alpha)) 50%,
+    rgba(255, 182, 193, var(--ribbon-alpha)) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 6px 18px rgba(255, 105, 180, 0.2),
+    0 2px 8px rgba(218, 112, 214, 0.15);
+}
+
+.theme-licornes .ribbon-icon {
+  filter: drop-shadow(0 1px 2px rgba(255, 105, 180, 0.5));
+}
+
+.theme-licornes .ribbon-title {
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+/* =============================================================================
+   THEME: DINOSAURES (Dinosaurs)
+   Colors: Green, Earth tones, Adventure vibes
+   ============================================================================= */
+.theme-dinosaures {
+  --ribbon-bg: #228B22;
+  --ribbon-text-color: #FFFFFF;
+  --theme-primary: #228B22;
+  --theme-secondary: #32CD32;
+  --theme-accent: #90EE90;
+}
+
+.theme-dinosaures .title-ribbon {
+  background: linear-gradient(135deg,
+    rgba(34, 139, 34, var(--ribbon-alpha)) 0%,
+    rgba(50, 205, 50, var(--ribbon-alpha)) 50%,
+    rgba(144, 238, 144, var(--ribbon-alpha)) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow:
+    0 6px 18px rgba(34, 139, 34, 0.25),
+    0 2px 8px rgba(50, 205, 50, 0.15);
+}
+
+.theme-dinosaures .ribbon-icon {
+  filter: drop-shadow(0 1px 2px rgba(34, 139, 34, 0.6));
+}
+
+.theme-dinosaures .ribbon-title {
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 0 6px rgba(144, 238, 144, 0.3);
+  font-weight: 700;
+}
+
+/* =============================================================================
+   THEME: PIRATES (Pirates)
+   Colors: Deep blue, Gold, Adventure navy
+   ============================================================================= */
+.theme-pirates {
+  --ribbon-bg: #1E3A8A;
+  --ribbon-text-color: #FFD700;
+  --theme-primary: #1E3A8A;
+  --theme-secondary: #3B82F6;
+  --theme-accent: #FFD700;
+}
+
+.theme-pirates .title-ribbon {
+  background: linear-gradient(135deg,
+    rgba(30, 58, 138, var(--ribbon-alpha)) 0%,
+    rgba(59, 130, 246, var(--ribbon-alpha)) 50%,
+    rgba(30, 58, 138, var(--ribbon-alpha)) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  box-shadow:
+    0 6px 18px rgba(30, 58, 138, 0.3),
+    0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.theme-pirates .ribbon-icon {
+  color: #FFD700;
+  filter: drop-shadow(0 1px 2px rgba(30, 58, 138, 0.7));
+}
+
+.theme-pirates .ribbon-title {
+  color: #FFD700;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 0 8px rgba(255, 215, 0, 0.4);
+  font-weight: 700;
+}
+
+/* =============================================================================
+   RESPONSIVE ADJUSTMENTS
+   Ensure themes work well across different screen sizes
+   ============================================================================= */
+@media (max-width: 768px) {
+  .theme-licornes .title-ribbon,
+  .theme-dinosaures .title-ribbon,
+  .theme-pirates .title-ribbon {
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.15),
+      0 1px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* =============================================================================
+   WEASYPRINT PDF COMPATIBILITY
+   Fallbacks for PDF rendering where advanced CSS features may not work
+   ============================================================================= */
+@media print {
+  .theme-licornes .title-ribbon {
+    background: rgba(255, 105, 180, 0.75) !important;
+    backdrop-filter: none;
+  }
+
+  .theme-dinosaures .title-ribbon {
+    background: rgba(34, 139, 34, 0.75) !important;
+    backdrop-filter: none;
+  }
+
+  .theme-pirates .title-ribbon {
+    background: rgba(30, 58, 138, 0.75) !important;
+    backdrop-filter: none;
+  }
+
+  .theme-licornes .ribbon-icon,
+  .theme-dinosaures .ribbon-icon,
+  .theme-pirates .ribbon-icon {
+    filter: none;
+  }
+}
+
+/* =============================================================================
+   UTILITY CLASSES
+   Helper classes for quick theme switching
+   ============================================================================= */
+.ribbon-theme-licornes { @extend .theme-licornes; }
+.ribbon-theme-dinosaures { @extend .theme-dinosaures; }
+.ribbon-theme-pirates { @extend .theme-pirates; }
+
+/* Theme selection helper */
+.theme-selector {
+  display: none; /* Hidden by default, used for theme switching logic */
+}

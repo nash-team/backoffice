@@ -1,0 +1,16 @@
+id: neutral-default
+label: "Thème Neutre (Par défaut)"
+palette:
+  base: ["#ffffff", "#f5f5f5", "#e0e0e0"]
+  accents_allowed: ["#666666", "#333333"]
+  forbidden_keywords: ["bright neon", "rainbow gradient"]
+prompt_blocks:
+  subject: "a simple, child-friendly illustration, centered composition"
+  environment: "clean white background, minimal details"
+  tone: "calm, neutral, kid-friendly"
+  positives: ["clean lines", "simple design", "professional children's book style", "high quality"]
+  negatives: ["no text", "no mockup", "no borders", "no complex details", "no dark themes"]
+ribbon:
+  bg_rgb: [255, 255, 255]
+  text_hex: "#222222"
+  alpha: 0.9

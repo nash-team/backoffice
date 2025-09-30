@@ -21,18 +21,44 @@ class PageFactory:
         template: str = "story",
         subtitle: str | None = None,
         image_url: str | None = None,
+        ribbon_title: str | None = None,
+        ribbon_theme: str | None = None,
+        show_ribbon: bool | None = None,
     ) -> PageContent:
-        """Create a cover page with the given parameters"""
+        """Create a cover page with the given parameters
+
+        Args:
+            title: Main title of the cover
+            author: Author name
+            template: Template to use (story, coloring, etc.)
+            subtitle: Optional subtitle
+            image_url: Optional background image URL
+            ribbon_title: Title to display in the ribbon (for coloring books)
+            ribbon_theme: Theme for the ribbon (licornes, dinosaures, pirates)
+            show_ribbon: Whether to show the ribbon (for coloring books)
+        """
+        data: dict[str, str | bool | None] = {
+            "title": title,
+            "subtitle": subtitle,
+            "author": author,
+            "image_url": image_url,
+        }
+
+        # Add ribbon configuration for coloring books
+        if template == "coloring":
+            data.update(
+                {
+                    "ribbon_title": ribbon_title or "Cahier de coloriage",
+                    "ribbon_theme": ribbon_theme or "licornes",
+                    "show_ribbon": show_ribbon if show_ribbon is not None else True,
+                }
+            )
+
         return PageContent(
             type=ContentType.COVER,
             template=template,
             layout=PageLayout.COVER,
-            data={
-                "title": title,
-                "subtitle": subtitle,
-                "author": author,
-                "image_url": image_url,
-            },
+            data=data,
             id="cover",
             title="Couverture",
             display_in_toc=False,

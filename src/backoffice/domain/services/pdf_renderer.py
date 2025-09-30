@@ -6,7 +6,9 @@ from pathlib import Path
 
 import weasyprint
 
+from backoffice.domain.constants import PageFormat
 from backoffice.domain.entities.page_content import EbookPages
+from backoffice.domain.services.pdf_css_generator import PdfCssGenerator
 from backoffice.domain.services.template_registry import TemplateRegistry
 
 logger = logging.getLogger(__name__)
@@ -25,9 +27,12 @@ class PdfRenderer:
         """Initialize with templates directory"""
         self.templates_dir = Path(templates_dir)
         self.template_registry = TemplateRegistry(templates_dir)
+        self.css_generator = PdfCssGenerator()
         self.temp_images: set[str] = set()  # Track temporary image files for cleanup
 
-    def generate_pdf_from_pages(self, ebook: EbookPages) -> bytes:
+    def generate_pdf_from_pages(
+        self, ebook: EbookPages, page_format: PageFormat = PageFormat.A4
+    ) -> bytes:
         """
         Generate PDF from modular page structure
 
@@ -45,10 +50,17 @@ class PdfRenderer:
             html_content = self.template_registry.render_ebook(ebook_with_temp_files)
 
             # Wrap with minimal layout and CSS
-            full_html = self._wrap_with_layout(html_content, ebook_with_temp_files.meta)
+            full_html = self._wrap_with_layout(
+                html_content, ebook_with_temp_files.meta, page_format
+            )
 
             # Generate PDF with WeasyPrint
             logger.info(f"Starting PDF generation with {len(self.temp_images)} temp images")
+            for i, page in enumerate(ebook_with_temp_files.pages):
+                logger.info(
+                    f"PDF Page {i+1}: type={page.type}, title='{page.title}', "
+                    f"template='{page.template}'"
+                )
             for temp_file in self.temp_images:
                 if os.path.exists(temp_file):
                     file_size = os.path.getsize(temp_file)
@@ -79,7 +91,9 @@ class PdfRenderer:
             self._cleanup_temp_files()
             raise PdfRenderingError(f"PDF generation error: {e}") from e
 
-    def _wrap_with_layout(self, content: str, meta: dict) -> str:
+    def _wrap_with_layout(
+        self, content: str, meta: dict, page_format: PageFormat = PageFormat.A4
+    ) -> str:
         """Wrap content with minimal HTML layout and CSS"""
         title = meta.get("title", "Ebook")
 
@@ -90,71 +104,13 @@ class PdfRenderer:
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title}</title>
     <style>
-        {self._get_global_css()}
+        {self.css_generator.generate_global_css(page_format)}
     </style>
 </head>
 <body>
 {content}
 </body>
 </html>"""
-
-    def _get_global_css(self) -> str:
-        """Get global CSS styles for PDF rendering"""
-        return """
-        /* Global CSS for all page types */
-        @page {
-            size: A4;
-            margin: 2cm;
-        }
-
-        /* Cover pages */
-        @page cover {
-            size: A4;
-            margin: 0;
-        }
-
-        /* Full page bleed (coloring) */
-        @page full-bleed {
-            size: A4;
-            margin: 0;
-        }
-
-        /* Standard pages with reduced margins */
-        @page minimal {
-            size: A4;
-            margin: 1cm;
-        }
-
-        body {
-            font-family: "Georgia", "Times New Roman", serif;
-            line-height: 1.6;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Apply CSS layouts */
-        .page.cover { page: cover; }
-        .page.full-bleed { page: full-bleed; }
-        .page.minimal { page: minimal; }
-        .page.standard { page: auto; }
-
-        /* Page breaks */
-        .page-break-before { page-break-before: always; }
-        .page-break-after { page-break-after: always; }
-
-        /* Generic styles */
-        h1, h2, h3 { page-break-after: avoid; }
-        img { max-width: 100%; height: auto; }
-
-        /* Full page image style */
-        .full-page-image {
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
-            page-break-before: always;
-        }
-        """
 
     def _convert_data_urls_to_temp_files(self, ebook: EbookPages) -> EbookPages:
         """Convert data URLs in ebook pages to temporary file URLs for WeasyPrint compatibility"""

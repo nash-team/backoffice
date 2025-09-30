@@ -26,14 +26,16 @@ class OpenAIContentAdapter(ContentGenerationPort):
         return self.openai_service.client is not None
 
     async def generate_ebook_structure(
-        self, prompt: str, config: EbookConfig | None = None
+        self, prompt: str, config: EbookConfig | None = None, theme_name: str | None = None
     ) -> EbookStructure:
         """Generate structured ebook content from prompt using OpenAI"""
         try:
             logger.info(f"Generating ebook structure from prompt: {prompt[:50]}...")
 
             # Generate JSON content using OpenAI service
-            json_data = await self.openai_service.generate_ebook_json(prompt, config=config)
+            json_data = await self.openai_service.generate_ebook_json(
+                prompt, config=config, theme_name=theme_name
+            )
 
             # Parse JSON into EbookStructure
             ebook_structure = self.content_parser.parse_ebook_structure(json_data["content"])

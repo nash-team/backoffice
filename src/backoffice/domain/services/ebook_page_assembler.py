@@ -39,6 +39,7 @@ class EbookPageAssembler:
             config = EbookConfig()
 
         pages: list[PageContent] = []
+        toc_placeholder = None
 
         # 1. Cover
         if config.cover_enabled:
@@ -97,6 +98,7 @@ class EbookPageAssembler:
             config = EbookConfig(cover_enabled=True, toc=True)
 
         pages: list[PageContent] = []
+        toc_placeholder = None
 
         # 1. Cover page
         if config.cover_enabled:
@@ -163,30 +165,45 @@ class EbookPageAssembler:
         pages: list[PageContent] = []
 
         # 1. Cover page
+        used_first_image_as_cover = False
         if config.cover_enabled:
             # Use provided cover image or fall back to first coloring image
             final_cover_image_url = cover_image_url
-            if (
-                not final_cover_image_url
-                and images
-                and images[0].get("url")
-                and images[0]["url"] != "placeholder"
-            ):
+            if final_cover_image_url:
+                # Dedicated cover image provided - don't touch the coloring images
+                logger.info(f"Using dedicated cover image: {len(final_cover_image_url)} chars")
+            elif images and images[0].get("url") and images[0]["url"] != "placeholder":
+                # Fallback: use first coloring image as cover
                 final_cover_image_url = images[0]["url"]
+                used_first_image_as_cover = True
                 cover_url_len = len(final_cover_image_url or "")
                 logger.info(f"Fallback: Using first coloring image as cover: {cover_url_len} chars")
-            elif final_cover_image_url:
-                logger.info(f"Using dedicated cover image: {len(final_cover_image_url)} chars")
 
             cover_page = self.page_factory.create_cover_page(
-                title=title, author=author, template="coloring", image_url=final_cover_image_url
+                title=title,
+                author=author,
+                template="coloring",
+                image_url=final_cover_image_url,
+                ribbon_title=config.ribbon_title,
+                ribbon_theme=config.ribbon_theme,
+                show_ribbon=config.show_ribbon,
             )
             pages.append(cover_page)
+            logger.info(f"Added cover page: type={cover_page.type}, title='{title}'")
 
         # 2. TOC placeholder - disabled for coloring books (only cover + images needed)
 
-        # 3. Coloring images
-        for i, image in enumerate(images, 1):
+        # 3. Coloring images - skip first image if it was used as cover
+        images_to_process = images[1:] if used_first_image_as_cover else images
+        logger.info(
+            f"Creating coloring ebook: received {len(images)} images, "
+            f"cover_image_url={'provided' if cover_image_url else 'none'}"
+        )
+        logger.info(
+            f"Used first image as cover: {used_first_image_as_cover}, "
+            f"processing {len(images_to_process)} images for coloring pages"
+        )
+        for i, image in enumerate(images_to_process, 1):
             coloring_page = self.page_factory.create_coloring_page(
                 image_url=image["url"],
                 page_id=f"coloring-{i}",
@@ -195,6 +212,10 @@ class EbookPageAssembler:
                 display_in_toc=False,  # No TOC for coloring books
             )
             pages.append(coloring_page)
+            logger.info(
+                f"Added coloring page {i}: type={coloring_page.type}, "
+                f"title='{coloring_page.title}', url_length={len(image['url'])}"
+            )
 
         return EbookPages(
             meta={

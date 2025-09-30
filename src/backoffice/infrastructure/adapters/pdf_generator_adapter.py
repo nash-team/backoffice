@@ -7,6 +7,12 @@ import weasyprint
 from jinja2 import Environment, FileSystemLoader
 from PIL import Image
 
+from backoffice.domain.constants import (
+    CONTENT_MIN_PIXELS_SQUARE,
+    COVER_MIN_PIXELS_SQUARE,
+    MIN_DPI_REQUIREMENT,
+    PageFormat,
+)
 from backoffice.domain.entities.ebook import EbookConfig
 from backoffice.domain.entities.ebook_structure import EbookStructure
 from backoffice.domain.entities.ebook_theme import EbookType, ExtendedEbookConfig
@@ -190,9 +196,22 @@ class PDFGeneratorAdapter(EbookGeneratorPort):
                 # Generate real coloring images from AI
                 logger.info("Generating coloring pages with AI images...")
 
-                # Create requests for each section
+                # Create requests for each section (skip first section as it's used for cover)
                 coloring_requests = []
-                for section in ebook_structure.sections or []:
+                sections_to_process = (
+                    ebook_structure.sections[1:] if ebook_structure.sections else []
+                )
+                logger.info(
+                    f"Debug: Total sections: {len(ebook_structure.sections or [])}, "
+                    f"sections for coloring: {len(sections_to_process)}"
+                )
+                for i, section in enumerate(ebook_structure.sections or []):
+                    logger.info(
+                        f"Debug: Section {i+1}: '{section.title}' - "
+                        f"Content: '{section.content[:50]}...'"
+                    )
+
+                for section in sections_to_process:
                     # For coloring books, sections might contain image references
                     if hasattr(section, "images") and section.images:
                         # Use existing images if available
@@ -202,17 +221,20 @@ class PDFGeneratorAdapter(EbookGeneratorPort):
                                 continue
 
                     # Generate AI image from section content
-                    coloring_requests.append(
-                        ColoringPageRequest(
-                            description=section.content,
-                            title=section.title,
-                            generate_from_ai=True,
+                    if section.content and section.content.strip():
+                        coloring_requests.append(
+                            ColoringPageRequest(
+                                description=section.content,
+                                title=section.title,
+                                generate_from_ai=True,
+                            )
                         )
-                    )
+                    else:
+                        logger.warning(f"Skipping section '{section.title}' with empty content")
 
                 # Generate cover image first (separate from coloring pages)
                 cover_image_data_url = None
-                if coloring_requests:
+                if ebook_structure.sections:
                     try:
                         # Generate a special cover image with a more general/appealing description
                         first_section = (
@@ -220,8 +242,17 @@ class PDFGeneratorAdapter(EbookGeneratorPort):
                         )
                         if first_section:
                             cover_prompt = (
-                                f"Couverture de livre de coloriage: {first_section.content}. "
-                                "Style simple et attrayant pour enfants."
+                                f"Professional children's coloring book cover illustration "
+                                f"featuring {first_section.content}. "
+                                "Single page cover design, centered main character, "
+                                "no text, no borders, no mockup. "
+                                "Highly detailed, glossy, Amazon bestseller style, "
+                                "eye-catching and commercial. "
+                                "Bright saturated colors, whimsical and joyful, "
+                                "appealing to kids and parents. "
+                                "Background environment matching the theme: "
+                                "enchanted fantasy for unicorns, lush jungle for dinosaurs, "
+                                "treasure island for pirates, etc."
                             )
                             logger.info(
                                 f"Generating cover image with prompt: {cover_prompt[:100]}..."
@@ -242,7 +273,9 @@ class PDFGeneratorAdapter(EbookGeneratorPort):
                             if cover_pages and cover_pages[0].image_data:
                                 # Optimize and create data URL for cover
                                 optimized_cover = self._optimize_image_for_pdf(
-                                    cover_pages[0].image_data
+                                    cover_pages[0].image_data,
+                                    is_cover=True,
+                                    page_format=PageFormat.SQUARE_8_5,
                                 )
                                 cover_image_base64 = base64.b64encode(optimized_cover).decode(
                                     "utf-8"
@@ -284,7 +317,11 @@ class PDFGeneratorAdapter(EbookGeneratorPort):
                             # Optimize and embed image data as base64
                             try:
                                 # Optimize image size for PDF embedding
-                                optimized_image_data = self._optimize_image_for_pdf(page.image_data)
+                                optimized_image_data = self._optimize_image_for_pdf(
+                                    page.image_data,
+                                    is_cover=False,
+                                    page_format=PageFormat.SQUARE_8_5,
+                                )
                                 image_base64 = base64.b64encode(optimized_image_data).decode(
                                     "utf-8"
                                 )
@@ -343,7 +380,7 @@ class PDFGeneratorAdapter(EbookGeneratorPort):
                     ]
 
                 return await self.modular_adapter.generate_coloring_ebook(
-                    title, author, images, config, cover_image_data_url
+                    title, author, images, config, cover_image_url=cover_image_data_url
                 )
 
             elif config.ebook_type == EbookType.MIXED:
@@ -379,7 +416,9 @@ class PDFGeneratorAdapter(EbookGeneratorPort):
 
                         for page in image_pages:
                             # Optimize and embed image data as base64
-                            optimized_image_data = self._optimize_image_for_pdf(page.image_data)
+                            optimized_image_data = self._optimize_image_for_pdf(
+                                page.image_data, is_cover=False, page_format=PageFormat.SQUARE_8_5
+                            )
                             image_base64 = base64.b64encode(optimized_image_data).decode("utf-8")
                             data_url = f"data:image/jpeg;base64,{image_base64}"
 
@@ -421,23 +460,108 @@ class PDFGeneratorAdapter(EbookGeneratorPort):
             logger.error(f"Error in modular ebook generation: {e}")
             raise PDFGenerationError(f"Modular generation failed: {e}") from e
 
+    def _validate_image_dpi(
+        self, image_data: bytes, is_cover: bool = False, page_format: PageFormat = PageFormat.A4
+    ) -> bool:
+        """
+        Validate image resolution meets DPI requirements
+
+        Args:
+            image_data: Image bytes to validate
+            is_cover: True if this is a cover image, False for content
+            page_format: Page format to determine requirements
+
+        Returns:
+            True if image meets DPI requirements
+        """
+        try:
+            img = Image.open(BytesIO(image_data))
+            width, height = img.size
+
+            if page_format == PageFormat.SQUARE_8_5:
+                if is_cover:
+                    min_pixels = COVER_MIN_PIXELS_SQUARE  # 2550x2550
+                    target_area = 'cover (8.5" x 8.5")'
+                else:
+                    min_pixels = CONTENT_MIN_PIXELS_SQUARE  # 2175x2175
+                    target_area = 'content area (7.25" x 7.25")'
+
+                # For square format, check both dimensions
+                dpi_valid = width >= min_pixels and height >= min_pixels
+            else:
+                # A4 or other formats - use existing logic
+                min_pixels = 2480 if is_cover else 2100
+                target_area = "A4 format"
+                dpi_valid = width >= min_pixels and height >= min_pixels
+
+            logger.info(
+                f"DPI validation: {width}x{height} pixels for {target_area}, "
+                f"required: {min_pixels}+ pixels, valid: {dpi_valid}"
+            )
+
+            return dpi_valid
+
+        except Exception as e:
+            logger.error(f"Error validating image DPI: {e}")
+            return False
+
+    def _get_target_image_size(
+        self, is_cover: bool = False, page_format: PageFormat = PageFormat.A4
+    ) -> tuple[int, int]:
+        """
+        Get target image size for optimization based on usage and format
+
+        Args:
+            is_cover: True if this is a cover image
+            page_format: Page format to determine target size
+
+        Returns:
+            Tuple of (width, height) for target size
+        """
+        if page_format == PageFormat.SQUARE_8_5:
+            if is_cover:
+                return (COVER_MIN_PIXELS_SQUARE, COVER_MIN_PIXELS_SQUARE)  # 2550x2550
+            else:
+                return (CONTENT_MIN_PIXELS_SQUARE, CONTENT_MIN_PIXELS_SQUARE)  # 2175x2175
+        else:
+            # A4 or other formats
+            if is_cover:
+                return (2480, 3508)  # A4 at 300 DPI
+            else:
+                return (2100, 2970)  # A4 content area at 300 DPI
+
     def _optimize_image_for_pdf(
-        self, image_data: bytes, max_size: tuple[int, int] = (800, 600), quality: int = 85
+        self,
+        image_data: bytes,
+        is_cover: bool = False,
+        page_format: PageFormat = PageFormat.A4,
+        quality: int = 85,
     ) -> bytes:
         """
-        Optimize image for PDF embedding by resizing and compressing
+        Optimize image for PDF embedding with DPI validation
 
         Args:
             image_data: Original image bytes
-            max_size: Maximum size (width, height) for the image
+            is_cover: True if this is a cover image
+            page_format: Page format for target sizing
             quality: JPEG quality (1-100)
 
         Returns:
             Optimized image bytes
         """
         try:
+            # Validate DPI requirements first
+            if not self._validate_image_dpi(image_data, is_cover, page_format):
+                logger.warning(
+                    f"Image does not meet {MIN_DPI_REQUIREMENT} DPI requirement for "
+                    f"{'cover' if is_cover else 'content'} in {page_format.value} format"
+                )
+
+            # Get target size for this usage
+            target_size = self._get_target_image_size(is_cover, page_format)
+
             # Open image from bytes
-            img = Image.open(BytesIO(image_data))
+            img: Image.Image = Image.open(BytesIO(image_data))
 
             # Convert RGBA to RGB if necessary (for JPEG compatibility)
             if img.mode == "RGBA":
@@ -448,19 +572,28 @@ class PDFGeneratorAdapter(EbookGeneratorPort):
             elif img.mode != "RGB":
                 img = img.convert("RGB")
 
-            # Resize if too large
-            img.thumbnail(max_size, Image.Resampling.LANCZOS)
+            # Resize intelligently - don't downscale if already meeting requirements
+            if img.width >= target_size[0] and img.height >= target_size[1]:
+                # Image meets minimum requirements, only optimize quality
+                logger.info(f"Image meets size requirements: {img.size} >= {target_size}")
+            else:
+                # Image too small, this will reduce quality but proceed anyway
+                logger.warning(
+                    f"Image too small: {img.size} < {target_size}, "
+                    "may not meet print quality requirements"
+                )
 
             # Save as optimized JPEG
             output = BytesIO()
             img.save(output, format="JPEG", quality=quality, optimize=True)
             optimized_data = output.getvalue()
 
-            original_size = len(image_data)
-            optimized_size = len(optimized_data)
-            percentage = optimized_size / original_size * 100
+            original_size_bytes = len(image_data)
+            optimized_size_bytes = len(optimized_data)
+            percentage = optimized_size_bytes / original_size_bytes * 100
             logger.info(
-                f"Image optimized: {original_size} -> {optimized_size} bytes ({percentage:.1f}%)"
+                f"Image optimized: {original_size_bytes} -> {optimized_size_bytes} "
+                f"bytes ({percentage:.1f}%)"
             )
 
             return optimized_data

@@ -52,6 +52,9 @@ class SqlAlchemyEbookRepository(EbookPort):
             preview_url=ebook.preview_url,
             drive_id=ebook.drive_id,
             created_at=datetime.now(UTC),
+            theme_id=ebook.theme_id,
+            theme_version=ebook.theme_version,
+            audience=ebook.audience,
         )
         self.db.add(db_ebook)
         self.db.commit()
@@ -69,6 +72,9 @@ class SqlAlchemyEbookRepository(EbookPort):
         db_ebook.status = ebook.status.value
         db_ebook.preview_url = ebook.preview_url
         db_ebook.drive_id = ebook.drive_id
+        db_ebook.theme_id = ebook.theme_id
+        db_ebook.theme_version = ebook.theme_version
+        db_ebook.audience = ebook.audience
 
         self.db.commit()
         self.db.refresh(db_ebook)
@@ -90,4 +96,7 @@ class SqlAlchemyEbookRepository(EbookPort):
             preview_url=str(db_ebook.preview_url) if db_ebook.preview_url else None,
             drive_id=str(db_ebook.drive_id) if db_ebook.drive_id else None,
             created_at=db_ebook.created_at,
+            theme_id=str(db_ebook.theme_id) if db_ebook.theme_id else None,
+            theme_version=str(db_ebook.theme_version) if db_ebook.theme_version else None,
+            audience=str(db_ebook.audience) if db_ebook.audience else None,
         )

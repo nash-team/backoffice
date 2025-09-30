@@ -95,9 +95,9 @@ async def test_generate_coloring_pages_from_description(use_case, fake_image_gen
 
     # Verify correct method was called
     assert len(fake_image_generator.generate_coloring_page_from_description_calls) == 1
-    assert (
-        fake_image_generator.generate_coloring_page_from_description_calls[0]
-        == "A cute cat playing with yarn"
+    assert fake_image_generator.generate_coloring_page_from_description_calls[0] == (
+        "A cute cat playing with yarn",
+        False,
     )
 
 

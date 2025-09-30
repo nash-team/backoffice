@@ -7,11 +7,13 @@ from fastapi.responses import HTMLResponse
 from backoffice.domain.entities.ebook import EbookStatus
 from backoffice.domain.entities.ebook_theme import EbookType, ExtendedEbookConfig
 from backoffice.domain.entities.pagination import PaginationParams
+from backoffice.domain.services.prompt_builder import AgeGroup
 from backoffice.domain.usecases.approve_ebook import ApproveEbookUseCase
 from backoffice.domain.usecases.create_ebook import CreateEbookUseCase
 from backoffice.domain.usecases.get_ebooks import GetEbooksUseCase
 from backoffice.domain.usecases.get_stats import GetStatsUseCase
 from backoffice.domain.usecases.reject_ebook import RejectEbookUseCase
+from backoffice.infrastructure.adapters.theme_repository import ThemeRepository
 from backoffice.infrastructure.factories.repository_factory import (
     RepositoryFactory,
     get_repository_factory,
@@ -180,8 +182,10 @@ async def get_new_ebook_form(request: Request) -> Response:
 async def create_ebook(
     request: Request,
     factory: RepositoryFactoryDep,
-    prompt: str = Form(...),
+    prompt: str = Form(""),
     ebook_type: str = Form(...),
+    theme_id: str = Form(None),
+    audience: str = Form(None),
     theme_name: str = Form(None),
     cover_template: str = Form(None),
     toc_template: str = Form(None),
@@ -227,9 +231,43 @@ async def create_ebook(
 
         create_ebook_usecase = CreateEbookUseCase(ebook_repo, ebook_processor)
 
-        # Process coloring pages if needed
+        # Handle theme-based generation for coloring books
         image_pages = []
-        if ebook_type in ["coloring", "mixed"] and image_urls.strip():
+        theme_repository = ThemeRepository()
+
+        if ebook_type == "coloring":
+            # For coloring books, validate theme and audience are provided
+            if not theme_id:
+                raise ValueError("Theme ID is required for coloring books")
+            if not audience:
+                raise ValueError("Audience is required for coloring books")
+
+            # Load theme and generate theme-based content
+            logger.info(f"Loading theme with ID: {theme_id}")
+            theme = theme_repository.get_theme_by_id(theme_id)
+            age_group = AgeGroup.from_string(audience)
+
+            logger.info(f"✅ Theme loaded successfully: '{theme.id}' ({theme.label})")
+            logger.info(f"Theme subject: {theme.blocks.subject}")
+            logger.info(
+                f"Generating theme-based coloring book (theme: {theme.id}, "
+                f"age: {age_group.value})"
+            )
+
+            # Use theme-based generation
+            coloring_usecase = factory.get_coloring_pages_usecase()
+            pages_count = number_of_pages or 8  # Default to 8 pages if not specified
+
+            image_pages = await coloring_usecase.execute_with_theme(
+                theme=theme,
+                age_group=age_group,
+                number_of_pages=pages_count,
+                convert_to_svg=convert_to_svg,
+            )
+            logger.info(f"Generated {len(image_pages)} theme-based coloring pages")
+
+        elif ebook_type in ["coloring", "mixed"] and image_urls.strip():
+            # Legacy URL-based generation for mixed types
             logger.info("Processing coloring pages from provided URLs")
             coloring_usecase = factory.get_coloring_pages_usecase()
             coloring_requests = coloring_usecase.parse_image_urls(image_urls)
@@ -241,16 +279,28 @@ async def create_ebook(
                 )
                 logger.info(f"Generated {len(image_pages)} coloring pages")
 
+        # Get theme version and name if theme-based
+        theme_version = None
+        actual_theme_name = None
+        if theme_id:
+            theme_version = theme_repository.get_theme_version(theme_id)
+            # Use the loaded theme's label as the theme_name
+            actual_theme_name = theme.label if "theme" in locals() else None
+            logger.info(f"Using theme name for generation: {actual_theme_name}")
+
         # Create new ebook with extended config
         new_ebook = await create_ebook_usecase.execute(
             prompt=prompt,
             config=extended_config,
             title=title,
             ebook_type=ebook_type,
-            theme_name=theme_name,
+            theme_name=actual_theme_name,
             image_pages=image_pages,
             number_of_chapters=number_of_chapters,
             number_of_pages=number_of_pages,
+            theme_id=theme_id,
+            theme_version=theme_version,
+            audience=audience,
         )
         logger.info(f"Ebook created successfully: {new_ebook.title} (ID: {new_ebook.id})")
 

@@ -5,6 +5,9 @@ This module centralizes all magic numbers, default values, and configuration
 constants to improve maintainability and reduce duplication.
 """
 
+from enum import Enum
+from typing import NamedTuple, TypedDict
+
 # Default values for ebook generation
 DEFAULT_AUTHOR = "Assistant IA"
 DEFAULT_TITLE_FALLBACK = "Sans titre"
@@ -90,3 +93,90 @@ LOG_MSG_USING_FALLBACK_TITLE = "No title found, using fallback '{title}'"
 REGEX_CLEAN_SLUG = r"[^\w\s-]"
 REGEX_NORMALIZE_SPACES = r"[-\s]+"
 REGEX_SENTENCE_SPLIT = r"[.!?]+"
+
+
+# Page format constants for different ebook types with KDP compliance
+class PageFormat(Enum):
+    """Supported page formats for ebook generation."""
+
+    A4 = "A4"
+    SQUARE_8_5 = "SQUARE_8_5"
+
+
+class PageDimensions(NamedTuple):
+    """Page dimensions in inches."""
+
+    width: float
+    height: float
+
+
+class PageMargins(NamedTuple):
+    """Page margins in inches for print compatibility."""
+
+    outer: float  # Left/right margins
+    inner: float  # Top/bottom margins (gutter for binding)
+
+
+class ImageResolution(NamedTuple):
+    """Required image resolution specifications."""
+
+    cover_min_pixels: int  # Minimum pixels for cover images
+    content_min_pixels: int  # Minimum pixels for content images
+    dpi_requirement: int  # DPI requirement for print quality
+
+
+class PageSpecification(TypedDict):
+    """Type definition for page specification dictionary."""
+
+    dimensions: PageDimensions
+    margins: PageMargins
+    resolution: ImageResolution
+
+
+# Page format specifications
+PAGE_SPECIFICATIONS: dict[PageFormat, PageSpecification] = {
+    PageFormat.A4: {
+        "dimensions": PageDimensions(width=8.27, height=11.69),  # A4 in inches
+        "margins": PageMargins(outer=0.75, inner=0.75),
+        "resolution": ImageResolution(
+            cover_min_pixels=2480,  # 300 DPI for 8.27" width
+            content_min_pixels=2100,  # Content area consideration
+            dpi_requirement=300,
+        ),
+    },
+    PageFormat.SQUARE_8_5: {
+        "dimensions": PageDimensions(width=8.5, height=8.5),
+        "margins": PageMargins(outer=0.5, inner=0.75),  # KDP compliant
+        "resolution": ImageResolution(
+            cover_min_pixels=2550,  # 300 DPI for full 8.5" coverage
+            content_min_pixels=2175,  # 300 DPI for 7.25" content area
+            dpi_requirement=300,
+        ),
+    },
+}
+
+
+# Content area calculations
+def get_content_area_dimensions(page_format: PageFormat) -> PageDimensions:
+    """Calculate usable content area after removing margins."""
+    spec = PAGE_SPECIFICATIONS[page_format]
+    dims: PageDimensions = spec["dimensions"]
+    margins: PageMargins = spec["margins"]
+
+    # Content area = total - outer margin - inner margin
+    content_width = dims.width - margins.outer - margins.inner
+    content_height = dims.height - margins.outer - margins.inner
+
+    return PageDimensions(width=content_width, height=content_height)
+
+
+# Quick access constants for square format (most used)
+SQUARE_8_5_DIMENSIONS = PAGE_SPECIFICATIONS[PageFormat.SQUARE_8_5]["dimensions"]
+SQUARE_8_5_MARGINS = PAGE_SPECIFICATIONS[PageFormat.SQUARE_8_5]["margins"]
+SQUARE_8_5_RESOLUTION = PAGE_SPECIFICATIONS[PageFormat.SQUARE_8_5]["resolution"]
+SQUARE_8_5_CONTENT_AREA = get_content_area_dimensions(PageFormat.SQUARE_8_5)  # 7.25" x 7.25"
+
+# DPI validation constants
+MIN_DPI_REQUIREMENT = 300
+COVER_MIN_PIXELS_SQUARE = 2550  # For 8.5" at 300 DPI
+CONTENT_MIN_PIXELS_SQUARE = 2175  # For 7.25" content area at 300 DPI

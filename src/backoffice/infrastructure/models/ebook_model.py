@@ -28,3 +28,8 @@ class EbookModel(Base):
     preview_url: Mapped[str | None]
     drive_id: Mapped[str | None]
     created_at: Mapped[datetime]
+
+    # Theme-based generation fields
+    theme_id: Mapped[str | None] = mapped_column(String(50))
+    theme_version: Mapped[str | None] = mapped_column(String(20))
+    audience: Mapped[str | None] = mapped_column(String(10))

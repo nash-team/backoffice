@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+from backoffice.domain.constants import PageFormat
 from backoffice.domain.entities.ebook import EbookConfig
 from backoffice.domain.entities.ebook_structure import EbookStructure
 from backoffice.domain.entities.page_content import EbookPages
@@ -110,14 +111,17 @@ class ModularPageGenerator:
         """
         return self.assembler.create_coloring_ebook(title, author, images, config, cover_image_url)
 
-    def generate_pdf_from_pages(self, ebook: EbookPages) -> bytes:
+    def generate_pdf_from_pages(
+        self, ebook: EbookPages, page_format: PageFormat = PageFormat.A4
+    ) -> bytes:
         """
         Generate PDF from modular page structure
 
         Args:
             ebook: Modular ebook structure
+            page_format: Page format to use for PDF generation
 
         Returns:
             PDF bytes
         """
-        return self.pdf_renderer.generate_pdf_from_pages(ebook)
+        return self.pdf_renderer.generate_pdf_from_pages(ebook, page_format)

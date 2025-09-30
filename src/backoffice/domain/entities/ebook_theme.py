@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
+from backoffice.domain.constants import PageFormat
 from backoffice.domain.entities.ebook import EbookConfig
 
 
@@ -45,6 +46,9 @@ class ExtendedEbookConfig(EbookConfig):
 
     # Sélection du type d'ebook
     ebook_type: EbookType = EbookType.STORY
+
+    # Page format configuration
+    page_format: PageFormat | None = None  # Auto-determined from ebook_type if None
 
     # Templates spécifiques (si différents du thème)
     cover_template: str | None = None
@@ -122,6 +126,26 @@ class ExtendedEbookConfig(EbookConfig):
                     "text": "chapter",
                     "image": "illustration",
                 }
+
+    def get_effective_page_format(self) -> PageFormat:
+        """
+        Détermine le format de page effectif basé sur le type d'ebook
+
+        Returns:
+            PageFormat à utiliser pour ce type d'ebook
+        """
+        # Format explicitement défini
+        if self.page_format is not None:
+            return self.page_format
+
+        # Format automatique basé sur le type d'ebook
+        match self.ebook_type:
+            case EbookType.COLORING:
+                return PageFormat.SQUARE_8_5  # Square format for coloring books
+            case EbookType.STORY | EbookType.MIXED:
+                return PageFormat.A4  # A4 for story and mixed books
+            case _:
+                return PageFormat.A4  # Default fallback
 
 
 # Thèmes prédéfinis disponibles

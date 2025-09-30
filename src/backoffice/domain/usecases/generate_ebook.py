@@ -62,7 +62,7 @@ class GenerateEbookUseCase:
             # Step 1: Generate content structure
             logger.info("Generating ebook content structure...")
             ebook_structure = await self.content_generator.generate_ebook_structure(
-                prompt, config=config
+                prompt, config=config, theme_name=theme_name
             )
 
             # Step 1.5: Integrate image pages if provided

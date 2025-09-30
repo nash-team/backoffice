@@ -42,6 +42,9 @@ class CreateEbookUseCase:
         image_pages: list[ImagePage] | None = None,
         number_of_chapters: int | None = None,
         number_of_pages: int | None = None,
+        theme_id: str | None = None,
+        theme_version: str | None = None,
+        audience: str | None = None,
     ) -> Ebook:
         """Execute ebook creation workflow.
 
@@ -56,12 +59,13 @@ class CreateEbookUseCase:
             ValueError: If prompt is invalid
             Exception: If processing or persistence fails
         """
-        # Business rule: validate prompt
-        if not prompt or len(prompt.strip()) < 10:
-            raise ValueError("Le prompt doit contenir au moins 10 caractères")
+        # Business rule: validate prompt (only for non-theme-based generation)
+        if ebook_type != "coloring" or not theme_id:
+            if not prompt or len(prompt.strip()) < 10:
+                raise ValueError("Le prompt doit contenir au moins 10 caractères")
 
-        if len(prompt) > 2000:
-            raise ValueError("Le prompt ne peut pas dépasser 2000 caractères")
+            if len(prompt) > 2000:
+                raise ValueError("Le prompt ne peut pas dépasser 2000 caractères")
 
         # Use default config if none provided
         if config is None:
@@ -93,6 +97,9 @@ class CreateEbookUseCase:
             preview_url=ebook_data.get("preview_url"),
             created_at=None,  # Will be set by repository
             config=config,
+            theme_id=theme_id,
+            theme_version=theme_version,
+            audience=audience,
         )
 
         # Persist ebook

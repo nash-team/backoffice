@@ -59,12 +59,12 @@ class TestEbookConfig:
 
     def test_invalid_chapters_non_integer(self):
         """Test validation for non-integer chapters"""
-        with pytest.raises(ValueError, match="Number of chapters must be between 1 and 15"):
+        with pytest.raises(ValueError, match="Number of chapters must be an integer, got str"):
             EbookConfig(number_of_chapters="5")
 
     def test_invalid_pages_non_integer(self):
         """Test validation for non-integer pages"""
-        with pytest.raises(ValueError, match="Number of pages must be between 1 and 30"):
+        with pytest.raises(ValueError, match="Number of pages must be an integer, got str"):
             EbookConfig(number_of_pages="10")
 
     def test_valid_boundary_chapters(self):

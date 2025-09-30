@@ -77,8 +77,56 @@
     </div>
   </div>
 
-  <!-- Étape 2: Thème (se charge dynamiquement) -->
-  <div class="mb-4" id="themeSection" x-show="showThemeSection">
+  <!-- Étape 2: Thème et audience (pour livres de coloriage) -->
+  <div class="mb-4" id="themeSection" x-show="selectedType === 'coloring'">
+    <h6 class="fw-bold text-primary">
+      <i class="fas fa-paint-brush me-2"></i>
+      2. Thème et audience
+    </h6>
+
+    <!-- Sélection du thème -->
+    <div class="mb-3">
+      <label for="theme_id" class="form-label">
+        <strong>Thème</strong>
+        <small class="text-muted">(Choisissez un thème prédéfini)</small>
+      </label>
+      <select class="form-select" id="theme_id" name="theme_id"
+              x-model="selectedTheme"
+              x-on:change="validateForm"
+              data-testid="theme-select">
+        <option value="">Sélectionnez un thème...</option>
+        <option value="dinosaurs">Dinosaures</option>
+        <option value="unicorns">Licornes</option>
+        <option value="pirates">Pirates</option>
+      </select>
+      <div class="form-text">
+        💡 <strong>Tip :</strong> Le thème déterminera automatiquement le style et les couleurs des illustrations.
+      </div>
+    </div>
+
+    <!-- Sélection de l'âge -->
+    <div class="mb-3">
+      <label for="audience" class="form-label">
+        <strong>Tranche d'âge</strong>
+        <small class="text-muted">(Public cible)</small>
+      </label>
+      <select class="form-select" id="audience" name="audience"
+              x-model="selectedAudience"
+              x-on:change="validateForm"
+              data-testid="audience-select">
+        <option value="">Sélectionnez une tranche d'âge...</option>
+        <option value="3-5">3-5 ans (Tout petits)</option>
+        <option value="6-8">6-8 ans (Premiers lecteurs)</option>
+        <option value="9-12">9-12 ans (Pré-adolescents)</option>
+      </select>
+      <div class="form-text">
+        💡 <strong>Tip :</strong> L'âge influence la complexité et le style des illustrations.
+      </div>
+    </div>
+  </div>
+
+  <!-- Étape 2 bis: Thème visuel (pour autres types) -->
+  <div class="mb-4" id="traditionalThemeSection" x-show="selectedType !== 'coloring' && showThemeSection">
     <h6 class="fw-bold text-primary">
       <i class="fas fa-paint-brush me-2"></i>
       2. Thème visuel
@@ -94,19 +142,32 @@
       <i class="fas fa-edit me-2"></i>
       3. Contenu à générer
     </h6>
-    <div class="mb-3">
+
+    <!-- Prompt manuel (uniquement pour histoires et mixte) -->
+    <div class="mb-3" x-show="selectedType !== 'coloring'">
       <label for="prompt" class="form-label">
         <strong>Prompt de génération</strong>
         <small class="text-muted">(Décrivez ce que l'IA doit créer)</small>
       </label>
-      <textarea class="form-control" id="prompt" name="prompt" rows="8" required
+      <textarea class="form-control" id="prompt" name="prompt" rows="8"
         data-testid="prompt-textarea"
         :placeholder="promptPlaceholder"
         x-model="promptText"
-        x-on:input="validateForm"></textarea>
+        x-on:input="validateForm"
+        :required="selectedType !== 'coloring'"></textarea>
       <div class="form-text">
         💡 <strong>Tip :</strong> Plus votre prompt est détaillé, meilleur sera le résultat.
         Spécifiez le style, la longueur, le public cible, etc.
+      </div>
+    </div>
+
+    <!-- Message informatif pour les livres de coloriage -->
+    <div class="mb-3" x-show="selectedType === 'coloring'">
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Génération automatique</strong><br>
+        Le contenu sera généré automatiquement selon le thème et l'âge sélectionnés.
+        Aucun prompt manuel n'est nécessaire.
       </div>
     </div>
 

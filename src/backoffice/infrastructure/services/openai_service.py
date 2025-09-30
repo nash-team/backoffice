@@ -21,7 +21,7 @@ class OpenAIService:
             self.client = AsyncOpenAI(api_key=self.api_key)
 
     async def generate_ebook_json(
-        self, prompt: str, config: EbookConfig | None = None
+        self, prompt: str, config: EbookConfig | None = None, theme_name: str | None = None
     ) -> dict[str, str]:
         """Generate ebook content in structured JSON format"""
         try:
@@ -76,16 +76,38 @@ IMPORTANT:
 
             # Build different prompts based on config type
             if config and config.number_of_pages:
-                # Coloring book prompt
-                user_prompt = f"""Génère un livre de coloriage sur le sujet suivant: {prompt}
+                # Coloring book prompt - need +1 sections (first one becomes cover)
+                total_sections_needed = config.number_of_pages + 1
+
+                # Build theme-aware prompt
+                if theme_name:
+                    subject = f"livre de coloriage sur le thème des {theme_name.lower()}"
+                    logger.info(f"Using theme-specific subject: {subject}")
+                else:
+                    subject = f"livre de coloriage sur le sujet suivant: {prompt}"
+
+                user_prompt = f"""Génère un {subject}
 
 Le livre doit contenir:
-- Exactement {config.number_of_pages} pages de coloriage
+- Exactement {total_sections_needed} sections "
+        f"(1 pour la couverture + {config.number_of_pages} pour le coloriage)
 - Chaque section doit avoir le type "image_page"
 - Chaque titre doit être TRÈS COURT (3-5 mots max)
 - Chaque contenu doit être UNE SEULE PHRASE SIMPLE décrivant l'image à colorier
 - Pas de texte long, pas d'explication, juste la description visuelle pure
-- Exemple: title: "Licorne magique", content: "Une licorne avec une corne brillante"
+- IMPORTANT: Respecte le thème {theme_name or 'demandé'} dans TOUTES les sections
+- Exemple pour {theme_name or 'licornes'}: title: "Pirate et trésor", "
+        f"content: "Un pirate avec un coffre au trésor"
+
+IMPORTANT pour le meta.title et meta.subtitle:
+- Titre ACCROCHEUR et COMMERCIAL pour la couverture
+- Format: "Cahier de Coloriage [THÈME]" ou "[THÈME] à Colorier" ou "Aventures de [THÈME] à Colorier"
+- UTILISE LE THÈME: {theme_name or 'générique'}
+- Exemples: "Cahier de Coloriage {theme_name or 'Licornes'}", "
+        f""{theme_name or 'Pirates'} à Colorier"
+- Subtitle COMMERCIAL: "À partir de 4 ans" ou "
+        f""{config.number_of_pages} Pages à Colorier" ou "Créativité et Détente"
+- Le titre doit être VENDEUR et attirer les enfants/parents
 
 Réponds UNIQUEMENT avec le JSON structuré."""
             else:

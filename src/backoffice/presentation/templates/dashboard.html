@@ -187,6 +187,7 @@
       return {
         selectedType: '',
         selectedTheme: null,
+        selectedAudience: '',
         promptText: '',
         imageUrls: '',
         imagePreviews: [],
@@ -206,6 +207,10 @@
         },
 
         get isFormValid() {
+          // Different validation logic for coloring vs other types
+          if (this.selectedType === 'coloring') {
+            return this.selectedType && this.selectedTheme && this.selectedAudience;
+          }
           return this.selectedType && this.selectedTheme && this.promptText.length > 0;
         },
 
@@ -223,10 +228,21 @@
         selectType(type) {
           console.log('Selecting type:', type);
           this.selectedType = type;
-          this.showThemeSection = true;
           this.selectedTheme = null; // Reset theme selection
-          this.showContentSection = false;
-          this.showAdvancedSection = false;
+          this.selectedAudience = ''; // Reset audience selection
+
+          if (type === 'coloring') {
+            // For coloring books, show theme section immediately and content section
+            this.showThemeSection = true;
+            this.showContentSection = true;
+            this.showAdvancedSection = true;
+          } else {
+            // For other types, show theme section and prepare for traditional flow
+            this.showThemeSection = true;
+            this.showContentSection = false;
+            this.showAdvancedSection = false;
+          }
+
           this.validateForm();
         },
 

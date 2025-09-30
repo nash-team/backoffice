@@ -45,6 +45,11 @@ class EbookConfig:
     number_of_chapters: int | None = None
     number_of_pages: int | None = None
 
+    # Ribbon configuration for coloring book covers
+    ribbon_title: str | None = None
+    ribbon_theme: str = "licornes"
+    show_ribbon: bool = True
+
     def __post_init__(self):
         """Validate config values after initialization"""
         if self.number_of_chapters is not None:
@@ -112,3 +117,8 @@ class Ebook:
     preview_url: str | None = None
     drive_id: str | None = None  # ID du fichier dans Google Drive
     config: EbookConfig | None = None
+
+    # Theme-based generation metadata
+    theme_id: str | None = None
+    theme_version: str | None = None
+    audience: str | None = None

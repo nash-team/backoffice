@@ -1,127 +1,120 @@
-<div class="page cover {{ page.layout }}">
-    <div class="coloring-cover">
-        <div class="cover-header">
-            <h1 class="cover-title">{{ page.data.title|safe }}</h1>
-            {% if page.data.subtitle %}
-            <h2 class="cover-subtitle">{{ page.data.subtitle|safe }}</h2>
-            {% endif %}
-        </div>
-
-        {% if page.data.image_url %}
-        <div class="cover-main-image">
-            <img src="{{ page.data.image_url }}" alt="{{ page.alt_text or 'Image de couverture à colorier' }}" />
-        </div>
-        {% else %}
-        <div class="cover-placeholder">
-            <div class="placeholder-border">
-                <div class="placeholder-text">À COLORIER</div>
-            </div>
-        </div>
-        {% endif %}
-
-        <div class="cover-footer">
-            <div class="cover-author">{{ page.data.author }}</div>
-        </div>
-    </div>
+<div class="page cover {{ 'theme-' + (page.data.ribbon_theme|default('licornes')|lower) }}">
+  {% if page.data.show_ribbon|default(true) %}
+  <div class="title-ribbon" role="banner" aria-label="Ribbon de coloriage">
+    <svg class="ribbon-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+    </svg>
+    <span class="ribbon-title">{{ page.data.ribbon_title|default("Cahier de coloriage") }}</span>
+  </div>
+  {% endif %}
 </div>
 
 <style>
-    .coloring-cover {
-        width: 100%;
-        min-height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-        box-sizing: border-box;
-        background: #ffffff;
-        border: 3px solid #333;
-    }
+  @page { size: 8.5in 8.5in; margin: 0; }
 
-    .cover-header {
-        text-align: center;
-        padding: 1rem;
-    }
+  :root {
+    /* Ribbon configuration variables - WeasyPrint compatible */
+    --ribbon-width: 350px; /* 44ch approximation */
+    --ribbon-pad-vertical: 0.75rem;
+    --ribbon-pad-horizontal: 1.2rem;
+    --ribbon-alpha: 0.75;
+    --ribbon-bg: #8B5CF6;
+    --ribbon-text-color: #FFFFFF;
+    --ribbon-icon-size: 20px;
+    --ribbon-font-size: 1rem;
 
-    .cover-title {
-        font-size: 24pt;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 0.5rem;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        border: 2px solid #333;
-        padding: 0.5rem 1rem;
-        display: inline-block;
-    }
+    /* Theme variables (default: basic purple) */
+    --theme-primary: #8B5CF6;
+    --theme-secondary: #A78BFA;
+    --theme-accent: #DDD6FE;
+  }
 
-    .cover-subtitle {
-        font-size: 16pt;
-        color: #666;
-        font-style: italic;
-        margin-top: 0.5rem;
-    }
+  /* Theme classes - Embedded for WeasyPrint compatibility */
+  .theme-licornes {
+    --ribbon-bg: #FF69B4;
+    --ribbon-text-color: #FFFFFF;
+    --theme-primary: #FF69B4;
+    --theme-secondary: #DA70D6;
+    --theme-accent: #FFB6C1;
+  }
 
-    .cover-main-image {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1rem;
-        max-width: 80%;
-    }
+  .theme-dinosaures {
+    --ribbon-bg: #228B22;
+    --ribbon-text-color: #FFFFFF;
+    --theme-primary: #228B22;
+    --theme-secondary: #32CD32;
+    --theme-accent: #90EE90;
+  }
 
-    .cover-main-image img {
-        max-width: 100%;
-        max-height: 100%;
-        border: 2px dashed #ccc;
-        padding: 1rem;
-    }
+  .theme-pirates {
+    --ribbon-bg: #1E3A8A;
+    --ribbon-text-color: #FFD700;
+    --theme-primary: #1E3A8A;
+    --theme-secondary: #3B82F6;
+    --theme-accent: #FFD700;
+  }
 
-    .cover-placeholder {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 80%;
-    }
+  .page.cover {
+    width: 8.5in;
+    height: 8.5in;
+    background: url("{{ page.data.image_url }}") center/cover no-repeat;
+    background-size: cover;
+    position: relative;
+    margin: 0;
+    padding: 0;
+  }
 
-    .placeholder-border {
-        width: 300px;
-        height: 300px;
-        border: 3px dashed #333;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 10px,
-            rgba(0,0,0,0.05) 10px,
-            rgba(0,0,0,0.05) 20px
-        );
-    }
+  .title-ribbon {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    max-width: 350px;
+    width: auto;
+    background: rgba(139, 92, 246, 0.75);
+    padding: 0.75rem 1.2rem;
+    border-radius: 10px;
+    display: block;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    z-index: 10;
+  }
 
-    .placeholder-text {
-        font-size: 24pt;
-        font-weight: bold;
-        color: #999;
-        text-align: center;
-        letter-spacing: 3px;
-    }
+  /* Theme-specific backgrounds for WeasyPrint compatibility */
+  .theme-licornes .title-ribbon {
+    background: rgba(255, 105, 180, 0.75);
+  }
 
-    .cover-footer {
-        text-align: center;
-        padding: 1rem;
-    }
+  .theme-dinosaures .title-ribbon {
+    background: rgba(34, 139, 34, 0.75);
+  }
 
-    .cover-author {
-        font-size: 14pt;
-        color: #333;
-        font-weight: 500;
-        border-top: 2px solid #333;
-        padding-top: 0.5rem;
-        margin-top: 0.5rem;
-    }
+  .theme-pirates .title-ribbon {
+    background: rgba(30, 58, 138, 0.75);
+  }
+
+  .ribbon-icon {
+    width: 20px;
+    height: 20px;
+    color: #FFFFFF;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 0.5rem;
+  }
+
+  .ribbon-title {
+    font-family: "Arial", sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    line-height: 1.2;
+    display: inline-block;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  /* Theme-specific text colors for WeasyPrint */
+  .theme-pirates .ribbon-icon,
+  .theme-pirates .ribbon-title {
+    color: #FFD700;
+  }
+
 </style>

@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+from backoffice.domain.constants import PageFormat
 from backoffice.domain.entities.ebook import EbookConfig
 from backoffice.domain.entities.ebook_structure import EbookStructure
 from backoffice.domain.entities.page_content import ContentType
@@ -98,8 +99,10 @@ class ModularPDFGeneratorAdapter(EbookGeneratorPort):
                 title=title, author=author, chapters=story_chapters
             )
 
-            # Générer le PDF
-            pdf_bytes = self.page_generator.generate_pdf_from_pages(story_ebook)
+            # Générer le PDF with A4 format for story books
+            pdf_bytes = self.page_generator.generate_pdf_from_pages(
+                story_ebook, page_format=PageFormat.A4
+            )
             if not isinstance(pdf_bytes, bytes):
                 raise ModularPDFGeneratorError(
                     "PDF generation failed: expected bytes, got different type"
@@ -149,8 +152,10 @@ class ModularPDFGeneratorAdapter(EbookGeneratorPort):
                 cover_image_url=cover_image_url,
             )
 
-            # Générer le PDF
-            pdf_bytes = self.page_generator.generate_pdf_from_pages(coloring_ebook)
+            # Générer le PDF with square format for coloring books
+            pdf_bytes = self.page_generator.generate_pdf_from_pages(
+                coloring_ebook, page_format=PageFormat.SQUARE_8_5
+            )
             if not isinstance(pdf_bytes, bytes):
                 raise ModularPDFGeneratorError(
                     "PDF generation failed: expected bytes, got different type"
@@ -202,8 +207,10 @@ class ModularPDFGeneratorAdapter(EbookGeneratorPort):
 
             # Valider la structure
 
-            # Générer le PDF
-            pdf_bytes = self.page_generator.generate_pdf_from_pages(ebook_pages)
+            # Générer le PDF with A4 format for mixed books
+            pdf_bytes = self.page_generator.generate_pdf_from_pages(
+                ebook_pages, page_format=PageFormat.A4
+            )
             if not isinstance(pdf_bytes, bytes):
                 raise ModularPDFGeneratorError(
                     "PDF generation failed: expected bytes, got different type"
