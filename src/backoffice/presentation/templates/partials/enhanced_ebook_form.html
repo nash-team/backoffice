@@ -1,14 +1,12 @@
 <!-- Zone d'erreur OOB (ciblée par le serveur si erreur) -->
 <div id="ebookFormErrors" class="mb-3" aria-live="assertive" data-testid="error-container"></div>
 
-<div x-data="ebookForm()" x-init="init()">
 <form id="ebookForm"
       data-testid="ebook-form"
       hx-post="/api/dashboard/ebooks"
       hx-target="#ebooksTableContainer"
       hx-swap="innerHTML"
-      hx-disabled-elt="#createBtn"
-      hx-indicator="#createBtnSpinner">
+      hx-disabled-elt="#createBtn">
 
   <!-- Type d'ebook (coloriage uniquement) -->
   <input type="hidden" name="ebook_type" value="coloring">
@@ -27,8 +25,6 @@
         <small class="text-muted">(Choisissez un thème prédéfini)</small>
       </label>
       <select class="form-select" id="theme_id" name="theme_id"
-              x-model="selectedTheme"
-              x-on:change="validateForm"
               data-testid="theme-select"
               required>
         <option value="">Sélectionnez un thème...</option>
@@ -48,8 +44,6 @@
         <small class="text-muted">(Public cible)</small>
       </label>
       <select class="form-select" id="audience" name="audience"
-              x-model="selectedAudience"
-              x-on:change="validateForm"
               data-testid="audience-select"
               required>
         <option value="">Sélectionnez une tranche d'âge...</option>
@@ -112,14 +106,13 @@
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-testid="cancel-btn">
       Annuler
     </button>
-    <button id="createBtn" type="submit" class="btn btn-primary" data-testid="create-btn">
-      <span id="createBtnSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
-      <i class="fas fa-plus me-2" aria-hidden="true"></i>
-      Créer l'ebook
+    <button id="createBtn" type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2" data-testid="create-btn">
+      <span class="spinner-border spinner-border-sm" id="createBtnSpinner" role="status" aria-hidden="true"></span>
+      <i class="fas fa-plus" id="createBtnIcon" aria-hidden="true"></i>
+      <span>Créer l'ebook</span>
     </button>
   </div>
 </form>
-</div>
 
 <style>
 .ebook-type-card {
@@ -172,6 +165,30 @@
 .theme-card.selected {
   border-color: #198754;
   background-color: #f8fff9;
+}
+
+/* Button loading states - Simple et propre */
+/* Par défaut: spinner caché, icône visible */
+#createBtnSpinner {
+  display: none;
+}
+
+#createBtnIcon {
+  display: inline-block;
+}
+
+/* Pendant la requête (htmx ajoute htmx-request au FORM) */
+#ebookForm.htmx-request #createBtnSpinner {
+  display: inline-block;
+}
+
+#ebookForm.htmx-request #createBtnIcon {
+  display: none;
+}
+
+/* Curseur d'attente */
+#createBtn[disabled] {
+  cursor: wait;
 }
 
 </style>
