@@ -1,6 +1,7 @@
 """Factory for creating provider instances (V1 slim)."""
 
 import logging
+import os
 
 from backoffice.domain.policies.model_registry import ModelRegistry
 from backoffice.domain.ports.assembly_port import AssemblyPort
@@ -8,6 +9,11 @@ from backoffice.domain.ports.content_page_generation_port import ContentPageGene
 from backoffice.domain.ports.cover_generation_port import CoverGenerationPort
 
 logger = logging.getLogger(__name__)
+
+
+def _should_use_fakes() -> bool:
+    """Check if we should use fake providers (E2E tests)."""
+    return os.getenv("USE_FAKE_PROVIDERS", "false").lower() == "true"
 
 
 class ProviderFactory:
@@ -20,7 +26,7 @@ class ProviderFactory:
 
     @staticmethod
     def create_cover_provider() -> CoverGenerationPort:
-        """Create cover generation provider.
+        """Create cover generation provider (real or fake).
 
         Returns:
             CoverGenerationPort implementation
@@ -28,6 +34,14 @@ class ProviderFactory:
         Raises:
             ValueError: If provider not found or not configured
         """
+        # Use fake provider for E2E tests
+        if _should_use_fakes():
+            from tests.e2e.fakes import FakeCoverGenerationPort
+
+            logger.info("Creating FAKE cover provider for E2E tests")
+            return FakeCoverGenerationPort()
+
+        # Use real provider
         registry = ModelRegistry.get_instance()
         model_mapping = registry.get_cover_model()
 
@@ -47,7 +61,7 @@ class ProviderFactory:
 
     @staticmethod
     def create_content_page_provider() -> ContentPageGenerationPort:
-        """Create content page generation provider.
+        """Create content page generation provider (real or fake).
 
         Returns:
             ContentPageGenerationPort implementation
@@ -55,6 +69,14 @@ class ProviderFactory:
         Raises:
             ValueError: If provider not found or not configured
         """
+        # Use fake provider for E2E tests
+        if _should_use_fakes():
+            from tests.e2e.fakes import FakeContentPageGenerationPort
+
+            logger.info("Creating FAKE page provider for E2E tests")
+            return FakeContentPageGenerationPort()
+
+        # Use real provider
         registry = ModelRegistry.get_instance()
         model_mapping = registry.get_page_model()
 
