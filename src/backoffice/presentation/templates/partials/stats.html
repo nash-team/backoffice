@@ -1,32 +1,40 @@
 <div class="col-md-3">
-    <div class="card">
+    <div class="card border-primary">
         <div class="card-body">
-            <h5 class="card-title">Total Ebooks</h5>
-            <p class="card-text display-4">{{ stats.total_ebooks }}</p>
+            <h5 class="card-title text-muted">
+                <i class="fas fa-book me-2"></i>Total Ebooks
+            </h5>
+            <p class="card-text display-4 fw-bold text-primary">{{ stats.total_ebooks }}</p>
         </div>
     </div>
 </div>
 <div class="col-md-3">
-    <div class="card">
+    <div class="card border-warning" style="background: linear-gradient(135deg, #fff3cd 0%, #ffffff 100%);">
         <div class="card-body">
-            <h5 class="card-title">Brouillons</h5>
-            <p class="card-text display-4">{{ stats.draft_ebooks }}</p>
+            <h5 class="card-title text-muted">
+                <i class="fas fa-edit me-2"></i>Brouillons
+            </h5>
+            <p class="card-text display-4 fw-bold" style="color: #ff9800;">{{ stats.draft_ebooks }}</p>
         </div>
     </div>
 </div>
 <div class="col-md-3">
-    <div class="card">
+    <div class="card border-success" style="background: linear-gradient(135deg, #d1f4dd 0%, #ffffff 100%);">
         <div class="card-body">
-            <h5 class="card-title">En attente</h5>
-            <p class="card-text display-4">{{ stats.pending_ebooks }}</p>
+            <h5 class="card-title text-muted">
+                <i class="fas fa-check-circle me-2"></i>Approuvés
+            </h5>
+            <p class="card-text display-4 fw-bold" style="color: #28a745;">{{ stats.approved_ebooks }}</p>
         </div>
     </div>
 </div>
 <div class="col-md-3">
-    <div class="card">
+    <div class="card border-danger" style="background: linear-gradient(135deg, #f8d7da 0%, #ffffff 100%);">
         <div class="card-body">
-            <h5 class="card-title">Approuvés</h5>
-            <p class="card-text display-4">{{ stats.approved_ebooks }}</p>
+            <h5 class="card-title text-muted">
+                <i class="fas fa-times-circle me-2"></i>Rejetés
+            </h5>
+            <p class="card-text display-4 fw-bold" style="color: #dc3545;">{{ stats.rejected_ebooks }}</p>
         </div>
     </div>
 </div> 

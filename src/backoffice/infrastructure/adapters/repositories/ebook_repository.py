@@ -56,6 +56,7 @@ class SqlAlchemyEbookRepository(EbookPort):
             theme_version=ebook.theme_version,
             audience=ebook.audience,
             structure_json=ebook.structure_json,
+            page_count=ebook.page_count,
         )
         self.db.add(db_ebook)
         self.db.commit()
@@ -77,6 +78,7 @@ class SqlAlchemyEbookRepository(EbookPort):
         db_ebook.theme_version = ebook.theme_version
         db_ebook.audience = ebook.audience
         db_ebook.structure_json = ebook.structure_json
+        db_ebook.page_count = ebook.page_count
 
         self.db.commit()
         self.db.refresh(db_ebook)
@@ -88,6 +90,20 @@ class SqlAlchemyEbookRepository(EbookPort):
             return await self.create(ebook)
         else:
             return await self.update(ebook)
+
+    async def get_ebook_bytes(self, ebook_id: int) -> bytes | None:
+        """Récupère les bytes du PDF d'un ebook."""
+        db_ebook = self.db.query(EbookModel).filter(EbookModel.id == ebook_id).first()
+        return db_ebook.ebook_bytes if db_ebook else None
+
+    async def save_ebook_bytes(self, ebook_id: int, ebook_bytes: bytes) -> None:
+        """Sauvegarde les bytes du PDF d'un ebook."""
+        db_ebook = self.db.query(EbookModel).filter(EbookModel.id == ebook_id).first()
+        if not db_ebook:
+            raise ValueError(f"Ebook with id {ebook_id} not found")
+
+        db_ebook.ebook_bytes = ebook_bytes
+        self.db.commit()
 
     def _to_domain(self, db_ebook: EbookModel) -> Ebook:
         return Ebook(
@@ -102,4 +118,5 @@ class SqlAlchemyEbookRepository(EbookPort):
             theme_version=str(db_ebook.theme_version) if db_ebook.theme_version else None,
             audience=str(db_ebook.audience) if db_ebook.audience else None,
             structure_json=db_ebook.structure_json,
+            page_count=db_ebook.page_count,
         )

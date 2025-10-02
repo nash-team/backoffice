@@ -8,7 +8,7 @@ Il ne doit pas être utilisé directement dans la logique métier ou l'API.
 
 from datetime import datetime
 
-from sqlalchemy import JSON, String
+from sqlalchemy import JSON, LargeBinary, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from backoffice.domain.entities.ebook import EbookStatus
@@ -36,3 +36,9 @@ class EbookModel(Base):
 
     # Ebook structure as JSON (for regeneration)
     structure_json: Mapped[dict | None] = mapped_column(JSON)
+
+    # PDF bytes for DRAFT ebooks (awaiting approval)
+    ebook_bytes: Mapped[bytes | None] = mapped_column(LargeBinary)
+
+    # Page count for KDP export
+    page_count: Mapped[int | None]

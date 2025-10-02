@@ -54,7 +54,7 @@ class TestColoringBookStrategy:
             theme="Animals",
             age_group=AgeGroup.PRESCHOOL,
             ebook_type=EbookType.COLORING,
-            page_count=3,
+            page_count=24,
             request_id="test-123",
             seed=42,
         )
@@ -64,11 +64,11 @@ class TestColoringBookStrategy:
 
         # Assert
         assert result.pdf_uri.startswith("file://")
-        assert len(result.pages_meta) == 4  # 1 cover + 3 pages
+        assert len(result.pages_meta) == 25  # 1 cover + 24 pages
         assert result.pages_meta[0].title == "Cover"
         assert result.pages_meta[1].title == "Page 1"
         assert fake_cover_port.call_count == 1
-        assert fake_page_port.call_count == 3
+        assert fake_page_port.call_count == 24
         assert fake_assembly_port.call_count == 1
 
         # Verify PDF was created
@@ -102,7 +102,7 @@ class TestColoringBookStrategy:
             theme="Animals",
             age_group=AgeGroup.PRESCHOOL,
             ebook_type=EbookType.COLORING,
-            page_count=1,  # Just 1 page
+            page_count=24,  # KDP minimum
             request_id="test-456",
             seed=42,
         )
@@ -111,9 +111,9 @@ class TestColoringBookStrategy:
         result = await strategy.generate(request)
 
         # Assert
-        assert len(result.pages_meta) == 2  # 1 cover + 1 page
+        assert len(result.pages_meta) == 25  # 1 cover + 24 pages
         assert fake_cover_port.call_count == 1
-        assert fake_page_port.call_count == 1
+        assert fake_page_port.call_count == 24
 
     @pytest.mark.asyncio
     async def test_generate_coloring_book_metadata_correctness(self):
@@ -142,7 +142,7 @@ class TestColoringBookStrategy:
             theme="Animals",
             age_group=AgeGroup.PRESCHOOL,
             ebook_type=EbookType.COLORING,
-            page_count=2,
+            page_count=24,
             request_id="test-789",
             seed=42,
         )

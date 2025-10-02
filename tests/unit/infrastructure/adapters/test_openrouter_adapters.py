@@ -4,13 +4,13 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from backoffice.domain.entities.generation_request import ColorMode, ImageSpec
-from backoffice.infrastructure.providers.openrouter_cover_provider import (
-    OpenRouterCoverProvider,
+from backoffice.infrastructure.providers.openrouter_image_provider import (
+    OpenRouterImageProvider,
 )
 
 
-class TestOpenRouterCoverProvider:
-    """Tests for OpenRouter cover generation adapter."""
+class TestOpenRouterImageProvider:
+    """Tests for OpenRouter image generation adapter."""
 
     @pytest.fixture
     def mock_openai_client(self):
@@ -42,7 +42,7 @@ class TestOpenRouterCoverProvider:
     async def test_generate_cover_success(self, mock_openai_client):
         """Test successful cover generation."""
         # Arrange
-        provider = OpenRouterCoverProvider(model="google/gemini-2.5-flash-image-preview")
+        provider = OpenRouterImageProvider(model="google/gemini-2.5-flash-image-preview")
         spec = ImageSpec(width_px=1024, height_px=1024, format="png", color_mode=ColorMode.COLOR)
 
         # Mock the client
@@ -75,7 +75,7 @@ class TestOpenRouterCoverProvider:
         """Test that provider uses default model when none specified."""
         # Arrange
         with patch.dict("os.environ", {"LLM_IMAGE_MODEL": "google/gemini-custom-image"}):
-            provider = OpenRouterCoverProvider()
+            provider = OpenRouterImageProvider()
 
         provider.client = mock_openai_client
         spec = ImageSpec(width_px=1024, height_px=1024, format="png", color_mode=ColorMode.COLOR)
@@ -95,7 +95,7 @@ class TestOpenRouterCoverProvider:
     async def test_generate_cover_with_bw_color_mode(self, mock_openai_client):
         """Test cover generation with black & white color mode for coloring pages."""
         # Arrange
-        provider = OpenRouterCoverProvider()
+        provider = OpenRouterImageProvider()
         provider.client = mock_openai_client
         spec = ImageSpec(
             width_px=1024, height_px=1024, format="png", color_mode=ColorMode.BLACK_WHITE
@@ -108,17 +108,18 @@ class TestOpenRouterCoverProvider:
         assert result is not None
         assert isinstance(result, bytes)
 
-        # Verify prompt includes B&W instructions
+        # Verify prompt includes B&W instructions (border is added programmatically, not via prompt)
         call_kwargs = mock_openai_client.chat.completions.create.call_args.kwargs
         messages = call_kwargs["messages"]
-        assert "black and white" in messages[0]["content"].lower()
-        assert "line art" in messages[0]["content"].lower()
+        prompt_content = messages[0]["content"].lower()
+        assert "black and white" in prompt_content
+        assert "line art" in prompt_content
 
     @pytest.mark.asyncio
     async def test_generate_cover_handles_invalid_response(self):
         """Test that cover generation handles invalid API responses gracefully."""
         # Arrange
-        provider = OpenRouterCoverProvider()
+        provider = OpenRouterImageProvider()
         spec = ImageSpec(width_px=1024, height_px=1024, format="png", color_mode=ColorMode.COLOR)
 
         # Mock client with invalid response (no images, no content)
@@ -147,7 +148,7 @@ class TestOpenRouterCoverProvider:
     async def test_generate_cover_includes_modalities(self, mock_openai_client):
         """Test that cover generation includes required modalities for Gemini."""
         # Arrange
-        provider = OpenRouterCoverProvider(model="google/gemini-2.5-flash-image-preview")
+        provider = OpenRouterImageProvider(model="google/gemini-2.5-flash-image-preview")
         provider.client = mock_openai_client
         spec = ImageSpec(width_px=1024, height_px=1024, format="png", color_mode=ColorMode.COLOR)
 
@@ -162,7 +163,7 @@ class TestOpenRouterCoverProvider:
     def test_provider_initializes_with_correct_model(self):
         """Test that provider stores the correct model."""
         # Arrange & Act
-        provider = OpenRouterCoverProvider(model="custom/model")
+        provider = OpenRouterImageProvider(model="custom/model")
 
         # Assert
         assert provider.model == "custom/model"
@@ -171,7 +172,7 @@ class TestOpenRouterCoverProvider:
         """Test that provider loads API key from environment."""
         # Arrange & Act
         with patch.dict("os.environ", {"LLM_API_KEY": "test-api-key"}):
-            provider = OpenRouterCoverProvider()
+            provider = OpenRouterImageProvider()
 
         # Assert - client should be initialized (not None)
         assert provider.client is not None

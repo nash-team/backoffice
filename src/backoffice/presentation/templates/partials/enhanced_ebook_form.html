@@ -11,6 +11,7 @@
   <!-- Type d'ebook (coloriage uniquement) -->
   <input type="hidden" name="ebook_type" value="coloring">
 
+
   <!-- Étape 1: Thème et audience -->
   <div class="mb-4" id="themeSection">
     <h6 class="fw-bold text-primary">
@@ -68,18 +69,18 @@
     <div class="mb-3">
       <label for="number_of_pages" class="form-label">
         <strong>Nombre de pages de coloriage</strong>
-        <small class="text-muted">(1 à 30)</small>
+        <small class="text-muted">(24 à 30 - minimum KDP)</small>
       </label>
       <input type="number"
              class="form-control"
              id="number_of_pages"
              name="number_of_pages"
-             min="1"
+             min="24"
              max="30"
-             value="8"
+             value="24"
              data-testid="pages-input">
       <div class="form-text">
-        💡 <strong>Tip :</strong> Chaque page contiendra une image différente à colorier.
+        💡 <strong>Tip :</strong> Amazon KDP impose un minimum de 24 pages pour l'impression paperback.
       </div>
     </div>
 
@@ -106,11 +107,32 @@
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-testid="cancel-btn">
       Annuler
     </button>
-    <button id="createBtn" type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2" data-testid="create-btn">
-      <span class="spinner-border spinner-border-sm" id="createBtnSpinner" role="status" aria-hidden="true"></span>
-      <i class="fas fa-plus" id="createBtnIcon" aria-hidden="true"></i>
-      <span>Créer l'ebook</span>
-    </button>
+    <div class="d-flex gap-2">
+      <button type="submit"
+              class="btn btn-info d-inline-flex align-items-center gap-2"
+              data-testid="preview-btn"
+              hx-post="/api/dashboard/ebooks"
+              hx-target="#ebooksTableContainer"
+              hx-swap="innerHTML"
+              hx-vals='{"preview_mode": "true"}'
+              hx-include="#ebookForm [name]">
+        <span class="spinner-border spinner-border-sm preview-spinner" role="status" aria-hidden="true"></span>
+        <i class="fas fa-eye preview-icon" aria-hidden="true"></i>
+        <span>Aperçu Rapide (3 pages)</span>
+      </button>
+      <button type="submit"
+              class="btn btn-primary d-inline-flex align-items-center gap-2"
+              data-testid="create-btn"
+              hx-post="/api/dashboard/ebooks"
+              hx-target="#ebooksTableContainer"
+              hx-swap="innerHTML"
+              hx-vals='{"preview_mode": "false"}'
+              hx-include="#ebookForm [name]">
+        <span class="spinner-border spinner-border-sm create-spinner" role="status" aria-hidden="true"></span>
+        <i class="fas fa-book create-icon" aria-hidden="true"></i>
+        <span>Créer Ebook Complet</span>
+      </button>
+    </div>
   </div>
 </form>
 
@@ -169,27 +191,36 @@
 
 /* Button loading states - Simple et propre */
 /* Par défaut: spinner caché, icône visible */
-#createBtnSpinner {
+.preview-spinner, .create-spinner {
   display: none;
 }
 
-#createBtnIcon {
+.preview-icon, .create-icon {
   display: inline-block;
 }
 
-/* Pendant la requête (htmx ajoute htmx-request au FORM) */
-#ebookForm.htmx-request #createBtnSpinner {
+/* Pendant la requête - Cibler le bouton spécifique cliqué */
+button.htmx-request .preview-spinner,
+button.htmx-request .create-spinner {
   display: inline-block;
 }
 
-#ebookForm.htmx-request #createBtnIcon {
+button.htmx-request .preview-icon,
+button.htmx-request .create-icon {
   display: none;
 }
 
-/* Curseur d'attente */
-#createBtn[disabled] {
+/* Désactiver visuellement le bouton qui ne charge pas */
+#ebookForm.htmx-request button:not(.htmx-request) {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Curseur d'attente sur le bouton actif */
+button.htmx-request {
   cursor: wait;
 }
 
 </style>
+
 

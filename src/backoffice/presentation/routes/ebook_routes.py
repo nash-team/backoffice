@@ -81,14 +81,14 @@ async def regenerate_ebook_page(
         if not page_type:
             raise HTTPException(status_code=400, detail="page_type is required")
 
-        # V1: Only cover regeneration supported
-        if page_type != "cover":
+        # V1: Only cover and back_cover regeneration supported
+        if page_type not in ["cover", "back_cover"]:
             raise HTTPException(
                 status_code=400,
-                detail=f"Only cover regeneration is supported in V1. Got: {page_type}",
+                detail=f"Only 'cover' and 'back_cover' regeneration supported. Got: {page_type}",
             )
 
-        logger.info(f"Regenerating cover for ebook {ebook_id}")
+        logger.info(f"Regenerating {page_type} for ebook {ebook_id}")
 
         # Get dependencies from factory
         ebook_repo = factory.get_ebook_repository()
@@ -97,34 +97,48 @@ async def regenerate_ebook_page(
         # Create new architecture services
         from backoffice.domain.cover_generation import CoverGenerationService
         from backoffice.domain.pdf_assembly import PDFAssemblyService
-        from backoffice.domain.usecases.regenerate_cover import RegenerateCoverUseCase
-        from backoffice.infrastructure.providers.openrouter_cover_provider import (
-            OpenRouterCoverProvider,
+        from backoffice.infrastructure.providers.openrouter_image_provider import (
+            OpenRouterImageProvider,
         )
         from backoffice.infrastructure.providers.weasyprint_assembly_provider import (
             WeasyPrintAssemblyProvider,
         )
 
         # Initialize services
-        cover_provider = OpenRouterCoverProvider()
+        cover_provider = OpenRouterImageProvider()
         cover_service = CoverGenerationService(cover_port=cover_provider)
         assembly_provider = WeasyPrintAssemblyProvider()
         assembly_service = PDFAssemblyService(assembly_port=assembly_provider)
 
-        # Create and execute use case
-        regenerate_usecase = RegenerateCoverUseCase(
-            ebook_repository=ebook_repo,
-            cover_service=cover_service,
-            assembly_service=assembly_service,
-            file_storage=file_storage,
+        # Choose the appropriate use case based on page_type
+        from backoffice.domain.usecases.regenerate_back_cover import (
+            RegenerateBackCoverUseCase,
         )
+        from backoffice.domain.usecases.regenerate_cover import RegenerateCoverUseCase
+
+        if page_type == "cover":
+            regenerate_usecase: RegenerateCoverUseCase | RegenerateBackCoverUseCase = (
+                RegenerateCoverUseCase(
+                    ebook_repository=ebook_repo,
+                    cover_service=cover_service,
+                    assembly_service=assembly_service,
+                    file_storage=file_storage,
+                )
+            )
+        else:  # back_cover
+            regenerate_usecase = RegenerateBackCoverUseCase(
+                ebook_repository=ebook_repo,
+                cover_service=cover_service,
+                assembly_service=assembly_service,
+                file_storage=file_storage,
+            )
 
         updated_ebook = await regenerate_usecase.execute(
             ebook_id=ebook_id,
             prompt_override=prompt_override,
         )
 
-        logger.info(f"Successfully regenerated cover for ebook {ebook_id}")
+        logger.info(f"Successfully regenerated {page_type} for ebook {ebook_id}")
 
         return {
             "success": True,

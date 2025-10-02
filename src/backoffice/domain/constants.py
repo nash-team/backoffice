@@ -70,7 +70,7 @@ MIN_CONTENT_LENGTH = 10
 # Ebook configuration validation
 MIN_CHAPTERS = 1
 MAX_CHAPTERS = 15
-MIN_PAGES = 1
+MIN_PAGES = 24  # Amazon KDP minimum for paperback printing
 MAX_PAGES = 30
 
 # Error messages

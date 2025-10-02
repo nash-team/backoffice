@@ -25,11 +25,11 @@ def create_cover_generation_port() -> CoverGenerationPort:
         return FakeCoverGenerationPort()
     else:
         # Use real provider
-        from backoffice.infrastructure.providers.openrouter_cover_provider import (
-            OpenRouterCoverProvider,
+        from backoffice.infrastructure.providers.openrouter_image_provider import (
+            OpenRouterImageProvider,
         )
 
-        return OpenRouterCoverProvider()
+        return OpenRouterImageProvider()
 
 
 def create_content_page_generation_port() -> ContentPageGenerationPort:

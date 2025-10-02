@@ -44,7 +44,7 @@ class GoogleDriveAdapter:
                 title=file["name"],
                 author="",  # À remplir plus tard
                 created_at=datetime.fromisoformat(file["createdTime"].replace("Z", "+00:00")),
-                status=EbookStatus.PENDING,
+                status=EbookStatus.DRAFT,
                 drive_id=file["id"],
                 preview_url=preview_url,  # URL d'aperçu Google Drive
             )

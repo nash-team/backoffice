@@ -103,17 +103,6 @@
                                 <span id="filterDraftSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
                                 <span class="button-content">Brouillons</span>
                             </button>
-                            <button id="filterPendingBtn" type="button" class="btn btn-outline-secondary filter-btn"
-                                    data-testid="filter-pending-btn"
-                                    hx-get="/api/dashboard/ebooks?status=pending"
-                                    hx-target="#ebooksTableContainer"
-                                    hx-swap="innerHTML"
-                                    hx-indicator="#filterPendingSpinner"
-                                    hx-disabled-elt="this"
-                                    aria-label="Afficher les ebooks en attente">
-                                <span id="filterPendingSpinner" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
-                                <span class="button-content">En attente</span>
-                            </button>
                             <button id="filterApprovedBtn" type="button" class="btn btn-outline-secondary filter-btn"
                                     data-testid="filter-approved-btn"
                                     hx-get="/api/dashboard/ebooks?status=approved"

@@ -6,11 +6,11 @@ from fastapi.responses import HTMLResponse
 
 from backoffice.domain.entities.ebook import EbookStatus
 from backoffice.domain.entities.pagination import PaginationParams
+from backoffice.domain.errors.error_taxonomy import DomainError
 from backoffice.domain.usecases.approve_ebook import ApproveEbookUseCase
 from backoffice.domain.usecases.get_ebooks import GetEbooksUseCase
 from backoffice.domain.usecases.get_stats import GetStatsUseCase
 from backoffice.domain.usecases.reject_ebook import RejectEbookUseCase
-from backoffice.domain.usecases.submit_ebook_for_validation import SubmitEbookForValidationUseCase
 from backoffice.infrastructure.adapters.theme_repository import ThemeRepository
 from backoffice.infrastructure.factories.repository_factory import (
     RepositoryFactory,
@@ -55,8 +55,6 @@ async def get_ebooks(
     ebook_status = None
     if status == "draft":
         ebook_status = EbookStatus.DRAFT
-    elif status == "pending":
-        ebook_status = EbookStatus.PENDING
     elif status == "approved":
         ebook_status = EbookStatus.APPROVED
     elif status == "rejected":
@@ -128,8 +126,6 @@ async def get_ebooks_json(
     ebook_status = None
     if status == "draft":
         ebook_status = EbookStatus.DRAFT
-    elif status == "pending":
-        ebook_status = EbookStatus.PENDING
     elif status == "approved":
         ebook_status = EbookStatus.APPROVED
     elif status == "rejected":
@@ -186,6 +182,7 @@ async def create_ebook(
     title: str = Form(None),
     author: str = Form("Assistant IA"),
     number_of_pages: int = Form(8),  # Default 8 pages
+    preview_mode: bool = Form(False),  # Preview mode (3 images) vs Production (26 images)
 ) -> Response:
     """Crée un nouvel ebook de coloriage (coloring book only)."""
     logger.info(f"Creating coloring book - Theme: {theme_id}, Audience: {audience}")
@@ -221,9 +218,15 @@ async def create_ebook(
         mapped_audience = age_mapping.get(audience, audience)
         new_age_group = NewAgeGroup(mapped_audience)
 
-        pages_count = number_of_pages or 8
+        # Convert preview_mode string to boolean (Form sends "true"/"false" as strings)
+        is_preview = str(preview_mode).lower() in ("true", "1", "yes")
 
-        logger.info("🎨 Generating coloring book via NEW ARCHITECTURE")
+        # Preview mode: 1 page (+ cover + back cover = 3 images)
+        # Production mode: use number_of_pages (default 24)
+        pages_count = 1 if is_preview else (number_of_pages or 24)
+
+        mode_label = "PREVIEW" if is_preview else "PRODUCTION"
+        logger.info(f"🎨 Generating coloring book via NEW ARCHITECTURE ({mode_label} MODE)")
         logger.info(f"   Theme: {theme.label} ({theme.blocks.subject})")
         logger.info(f"   Age group: {new_age_group.value}")
         logger.info(f"   Pages: {pages_count}")
@@ -240,59 +243,21 @@ async def create_ebook(
         logger.info(f"✅ NEW ARCHITECTURE: PDF generated at {generation_result.pdf_uri}")
         logger.info(f"   Total pages: {len(generation_result.pages_meta)}")
 
-        # 📤 Upload PDF to Google Drive
+        # 📝 DRAFT workflow: PDF NOT uploaded to Drive automatically
+        # Upload will happen only after manual approval
         import pathlib
 
         pdf_path = pathlib.Path(generation_result.pdf_uri.replace("file://", ""))
-        logger.info(f"📤 Uploading PDF to Google Drive: {pdf_path}")
-
-        # Get file storage adapter
-        file_storage = factory.get_file_storage()
-        drive_id = None
-        drive_preview_url = None
-
-        if file_storage.is_available():
-            try:
-                # Read PDF bytes
-                with open(pdf_path, "rb") as f:
-                    pdf_bytes = f.read()
-
-                # Upload to Drive
-                filename = f"{title or 'coloring_book'}_{theme_id}.pdf"
-                upload_result = await file_storage.upload_ebook(
-                    file_bytes=pdf_bytes,
-                    filename=filename,
-                    metadata={
-                        "title": title or f"Livre de coloriage - {theme.label}",
-                        "author": author or "Auteur Inconnu",
-                        "theme_id": theme_id,
-                        "audience": audience,
-                        "pages": str(pages_count),
-                    },
-                )
-
-                # GoogleDriveStorageAdapter returns "storage_id" and "storage_url"
-                drive_id = upload_result.get("storage_id")
-                drive_preview_url = upload_result.get("storage_url")
-
-                logger.info(f"✅ PDF uploaded to Drive: {drive_id}")
-                logger.info(f"   Preview URL: {drive_preview_url}")
-
-            except Exception as e:
-                logger.warning(f"⚠️ Failed to upload to Drive: {e}")
-        else:
-            logger.warning("⚠️ Google Drive not available, skipping upload")
+        logger.info(f"📝 Ebook created in DRAFT status (awaiting approval): {pdf_path}")
 
         # 🎯 NEW ARCHITECTURE SHORTCUT: PDF is already generated, save ebook directly
         import base64
 
         from backoffice.domain.entities.ebook import Ebook, EbookStatus
 
-        # Use Drive preview URL if available, otherwise fall back to local file
-        final_preview_url = drive_preview_url if drive_id else generation_result.pdf_uri
-
         # Build structure_json with pages metadata for regeneration
         structure_json = {
+            "is_preview": is_preview,  # Store preview mode flag
             "pages_meta": [
                 {
                     "page_number": page_meta.page_number,
@@ -301,30 +266,49 @@ async def create_ebook(
                     "image_data_base64": base64.b64encode(page_meta.image_data).decode(),
                 }
                 for page_meta in generation_result.pages_meta
-            ]
+            ],
         }
 
-        # Create ebook entity directly with generated PDF
-        # Note: pdf_path and other legacy fields removed from Ebook entity
+        # Store cover without text (if available) for KDP back cover generation
+        if (
+            hasattr(generation_result, "cover_no_text_bytes")
+            and generation_result.cover_no_text_bytes
+        ):
+            structure_json["cover_no_text_base64"] = base64.b64encode(
+                generation_result.cover_no_text_bytes
+            ).decode()
+            logger.info("✅ Stored cover without text for KDP back cover generation")
+
+        # Create ebook entity in DRAFT status (no Drive upload yet)
         new_ebook = Ebook(
             id=0,  # Will be set by repository
             title=title or f"Livre de coloriage - {theme.label}",
             author=author or "Auteur Inconnu",
             created_at=None,  # Will be set by repository
-            status=EbookStatus.PENDING,
-            preview_url=final_preview_url,  # Google Drive preview URL
-            drive_id=drive_id,  # Google Drive file ID
+            status=EbookStatus.DRAFT,  # ✅ DRAFT - awaiting approval
+            preview_url=None,  # Will be set after approval
+            drive_id=None,  # Will be set after approval
             config=None,  # No config needed for new arch
             theme_id=theme_id,
             theme_version=theme_repository.get_theme_version(theme_id),
             audience=audience,
             structure_json=structure_json,  # Store pages for regeneration
+            page_count=len(generation_result.pages_meta),
         )
 
         # Save to repository
         ebook_repo = factory.get_ebook_repository()
         saved_ebook = await ebook_repo.create(new_ebook)
         logger.info(f"✅ Ebook saved to database: ID={saved_ebook.id}")
+
+        # Save PDF bytes for DRAFT workflow (for regeneration/approval)
+        try:
+            with open(pdf_path, "rb") as f:
+                pdf_bytes = f.read()
+            await ebook_repo.save_ebook_bytes(saved_ebook.id, pdf_bytes)
+            logger.info(f"✅ PDF bytes saved to database for ebook {saved_ebook.id}")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to save PDF bytes: {e}")
 
         # Get updated ebooks list for response
         from backoffice.domain.entities.pagination import PaginationParams
@@ -408,7 +392,8 @@ async def approve_ebook(ebook_id: int, request: Request, factory: RepositoryFact
     """Approve an ebook and return the updated table row."""
     try:
         ebook_repo = factory.get_ebook_repository()
-        approve_usecase = ApproveEbookUseCase(ebook_repo)
+        file_storage = factory.get_file_storage()
+        approve_usecase = ApproveEbookUseCase(ebook_repo, file_storage)
         updated_ebook = await approve_usecase.execute(ebook_id)
 
         ebook_data = {
@@ -497,41 +482,89 @@ async def get_ebook_preview_modal(
         raise HTTPException(status_code=500, detail="Error loading ebook preview") from e
 
 
-@router.post("/ebooks/{ebook_id}/submit")
-async def submit_ebook_for_validation(
-    ebook_id: int, request: Request, factory: RepositoryFactoryDep
-) -> Response:
-    """Submit an ebook for validation (DRAFT → PENDING transition)."""
+@router.get("/ebooks/{ebook_id}/pdf")
+async def get_ebook_pdf(ebook_id: int, factory: RepositoryFactoryDep) -> Response:
+    """Serve PDF bytes for DRAFT ebooks (before Drive upload)."""
     try:
+        from fastapi.responses import Response as FastAPIResponse
+
         ebook_repo = factory.get_ebook_repository()
-        submit_usecase = SubmitEbookForValidationUseCase(ebook_repo)
-        updated_ebook = await submit_usecase.execute(ebook_id)
+        ebook = await ebook_repo.get_by_id(ebook_id)
 
-        ebook_data = {
-            "id": updated_ebook.id,
-            "title": updated_ebook.title,
-            "author": updated_ebook.author,
-            "created_at": updated_ebook.created_at,
-            "status": updated_ebook.status.value,
-            "preview_url": updated_ebook.preview_url,
-            "drive_id": updated_ebook.drive_id,
-        }
+        if not ebook:
+            raise HTTPException(status_code=404, detail=f"Ebook with id {ebook_id} not found")
 
-        return templates.TemplateResponse(
-            "partials/ebooks_table_row.html",
-            {"request": request, "ebook": type("Ebook", (), ebook_data)()},
+        # Get PDF bytes from repository
+        pdf_bytes = await ebook_repo.get_ebook_bytes(ebook_id)
+
+        if not pdf_bytes:
+            raise HTTPException(
+                status_code=404, detail="PDF not found - may have been deleted after approval"
+            )
+
+        # Return PDF with proper headers
+        return FastAPIResponse(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'inline; filename="{ebook.title}.pdf"',
+                "Cache-Control": "public, max-age=3600",
+            },
         )
-    except ValueError as e:
-        logger.warning(f"Validation error submitting ebook {ebook_id}: {str(e)}")
-        error_html = f"""<div class="alert alert-danger" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            {str(e)}
-        </div>"""
-        return HTMLResponse(content=error_html, status_code=400)
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Unexpected error submitting ebook {ebook_id}: {str(e)}", exc_info=True)
-        error_html = """<div class="alert alert-danger" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            Erreur lors de la soumission de l'ebook. Veuillez réessayer.
-        </div>"""
-        return HTMLResponse(content=error_html, status_code=500)
+        logger.error(f"Error serving PDF for ebook {ebook_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error serving PDF") from e
+
+
+@router.get("/ebooks/{ebook_id}/export-kdp")
+async def export_ebook_to_kdp(
+    ebook_id: int, factory: RepositoryFactoryDep, preview: bool = False
+) -> Response:
+    """Export an approved ebook to Amazon KDP paperback format.
+
+    Args:
+        ebook_id: ID of the ebook
+        preview: If True, display inline (allows DRAFT); if False, download (requires APPROVED)
+    """
+    try:
+        from fastapi.responses import Response as FastAPIResponse
+
+        from backoffice.domain.usecases.export_to_kdp import ExportToKDPUseCase
+
+        ebook_repo = factory.get_ebook_repository()
+        export_usecase = ExportToKDPUseCase(ebook_repo)
+
+        # Execute export (preview_mode=True allows DRAFT, False requires APPROVED)
+        kdp_pdf_bytes = await export_usecase.execute(ebook_id, preview_mode=preview)
+
+        # Get ebook for filename
+        ebook = await ebook_repo.get_by_id(ebook_id)
+        filename = f"{ebook.title}_KDP.pdf" if ebook else f"ebook_{ebook_id}_KDP.pdf"
+
+        # Return PDF (inline for preview, attachment for download)
+        disposition = "inline" if preview else "attachment"
+        return FastAPIResponse(
+            content=kdp_pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'{disposition}; filename="{filename}"',
+                "Cache-Control": "no-cache",
+            },
+        )
+    except DomainError as e:
+        logger.warning(f"Domain error exporting ebook {ebook_id} to KDP: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except NotImplementedError as e:
+        logger.warning(f"KDP export not yet implemented for ebook {ebook_id}")
+        raise HTTPException(status_code=501, detail=str(e)) from e
+    except Exception as e:
+        logger.error(f"Unexpected error exporting ebook {ebook_id} to KDP: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Error exporting to KDP format. Please try again.",
+        ) from e
+
+
+# Route removed: submit_ebook_for_validation (PENDING status no longer exists)

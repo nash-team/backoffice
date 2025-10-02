@@ -2,6 +2,7 @@ import pytest
 from datetime import datetime
 
 from backoffice.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.domain.errors.error_taxonomy import DomainError
 from backoffice.domain.usecases.reject_ebook import RejectEbookUseCase
 
 
@@ -76,24 +77,24 @@ class TestRejectEbookUseCase:
         )
 
     @pytest.mark.asyncio
-    async def test_reject_pending_ebook_success(
-        self, reject_ebook_usecase, ebook_repository, pending_ebook
+    async def test_reject_draft_ebook_success(
+        self, reject_ebook_usecase, ebook_repository, draft_ebook
     ):
-        """Should successfully reject a pending ebook"""
+        """Should successfully reject a draft ebook"""
         # Arrange
-        ebook_repository.add_ebook(pending_ebook)
+        ebook_repository.add_ebook(draft_ebook)
 
         # Act
-        result = await reject_ebook_usecase.execute(1)
+        result = await reject_ebook_usecase.execute(3)
 
         # Assert
         assert result.status == EbookStatus.REJECTED
-        assert result.id == pending_ebook.id
-        assert result.title == pending_ebook.title
-        assert result.author == pending_ebook.author
+        assert result.id == draft_ebook.id
+        assert result.title == draft_ebook.title
+        assert result.author == draft_ebook.author
 
         # Verify the ebook is persisted with correct status
-        persisted_ebook = await ebook_repository.get_by_id(1)
+        persisted_ebook = await ebook_repository.get_by_id(3)
         assert persisted_ebook.status == EbookStatus.REJECTED
 
     @pytest.mark.asyncio
@@ -117,32 +118,39 @@ class TestRejectEbookUseCase:
 
     @pytest.mark.asyncio
     async def test_reject_nonexistent_ebook_raises_error(self, reject_ebook_usecase):
-        """Should raise ValueError when ebook doesn't exist"""
+        """Should raise DomainError when ebook doesn't exist"""
         # Act & Assert
-        with pytest.raises(ValueError, match="Ebook with id 999 not found"):
+        with pytest.raises(DomainError, match="Ebook with ID 999 not found"):
             await reject_ebook_usecase.execute(999)
 
     @pytest.mark.asyncio
-    async def test_reject_draft_ebook_raises_error(
-        self, reject_ebook_usecase, ebook_repository, draft_ebook
-    ):
-        """Should raise ValueError when trying to reject draft ebook"""
+    async def test_reject_pending_ebook_raises_error(self, reject_ebook_usecase, ebook_repository):
+        """Should raise DomainError when trying to reject pending ebook"""
         # Arrange
-        ebook_repository.add_ebook(draft_ebook)
+        pending_ebook = Ebook(
+            id=5,
+            title="Pending Ebook",
+            author="Test Author",
+            created_at=datetime.now(),
+            status=EbookStatus.PENDING,
+            preview_url="http://example.com/preview",
+            drive_id="test_drive_id",
+        )
+        ebook_repository.add_ebook(pending_ebook)
 
         # Act & Assert
-        with pytest.raises(ValueError, match="Cannot reject ebook with status DRAFT"):
-            await reject_ebook_usecase.execute(3)
+        with pytest.raises(DomainError, match="Cannot reject ebook with status PENDING"):
+            await reject_ebook_usecase.execute(5)
 
         # Verify the ebook status remains unchanged
-        persisted_ebook = await ebook_repository.get_by_id(3)
-        assert persisted_ebook.status == EbookStatus.DRAFT
+        persisted_ebook = await ebook_repository.get_by_id(5)
+        assert persisted_ebook.status == EbookStatus.PENDING
 
     @pytest.mark.asyncio
     async def test_reject_already_rejected_ebook_raises_error(
         self, reject_ebook_usecase, ebook_repository
     ):
-        """Should raise ValueError when trying to reject already rejected ebook"""
+        """Should raise DomainError when trying to reject already rejected ebook"""
         # Arrange
         rejected_ebook = Ebook(
             id=4,
@@ -156,7 +164,7 @@ class TestRejectEbookUseCase:
         ebook_repository.add_ebook(rejected_ebook)
 
         # Act & Assert
-        with pytest.raises(ValueError, match="Cannot reject ebook with status REJECTED"):
+        with pytest.raises(DomainError, match="Cannot reject ebook with status REJECTED"):
             await reject_ebook_usecase.execute(4)
 
         # Verify the ebook status remains unchanged

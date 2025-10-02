@@ -101,38 +101,29 @@ class GenerateEbookUseCase:
             structure_dict = asdict(ebook_structure)
             serializable_structure = serialize_ebook_structure(structure_dict)
 
+            # ✅ DRAFT workflow: Ebook created but NOT uploaded to Drive
+            # Upload will happen only after manual approval
             result: dict[str, str | int | bool | None | list[str] | dict] = {
                 "title": ebook_structure.meta.title,
                 "author": ebook_structure.meta.author,
                 "format": config.format,
                 "size": len(ebook_bytes),
+                "status": "DRAFT",  # Ebook requires manual approval
                 "content_generation_available": self.content_generator.is_available(),
                 "storage_available": self.file_storage.is_available()
                 if self.file_storage
                 else False,
                 "ebook_structure": serializable_structure,  # Store structure for regeneration
+                "ebook_bytes": ebook_bytes,  # Keep bytes for preview and later upload
+                "storage_id": None,  # Will be set after approval
+                "storage_url": None,  # Will be set after approval
+                "storage_status": "pending_approval",
             }
 
-            if self.file_storage and self.file_storage.is_available():
-                logger.info("Uploading ebook to storage...")
-                filename = f"{ebook_structure.meta.title}.{config.format}"
-                metadata = {
-                    "title": ebook_structure.meta.title,
-                    "author": ebook_structure.meta.author,
-                    "format": config.format,
-                }
-
-                storage_result = await self.file_storage.upload_ebook(
-                    file_bytes=ebook_bytes, filename=filename, metadata=metadata
-                )
-
-                # Merge storage result into final result
-                result.update(storage_result)
-            else:
-                logger.warning("No storage service available, ebook not uploaded")
-                result.update(
-                    {"storage_id": None, "storage_url": None, "storage_status": "no_storage"}
-                )
+            logger.info(
+                f"Ebook generated in DRAFT status: '{ebook_structure.meta.title}' "
+                f"(awaiting manual approval before Drive upload)"
+            )
 
             logger.info(f"Ebook generation completed successfully: '{ebook_structure.meta.title}'")
             return result

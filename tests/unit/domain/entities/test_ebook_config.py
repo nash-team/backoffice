@@ -25,17 +25,17 @@ class TestEbookConfig:
 
     def test_config_with_valid_pages(self):
         """Test creating EbookConfig with valid number of pages"""
-        config = EbookConfig(number_of_pages=10)
+        config = EbookConfig(number_of_pages=24)
 
-        assert config.number_of_pages == 10
+        assert config.number_of_pages == 24
         assert config.number_of_chapters is None
 
     def test_config_with_both_chapters_and_pages(self):
         """Test creating EbookConfig with both chapters and pages"""
-        config = EbookConfig(number_of_chapters=3, number_of_pages=12)
+        config = EbookConfig(number_of_chapters=3, number_of_pages=24)
 
         assert config.number_of_chapters == 3
-        assert config.number_of_pages == 12
+        assert config.number_of_pages == 24
 
     def test_invalid_chapters_too_low(self):
         """Test validation for chapters below minimum"""
@@ -48,13 +48,13 @@ class TestEbookConfig:
             EbookConfig(number_of_chapters=16)
 
     def test_invalid_pages_too_low(self):
-        """Test validation for pages below minimum"""
-        with pytest.raises(ValueError, match="Number of pages must be between 1 and 30"):
+        """Test validation for pages below minimum (KDP requires 24+)"""
+        with pytest.raises(ValueError, match="Number of pages must be between 24 and 30"):
             EbookConfig(number_of_pages=0)
 
     def test_invalid_pages_too_high(self):
         """Test validation for pages above maximum"""
-        with pytest.raises(ValueError, match="Number of pages must be between 1 and 30"):
+        with pytest.raises(ValueError, match="Number of pages must be between 24 and 30"):
             EbookConfig(number_of_pages=31)
 
     def test_invalid_chapters_non_integer(self):
@@ -65,7 +65,7 @@ class TestEbookConfig:
     def test_invalid_pages_non_integer(self):
         """Test validation for non-integer pages"""
         with pytest.raises(ValueError, match="Number of pages must be an integer, got str"):
-            EbookConfig(number_of_pages="10")
+            EbookConfig(number_of_pages="24")
 
     def test_valid_boundary_chapters(self):
         """Test valid boundary values for chapters"""
@@ -76,9 +76,9 @@ class TestEbookConfig:
         assert config_max.number_of_chapters == 15
 
     def test_valid_boundary_pages(self):
-        """Test valid boundary values for pages"""
-        config_min = EbookConfig(number_of_pages=1)
+        """Test valid boundary values for pages (KDP requires 24-30)"""
+        config_min = EbookConfig(number_of_pages=24)
         config_max = EbookConfig(number_of_pages=30)
 
-        assert config_min.number_of_pages == 1
+        assert config_min.number_of_pages == 24
         assert config_max.number_of_pages == 30

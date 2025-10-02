@@ -1,3 +1,25 @@
-{# V1 Simplification: Validation buttons hidden for now #}
-{# Will be re-enabled when AI auto-validation agent is implemented #}
-{# Code kept for future use: PENDING → APPROVED/REJECTED transitions #}
+{% if ebook.status.value == 'DRAFT' %}
+<button class="btn btn-sm btn-success"
+        hx-put="/api/dashboard/ebooks/{{ ebook.id }}/approve"
+        hx-target="#ebook-row-{{ ebook.id }}"
+        hx-swap="outerHTML"
+        hx-indicator="#approveSpinner-{{ ebook.id }}"
+        hx-disabled-elt="this"
+        aria-label="Approuver l'ebook {{ ebook.title }}"
+        data-testid="approve-ebook-btn">
+    <span id="approveSpinner-{{ ebook.id }}" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
+    <span class="button-content"><i class="fas fa-check me-1"></i>Approuver</span>
+</button>
+<button class="btn btn-sm btn-danger"
+        hx-put="/api/dashboard/ebooks/{{ ebook.id }}/reject"
+        hx-target="#ebook-row-{{ ebook.id }}"
+        hx-swap="outerHTML"
+        hx-indicator="#rejectSpinner-{{ ebook.id }}"
+        hx-disabled-elt="this"
+        hx-confirm="Êtes-vous sûr de vouloir rejeter cet ebook ?"
+        aria-label="Rejeter l'ebook {{ ebook.title }}"
+        data-testid="reject-ebook-btn">
+    <span id="rejectSpinner-{{ ebook.id }}" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
+    <span class="button-content"><i class="fas fa-times me-1"></i>Rejeter</span>
+</button>
+{% endif %}

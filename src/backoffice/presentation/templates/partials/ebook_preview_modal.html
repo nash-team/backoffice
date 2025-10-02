@@ -30,13 +30,23 @@
     <!-- PDF Viewer -->
     <div class="pdf-viewer-container mb-4" style="min-height: 600px; border: 1px solid #dee2e6; border-radius: 0.375rem; background: #f8f9fa;">
         {% if ebook.preview_url %}
-            <!-- Google Drive PDF Embed -->
+            <!-- Google Drive PDF Embed (APPROVED ebooks) -->
             <iframe
                 src="https://drive.google.com/file/d/{{ ebook.drive_id }}/preview"
                 width="100%"
                 height="600"
                 frameborder="0"
                 allow="autoplay"
+                style="border-radius: 0.375rem;"
+                data-testid="pdf-viewer">
+            </iframe>
+        {% elif ebook.status.value == 'DRAFT' %}
+            <!-- Local PDF Embed (DRAFT ebooks - before Drive upload) -->
+            <iframe
+                src="/api/dashboard/ebooks/{{ ebook.id }}/pdf"
+                width="100%"
+                height="600"
+                frameborder="0"
                 style="border-radius: 0.375rem;"
                 data-testid="pdf-viewer">
             </iframe>
@@ -62,8 +72,29 @@
         </a>
         {% endif %}
 
-        <!-- Regenerate Cover (available for PENDING ebooks) -->
-        {% if ebook.status.value == 'PENDING' or ebook.status.value == 'DRAFT' %}
+        <!-- KDP Preview (for DRAFT and APPROVED ebooks) -->
+        {% if ebook.status.value in ['DRAFT', 'APPROVED'] %}
+        <button class="btn btn-outline-info"
+                onclick="showKDPPreview({{ ebook.id }})"
+                data-testid="preview-kdp-btn">
+            <i class="fas fa-eye me-2"></i>
+            Aperçu KDP
+        </button>
+        {% endif %}
+
+        <!-- KDP Download (only for APPROVED ebooks) -->
+        {% if ebook.status.value == 'APPROVED' %}
+        <a href="/api/dashboard/ebooks/{{ ebook.id }}/export-kdp"
+           class="btn btn-outline-success"
+           download
+           data-testid="export-kdp-btn">
+            <i class="fas fa-file-download me-2"></i>
+            Télécharger KDP
+        </a>
+        {% endif %}
+
+        <!-- DRAFT Status Actions: Regenerate + Approve/Reject -->
+        {% if ebook.status.value == 'DRAFT' %}
         <button class="btn btn-outline-warning"
                 hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
                 hx-vals='{"page_type": "cover", "page_index": 0}'
@@ -73,16 +104,86 @@
                 hx-on::after-request="
                     if(event.detail.successful) {
                         createToast('Couverture régénérée avec succès !', 'success');
-                        // Reload preview after 2s
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
+                        setTimeout(() => { location.reload(); }, 2000);
                     }
                 "
                 data-testid="regenerate-cover-btn">
             <span id="regenerateCoverSpinner-{{ ebook.id }}" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
             <i class="fas fa-sync-alt me-2"></i>
             Régénérer la couverture
+        </button>
+
+        <button class="btn btn-outline-warning"
+                hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
+                hx-vals='{"page_type": "back_cover"}'
+                hx-ext="json-enc"
+                hx-indicator="#regenerateBackCoverSpinner-{{ ebook.id }}"
+                hx-disabled-elt="this"
+                hx-on::after-request="
+                    if(event.detail.successful) {
+                        createToast('4ème de couverture régénérée avec succès !', 'success');
+                        setTimeout(() => { location.reload(); }, 2000);
+                    }
+                "
+                data-testid="regenerate-back-cover-btn">
+            <span id="regenerateBackCoverSpinner-{{ ebook.id }}" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+            <i class="fas fa-sync-alt me-2"></i>
+            Régénérer la 4ème de couv.
+        </button>
+
+        <!-- Approve Button (DRAFT → upload to Drive → APPROVED) -->
+        <button class="btn btn-success"
+                hx-post="/api/ebooks/{{ ebook.id }}/approve"
+                hx-indicator="#approveSpinner-{{ ebook.id }}"
+                hx-disabled-elt="this"
+                hx-on::after-request="
+                    if(event.detail.successful) {
+                        createToast('Ebook approuvé et uploadé sur Drive !', 'success');
+                        setTimeout(() => { location.reload(); }, 2000);
+                    }
+                "
+                data-testid="approve-btn">
+            <span id="approveSpinner-{{ ebook.id }}" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+            <i class="fas fa-check me-2"></i>
+            Approuver
+        </button>
+
+        <!-- Reject Button (DRAFT → REJECTED) -->
+        <button class="btn btn-danger"
+                hx-post="/api/ebooks/{{ ebook.id }}/reject"
+                hx-indicator="#rejectSpinner-{{ ebook.id }}"
+                hx-disabled-elt="this"
+                hx-confirm="Êtes-vous sûr de vouloir rejeter cet ebook ?"
+                hx-on::after-request="
+                    if(event.detail.successful) {
+                        createToast('Ebook rejeté', 'info');
+                        setTimeout(() => { location.reload(); }, 2000);
+                    }
+                "
+                data-testid="reject-btn">
+            <span id="rejectSpinner-{{ ebook.id }}" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+            <i class="fas fa-times me-2"></i>
+            Rejeter
+        </button>
+        {% endif %}
+
+        <!-- APPROVED Status Actions: Reject only (if problem found) -->
+        {% if ebook.status.value == 'APPROVED' %}
+        <button class="btn btn-outline-danger"
+                hx-post="/api/ebooks/{{ ebook.id }}/reject"
+                hx-indicator="#rejectApprovedSpinner-{{ ebook.id }}"
+                hx-disabled-elt="this"
+                hx-confirm="Êtes-vous sûr de vouloir rejeter cet ebook approuvé ?"
+                hx-on::after-request="
+                    if(event.detail.successful) {
+                        createToast('Ebook rejeté', 'info');
+                        setTimeout(() => { location.reload(); }, 2000);
+                    }
+                "
+                data-testid="reject-approved-btn">
+            <span id="rejectApprovedSpinner-{{ ebook.id }}" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+            <i class="fas fa-times me-2"></i>
+            Rejeter
         </button>
         {% endif %}
     </div>
@@ -138,3 +239,36 @@
         Fermer
     </button>
 </div>
+
+<script>
+function showKDPPreview(ebookId) {
+    // Replace current PDF viewer with KDP preview
+    const pdfContainer = document.querySelector('.pdf-viewer-container');
+    if (!pdfContainer) return;
+
+    // Show loading state
+    pdfContainer.innerHTML = `
+        <div class="d-flex flex-column align-items-center justify-content-center h-100" style="min-height: 600px;">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Génération de l'aperçu KDP...</span>
+            </div>
+            <p class="text-muted">Génération de l'aperçu KDP en cours...</p>
+            <small class="text-muted">Cela peut prendre quelques secondes</small>
+        </div>
+    `;
+
+    // Load KDP preview after a small delay to show loading state
+    setTimeout(() => {
+        pdfContainer.innerHTML = `
+            <iframe
+                src="/api/dashboard/ebooks/${ebookId}/export-kdp?preview=true"
+                width="100%"
+                height="600"
+                frameborder="0"
+                style="border-radius: 0.375rem;"
+                data-testid="kdp-preview">
+            </iframe>
+        `;
+    }, 100);
+}
+</script>

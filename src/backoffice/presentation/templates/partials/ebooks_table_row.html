@@ -5,6 +5,7 @@
     <td>{{ ebook.created_at|date }}</td>
     <td>
         <span class="badge {{ ebook.status|ebook_status_class }}">
+            <i class="fas {{ ebook.status|ebook_status_icon }}"></i>
             {{ ebook.status|ebook_status_label }}
         </span>
     </td>

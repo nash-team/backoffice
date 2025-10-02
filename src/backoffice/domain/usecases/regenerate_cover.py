@@ -66,11 +66,11 @@ class RegenerateCoverUseCase:
         if not ebook:
             raise ValueError(f"Ebook with id {ebook_id} not found")
 
-        # Business rule: only PENDING ebooks can have their cover regenerated
-        if ebook.status != EbookStatus.PENDING:
+        # Business rule: only DRAFT ebooks can have their cover regenerated
+        if ebook.status != EbookStatus.DRAFT:
             raise ValueError(
                 f"Cannot regenerate cover for ebook with status {ebook.status.value}. "
-                f"Only PENDING ebooks can be modified."
+                f"Only DRAFT ebooks can be modified."
             )
 
         # Business rule: ebook must have structure_json with pages metadata

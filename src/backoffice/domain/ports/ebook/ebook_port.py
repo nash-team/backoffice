@@ -87,3 +87,27 @@ class EbookPort(ABC):
             PaginatedResult[Ebook]: Résultat paginé filtré
         """
         pass
+
+    @abstractmethod
+    async def get_ebook_bytes(self, ebook_id: int) -> bytes | None:
+        """
+        Récupère les bytes du PDF d'un ebook.
+
+        Args:
+            ebook_id: ID de l'ebook
+
+        Returns:
+            bytes | None: Bytes du PDF ou None si introuvable
+        """
+        pass
+
+    @abstractmethod
+    async def save_ebook_bytes(self, ebook_id: int, ebook_bytes: bytes) -> None:
+        """
+        Sauvegarde les bytes du PDF d'un ebook.
+
+        Args:
+            ebook_id: ID de l'ebook
+            ebook_bytes: Bytes du PDF à sauvegarder
+        """
+        pass

@@ -34,6 +34,8 @@ dependencies = [
   # PDF Generation & Image Processing
   "weasyprint>=61.0",
   "pillow>=10.0.0",
+  "img2pdf>=0.5.0",
+  "numpy>=1.24.0",
 
   # HTTP client for external API calls
   "httpx>=0.25.1",
@@ -135,7 +137,7 @@ module = ["backoffice.infrastructure.adapters.repositories.*"]
 disable_error_code = ["assignment"]
 
 [[tool.mypy.overrides]]
-module = ["backoffice.infrastructure.providers.openrouter_cover_provider", "backoffice.infrastructure.adapters.openrouter_image_adapter", "backoffice.infrastructure.services.openrouter_service", "backoffice.infrastructure.factories.llm_adapter_factory", "backoffice.domain.entities.ebook_theme", "backoffice.domain.usecases.generate_ebook", "backoffice.migrations.*", "backoffice.infrastructure.adapters.openrouter_content_adapter", "backoffice.infrastructure.adapters.openai_content_adapter"]
+module = ["backoffice.infrastructure.providers.openrouter_image_provider", "backoffice.infrastructure.adapters.openrouter_image_adapter", "backoffice.infrastructure.services.openrouter_service", "backoffice.infrastructure.factories.llm_adapter_factory", "backoffice.domain.entities.ebook_theme", "backoffice.domain.usecases.generate_ebook", "backoffice.migrations.*", "backoffice.infrastructure.adapters.openrouter_content_adapter", "backoffice.infrastructure.adapters.openai_content_adapter"]
 disable_error_code = ["arg-type", "assignment", "union-attr", "no-any-return", "import-not-found", "return-value", "dict-item", "import-untyped"]
 
 

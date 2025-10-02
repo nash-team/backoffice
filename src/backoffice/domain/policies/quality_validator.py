@@ -8,7 +8,7 @@ from backoffice.domain.errors.error_taxonomy import DomainError, ErrorCode
 logger = logging.getLogger(__name__)
 
 # V1: Hardcoded limits instead of complex policy system
-MAX_PAGES = 20
+MAX_PAGES = 30  # Aligned with KDP maximum (24-30 pages supported)
 MAX_RESOLUTION_PX = 2048
 
 

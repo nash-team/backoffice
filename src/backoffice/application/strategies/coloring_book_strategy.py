@@ -87,7 +87,7 @@ class ColoringBookStrategy:
         )
 
         # Step 2: Generate content pages (B&W)
-        logger.info(f"\n📋 Step 2/3: Generating {request.page_count} content pages...")
+        logger.info(f"\n📋 Step 2/4: Generating {request.page_count} content pages...")
         page_prompts = self._build_page_prompts(request)
         page_spec = ImageSpec(
             width_px=1024,
@@ -103,8 +103,25 @@ class ColoringBookStrategy:
             seed=request.seed,
         )
 
-        # Step 3: Assemble PDF
-        logger.info("\n📋 Step 3/3: Assembling PDF...")
+        # Step 3: Generate back cover (line art on colored background)
+        logger.info("\n📋 Step 3/4: Generating back cover (line art style)...")
+        back_cover_prompt = self._build_back_cover_prompt(request, cover_data)
+        back_cover_spec = ImageSpec(
+            width_px=1024,
+            height_px=1024,
+            format="PNG",
+            dpi=300,
+            color_mode=ColorMode.COLOR,  # Colored background
+        )
+
+        back_cover_data = await self.cover_service.generate_cover(
+            prompt=back_cover_prompt,
+            spec=back_cover_spec,
+            seed=request.seed,
+        )
+
+        # Step 4: Assemble PDF
+        logger.info("\n📋 Step 4/4: Assembling PDF...")
         output_path = self._generate_output_path(request)
 
         cover_page = AssembledPage(
@@ -124,35 +141,55 @@ class ColoringBookStrategy:
             for i, page_data in enumerate(pages_data)
         ]
 
+        # Add back cover as last page
+        back_cover_page = AssembledPage(
+            page_number=len(pages_data) + 1,
+            title="Back Cover",
+            image_data=back_cover_data,
+            image_format="PNG",
+        )
+
         pdf_uri = await self.assembly_service.assemble_ebook(
             cover=cover_page,
-            pages=content_pages,
+            pages=content_pages + [back_cover_page],  # Include back cover
             output_path=output_path,
         )
 
         # Build result with image data for regeneration
-        pages_meta = [
-            PageMeta(
-                page_number=0,
-                title="Cover",
-                format="PNG",
-                size_bytes=len(cover_data),
-                image_data=cover_data,
-            )
-        ] + [
-            PageMeta(
-                page_number=i + 1,
-                title=f"Page {i + 1}",
-                format="PNG",
-                size_bytes=len(page_data),
-                image_data=page_data,
-            )
-            for i, page_data in enumerate(pages_data)
-        ]
+        pages_meta = (
+            [
+                PageMeta(
+                    page_number=0,
+                    title="Cover",
+                    format="PNG",
+                    size_bytes=len(cover_data),
+                    image_data=cover_data,
+                )
+            ]
+            + [
+                PageMeta(
+                    page_number=i + 1,
+                    title=f"Page {i + 1}",
+                    format="PNG",
+                    size_bytes=len(page_data),
+                    image_data=page_data,
+                )
+                for i, page_data in enumerate(pages_data)
+            ]
+            + [
+                PageMeta(
+                    page_number=len(pages_data) + 1,
+                    title="Back Cover",
+                    format="PNG",
+                    size_bytes=len(back_cover_data),
+                    image_data=back_cover_data,
+                )
+            ]
+        )
 
         logger.info("\n✅ Coloring book generated successfully!")
         logger.info(f"   PDF: {pdf_uri}")
-        logger.info(f"   Total pages: {len(pages_meta)}")
+        logger.info(f"   Total pages: {len(pages_meta)} (includes back cover)")
 
         return GenerationResult(
             pdf_uri=pdf_uri,
@@ -187,7 +224,7 @@ class ColoringBookStrategy:
         logger.info("=" * 80 + "\n")
 
     def _build_cover_prompt(self, request: GenerationRequest) -> str:
-        """Build prompt for cover generation.
+        """Build prompt for cover generation WITH text.
 
         Args:
             request: Generation request
@@ -202,6 +239,53 @@ class ColoringBookStrategy:
             f"Target age: {request.age_group.value}. "
             f"Style: Engaging, playful, child-friendly. "
             f"Full-bleed illustration with rich colors."
+        )
+
+    def _build_back_cover_prompt(self, request: GenerationRequest, front_cover_bytes: bytes) -> str:
+        """Build prompt for back cover generation (line art style).
+
+        Args:
+            request: Generation request
+            front_cover_bytes: Front cover for color extraction
+
+        Returns:
+            Back cover prompt for line art generation
+        """
+
+        from backoffice.infrastructure.utils.color_utils import extract_dominant_color_exact
+
+        # Extract background color from front cover
+        bg_color = extract_dominant_color_exact(front_cover_bytes)
+        bg_hex = "#{:02x}{:02x}{:02x}".format(*bg_color)
+
+        return (
+            f"Create a simple LINE ART illustration for a {request.theme} "
+            f"coloring book back cover.\n"
+            f"\n"
+            f"STYLE REQUIREMENTS:\n"
+            f"- BLACK LINE ART ONLY (coloring book outline style)\n"
+            f"- Background color: {bg_hex} (solid color, same as front cover)\n"
+            f"- Clean, thick black lines (2-3px)\n"
+            f"- NO interior shading, NO gradients, NO text\n"
+            f"- Simple, centered composition\n"
+            f"- Theme: {request.theme}\n"
+            f"- Simpler than front cover (this is the back)\n"
+            f"- Full-bleed design filling the entire frame\n"
+            f"\n"
+            f"IMPORTANT - BARCODE SPACE:\n"
+            f"- MUST leave a PLAIN WHITE EMPTY RECTANGLE in the bottom-right corner\n"
+            f"- DO NOT draw any barcode, lines, or patterns in this space\n"
+            f"- Just a solid white empty box\n"
+            f"- Rectangle size: approximately 15% of image width, 8% of image height\n"
+            f"- Position: bottom-right corner with small margin from edges\n"
+            f"- Keep all illustrations AWAY from this white rectangle area\n"
+            f"\n"
+            f"Examples for {request.theme} theme:\n"
+            f"- Pirates: Simple ship outline, treasure chest, compass\n"
+            f"- Unicorns: Single unicorn silhouette, stars, rainbow outline\n"
+            f"- Dinosaurs: T-Rex outline, palm trees, volcano\n"
+            f"\n"
+            f"Target age: {request.age_group.value}"
         )
 
     def _build_page_prompts(self, request: GenerationRequest) -> list[str]:

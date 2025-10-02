@@ -16,10 +16,15 @@ class ErrorCode(Enum):
     MODEL_UNAVAILABLE = "provider.model_unavailable"
     PROVIDER_TIMEOUT = "provider.timeout"
     PROVIDER_RATE_LIMIT = "provider.rate_limit"
+    PROVIDER_UNAVAILABLE = "provider.unavailable"
 
     # Policy errors
     PAGE_LIMIT_EXCEEDED = "policy.page_limit_exceeded"
     RESOLUTION_TOO_HIGH = "policy.resolution_too_high"
+
+    # Validation errors
+    VALIDATION_ERROR = "validation.error"
+    EBOOK_NOT_FOUND = "validation.ebook_not_found"
 
 
 @dataclass

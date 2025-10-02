@@ -48,11 +48,11 @@ class ProviderFactory:
         logger.info(f"Creating cover provider: {model_mapping.provider} / {model_mapping.model}")
 
         if model_mapping.provider == "openrouter":
-            from backoffice.infrastructure.providers.openrouter_cover_provider import (
-                OpenRouterCoverProvider,
+            from backoffice.infrastructure.providers.openrouter_image_provider import (
+                OpenRouterImageProvider,
             )
 
-            return OpenRouterCoverProvider(model=model_mapping.model)
+            return OpenRouterImageProvider(model=model_mapping.model)
 
         else:
             raise ValueError(
@@ -85,11 +85,11 @@ class ProviderFactory:
         )
 
         if model_mapping.provider == "openrouter":
-            from backoffice.infrastructure.providers.openrouter_cover_provider import (
-                OpenRouterCoverProvider,
+            from backoffice.infrastructure.providers.openrouter_image_provider import (
+                OpenRouterImageProvider,
             )
 
-            return OpenRouterCoverProvider(model=model_mapping.model)
+            return OpenRouterImageProvider(model=model_mapping.model)
 
         else:
             raise ValueError(
