@@ -4,7 +4,6 @@ import logging
 from typing import cast
 
 from backoffice.domain.entities.ebook import (
-    BackCoverConfig,
     Ebook,
     EbookStatus,
     KDPExportConfig,
@@ -133,14 +132,7 @@ class ExportToKDPUseCase:
         logger.info("Extracting existing back cover from ebook structure...")
         back_cover_bytes = await self._get_back_cover_bytes(ebook)
 
-        # 8. Create back cover config (for metadata only)
-        back_cover_config = BackCoverConfig(
-            author_name=ebook.author,
-            theme=ebook.theme_id or "coloring",
-            include_copyright=True,
-        )
-
-        # 10. Assemble KDP PDF (back + spine + front)
+        # 8. Assemble KDP PDF (back + spine + front)
         logger.info("Assembling KDP paperback PDF...")
         kdp_pdf_bytes = cast(
             bytes,
@@ -148,7 +140,6 @@ class ExportToKDPUseCase:
                 ebook=ebook,
                 back_cover_bytes=back_cover_bytes,
                 front_cover_bytes=front_cover_bytes,
-                back_cover_config=back_cover_config,
                 kdp_config=kdp_config,
             ),
         )

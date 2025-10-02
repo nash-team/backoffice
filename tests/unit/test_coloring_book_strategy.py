@@ -64,7 +64,7 @@ class TestColoringBookStrategy:
 
         # Assert
         assert result.pdf_uri.startswith("file://")
-        assert len(result.pages_meta) == 25  # 1 cover + 24 pages
+        assert len(result.pages_meta) == 26  # 1 cover + 24 pages + 1 back cover
         assert result.pages_meta[0].title == "Cover"
         assert result.pages_meta[1].title == "Page 1"
         assert fake_cover_port.call_count == 1
@@ -111,7 +111,7 @@ class TestColoringBookStrategy:
         result = await strategy.generate(request)
 
         # Assert
-        assert len(result.pages_meta) == 25  # 1 cover + 24 pages
+        assert len(result.pages_meta) == 26  # 1 cover + 24 pages + 1 back cover
         assert fake_cover_port.call_count == 1
         assert fake_page_port.call_count == 24
 

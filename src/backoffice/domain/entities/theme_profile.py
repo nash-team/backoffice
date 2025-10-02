@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field, field_validator
@@ -104,25 +103,6 @@ class ThemeProfile:
                 negatives=model.prompt_blocks.negatives,
             ),
         )
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary representation"""
-        return {
-            "id": self.id,
-            "label": self.label,
-            "palette": {
-                "base": self.palette.base,
-                "accents_allowed": self.palette.accents_allowed,
-                "forbidden_keywords": self.palette.forbidden_keywords,
-            },
-            "prompt_blocks": {
-                "subject": self.blocks.subject,
-                "environment": self.blocks.environment,
-                "tone": self.blocks.tone,
-                "positives": self.blocks.positives,
-                "negatives": self.blocks.negatives,
-            },
-        }
 
 
 def load_theme_from_yaml(file_path: Path) -> ThemeProfile:

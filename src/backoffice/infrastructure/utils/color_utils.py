@@ -133,42 +133,6 @@ def extract_dominant_color_exact(image_bytes: bytes) -> tuple[int, int, int]:
     return cast(tuple[int, int, int], fallback_rgb_raw)
 
 
-def extract_dominant_color_vibrant(image_bytes: bytes) -> tuple[int, int, int]:
-    """Extract dominant color keeping vibrant saturation for back cover.
-
-    Args:
-        image_bytes: Image bytes to analyze
-
-    Returns:
-        RGB tuple (r, g, b) with preserved vibrant colors
-    """
-    img = Image.open(BytesIO(image_bytes)).convert("RGB")
-
-    # Resize for performance
-    img_small = img.resize((150, 150))
-    colors = img_small.getcolors(150 * 150)
-
-    if not colors:
-        # Fallback: sky blue
-        return (135, 206, 235)
-
-    # Most frequent color
-    _, dominant_rgb_raw = max(colors, key=lambda x: x[0])
-    dominant_rgb = cast(tuple[int, int, int], dominant_rgb_raw)
-
-    # Convert to HSV to adjust slightly
-    r, g, b = dominant_rgb
-    hsv = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
-
-    # Keep saturation high (only reduce by 10% max) and maintain brightness
-    # This gives a cohesive but still colorful back cover
-    hsv_vibrant = (hsv[0], max(0.3, hsv[1] * 0.9), max(0.4, hsv[2]))
-
-    # Convert back to RGB
-    rgb_vibrant = colorsys.hsv_to_rgb(*hsv_vibrant)
-    return cast(tuple[int, int, int], tuple(min(255, int(c * 255)) for c in rgb_vibrant))
-
-
 def ensure_cmyk(img: PILImage, icc_cmyk: str = "CoatedFOGRA39.icc") -> PILImage:
     """Force image to CMYK mode. Use before assembly.
 

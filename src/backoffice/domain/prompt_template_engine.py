@@ -338,21 +338,3 @@ class PromptTemplateEngine:
             page_seed = self.seed + index * 1000 + hash(var_name) % 1000
             page_rng = random.Random(page_seed)  # noqa: S311 - Not for cryptography
             return page_rng.choice(options)
-
-    def add_custom_template(self, theme_name: str, template: PromptTemplate) -> None:
-        """Add or override a theme template.
-
-        Args:
-            theme_name: Name of the theme
-            template: Template configuration
-        """
-        self.THEMES[theme_name.lower()] = template
-        logger.info(f"Added custom template for theme '{theme_name}'")
-
-    def list_available_themes(self) -> list[str]:
-        """List all available theme templates.
-
-        Returns:
-            List of theme names
-        """
-        return list(self.THEMES.keys())

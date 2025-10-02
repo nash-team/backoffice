@@ -10,7 +10,6 @@ from backoffice.domain.pdf_assembly import PDFAssemblyService
 from backoffice.domain.ports.assembly_port import AssembledPage
 from backoffice.domain.ports.ebook.ebook_port import EbookPort
 from backoffice.domain.ports.file_storage_port import FileStoragePort
-from backoffice.infrastructure.utils.color_utils import extract_dominant_color_exact
 
 logger = logging.getLogger(__name__)
 
@@ -194,50 +193,3 @@ class RegenerateBackCoverUseCase:
         logger.info(f"✅ Ebook {ebook_id} updated with new back cover")
 
         return updated_ebook
-
-    def _build_back_cover_prompt(self, ebook: Ebook, front_cover_bytes: bytes) -> str:
-        """Build back cover prompt from ebook metadata and front cover.
-
-        Args:
-            ebook: Ebook entity
-            front_cover_bytes: Front cover bytes for color extraction
-
-        Returns:
-            Back cover prompt
-        """
-        theme = ebook.theme_id or "coloring book"
-        audience = ebook.audience or "children"
-
-        # Extract background color from front cover
-        bg_color = extract_dominant_color_exact(front_cover_bytes)
-        bg_hex = "#{:02x}{:02x}{:02x}".format(*bg_color)
-
-        return (
-            f"Create a simple LINE ART illustration for a {theme} "
-            f"coloring book back cover.\n"
-            f"\n"
-            f"STYLE REQUIREMENTS:\n"
-            f"- BLACK LINE ART ONLY (coloring book outline style)\n"
-            f"- Background color: {bg_hex} (solid color, same as front cover)\n"
-            f"- Clean, thick black lines (2-3px)\n"
-            f"- NO interior shading, NO gradients, NO text\n"
-            f"- Simple, centered composition\n"
-            f"- Theme: {theme}\n"
-            f"- Simpler than front cover (this is the back)\n"
-            f"- Full-bleed design filling the entire frame\n"
-            f"\n"
-            f"IMPORTANT - BARCODE SPACE:\n"
-            f"- MUST leave a PLAIN WHITE EMPTY RECTANGLE in the bottom-right corner\n"
-            f"- DO NOT draw any barcode, lines, or patterns in this space\n"
-            f"- Just a solid white empty box\n"
-            f"- Rectangle size: approximately 15% of image width, 8% of image height\n"
-            f"- Position: bottom-right corner with small margin from edges\n"
-            f"- Keep all illustrations AWAY from this white rectangle area\n"
-            f"\n"
-            f"Examples for {theme} theme:\n"
-            f"- Pirates: Simple ship outline, treasure chest, compass\n"
-            f"- Unicorns: Single unicorn silhouette, stars, rainbow outline\n"
-            f"- Dinosaurs: T-Rex outline, palm trees, volcano\n"
-            f"\n"
-            f"Target age: {audience}"
-        )

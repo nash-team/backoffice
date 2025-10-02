@@ -135,11 +135,3 @@ class GenerateEbookUseCase:
     def get_supported_formats(self) -> list[str]:
         """Get list of supported formats from the ebook generator"""
         return self.ebook_generator.get_supported_formats()
-
-    def get_service_status(self) -> dict[str, bool]:
-        """Get status of all injected services"""
-        return {
-            "content_generator": self.content_generator.is_available(),
-            "ebook_generator": True,  # Always available (no availability check in port)
-            "file_storage": self.file_storage.is_available() if self.file_storage else False,
-        }

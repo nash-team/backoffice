@@ -72,32 +72,3 @@ class LLMAdapterFactory:
         adapter = OpenRouterImageAdapter(model=selected_model)
         logger.info(f"Created OpenRouterImageAdapter with model: {adapter.model}")
         return adapter
-
-    @staticmethod
-    def get_available_providers() -> list[str]:
-        """Get list of available provider names.
-
-        Returns:
-            list: Available provider names
-        """
-        return ["openrouter"]
-
-    @staticmethod
-    def validate_provider_config() -> dict[str, bool]:
-        """Validate current provider configuration (OpenRouter only).
-
-        Returns:
-            dict: Validation results with boolean flags
-        """
-        provider = os.getenv("LLM_PROVIDER", "openrouter").lower()
-        results = {
-            "provider_valid": provider == "openrouter",
-            "has_text_api_key": bool(os.getenv("LLM_API_KEY")),
-            "has_image_api_key": bool(os.getenv("LLM_API_KEY")),
-            "has_text_model": bool(os.getenv("LLM_TEXT_MODEL")),
-            "has_image_model": bool(
-                os.getenv("LLM_IMAGE_MODEL", "google/gemini-2.5-flash-image-preview")
-            ),
-        }
-
-        return results

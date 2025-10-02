@@ -8,7 +8,6 @@ import img2pdf  # type: ignore[import-not-found]
 from PIL import Image
 
 from backoffice.domain.entities.ebook import (
-    BackCoverConfig,
     Ebook,
     KDPExportConfig,
     calculate_spine_width,
@@ -38,7 +37,6 @@ class KDPAssemblyProvider:
         ebook: Ebook,
         back_cover_bytes: bytes,
         front_cover_bytes: bytes,
-        back_cover_config: BackCoverConfig,
         kdp_config: KDPExportConfig,
     ) -> bytes:
         """Assemble KDP-ready PDF with back, spine, and front.
@@ -47,7 +45,6 @@ class KDPAssemblyProvider:
             ebook: Ebook entity with metadata
             back_cover_bytes: Back cover image bytes (CMYK TIFF)
             front_cover_bytes: Front cover image bytes (will be converted to CMYK)
-            back_cover_config: Back cover configuration
             kdp_config: KDP export configuration
 
         Returns:

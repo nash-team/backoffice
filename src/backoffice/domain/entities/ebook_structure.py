@@ -52,16 +52,6 @@ class EbookStructure:
         if self.image_pages is None:
             self.image_pages = []
 
-    def add_image_page(self, image_page: ImagePage, position: int | None = None) -> None:
-        """Add an image page to the ebook"""
-        if self.image_pages is None:
-            self.image_pages = []
-
-        if position is None:
-            self.image_pages.append(image_page)
-        else:
-            self.image_pages.insert(position, image_page)
-
     def add_coloring_page_section(self, image_page: ImagePage) -> None:
         """Add a coloring page as a dedicated section"""
         if self.sections is None:
@@ -74,15 +64,3 @@ class EbookStructure:
             image_page=image_page,
         )
         self.sections.append(section)
-
-    def get_image_sections(self) -> list[EbookSection]:
-        """Get all sections that contain image pages"""
-        if self.sections is None:
-            return []
-        return [section for section in self.sections if section.image_page is not None]
-
-    def get_text_sections(self) -> list[EbookSection]:
-        """Get all sections that contain text content"""
-        if self.sections is None:
-            return []
-        return [section for section in self.sections if section.image_page is None]

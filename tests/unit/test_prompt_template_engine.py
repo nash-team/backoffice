@@ -1,6 +1,6 @@
 """Unit tests for PromptTemplateEngine."""
 
-from backoffice.domain.prompt_template_engine import PromptTemplate, PromptTemplateEngine
+from backoffice.domain.prompt_template_engine import PromptTemplateEngine
 
 
 class TestPromptTemplateEngine:
@@ -163,40 +163,6 @@ class TestPromptTemplateEngine:
         # Assert
         assert "age 4-8" in prompts_default[0]
         assert "age 5-7" in prompts_custom[0]
-
-    def test_add_custom_template(self):
-        """Test adding custom template."""
-        # Arrange
-        engine = PromptTemplateEngine(seed=42)
-        custom_template = PromptTemplate(
-            base_structure="Custom {SUBJECT} coloring page.",
-            variables={"SUBJECT": ["cat", "dog", "bird"]},
-            quality_settings="Bold outlines, 300 DPI.",
-        )
-
-        # Act
-        engine.add_custom_template("pets", custom_template)
-        prompts = engine.generate_prompts(theme="pets", count=3)
-
-        # Assert
-        for prompt in prompts:
-            assert "Custom" in prompt
-            assert "coloring page" in prompt
-            assert any(s in prompt for s in ["cat", "dog", "bird"])
-
-    def test_list_available_themes(self):
-        """Test listing available themes."""
-        # Arrange
-        engine = PromptTemplateEngine(seed=42)
-
-        # Act
-        themes = engine.list_available_themes()
-
-        # Assert
-        assert "dinosaurs" in themes
-        assert "unicorns" in themes
-        assert "pirates" in themes
-        assert len(themes) >= 3
 
     def test_generate_prompts_zero_count(self):
         """Test generating zero prompts."""

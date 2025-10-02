@@ -73,3 +73,15 @@ class FakeCoverPort(CoverGenerationPort):
 
         # Return valid fake image
         return b"F" * self.image_size  # Synthetic PNG-like data
+
+    async def convert_cover_to_line_art_with_gemini(self, cover_bytes: bytes) -> bytes:
+        """Remove text from cover to create back cover using AI vision.
+
+        Args:
+            cover_bytes: Original cover image (with text)
+
+        Returns:
+            Same image without text (for back cover)
+        """
+        # For testing, just return the same bytes or a modified version
+        return cover_bytes

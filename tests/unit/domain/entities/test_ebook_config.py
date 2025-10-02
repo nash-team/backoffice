@@ -10,11 +10,11 @@ class TestEbookConfig:
         """Test creating EbookConfig with default values"""
         config = EbookConfig()
 
-        assert config.toc is True
-        assert config.cover_enabled is True
+        assert config.engine == "weasyprint"
         assert config.format == "pdf"
         assert config.number_of_chapters is None
         assert config.number_of_pages is None
+        assert config.ebook_type == "story"
 
     def test_config_with_valid_chapters(self):
         """Test creating EbookConfig with valid number of chapters"""

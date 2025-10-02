@@ -27,15 +27,6 @@ class ContentGenerationPort(ABC):
         pass
 
     @abstractmethod
-    async def generate_ebook_content_legacy(self, prompt: str) -> dict[str, str]:
-        """Legacy method for backward compatibility
-
-        Returns:
-            dict: Contains 'title', 'content', 'author' keys
-        """
-        pass
-
-    @abstractmethod
     def is_available(self) -> bool:
         """Check if the content generation service is available
 

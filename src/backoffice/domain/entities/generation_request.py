@@ -8,7 +8,7 @@ class EbookType(str, Enum):
     """Type of ebook to generate."""
 
     COLORING = "coloring"
-    STORY = "story"
+    # TODO: STORY type to be implemented in future
 
 
 class AgeGroup(str, Enum):
