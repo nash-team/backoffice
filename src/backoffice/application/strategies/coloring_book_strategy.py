@@ -103,21 +103,11 @@ class ColoringBookStrategy:
             seed=request.seed,
         )
 
-        # Step 3: Generate back cover (line art on colored background)
-        logger.info("\n📋 Step 3/4: Generating back cover (line art style)...")
-        back_cover_prompt = self._build_back_cover_prompt(request, cover_data)
-        back_cover_spec = ImageSpec(
-            width_px=1024,
-            height_px=1024,
-            format="PNG",
-            dpi=300,
-            color_mode=ColorMode.COLOR,  # Colored background
-        )
+        # Step 3: Remove text from cover to create back cover with Gemini Vision
+        logger.info("\n📋 Step 3/4: Creating back cover (same image without text)...")
 
-        back_cover_data = await self.cover_service.generate_cover(
-            prompt=back_cover_prompt,
-            spec=back_cover_spec,
-            seed=request.seed,
+        back_cover_data = await self.cover_service.cover_port.convert_cover_to_line_art_with_gemini(
+            cover_bytes=cover_data
         )
 
         # Step 4: Assemble PDF

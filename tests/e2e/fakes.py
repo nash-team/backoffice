@@ -48,6 +48,15 @@ class FakeCoverGenerationPort(CoverGenerationPort):
         """Check if the provider is available."""
         return True
 
+    async def convert_cover_to_line_art_with_gemini(
+        self,
+        cover_bytes: bytes,
+    ) -> bytes:
+        """Fake conversion of cover to line art (returns same fake image)."""
+        self.call_count += 1
+        # Return fake PNG image data
+        return _create_fake_image_data()
+
 
 class FakeContentPageGenerationPort(ContentPageGenerationPort):
     """Fake content page generation for coloring pages that returns instant deterministic results."""

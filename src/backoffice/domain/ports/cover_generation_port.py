@@ -34,3 +34,21 @@ class CoverGenerationPort(ABC):
     def is_available(self) -> bool:
         """Check if the provider is available."""
         pass
+
+    @abstractmethod
+    async def convert_cover_to_line_art_with_gemini(
+        self,
+        cover_bytes: bytes,
+    ) -> bytes:
+        """Remove text from cover to create back cover using AI vision.
+
+        Args:
+            cover_bytes: Original cover image (with text)
+
+        Returns:
+            Same image without text (for back cover)
+
+        Raises:
+            DomainError: If transformation fails
+        """
+        pass

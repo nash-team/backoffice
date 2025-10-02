@@ -189,7 +189,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
 
         Args:
             prompt: Text description of the page
-            spec: Image specifications (dimensions, format, color mode)
+            spec: ImageSpec specifications (dimensions, format, color mode)
             seed: Random seed for reproducibility
 
         Returns:
@@ -199,6 +199,108 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             DomainError: If generation fails
         """
         return await self.generate_cover(prompt, spec, seed)
+
+    async def convert_cover_to_line_art_with_gemini(
+        self,
+        cover_bytes: bytes,
+    ) -> bytes:
+        """Remove text from cover to create back cover using Gemini vision.
+
+        Args:
+            cover_bytes: Original cover image (with text)
+
+        Returns:
+            Same image without text (for back cover)
+
+        Raises:
+            DomainError: If transformation fails
+        """
+        if not self.is_available():
+            raise DomainError(
+                code=ErrorCode.MODEL_UNAVAILABLE,
+                message="OpenRouter provider not available",
+                actionable_hint="Configure LLM_API_KEY in .env",
+                context={"provider": "openrouter", "model": self.model},
+            )
+
+        logger.info("🍌 Removing text from cover with Gemini Vision (ultra-simple prompt)...")
+
+        try:
+            # Encode cover to base64
+            cover_b64 = base64.b64encode(cover_bytes).decode()
+
+            # ULTRA-SIMPLE prompt: just remove text, nothing else
+            prompt_text = "Remove all text and typography from this image."
+
+            # Call Gemini with image input + ultra-simple prompt
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/png;base64,{cover_b64}"},
+                            },
+                            {
+                                "type": "text",
+                                "text": prompt_text,
+                            },
+                        ],
+                    }
+                ],
+                extra_body={"modalities": ["image", "text"]},
+                extra_headers={
+                    "HTTP-Referer": "https://ebook-generator.app",
+                    "X-Title": "Ebook Generator Backoffice",
+                },
+                max_tokens=1000,
+                temperature=0.3,
+            )
+
+            # Extract transformed image (without text)
+            image_bytes = self._extract_image_from_response(response)
+            logger.info(f"✅ Text removed by Gemini: {len(image_bytes)} bytes")
+
+            # Step 2: Add barcode space programmatically with PIL
+            logger.info("📦 Adding barcode space with PIL...")
+            from io import BytesIO
+
+            from PIL import Image, ImageDraw
+
+            img = Image.open(BytesIO(image_bytes))
+            draw = ImageDraw.Draw(img)
+
+            w, h = img.size
+            rect_w = int(w * 0.15)  # 15% width
+            rect_h = int(h * 0.08)  # 8% height
+            margin = int(w * 0.02)  # 2% margin
+
+            # Bottom-right white rectangle
+            x1 = w - rect_w - margin
+            y1 = h - rect_h - margin
+            x2 = w - margin
+            y2 = h - margin
+
+            draw.rectangle([x1, y1, x2, y2], fill=(255, 255, 255))
+
+            # Convert back to bytes
+            output = BytesIO()
+            img.save(output, format="PNG")
+            final_bytes = output.getvalue()
+
+            logger.info(f"✅ Barcode space added: {len(final_bytes)} bytes")
+            return final_bytes
+
+        except Exception as e:
+            logger.error(f"❌ Gemini transformation failed: {str(e)}")
+            raise DomainError(
+                code=ErrorCode.PROVIDER_TIMEOUT,
+                message=f"Gemini vision transformation failed: {str(e)}",
+                actionable_hint="Check if model supports image-to-image transformation",
+                context={"provider": "openrouter", "model": self.model, "error": str(e)},
+            ) from e
 
     def _download_image_sync(self, url: str) -> bytes:
         """Download image from URL synchronously.

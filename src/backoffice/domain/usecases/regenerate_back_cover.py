@@ -6,7 +6,6 @@ from pathlib import Path
 
 from backoffice.domain.cover_generation import CoverGenerationService
 from backoffice.domain.entities.ebook import Ebook, EbookStatus
-from backoffice.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.domain.pdf_assembly import PDFAssemblyService
 from backoffice.domain.ports.assembly_port import AssembledPage
 from backoffice.domain.ports.ebook.ebook_port import EbookPort
@@ -93,31 +92,14 @@ class RegenerateBackCoverUseCase:
         front_cover_meta = pages_meta[0]
         front_cover_bytes = base64.b64decode(front_cover_meta["image_data_base64"])
 
-        # Step 2: Build back cover prompt
-        if prompt_override:
-            back_cover_prompt = prompt_override
-            logger.info(f"Using custom prompt: {back_cover_prompt}")
-        else:
-            # Build prompt from ebook metadata + front cover color
-            back_cover_prompt = self._build_back_cover_prompt(ebook, front_cover_bytes)
-            logger.info("Using auto-generated back cover prompt")
+        # Step 2: Remove text from cover to create back cover with Gemini Vision
+        logger.info("🍌 Creating back cover (same image without text)...")
 
-        # Step 3: Generate new back cover
-        back_cover_spec = ImageSpec(
-            width_px=1024,
-            height_px=1024,
-            format="PNG",
-            dpi=300,
-            color_mode=ColorMode.COLOR,  # Colored background with line art
+        back_cover_data = await self.cover_service.cover_port.convert_cover_to_line_art_with_gemini(
+            cover_bytes=front_cover_bytes
         )
 
-        back_cover_data = await self.cover_service.generate_cover(
-            prompt=back_cover_prompt,
-            spec=back_cover_spec,
-            seed=None,  # Random back cover each time
-        )
-
-        logger.info(f"✅ Back cover regenerated: {len(back_cover_data)} bytes")
+        logger.info(f"✅ Back cover regenerated via Gemini: {len(back_cover_data)} bytes")
 
         # Step 4: Rebuild PDF with new back cover
         assembled_pages = []
