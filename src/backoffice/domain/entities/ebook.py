@@ -45,11 +45,6 @@ class EbookConfig:
     number_of_chapters: int | None = None
     number_of_pages: int | None = None
 
-    # Ribbon configuration for coloring book covers
-    ribbon_title: str | None = None
-    ribbon_theme: str = "licornes"
-    show_ribbon: bool = True
-
     # LLM Model Selection
     ebook_type: str = "story"  # coloring_book, children_story, professional, story
     image_model: str | None = None  # None = auto-select, or explicit model ID

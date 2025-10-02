@@ -108,7 +108,6 @@ class ThemeLoader:
         from backoffice.domain.entities.theme_profile import (
             Palette,
             PromptBlocks,
-            RibbonStyle,
             ThemeProfile,
         )
 
@@ -137,10 +136,5 @@ class ThemeLoader:
                     "no complex details",
                     "no dark themes",
                 ],
-            ),
-            ribbon=RibbonStyle(
-                bg_rgb=(255, 255, 255),
-                text_hex="#222222",
-                alpha=0.9,
             ),
         )

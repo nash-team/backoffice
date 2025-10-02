@@ -10,7 +10,3 @@ prompt_blocks:
   tone: "adventurous, exciting, kid-friendly"
   positives: ["highly detailed", "glossy", "professional children's book cover", "Amazon bestseller style"]
   negatives: ["no text", "no mockup", "no borders", "no open book", "no low-res", "no distorted anatomy"]
-ribbon:
-  bg_rgb: [255, 255, 255]
-  text_hex: "#222222"
-  alpha: 0.9

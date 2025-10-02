@@ -10,7 +10,3 @@ prompt_blocks:
   tone: "calm, neutral, kid-friendly"
   positives: ["clean lines", "simple design", "professional children's book style", "high quality"]
   negatives: ["no text", "no mockup", "no borders", "no complex details", "no dark themes"]
-ribbon:
-  bg_rgb: [255, 255, 255]
-  text_hex: "#222222"
-  alpha: 0.9

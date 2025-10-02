@@ -40,23 +40,6 @@ class PromptBlocksModel(BaseModel):
         return v.strip()
 
 
-class RibbonStyleModel(BaseModel):
-    """Ribbon styling configuration"""
-
-    bg_rgb: tuple[int, int, int] = Field(..., description="Background RGB color")
-    text_hex: str = Field(..., pattern=r"^#[0-9a-fA-F]{6}$", description="Text color hex")
-    alpha: float = Field(..., ge=0.0, le=1.0, description="Alpha transparency")
-
-    @field_validator("bg_rgb")
-    @classmethod
-    def validate_rgb(cls, v: tuple[int, int, int]) -> tuple[int, int, int]:
-        if len(v) != 3:
-            raise ValueError("RGB must have exactly 3 values")
-        if not all(0 <= val <= 255 for val in v):
-            raise ValueError("RGB values must be between 0 and 255")
-        return v
-
-
 class ThemeProfileModel(BaseModel):
     """Complete theme profile configuration"""
 
@@ -64,7 +47,6 @@ class ThemeProfileModel(BaseModel):
     label: str = Field(..., min_length=1, description="Human-readable theme name")
     palette: PaletteModel
     prompt_blocks: PromptBlocksModel
-    ribbon: RibbonStyleModel
 
     @field_validator("id")
     @classmethod
@@ -95,15 +77,6 @@ class PromptBlocks:
 
 
 @dataclass
-class RibbonStyle:
-    """Domain entity for ribbon styling"""
-
-    bg_rgb: tuple[int, int, int]
-    text_hex: str
-    alpha: float
-
-
-@dataclass
 class ThemeProfile:
     """Domain entity for complete theme profile"""
 
@@ -111,7 +84,6 @@ class ThemeProfile:
     label: str
     palette: Palette
     blocks: PromptBlocks
-    ribbon: RibbonStyle
 
     @classmethod
     def from_model(cls, model: ThemeProfileModel) -> "ThemeProfile":
@@ -131,11 +103,6 @@ class ThemeProfile:
                 positives=model.prompt_blocks.positives,
                 negatives=model.prompt_blocks.negatives,
             ),
-            ribbon=RibbonStyle(
-                bg_rgb=model.ribbon.bg_rgb,
-                text_hex=model.ribbon.text_hex,
-                alpha=model.ribbon.alpha,
-            ),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -154,11 +121,6 @@ class ThemeProfile:
                 "tone": self.blocks.tone,
                 "positives": self.blocks.positives,
                 "negatives": self.blocks.negatives,
-            },
-            "ribbon": {
-                "bg_rgb": list(self.ribbon.bg_rgb),
-                "text_hex": self.ribbon.text_hex,
-                "alpha": self.ribbon.alpha,
             },
         }
 
