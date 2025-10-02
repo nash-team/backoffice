@@ -84,7 +84,7 @@ class TestSqlAlchemyEbookRepositoryPagination:
     @pytest.mark.asyncio
     async def test_get_paginated_by_status_filters_correctly(self):
         # Given
-        status = EbookStatus.PENDING
+        status = EbookStatus.DRAFT
         params = PaginationParams(page=1, size=5)
 
         # Mock database responses
@@ -174,7 +174,7 @@ class TestSqlAlchemyEbookRepositoryPagination:
     @pytest.mark.asyncio
     async def test_get_paginated_by_status_handles_empty_results(self):
         # Given
-        status = EbookStatus.PENDING
+        status = EbookStatus.DRAFT
         params = PaginationParams(page=1, size=10)
 
         # Mock database responses for empty results
@@ -198,7 +198,7 @@ class TestSqlAlchemyEbookRepositoryPagination:
         mock_ebook.id = id_
         mock_ebook.title = title
         mock_ebook.author = "Test Author"
-        mock_ebook.status = "PENDING"
+        mock_ebook.status = "DRAFT"
         mock_ebook.preview_url = f"http://example.com/preview/{id_}"
         mock_ebook.drive_id = f"drive-id-{id_}"
         mock_ebook.created_at = datetime.now(UTC)

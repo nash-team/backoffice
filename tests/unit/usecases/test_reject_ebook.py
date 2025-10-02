@@ -45,7 +45,7 @@ class TestRejectEbookUseCase:
             title="Test Ebook",
             author="Test Author",
             created_at=datetime.now(),
-            status=EbookStatus.PENDING,
+            status=EbookStatus.DRAFT,
             preview_url="http://example.com/preview",
             drive_id="test_drive_id",
         )
@@ -127,24 +127,24 @@ class TestRejectEbookUseCase:
     async def test_reject_pending_ebook_raises_error(self, reject_ebook_usecase, ebook_repository):
         """Should raise DomainError when trying to reject pending ebook"""
         # Arrange
-        pending_ebook = Ebook(
+        rejected_ebook = Ebook(
             id=5,
-            title="Pending Ebook",
+            title="Already Rejected Ebook",
             author="Test Author",
             created_at=datetime.now(),
-            status=EbookStatus.PENDING,
+            status=EbookStatus.REJECTED,
             preview_url="http://example.com/preview",
             drive_id="test_drive_id",
         )
-        ebook_repository.add_ebook(pending_ebook)
+        ebook_repository.add_ebook(rejected_ebook)
 
         # Act & Assert
-        with pytest.raises(DomainError, match="Cannot reject ebook with status PENDING"):
+        with pytest.raises(DomainError, match="Cannot reject ebook with status REJECTED"):
             await reject_ebook_usecase.execute(5)
 
         # Verify the ebook status remains unchanged
         persisted_ebook = await ebook_repository.get_by_id(5)
-        assert persisted_ebook.status == EbookStatus.PENDING
+        assert persisted_ebook.status == EbookStatus.REJECTED
 
     @pytest.mark.asyncio
     async def test_reject_already_rejected_ebook_raises_error(

@@ -10,7 +10,7 @@ def sample_ebooks(test_db_session):
     ebook1 = EbookModel(
         title="Test Ebook 1",
         author="Test Author 1",
-        status=EbookStatus.PENDING.value,
+        status=EbookStatus.DRAFT.value,
         created_at=datetime.now(),
     )
     ebook2 = EbookModel(

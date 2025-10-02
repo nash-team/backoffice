@@ -80,7 +80,7 @@ class TestSqlAlchemyEbookQuery:
         query_chain.order_by.return_value.offset.assert_called_with(expected_offset)
         query_chain.order_by.return_value.offset.return_value.limit.assert_called_with(size)
 
-    @pytest.mark.parametrize("status", [EbookStatus.PENDING, EbookStatus.APPROVED])
+    @pytest.mark.parametrize("status", [EbookStatus.DRAFT, EbookStatus.APPROVED])
     async def test_list_paginated_by_status_filters_correctly(self, status: EbookStatus):
         """Test that status filtering is applied correctly"""
         # Given
@@ -115,7 +115,7 @@ class TestSqlAlchemyEbookQuery:
         # Given
         params = PaginationParams(page=1, size=2)
         mock_models = [
-            self._create_mock_ebook_model(1, "Title 1", "PENDING"),
+            self._create_mock_ebook_model(1, "Title 1", "DRAFT"),
             self._create_mock_ebook_model(2, "Title 2", "APPROVED"),
         ]
         self._setup_pagination_mocks_with_models(2, mock_models)
@@ -131,7 +131,7 @@ class TestSqlAlchemyEbookQuery:
         assert isinstance(ebook_1, Ebook)
         assert ebook_1.id == 1
         assert ebook_1.title == "Title 1"
-        assert ebook_1.status == EbookStatus.PENDING
+        assert ebook_1.status == EbookStatus.DRAFT
 
         assert isinstance(ebook_2, Ebook)
         assert ebook_2.id == 2
@@ -159,7 +159,7 @@ class TestSqlAlchemyEbookQuery:
 
         # Mock data query chain
         mock_models = [
-            self._create_mock_ebook_model(i, f"Title {i}", "PENDING")
+            self._create_mock_ebook_model(i, f"Title {i}", "DRAFT")
             for i in range(1, item_count + 1)
         ]
         query_chain = self.mock_db.query.return_value

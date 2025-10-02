@@ -15,15 +15,15 @@ from backoffice.presentation.routes.templates import (
 class TestEbookStatusFilters:
     """Test suite for ebook status template filters."""
 
-    def test_format_ebook_status_label_pending(self):
+    def test_format_ebook_status_label_draft(self):
         # Given
-        status = "PENDING"
+        status = "DRAFT"
 
         # When
         result = format_ebook_status_label(status)
 
         # Then
-        assert result == "En attente"
+        assert result == "Brouillon"
 
     def test_format_ebook_status_label_approved(self):
         # Given
@@ -45,15 +45,15 @@ class TestEbookStatusFilters:
         # Then
         assert result == "UNKNOWN_STATUS"  # Fallback to original value
 
-    def test_format_ebook_status_class_pending(self):
+    def test_format_ebook_status_class_draft(self):
         # Given
-        status = "PENDING"
+        status = "DRAFT"
 
         # When
         result = format_ebook_status_class(status)
 
         # Then
-        assert result == "bg-warning text-dark"
+        assert result == "badge-draft"
 
     def test_format_ebook_status_class_approved(self):
         # Given
@@ -63,7 +63,7 @@ class TestEbookStatusFilters:
         result = format_ebook_status_class(status)
 
         # Then
-        assert result == "bg-success"
+        assert result == "badge-approved"
 
     def test_format_ebook_status_class_unknown(self):
         # Given
@@ -77,16 +77,16 @@ class TestEbookStatusFilters:
 
     def test_status_filters_case_sensitive(self):
         # Given
-        status_lower = "pending"
-        status_upper = "PENDING"
+        status_lower = "draft"
+        status_upper = "DRAFT"
 
         # When
         result_lower = format_ebook_status_label(status_lower)
         result_upper = format_ebook_status_label(status_upper)
 
         # Then
-        assert result_lower == "pending"  # No match, returns original
-        assert result_upper == "En attente"  # Match found
+        assert result_lower == "draft"  # No match, returns original
+        assert result_upper == "Brouillon"  # Match found
 
     def test_status_filters_with_none(self):
         # Given
@@ -140,4 +140,6 @@ class TestEbookStatusFilters:
         assert result is not None
         assert len(result) > 0
         assert result != "bg-secondary"  # Should not fallback to default
-        assert result.startswith("bg-")  # Should be a valid CSS class
+        assert result.startswith("badge-") or result.startswith(
+            "bg-"
+        )  # Should be a valid CSS class

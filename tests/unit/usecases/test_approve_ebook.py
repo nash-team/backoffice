@@ -95,7 +95,7 @@ class TestApproveEbookUseCase:
             title="Pending Ebook",
             author="Test Author",
             created_at=datetime.now(),
-            status=EbookStatus.PENDING,
+            status=EbookStatus.DRAFT,
             preview_url="http://example.com/preview",
             drive_id="test_drive_id",
         )
@@ -151,16 +151,25 @@ class TestApproveEbookUseCase:
             await approve_ebook_usecase.execute(999)
 
     @pytest.mark.asyncio
-    async def test_approve_draft_ebook_raises_error(
-        self, approve_ebook_usecase, ebook_repository, pending_ebook
+    async def test_approve_rejected_ebook_raises_error(
+        self, approve_ebook_usecase, ebook_repository
     ):
-        """Should raise DomainError when trying to approve pending ebook"""
+        """Should raise DomainError when trying to approve rejected ebook"""
         # Arrange
-        ebook_repository.add_ebook(pending_ebook)
+        rejected_ebook = Ebook(
+            id=3,
+            title="Rejected Ebook",
+            author="Test Author",
+            created_at=datetime.now(),
+            status=EbookStatus.REJECTED,
+            preview_url="http://example.com/preview",
+            drive_id="test_drive_id",
+        )
+        ebook_repository.add_ebook(rejected_ebook)
 
         # Act & Assert
         with pytest.raises(DomainError, match="Ebook must be in DRAFT status"):
-            await approve_ebook_usecase.execute(2)
+            await approve_ebook_usecase.execute(3)
 
     @pytest.mark.asyncio
     async def test_approve_already_approved_ebook_raises_error(

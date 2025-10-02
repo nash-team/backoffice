@@ -59,7 +59,7 @@ class TestSqlAlchemyEbookRepositoryPagination:
         assert result == expected_result
         assert params.offset == expected_offset
 
-    @pytest.mark.parametrize("status", [EbookStatus.PENDING, EbookStatus.APPROVED])
+    @pytest.mark.parametrize("status", [EbookStatus.DRAFT, EbookStatus.APPROVED])
     async def test_get_paginated_by_status_delegates_correctly(self, status: EbookStatus):
         """Test that status filtering is properly delegated"""
         # Given
@@ -88,7 +88,7 @@ class TestSqlAlchemyEbookRepositoryPagination:
                 id=1,
                 title="Test 1",
                 author="Author 1",
-                status=EbookStatus.PENDING,
+                status=EbookStatus.DRAFT,
                 created_at=datetime.now(UTC),
             ),
             Ebook(
@@ -120,14 +120,14 @@ class TestSqlAlchemyEbookRepositoryPagination:
     async def test_get_paginated_by_status_returns_query_port_result_unchanged(self):
         """Test that repository doesn't modify query port results for status filtering"""
         # Given
-        status = EbookStatus.PENDING
+        status = EbookStatus.DRAFT
         params = PaginationParams(page=3, size=7)
         mock_ebooks = [
             Ebook(
                 id=3,
                 title="Pending 1",
                 author="Author 3",
-                status=EbookStatus.PENDING,
+                status=EbookStatus.DRAFT,
                 created_at=datetime.now(UTC),
             ),
         ]
@@ -199,7 +199,7 @@ class TestSqlAlchemyEbookRepositoryPagination:
     async def test_status_filtering_propagates_query_port_exceptions(self):
         """Test that status filtering propagates exceptions from query port"""
         # Given
-        status = EbookStatus.PENDING
+        status = EbookStatus.DRAFT
         params = PaginationParams(page=1, size=10)
         expected_exception = ValueError("Invalid status filter")
         self.mock_query_port.list_paginated_by_status.side_effect = expected_exception

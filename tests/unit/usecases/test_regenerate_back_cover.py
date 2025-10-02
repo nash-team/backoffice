@@ -1,6 +1,7 @@
 """Tests for RegenerateBackCoverUseCase."""
 
 import base64
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -18,7 +19,8 @@ async def test_regenerate_back_cover_success():
         id=ebook_id,
         title="Test Coloring Book",
         author="Test Author",
-        status=EbookStatus.PENDING,
+        created_at=datetime.now(),
+        status=EbookStatus.DRAFT,
         theme_id="dinosaurs",
         audience="6-8",
     )
@@ -102,7 +104,9 @@ async def test_regenerate_back_cover_not_pending():
     fake_ebook = Ebook(
         id=ebook_id,
         title="Test Ebook",
-        status=EbookStatus.APPROVED,  # Not PENDING
+        author="Test Author",
+        created_at=datetime.now(),
+        status=EbookStatus.APPROVED,  # Not DRAFT
     )
 
     mock_repo = AsyncMock()
@@ -116,7 +120,7 @@ async def test_regenerate_back_cover_not_pending():
     )
 
     # Act & Assert
-    with pytest.raises(ValueError, match="Only PENDING ebooks"):
+    with pytest.raises(ValueError, match="Only DRAFT ebooks"):
         await use_case.execute(ebook_id=ebook_id)
 
 
@@ -128,7 +132,9 @@ async def test_regenerate_back_cover_missing_structure():
     fake_ebook = Ebook(
         id=ebook_id,
         title="Test Ebook",
-        status=EbookStatus.PENDING,
+        author="Test Author",
+        created_at=datetime.now(),
+        status=EbookStatus.DRAFT,
         structure_json=None,  # Missing structure
     )
 

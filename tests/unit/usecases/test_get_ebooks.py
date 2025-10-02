@@ -20,9 +20,9 @@ def usecase(repository):
 @pytest.fixture
 async def sample_ebooks(repository):
     ebooks = [
-        Ebook(1, "Python pour les débutants", "John Doe", datetime.now(), EbookStatus.PENDING),
+        Ebook(1, "Python pour les débutants", "John Doe", datetime.now(), EbookStatus.DRAFT),
         Ebook(2, "FastAPI Masterclass", "Jane Smith", datetime.now(), EbookStatus.APPROVED),
-        Ebook(3, "Django REST", "Alice Johnson", datetime.now(), EbookStatus.PENDING),
+        Ebook(3, "Django REST", "Alice Johnson", datetime.now(), EbookStatus.DRAFT),
     ]
     for ebook in ebooks:
         await repository.save(ebook)
@@ -48,11 +48,11 @@ async def test_get_pending_ebooks(usecase, sample_ebooks):
     await sample_ebooks  # Attendre que les ebooks soient créés
 
     # When
-    ebooks = await usecase.execute(EbookStatus.PENDING)
+    ebooks = await usecase.execute(EbookStatus.DRAFT)
 
     # Then
     assert len(ebooks) == 2
-    assert all(ebook.status == EbookStatus.PENDING for ebook in ebooks)
+    assert all(ebook.status == EbookStatus.DRAFT for ebook in ebooks)
 
 
 @pytest.mark.asyncio
