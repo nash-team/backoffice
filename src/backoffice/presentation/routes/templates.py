@@ -3,6 +3,7 @@ Configuration centralisée des templates Jinja2.
 """
 
 from datetime import datetime
+from decimal import Decimal
 from pathlib import Path
 
 from fastapi.templating import Jinja2Templates
@@ -51,8 +52,51 @@ def format_ebook_status_icon(status_value):
     return EBOOK_STATUS_CONFIG.get(status_value, {}).get("icon", "fa-question-circle")
 
 
+def format_currency(value: Decimal | float | None, currency: str = "USD") -> str:
+    """Format Decimal as currency (avoid float artifacts).
+
+    Args:
+        value: Decimal or float value to format
+        currency: Currency code (USD, EUR, etc.)
+
+    Returns:
+        Formatted currency string (e.g., "$12.34")
+    """
+    if value is None:
+        return "N/A"
+
+    # Convert float to Decimal to avoid precision issues
+    if isinstance(value, float):
+        value = Decimal(str(value))
+
+    # Round to cent only at display time (not before)
+    value = value.quantize(Decimal("0.01"))
+
+    # Currency symbols
+    symbols = {"USD": "$", "EUR": "€", "GBP": "£"}
+    symbol = symbols.get(currency, "$")
+
+    return f"{symbol}{value:,.2f}"
+
+
+def number_format(value: int | None) -> str:
+    """Format integer with thousand separators.
+
+    Args:
+        value: Integer to format
+
+    Returns:
+        Formatted number string (e.g., "1,234")
+    """
+    if value is None:
+        return "0"
+    return f"{value:,}"
+
+
 # Enregistrement des filtres
 templates.env.filters["date"] = format_date
 templates.env.filters["ebook_status_label"] = format_ebook_status_label
 templates.env.filters["ebook_status_class"] = format_ebook_status_class
 templates.env.filters["ebook_status_icon"] = format_ebook_status_icon
+templates.env.filters["format_currency"] = format_currency
+templates.env.filters["number_format"] = number_format

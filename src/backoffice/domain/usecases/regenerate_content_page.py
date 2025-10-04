@@ -1,11 +1,12 @@
-"""Use case for regenerating ebook back cover only."""
+"""Use case for regenerating a single content/coloring page."""
 
 import base64
 import logging
 from pathlib import Path
 
-from backoffice.domain.cover_generation import CoverGenerationService
 from backoffice.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.domain.entities.generation_request import ColorMode, ImageSpec
+from backoffice.domain.page_generation import ContentPageGenerationService
 from backoffice.domain.pdf_assembly import PDFAssemblyService
 from backoffice.domain.ports.assembly_port import AssembledPage
 from backoffice.domain.ports.ebook.ebook_port import EbookPort
@@ -14,51 +15,54 @@ from backoffice.domain.ports.file_storage_port import FileStoragePort
 logger = logging.getLogger(__name__)
 
 
-class RegenerateBackCoverUseCase:
-    """Regenerate the back cover of a coloring book ebook.
+class RegenerateContentPageUseCase:
+    """Regenerate a single content/coloring page of an ebook.
 
-    This regenerates ONLY the back cover while keeping:
-    - Front cover (extracts color from it)
-    - All content pages
+    This regenerates ONLY one specific content page while keeping:
+    - Front cover
+    - Back cover
+    - All other content pages
     - Same theme and metadata
     """
 
     def __init__(
         self,
         ebook_repository: EbookPort,
-        cover_service: CoverGenerationService,
+        page_service: ContentPageGenerationService,
         assembly_service: PDFAssemblyService,
         file_storage: FileStoragePort,
     ):
-        """Initialize regenerate back cover use case.
+        """Initialize regenerate content page use case.
 
         Args:
             ebook_repository: Repository for ebook persistence
-            cover_service: Service for cover generation
+            page_service: Service for page generation
             assembly_service: Service for PDF assembly
             file_storage: Service for file storage (Google Drive)
         """
         self.ebook_repository = ebook_repository
-        self.cover_service = cover_service
+        self.page_service = page_service
         self.assembly_service = assembly_service
         self.file_storage = file_storage
 
     async def execute(
         self,
         ebook_id: int,
+        page_index: int,
         prompt_override: str | None = None,
     ) -> Ebook:
-        """Regenerate the back cover of an ebook.
+        """Regenerate a specific content page of an ebook.
 
         Args:
             ebook_id: ID of the ebook
-            prompt_override: Optional custom prompt for back cover generation
+            page_index: Index of the page to regenerate (1-based, excluding cover)
+            prompt_override: Optional custom prompt for page generation
 
         Returns:
-            Updated ebook with new back cover
+            Updated ebook with regenerated page
 
         Raises:
-            ValueError: If ebook not found or not in PENDING status
+            ValueError: If ebook not found, not in DRAFT status, or invalid page index
         """
         # Retrieve the ebook
         ebook = await self.ebook_repository.get_by_id(ebook_id)
@@ -68,54 +72,63 @@ class RegenerateBackCoverUseCase:
         # Business rule: only DRAFT ebooks can be modified
         if ebook.status != EbookStatus.DRAFT:
             raise ValueError(
-                f"Cannot regenerate back cover for ebook with status {ebook.status.value}. "
+                f"Cannot regenerate page for ebook with status {ebook.status.value}. "
                 f"Only DRAFT ebooks can be modified."
             )
 
         # Business rule: ebook must have structure_json with pages metadata
         if not ebook.structure_json or "pages_meta" not in ebook.structure_json:
             raise ValueError(
-                "Cannot regenerate back cover: ebook structure is missing. "
+                "Cannot regenerate page: ebook structure is missing. "
                 "Please regenerate the entire ebook instead."
             )
 
         pages_meta = ebook.structure_json["pages_meta"]
-        if len(pages_meta) < 2:
+
+        # Validate page index (must be between cover and back cover)
+        if page_index < 1 or page_index >= len(pages_meta) - 1:
             raise ValueError(
-                "Cannot regenerate back cover: ebook must have at least 2 pages (cover + back)"
+                f"Invalid page index {page_index}. "
+                f"Must be between 1 and {len(pages_meta) - 2} (content pages only)."
             )
 
-        logger.info(f"🔄 Regenerating BACK COVER for ebook {ebook_id}: {ebook.title}")
-
-        # Step 1: Extract front cover bytes (first page)
-        front_cover_meta = pages_meta[0]
-        front_cover_bytes = base64.b64decode(front_cover_meta["image_data_base64"])
-
-        # Step 2: Remove text from cover using the SAME provider as original generation
-        logger.info("🔄 Creating back cover (same image without text)...")
-
-        # Get the original provider from generation_metadata
-        provider_name = "default"
-        if ebook.generation_metadata:
-            provider_name = ebook.generation_metadata.provider
-            model_name = ebook.generation_metadata.model
-            logger.info(f"📌 Using original provider: {provider_name} | Model: {model_name}")
-        else:
-            # Fallback to current provider if metadata not available
-            logger.warning("⚠️ No generation metadata found, using injected provider")
-
-        back_cover_data = await self.cover_service.cover_port.remove_text_from_cover(
-            cover_bytes=front_cover_bytes
+        logger.info(
+            f"🔄 Regenerating CONTENT PAGE {page_index} for ebook {ebook_id}: {ebook.title}"
         )
 
-        logger.info(f"✅ Back cover regenerated via {provider_name}: {len(back_cover_data)} bytes")
+        # Step 1: Generate new page with B&W coloring style
+        page_spec = ImageSpec(
+            width_px=1024,
+            height_px=1024,
+            format="PNG",
+            dpi=300,
+            color_mode=ColorMode.BLACK_WHITE,
+        )
 
-        # Step 4: Rebuild PDF with new back cover
+        # Use theme from ebook if available
+        prompt = prompt_override or f"{ebook.theme_id} themed coloring page"
+
+        new_page_data = await self.page_service.generate_single_page(
+            prompt=prompt,
+            spec=page_spec,
+            seed=None,  # Random seed for variety
+        )
+
+        logger.info(f"✅ Page regenerated: {len(new_page_data)} bytes")
+
+        # Step 2: Rebuild PDF with new page
         assembled_pages = []
 
-        # Add all pages EXCEPT the last one (old back cover)
-        for _i, page_meta in enumerate(pages_meta[:-1]):
-            page_data = base64.b64decode(page_meta["image_data_base64"])
+        # Add all pages, replacing the target page
+        for i, page_meta in enumerate(pages_meta):
+            if i == page_index:
+                # Use new generated page
+                page_data = new_page_data
+                logger.info(f"📝 Replacing page {page_index} with newly generated content")
+            else:
+                # Keep existing page
+                page_data = base64.b64decode(page_meta["image_data_base64"])
+
             assembled_pages.append(
                 AssembledPage(
                     page_number=page_meta["page_number"],
@@ -125,19 +138,12 @@ class RegenerateBackCoverUseCase:
                 )
             )
 
-        # Add new back cover as last page
-        back_cover_page = AssembledPage(
-            page_number=len(pages_meta),
-            title="Back Cover",
-            image_data=back_cover_data,
-            image_format="PNG",
-        )
-        assembled_pages.append(back_cover_page)
-
         # Generate PDF
         import tempfile
 
-        pdf_path = Path(tempfile.gettempdir()) / f"ebook_{ebook_id}_back_regenerated.pdf"
+        pdf_path = (
+            Path(tempfile.gettempdir()) / f"ebook_{ebook_id}_page{page_index}_regenerated.pdf"
+        )
 
         # Split into cover and content pages for assembly
         cover_page = assembled_pages[0]
@@ -149,15 +155,15 @@ class RegenerateBackCoverUseCase:
             output_path=str(pdf_path),
         )
 
-        logger.info(f"📄 PDF regenerated with new back cover: {pdf_path}")
+        logger.info(f"📄 PDF regenerated with new page {page_index}: {pdf_path}")
 
-        # Step 5: Upload to Google Drive
+        # Step 3: Upload to Google Drive
         if self.file_storage.is_available():
             try:
                 with open(pdf_path, "rb") as f:
                     pdf_bytes = f.read()
 
-                filename = f"{ebook.title or 'coloring_book'}_back_regenerated.pdf"
+                filename = f"{ebook.title or 'coloring_book'}_page{page_index}_regenerated.pdf"
                 upload_result = await self.file_storage.upload_ebook(
                     file_bytes=pdf_bytes,
                     filename=filename,
@@ -165,7 +171,7 @@ class RegenerateBackCoverUseCase:
                         "title": ebook.title or "Untitled",
                         "author": ebook.author or "Unknown",
                         "ebook_id": str(ebook_id),
-                        "back_cover_regenerated": "true",
+                        "page_regenerated": str(page_index),
                     },
                 )
 
@@ -184,22 +190,19 @@ class RegenerateBackCoverUseCase:
             logger.warning("⚠️ Google Drive not available, using local file")
             ebook.preview_url = f"file://{pdf_path}"
 
-        # Step 6: Update structure_json with new back cover
-        # Replace last page (old back cover) with new back cover
-        updated_pages_meta = pages_meta[:-1]  # Keep all except last
-        updated_pages_meta.append(
-            {
-                "page_number": len(pages_meta),
-                "title": "Back Cover",
-                "image_format": "PNG",
-                "image_data_base64": base64.b64encode(back_cover_data).decode(),
-            }
-        )
+        # Step 4: Update structure_json with new page
+        updated_pages_meta = pages_meta.copy()
+        updated_pages_meta[page_index] = {
+            "page_number": page_index,
+            "title": f"Page {page_index}",
+            "image_format": "PNG",
+            "image_data_base64": base64.b64encode(new_page_data).decode(),
+        }
 
         ebook.structure_json = {"pages_meta": updated_pages_meta}
 
-        # Step 7: Save updated ebook
+        # Step 5: Save updated ebook
         updated_ebook = await self.ebook_repository.save(ebook)
-        logger.info(f"✅ Ebook {ebook_id} updated with new back cover")
+        logger.info(f"✅ Ebook {ebook_id} updated with regenerated page {page_index}")
 
         return updated_ebook

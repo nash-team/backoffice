@@ -11,6 +11,7 @@ from backoffice.domain.constants import (
     MIN_CHAPTERS,
     MIN_PAGES,
 )
+from backoffice.domain.value_objects.generation_metadata import GenerationMetadata
 
 
 class EbookStatus(Enum):
@@ -48,7 +49,7 @@ class EbookConfig:
 
 @dataclass
 class Ebook:
-    id: int
+    id: int | None
     title: str
     author: str
     created_at: datetime | None
@@ -67,6 +68,9 @@ class Ebook:
 
     # Page count for KDP export
     page_count: int | None = None
+
+    # Generation metadata (Value Object - DDD)
+    generation_metadata: GenerationMetadata | None = None
 
 
 # KDP Export configurations

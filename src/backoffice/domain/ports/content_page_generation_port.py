@@ -14,6 +14,7 @@ class ContentPageGenerationPort(ABC):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
+        token_tracker=None,
     ) -> bytes:
         """Generate a single content page.
 
@@ -21,6 +22,7 @@ class ContentPageGenerationPort(ABC):
             prompt: Text prompt describing the page
             spec: Image specifications (dimensions, format, etc.)
             seed: Random seed for reproducibility
+            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             Image data as bytes

@@ -27,9 +27,19 @@ dependencies = [
   "psycopg2-binary>=2.9.9",
 
   # Clients externes (tu les utilises côté app)
-  "openai>=1.6.1",
+  "openai>=1.58.1",  # Updated for httpx 0.28+ compatibility
+  "replicate>=0.25.0",
+  "huggingface-hub>=0.20.0",
   "google-auth>=2.27.0",
   "google-api-python-client>=2.118.0",
+
+  # Local image generation (Stable Diffusion)
+  "diffusers>=0.30.0",
+  "torch>=2.0.0",
+  "transformers>=4.30.0",
+  "accelerate>=0.20.0",
+  "sentencepiece>=0.2.0",  # Required for FLUX tokenizer
+  "controlnet-aux>=0.0.7",  # ControlNet preprocessors (lineart, canny, etc.)
 
   # PDF Generation & Image Processing
   "weasyprint>=61.0",
@@ -39,6 +49,9 @@ dependencies = [
 
   # HTTP client for external API calls
   "httpx>=0.25.1",
+
+  # Retry logic for API calls
+  "tenacity>=9.0.0",
 
   # YAML parsing for theme configuration
   "pyyaml>=6.0",
@@ -107,6 +120,8 @@ combine-as-imports = true
 "tests/**" = ["S101", "S603", "S607", "S104", "E501", "E402", "I001"]  # Allow subprocess usage, binding, long lines, imports after code and import sorting in tests
 "src/backoffice/main.py" = ["S104"]  # Allow 0.0.0.0 binding when explicitly configured
 "src/backoffice/infrastructure/adapters/potrace_vectorizer.py" = ["S603", "S607", "S314"]  # Allow subprocess calls for external tool integration and XML parsing
+"src/backoffice/infrastructure/providers/*.py" = ["S101", "F821", "E501"]  # Allow asserts, undefined names from dynamic imports, long lines in docstrings
+"src/backoffice/domain/usecases/create_ebook.py" = ["S101"]  # Allow assert for post-creation validation
 
 # --- Mypy ---
 [tool.mypy]
@@ -137,8 +152,39 @@ module = ["backoffice.infrastructure.adapters.repositories.*"]
 disable_error_code = ["assignment"]
 
 [[tool.mypy.overrides]]
-module = ["backoffice.infrastructure.providers.openrouter_image_provider", "backoffice.infrastructure.adapters.openrouter_image_adapter", "backoffice.infrastructure.services.openrouter_service", "backoffice.infrastructure.factories.llm_adapter_factory", "backoffice.domain.entities.ebook_theme", "backoffice.domain.usecases.generate_ebook", "backoffice.migrations.*", "backoffice.infrastructure.adapters.openrouter_content_adapter", "backoffice.infrastructure.adapters.openai_content_adapter"]
-disable_error_code = ["arg-type", "assignment", "union-attr", "no-any-return", "import-not-found", "return-value", "dict-item", "import-untyped"]
+module = ["replicate", "torch", "diffusers", "controlnet_aux", "huggingface_hub", "tenacity"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["backoffice.infrastructure.providers.*"]
+disable_error_code = ["import-not-found", "override"]
+
+[[tool.mypy.overrides]]
+module = ["tests.e2e.fakes"]
+disable_error_code = ["override"]
+
+[[tool.mypy.overrides]]
+module = [
+    "backoffice.infrastructure.providers.openrouter_image_provider",
+    "backoffice.infrastructure.providers.replicate_image_provider",
+    "backoffice.infrastructure.providers.huggingface_image_provider",
+    "backoffice.infrastructure.adapters.openrouter_image_adapter",
+    "backoffice.infrastructure.adapters.openrouter_pricing_adapter",
+    "backoffice.infrastructure.services.openrouter_service",
+    "backoffice.infrastructure.factories.llm_adapter_factory",
+    "backoffice.domain.entities.ebook_theme",
+    "backoffice.domain.usecases.generate_ebook",
+    "backoffice.migrations.*",
+    "backoffice.infrastructure.adapters.openrouter_content_adapter",
+    "backoffice.infrastructure.adapters.openai_content_adapter",
+    "backoffice.domain.usecases.get_ebook_costs",
+    "backoffice.infrastructure.utils.color_utils",
+    "backoffice.infrastructure.providers.gemini_image_provider",
+    "backoffice.infrastructure.providers.kdp_assembly_provider",
+    "backoffice.infrastructure.providers.local_sd_provider",
+    "backoffice.presentation.routes.ebook_routes"
+]
+disable_error_code = ["arg-type", "assignment", "union-attr", "no-any-return", "import-not-found", "return-value", "dict-item", "import-untyped", "call-arg"]
 
 
 
@@ -159,9 +205,15 @@ DEP002 = [
     "python-multipart", # Used by FastAPI for form data
     "aiofiles",         # Used by FastAPI for static files
     "psycopg2-binary",  # Used by SQLAlchemy via connection string
+    "transformers",     # Used by diffusers/torch for local SD (optional, imported dynamically)
+    "accelerate",       # Used by diffusers for model loading optimization (optional)
+    "sentencepiece",    # Used by transformers for tokenization (optional)
 ]
 DEP004 = [
     "alembic",          # Used in migrations (dev tool but imported in migration files)
+]
+DEP001 = [
+    "tests",            # Test fakes imported conditionally for E2E tests (via USE_FAKE_PROVIDERS env)
 ]
 
 # Déclare les mappings nom PyPI -> package importable

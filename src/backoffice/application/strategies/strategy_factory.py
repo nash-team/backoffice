@@ -7,6 +7,7 @@ from backoffice.domain.cover_generation import CoverGenerationService
 from backoffice.domain.entities.generation_request import EbookType
 from backoffice.domain.page_generation import ContentPageGenerationService
 from backoffice.domain.pdf_assembly import PDFAssemblyService
+from backoffice.domain.ports.ebook_generation_strategy_port import EbookGenerationStrategyPort
 from backoffice.infrastructure.providers.provider_factory import ProviderFactory
 
 logger = logging.getLogger(__name__)
@@ -19,11 +20,14 @@ class StrategyFactory:
     """
 
     @staticmethod
-    def create_strategy(ebook_type: EbookType) -> ColoringBookStrategy:
+    def create_strategy(
+        ebook_type: EbookType, request_id: str | None = None
+    ) -> EbookGenerationStrategyPort:
         """Create generation strategy for ebook type.
 
         Args:
             ebook_type: Type of ebook to generate
+            request_id: Optional request ID for token tracking
 
         Returns:
             Strategy instance with injected dependencies
@@ -34,20 +38,33 @@ class StrategyFactory:
         logger.info(f"Creating strategy for ebook type: {ebook_type.value}")
 
         if ebook_type == EbookType.COLORING:
-            return StrategyFactory._create_coloring_book_strategy()
+            return StrategyFactory._create_coloring_book_strategy(request_id)
         else:
             raise ValueError(f"Ebook type {ebook_type.value} not yet supported")
 
     @staticmethod
-    def _create_coloring_book_strategy() -> ColoringBookStrategy:
+    def _create_coloring_book_strategy(request_id: str | None = None) -> ColoringBookStrategy:
         """Create coloring book strategy with dependencies.
+
+        Args:
+            request_id: Optional request ID for token tracking
 
         Returns:
             ColoringBookStrategy with injected services
         """
-        # Create providers via factory
-        cover_provider = ProviderFactory.create_cover_provider()
-        pages_provider = ProviderFactory.create_content_page_provider()
+        # Create token tracker if request_id provided
+        token_tracker = None
+        if request_id:
+            from backoffice.domain.services.token_tracker import TokenTracker
+            from backoffice.infrastructure.factories.pricing_factory import PricingFactory
+
+            pricing_adapter = PricingFactory.create_pricing_adapter()
+            token_tracker = TokenTracker(request_id=request_id, pricing_adapter=pricing_adapter)
+            logger.info(f"TokenTracker created for request: {request_id}")
+
+        # Create providers via factory with token tracker
+        cover_provider = ProviderFactory.create_cover_provider(token_tracker=token_tracker)
+        pages_provider = ProviderFactory.create_content_page_provider(token_tracker=token_tracker)
         assembly_provider = ProviderFactory.create_assembly_provider()
 
         # Create services with provider injection
@@ -71,6 +88,7 @@ class StrategyFactory:
             cover_service=cover_service,
             pages_service=pages_service,
             assembly_service=assembly_service,
+            token_tracker=token_tracker,
         )
 
         logger.info("✅ ColoringBookStrategy created with dependencies")

@@ -131,6 +131,39 @@
             Régénérer la 4ème de couv.
         </button>
 
+        <!-- Dropdown for regenerating coloring pages -->
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-palette me-2"></i>
+                Régénérer page coloriage
+            </button>
+            <ul class="dropdown-menu">
+                {% if ebook.structure_json and ebook.structure_json.pages_meta %}
+                    {% for page in ebook.structure_json.pages_meta %}
+                        {% if page.page_number > 0 and page.page_number < (ebook.structure_json.pages_meta|length - 1) %}
+                        <li>
+                            <a class="dropdown-item" href="#"
+                               hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
+                               hx-vals='{"page_type": "content_page", "page_index": {{ page.page_number }}}'
+                               hx-ext="json-enc"
+                               hx-indicator="#regeneratePageSpinner-{{ ebook.id }}-{{ page.page_number }}"
+                               hx-disabled-elt="this"
+                               hx-on::after-request="
+                                   if(event.detail.successful) {
+                                       createToast('Page {{ page.page_number }} régénérée !', 'success');
+                                       setTimeout(() => { location.reload(); }, 2000);
+                                   }
+                               ">
+                                <span id="regeneratePageSpinner-{{ ebook.id }}-{{ page.page_number }}" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+                                Page {{ page.page_number }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </ul>
+        </div>
+
         <!-- Approve Button (DRAFT → upload to Drive → APPROVED) -->
         <button class="btn btn-success"
                 hx-post="/api/ebooks/{{ ebook.id }}/approve"

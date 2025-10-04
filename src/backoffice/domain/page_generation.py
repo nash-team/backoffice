@@ -43,11 +43,56 @@ class ContentPageGenerationService:
         self.enable_cache = enable_cache
         self._semaphore = asyncio.Semaphore(max_concurrent)
 
+    async def generate_single_page(
+        self,
+        prompt: str,
+        spec: ImageSpec,
+        seed: int | None = None,
+        token_tracker=None,
+    ) -> bytes:
+        """Generate a single content page.
+
+        Args:
+            prompt: Text description for the page
+            spec: Image specifications (dimensions, format, color mode)
+            seed: Random seed for reproducibility
+            token_tracker: Optional TokenTracker for usage tracking
+
+        Returns:
+            Page image as bytes
+
+        Raises:
+            DomainError: If generation or validation fails
+        """
+        logger.info("🎨 Generating single content page")
+
+        # Pre-validation
+        QualityValidator.validate_color_mode(spec, is_cover=False)
+
+        # Check provider availability
+        if not self.page_port.is_available():
+            logger.error("❌ Content page provider not available")
+            raise RuntimeError("Content page provider is not available")
+
+        # Generate page
+        page_data = await self.page_port.generate_page(prompt, spec, seed, token_tracker)
+
+        # Post-validation
+        QualityValidator.validate_image(
+            image_data=page_data,
+            expected_spec=spec,
+            page_type="content_page",
+        )
+
+        logger.info(f"✅ Single page generated: {len(page_data)} bytes")
+        return page_data
+
     async def generate_pages(
         self,
         prompts: list[str],
         spec: ImageSpec,
         seed: int | None = None,
+        token_tracker=None,
     ) -> list[bytes]:
         """Generate multiple content pages in batch.
 
@@ -56,6 +101,7 @@ class ContentPageGenerationService:
             prompts: Text descriptions for each page
             spec: Image specifications (dimensions, format, color mode)
             seed: Random seed base for reproducibility
+            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             List of page images as bytes
@@ -84,6 +130,7 @@ class ContentPageGenerationService:
                 spec=spec,
                 seed=seed + i if seed else None,
                 page_number=i + 1,
+                token_tracker=token_tracker,
             )
             for i, prompt in enumerate(prompts)
         ]
@@ -100,6 +147,7 @@ class ContentPageGenerationService:
         spec: ImageSpec,
         seed: int | None,
         page_number: int,
+        token_tracker=None,
     ) -> bytes:
         """Generate a single content page with concurrency control.
 
@@ -108,6 +156,7 @@ class ContentPageGenerationService:
             spec: Image specifications
             seed: Random seed
             page_number: Page number (for logging)
+            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             Page image as bytes
@@ -115,7 +164,7 @@ class ContentPageGenerationService:
         # Check cache first (before acquiring semaphore)
         cache_key = self._compute_cache_key(prompt, seed)
         if self.enable_cache and cache_key in self._cache:
-            logger.info(f"✅ Cache hit for page {page_number}")
+            logger.info(f"✅ Cache hit for page {page_number} - NO COST TRACKED (cache return)")
             return self._cache[cache_key]
 
         # Acquire semaphore for concurrency control
@@ -124,7 +173,10 @@ class ContentPageGenerationService:
 
             # Double-check cache after acquiring semaphore
             if self.enable_cache and cache_key in self._cache:
-                logger.info(f"✅ Cache hit for page {page_number} (after semaphore)")
+                logger.info(
+                    f"✅ Cache hit for page {page_number} (after semaphore) - "
+                    f"NO COST TRACKED (cache return)"
+                )
                 return self._cache[cache_key]
 
             # Generate page
@@ -132,6 +184,7 @@ class ContentPageGenerationService:
                 prompt=prompt,
                 spec=spec,
                 seed=seed,
+                token_tracker=token_tracker,
             )
 
             # Post-validation

@@ -14,20 +14,24 @@ from backoffice.domain.entities.generation_request import (
 from backoffice.domain.page_generation import ContentPageGenerationService
 from backoffice.domain.pdf_assembly import PDFAssemblyService
 from backoffice.domain.ports.assembly_port import AssembledPage
+from backoffice.domain.ports.ebook_generation_strategy_port import EbookGenerationStrategyPort
 from backoffice.domain.prompt_template_engine import PromptTemplateEngine
 
 logger = logging.getLogger(__name__)
 
 
-class ColoringBookStrategy:
+class ColoringBookStrategy(EbookGenerationStrategyPort):
     """Strategy for generating coloring books (V1 slim).
 
     V1 approach:
     - Log execution plan BEFORE starting
-    - Generate cover (colorful) using CoverGenerationService
-    - Generate content pages (B&W) using ContentPageGenerationService
+    - Generate content pages (B&W) using ContentPageGenerationService (SDXL + LoRA)
+    - Generate cover (colorful) based on page themes using CoverGenerationService (Gemini)
+    - Create back cover (text removal from cover)
     - Assemble PDF using PDFAssemblyService
     - Return GenerationResult with pages_meta
+
+    Order changed: Pages FIRST → Cover SECOND (for visual consistency)
     """
 
     def __init__(
@@ -35,6 +39,7 @@ class ColoringBookStrategy:
         cover_service: CoverGenerationService,
         pages_service: ContentPageGenerationService,
         assembly_service: PDFAssemblyService,
+        token_tracker=None,
     ):
         """Initialize coloring book strategy.
 
@@ -42,10 +47,12 @@ class ColoringBookStrategy:
             cover_service: Service for cover generation
             pages_service: Service for content page generation
             assembly_service: Service for PDF assembly
+            token_tracker: Optional TokenTracker for cost tracking
         """
         self.cover_service = cover_service
         self.pages_service = pages_service
         self.assembly_service = assembly_service
+        self.token_tracker = token_tracker
 
     async def generate(self, request: GenerationRequest) -> GenerationResult:
         """Generate a coloring book.
@@ -69,9 +76,12 @@ class ColoringBookStrategy:
         # Log execution plan
         self._log_execution_plan(request)
 
-        # Step 1: Generate cover (colorful)
-        logger.info("\n📋 Step 1/3: Generating cover...")
-        cover_prompt = self._build_cover_prompt(request)
+        # Step 1: Generate cover (colorful) FIRST
+        logger.info("\n📋 Step 1/4: Generating cover...")
+        if self.token_tracker:
+            logger.debug(f"TokenTracker before cover = ${self.token_tracker.get_total_cost():.6f}")
+
+        cover_prompt = self._build_cover_prompt(request, page_prompts=None)
         cover_spec = ImageSpec(
             width_px=1024,
             height_px=1024,
@@ -84,10 +94,17 @@ class ColoringBookStrategy:
             prompt=cover_prompt,
             spec=cover_spec,
             seed=request.seed,
+            token_tracker=self.token_tracker,
         )
 
-        # Step 2: Generate content pages (B&W)
+        if self.token_tracker:
+            logger.debug(f"TokenTracker after cover = ${self.token_tracker.get_total_cost():.6f}")
+
+        # Step 2: Generate content pages (B&W) SECOND
         logger.info(f"\n📋 Step 2/4: Generating {request.page_count} content pages...")
+        if self.token_tracker:
+            logger.debug(f"TokenTracker before pages = ${self.token_tracker.get_total_cost():.6f}")
+
         page_prompts = self._build_page_prompts(request)
         page_spec = ImageSpec(
             width_px=1024,
@@ -101,14 +118,27 @@ class ColoringBookStrategy:
             prompts=page_prompts,
             spec=page_spec,
             seed=request.seed,
+            token_tracker=self.token_tracker,
         )
+
+        if self.token_tracker:
+            logger.debug(f"TokenTracker after pages = ${self.token_tracker.get_total_cost():.6f}")
 
         # Step 3: Remove text from cover to create back cover with Gemini Vision
         logger.info("\n📋 Step 3/4: Creating back cover (same image without text)...")
+        if self.token_tracker:
+            logger.debug(
+                f"TokenTracker before back cover = ${self.token_tracker.get_total_cost():.6f}"
+            )
 
-        back_cover_data = await self.cover_service.cover_port.convert_cover_to_line_art_with_gemini(
+        back_cover_data = await self.cover_service.cover_port.remove_text_from_cover(
             cover_bytes=cover_data
         )
+
+        if self.token_tracker:
+            logger.debug(
+                f"TokenTracker after back cover = ${self.token_tracker.get_total_cost():.6f}"
+            )
 
         # Step 4: Assemble PDF
         logger.info("\n📋 Step 4/4: Assembling PDF...")
@@ -205,31 +235,53 @@ class ColoringBookStrategy:
         )
         logger.info(f"Seed: {request.seed or 'random'}")
         logger.info("\nSteps:")
-        logger.info("  1. Generate colorful cover (OpenRouter/Gemini)")
-        logger.info(f"  2. Generate {request.page_count} B&W coloring pages (OpenRouter/Gemini)")
-        logger.info("  3. Assemble PDF (WeasyPrint)")
+        logger.info("  1. Generate colorful cover with 'Coloring Book' text (Gemini)")
+        logger.info(f"  2. Generate {request.page_count} B&W coloring pages (Gemini)")
+        logger.info("  3. Create back cover (text removal from cover)")
+        logger.info("  4. Assemble PDF (WeasyPrint)")
         logger.info("\nQuality settings:")
-        logger.info("  - Cover: 1024x1024, 300 DPI, color")
-        logger.info("  - Pages: 1024x1024, 300 DPI, B&W")
+        logger.info("  - Pages: 1024x1024, 300 DPI, B&W (FREE with local SDXL)")
+        logger.info("  - Cover: 1024x1024, 300 DPI, color (Gemini - $0.04)")
+        logger.info("  - Back: Same as cover without text")
         logger.info("=" * 80 + "\n")
 
-    def _build_cover_prompt(self, request: GenerationRequest) -> str:
+    def _build_cover_prompt(
+        self, request: GenerationRequest, page_prompts: list[str] | None = None
+    ) -> str:
         """Build prompt for cover generation WITH text.
 
         Args:
             request: Generation request
+            page_prompts: Optional list of page prompts to inspire cover (if pages generated first)
 
         Returns:
             Cover prompt
         """
-        return (
-            f"Create a vibrant, colorful cover for a children's coloring book. "
-            f"Title: '{request.title}'. "
+        # Base cover prompt with quality instructions
+        base_prompt = (
+            f"Create a vibrant, colorful cover illustration for a children's coloring book. "
+            f"Title text: '{request.title}'. "
             f"Theme: {request.theme}. "
-            f"Target age: {request.age_group.value}. "
-            f"Style: Engaging, playful, child-friendly. "
-            f"Full-bleed illustration with rich colors."
+            f"Style: Soft watercolor illustration, hand-drawn children's book art "
+            f"with gentle, harmonious colors. "
+            f"Natural composition with 2-4 cheerful characters, proper proportions. "
+            f"Warm, inviting atmosphere with balanced pastel and bright colors. "
+            f"Clean, friendly illustration without borders or frames. "
+            f"Only the title text should appear, no age labels or other text."
         )
+
+        # If pages were generated first, add context from page themes
+        if page_prompts and len(page_prompts) > 0:
+            # Extract common visual elements from first few pages (max 3 for brevity)
+            sample_pages = page_prompts[: min(3, len(page_prompts))]
+            context = (
+                " The book includes pages featuring: "
+                + ", ".join(prompt.split(".")[0].lower() for prompt in sample_pages)
+                + "."
+            )
+            return base_prompt + context
+
+        return base_prompt
 
     def _build_back_cover_prompt(self, request: GenerationRequest, front_cover_bytes: bytes) -> str:
         """Build prompt for back cover generation (line art style).

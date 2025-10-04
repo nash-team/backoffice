@@ -77,9 +77,12 @@ class PromptTemplateEngine:
                 "COMPOSITION": ["left-facing", "right-facing", "front", "3/4 view", "top-down"],
             },
             quality_settings=(
-                "Bold clean outlines, closed shapes, no shading, no gray, no color, "
-                "full page, edge to edge, fill entire page, "
-                "printable 300 DPI, simple to medium detail for kids age 4-8. "
+                "Black and white line art coloring page style. "
+                "IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading. "
+                "Bold clean outlines, closed shapes, thick black lines. "
+                "NO FRAME, NO BORDER around the illustration. "
+                "Illustration extends naturally to image boundaries. "
+                "Printable 300 DPI, simple to medium detail for kids age 4-8. "
                 "No text, no logo, no watermark."
             ),
         ),
@@ -126,9 +129,12 @@ class PromptTemplateEngine:
                 "COMPOSITION": ["left-facing", "right-facing", "front", "3/4 view", "jumping"],
             },
             quality_settings=(
-                "Bold clean outlines, closed shapes, no shading, no gray, no color, "
-                "full page, edge to edge, fill entire page, "
-                "printable 300 DPI, simple to medium detail for kids age 4-8. "
+                "Black and white line art coloring page style. "
+                "IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading. "
+                "Bold clean outlines, closed shapes, thick black lines. "
+                "NO FRAME, NO BORDER around the illustration. "
+                "Illustration extends naturally to image boundaries. "
+                "Printable 300 DPI, simple to medium detail for kids age 4-8. "
                 "No text, no logo, no watermark."
             ),
         ),
@@ -175,9 +181,10 @@ class PromptTemplateEngine:
                 "COMPOSITION": ["left-facing", "right-facing", "front", "3/4 view", "action pose"],
             },
             quality_settings=(
-                "Bold clean outlines, closed shapes, no shading, no gray, no color, "
-                "full page, edge to edge, fill entire page, "
-                "printable 300 DPI, simple to medium detail for kids age 4-8. "
+                "Bold clean outlines, closed shapes, no shading, no gray, no color. "
+                "NO FRAME, NO BORDER around the illustration. "
+                "Illustration extends naturally to image boundaries. "
+                "Printable 300 DPI, simple to medium detail for kids age 4-8. "
                 "No text, no logo, no watermark, no scary elements, no violence."
             ),
         ),
@@ -193,9 +200,10 @@ class PromptTemplateEngine:
             "COMPOSITION": ["centered", "left-side", "right-side", "diagonal"],
         },
         quality_settings=(
-            "Bold clean outlines, closed shapes, no shading, no gray, no color, "
-            "full page, edge to edge, fill entire page, "
-            "printable 300 DPI, simple detail for kids age 4-8. "
+            "Bold clean outlines, closed shapes, no shading, no gray, no color. "
+            "NO FRAME, NO BORDER around the illustration. "
+            "Illustration extends naturally to image boundaries. "
+            "Printable 300 DPI, simple detail for kids age 4-8. "
             "No text, no logo, no watermark."
         ),
     )

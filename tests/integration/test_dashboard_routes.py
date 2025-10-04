@@ -31,10 +31,10 @@ def test_get_stats(test_client, sample_ebooks):
     """Test de récupération des statistiques"""
     response = test_client.get("/api/dashboard/stats")
     assert response.status_code == 200
-    assert "En attente" in response.text
+    assert "Brouillons" in response.text
     assert "Approuvés" in response.text
-    assert "1" in response.text  # 1 ebook en attente
-    assert "1" in response.text  # 1 ebook validé
+    assert "1" in response.text  # 1 ebook brouillon
+    assert "1" in response.text  # 1 ebook approuvé
 
 
 def test_get_ebooks(test_client, sample_ebooks):
@@ -48,11 +48,11 @@ def test_get_ebooks(test_client, sample_ebooks):
 
 def test_get_ebooks_with_status(test_client, sample_ebooks):
     """Test de récupération des ebooks filtrés par statut"""
-    response = test_client.get("/api/dashboard/ebooks?status=pending")
+    response = test_client.get("/api/dashboard/ebooks?status=draft")
     assert response.status_code == 200
     assert "<td>" in response.text
     assert "Test Ebook 1" in response.text
-    assert "Test Ebook 2" not in response.text  # Ebook validé ne doit pas apparaître
+    assert "Test Ebook 2" not in response.text  # Ebook approuvé ne doit pas apparaître
 
 
 def test_get_new_ebook_form(test_client):

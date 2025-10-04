@@ -26,6 +26,6 @@ class PageFormat(Enum):
     SQUARE_8_5 = "SQUARE_8_5"
 
 
-# DPI validation constants (used by OpenRouterImageAdapter)
+# DPI validation constants (used by image providers)
 COVER_MIN_PIXELS_SQUARE = 2550  # For 8.5" at 300 DPI
 CONTENT_MIN_PIXELS_SQUARE = 2175  # For 7.25" content area at 300 DPI

@@ -1,22 +1,15 @@
 """Model registry for provider selection (V1 slim - YAML only)."""
 
 import logging
-from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar
 
 import yaml
+from pydantic import ValidationError
+
+from backoffice.config.models_schema import ModelMapping, ModelsConfig
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class ModelMapping:
-    """Model configuration."""
-
-    provider: str
-    model: str
-    supports_vectorization: bool = False
 
 
 class ModelRegistry:
@@ -58,31 +51,44 @@ class ModelRegistry:
         return cls._instance
 
     def _load_config(self) -> None:
-        """Load model mappings from YAML."""
+        """Load and validate model mappings from YAML.
+
+        Raises:
+            ValidationError: If YAML config is invalid (structure, types, constraints)
+            FileNotFoundError: If config file not found and defaults not applicable
+        """
         if not self._config_path.exists():
             logger.warning(f"⚠️ Config file not found: {self._config_path}, using defaults")
             self._set_defaults()
             return
 
         try:
+            # Load YAML
             with open(self._config_path) as f:
-                config = yaml.safe_load(f)
+                config_data = yaml.safe_load(f)
 
-            for key, value in config.get("models", {}).items():
-                self._mappings[key] = ModelMapping(
-                    provider=value["provider"],
-                    model=value["model"],
-                    supports_vectorization=value.get("supports_vectorization", False),
-                )
+            # Validate with Pydantic schema (raises ValidationError if invalid)
+            validated_config = ModelsConfig(**config_data)
 
-            logger.info(f"✅ Loaded {len(self._mappings)} model mappings from {self._config_path}")
+            # Extract validated mappings
+            self._mappings = validated_config.models
 
+            logger.info(
+                f"✅ Loaded and validated {len(self._mappings)} model mappings "
+                f"from {self._config_path}"
+            )
+
+        except ValidationError:
+            logger.error(f"❌ Invalid model configuration in {self._config_path}")
+            # Re-raise with original exception info
+            raise
         except Exception as e:
-            logger.error(f"❌ Failed to load config: {e}, using defaults")
-            self._set_defaults()
+            logger.error(f"❌ Failed to load config: {e}")
+            raise
 
     def _set_defaults(self) -> None:
-        """Set default model mappings."""
+        """Set default model mappings (validated via Pydantic)."""
+        # Use Pydantic models for consistency
         self._mappings = {
             "cover": ModelMapping(
                 provider="openrouter",

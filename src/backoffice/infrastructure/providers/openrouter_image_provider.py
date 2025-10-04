@@ -35,15 +35,17 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
     - B&W coloring pages (ColorMode.BLACK_WHITE)
     """
 
-    def __init__(self, model: str | None = None):
+    def __init__(self, model: str | None = None, token_tracker=None):
         """Initialize OpenRouter provider.
 
         Args:
             model: Specific model to use (defaults to Gemini 2.5 Flash Image Preview)
+            token_tracker: Optional TokenTracker for cost tracking
         """
         self.api_key = os.getenv("LLM_API_KEY")
         self.model = model or os.getenv("LLM_IMAGE_MODEL", "google/gemini-2.5-flash-image-preview")
         self.base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+        self.token_tracker = token_tracker
 
         if self.api_key:
             from openai import AsyncOpenAI
@@ -74,6 +76,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
+        token_tracker=None,
     ) -> bytes:
         """Generate a colorful cover image.
 
@@ -81,6 +84,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             prompt: Text description of the cover
             spec: Image specifications (dimensions, format, color mode)
             seed: Random seed for reproducibility
+            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             Cover image as bytes
@@ -105,26 +109,9 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                 context={"provider": "openrouter", "model": self.model},
             )
 
-        # Build prompt based on color mode
-        if spec.color_mode == ColorMode.BLACK_WHITE:
-            # B&W coloring page style (border will be added programmatically)
-            full_prompt = (
-                f"Create a simple black and white line art coloring page illustration. "
-                f"IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading. "
-                f"Thick black outlines, clean lines, simple shapes perfect for children to color. "
-                f"Full-bleed design filling the entire frame. "
-                f"Content: {prompt}"
-            )
-        else:
-            # Colorful cover style
-            full_prompt = (
-                f"Create a vibrant, colorful cover illustration perfect for a children's book. "
-                f"IMPORTANT: The illustration must fill the ENTIRE frame edge-to-edge "
-                f"with NO white margins or borders. "
-                f"Full-bleed design - the main subject should extend to all edges of the image. "
-                f"Rich colors, engaging composition. "
-                f"Content: {prompt}"
-            )
+        # Use prompt directly from strategy (no duplication)
+        # The strategy (e.g., ColoringBookStrategy) already builds the complete prompt
+        full_prompt = prompt
 
         logger.info(f"Generating cover via OpenRouter: {full_prompt[:100]}...")
 
@@ -140,7 +127,10 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                     }
                 ],
                 extra_body={
-                    "modalities": ["image", "text"]  # Required for Gemini image generation
+                    "modalities": ["image", "text"],  # Required for Gemini image generation
+                    "usage": {
+                        "include": True
+                    },  # Enable Usage Accounting for real cost (usage.cost)
                 },
                 extra_headers={
                     "HTTP-Referer": "https://ebook-generator.app",
@@ -150,6 +140,15 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                 temperature=0.7 if seed is None else 0.3,
                 # Note: OpenRouter doesn't support seed for image generation yet
             )
+
+            # Track usage with REAL cost from OpenRouter (includes platform fees)
+            if response.usage and hasattr(self, "token_tracker") and self.token_tracker:
+                logger.info(
+                    f"🔍 DEBUG: Tracking cost with TokenTracker ID: {id(self.token_tracker)}"
+                )
+                await self.token_tracker.add_usage_from_openrouter_response(
+                    response=response, model=self.model
+                )
 
             # Extract image from response
             image_bytes = self._extract_image_from_response(response)
@@ -184,6 +183,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
+        token_tracker=None,
     ) -> bytes:
         """Generate a content page (delegates to generate_cover with same logic).
 
@@ -191,6 +191,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             prompt: Text description of the page
             spec: ImageSpec specifications (dimensions, format, color mode)
             seed: Random seed for reproducibility
+            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             Page image as bytes
@@ -198,9 +199,9 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         Raises:
             DomainError: If generation fails
         """
-        return await self.generate_cover(prompt, spec, seed)
+        return await self.generate_cover(prompt, spec, seed, token_tracker)
 
-    async def convert_cover_to_line_art_with_gemini(
+    async def remove_text_from_cover(
         self,
         cover_bytes: bytes,
     ) -> bytes:
@@ -250,7 +251,12 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                         ],
                     }
                 ],
-                extra_body={"modalities": ["image", "text"]},
+                extra_body={
+                    "modalities": ["image", "text"],
+                    "usage": {
+                        "include": True
+                    },  # Enable Usage Accounting for real cost (usage.cost)
+                },
                 extra_headers={
                     "HTTP-Referer": "https://ebook-generator.app",
                     "X-Title": "Ebook Generator Backoffice",
@@ -258,6 +264,15 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                 max_tokens=1000,
                 temperature=0.3,
             )
+
+            # Track usage with REAL cost from OpenRouter (includes platform fees)
+            if response.usage and hasattr(self, "token_tracker") and self.token_tracker:
+                logger.info(
+                    f"🔍 DEBUG: Tracking cost with TokenTracker ID: {id(self.token_tracker)}"
+                )
+                await self.token_tracker.add_usage_from_openrouter_response(
+                    response=response, model=self.model
+                )
 
             # Extract transformed image (without text)
             image_bytes = self._extract_image_from_response(response)
@@ -324,7 +339,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
     def _add_rounded_border_to_image(
         self,
         image_bytes: bytes,
-        border_width: int = 10,
+        border_width: int = 5,
         corner_radius: int = 20,
         margin: int = 50,
     ) -> bytes:
@@ -332,7 +347,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
 
         Args:
             image_bytes: Original image bytes
-            border_width: Width of the border in pixels (default: 10px)
+            border_width: Width of the border in pixels (default: 5px)
             corner_radius: Radius for rounded corners in pixels (default: 20px)
             margin: White space between content and border in pixels (default: 50px)
 
@@ -610,7 +625,10 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                     }
                 ],
                 extra_body={
-                    "modalities": ["image", "text"]  # Required for Gemini image generation
+                    "modalities": ["image", "text"],  # Required for Gemini image generation
+                    "usage": {
+                        "include": True
+                    },  # Enable Usage Accounting for real cost (usage.cost)
                 },
                 extra_headers={
                     "HTTP-Referer": "https://ebook-generator.app",
@@ -619,6 +637,15 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                 max_tokens=1000,
                 temperature=0.7,
             )
+
+            # Track usage with REAL cost from OpenRouter (includes platform fees)
+            if response.usage and hasattr(self, "token_tracker") and self.token_tracker:
+                logger.info(
+                    f"🔍 DEBUG: Tracking cost with TokenTracker ID: {id(self.token_tracker)}"
+                )
+                await self.token_tracker.add_usage_from_openrouter_response(
+                    response=response, model=self.model
+                )
 
             # Extract image from response
             image_bytes = self._extract_image_from_response(response)

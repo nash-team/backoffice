@@ -1,5 +1,5 @@
 id: neutral-default
-label: "Thème Neutre (Par défaut)"
+label: "Neutral Theme (Default)"
 palette:
   base: ["#ffffff", "#f5f5f5", "#e0e0e0"]
   accents_allowed: ["#666666", "#333333"]

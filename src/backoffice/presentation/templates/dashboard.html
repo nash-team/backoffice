@@ -21,9 +21,15 @@
                     </div>
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link active text-white" href="/dashboard">
+                            <a class="nav-link active text-white" href="/">
                                 <i class="fas fa-home me-2"></i>
                                 Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="/dashboard/costs">
+                                <i class="fas fa-dollar-sign me-2"></i>
+                                Coûts de génération
                             </a>
                         </li>
                     </ul>
@@ -48,9 +54,10 @@
 
                 <!-- Stats Cards -->
                 <div class="row mb-4"
+                     id="stats-section"
                      data-testid="stats-section"
                      hx-get="/api/dashboard/stats"
-                     hx-trigger="load"
+                     hx-trigger="load, ebookCreated from:body"
                      hx-swap="innerHTML">
                     <!-- Les statistiques seront chargées dynamiquement par HTMX -->
                 </div>

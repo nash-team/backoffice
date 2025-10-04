@@ -60,10 +60,8 @@ async def test_regenerate_back_cover_success():
 
     mock_cover_service = AsyncMock()
     new_back_cover_bytes = b"new_back_cover_image"
-    # Mock the cover_port.convert_cover_to_line_art_with_gemini method
-    mock_cover_service.cover_port.convert_cover_to_line_art_with_gemini.return_value = (
-        new_back_cover_bytes
-    )
+    # Mock the cover_port.remove_text_from_cover method
+    mock_cover_service.cover_port.remove_text_from_cover.return_value = new_back_cover_bytes
 
     mock_assembly_service = AsyncMock()
     mock_file_storage = MagicMock()
@@ -82,7 +80,7 @@ async def test_regenerate_back_cover_success():
     # Assert
     assert result.id == ebook_id
     mock_repo.get_by_id.assert_called_once_with(ebook_id)
-    mock_cover_service.cover_port.convert_cover_to_line_art_with_gemini.assert_called_once_with(
+    mock_cover_service.cover_port.remove_text_from_cover.assert_called_once_with(
         cover_bytes=front_cover_bytes
     )
 

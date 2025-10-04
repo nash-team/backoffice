@@ -48,7 +48,7 @@ class FakeCoverGenerationPort(CoverGenerationPort):
         """Check if the provider is available."""
         return True
 
-    async def convert_cover_to_line_art_with_gemini(
+    async def remove_text_from_cover(
         self,
         cover_bytes: bytes,
     ) -> bytes:

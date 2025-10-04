@@ -42,6 +42,7 @@ class CoverGenerationService:
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
+        token_tracker=None,
     ) -> bytes:
         """Generate a cover image with quality validation.
 
@@ -49,6 +50,7 @@ class CoverGenerationService:
             prompt: Text description of the cover
             spec: Image specifications (dimensions, format, color mode)
             seed: Random seed for reproducibility
+            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             Cover image as bytes
@@ -65,7 +67,7 @@ class CoverGenerationService:
         # Check cache (idempotence)
         cache_key = self._compute_cache_key(prompt, seed)
         if self.enable_cache and cache_key in self._cache:
-            logger.info("✅ Cache hit for cover")
+            logger.info("✅ Cache hit for cover - NO COST TRACKED (cache return)")
             return self._cache[cache_key]
 
         # Check provider availability
@@ -79,6 +81,7 @@ class CoverGenerationService:
             prompt=prompt,
             spec=spec,
             seed=seed,
+            token_tracker=token_tracker,
         )
 
         # Post-validation

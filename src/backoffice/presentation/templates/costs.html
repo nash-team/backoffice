@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coûts de génération - Backoffice</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/presentation/static/css/dashboard.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        <h4 class="text-white">Backoffice</h4>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="/">
+                                <i class="fas fa-home me-2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active text-white" href="/dashboard/costs">
+                                <i class="fas fa-dollar-sign me-2"></i>
+                                Coûts de génération
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Coûts de génération</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <a href="/dashboard" class="btn btn-sm btn-outline-secondary me-2">
+                            <i class="fas fa-arrow-left"></i> Retour
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Total Cost Card -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card text-white bg-primary">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-dollar-sign me-2"></i>
+                                    Coût total
+                                </h5>
+                                <h2 class="mb-0">{{ total_cost|format_currency }}</h2>
+                                <small class="text-white-50">{{ cost_summaries|length }} ebook(s) avec coût tracé</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-success">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Coût moyen
+                                </h5>
+                                <h2 class="mb-0">
+                                    {% if cost_summaries|length > 0 %}
+                                        {{ (total_cost / cost_summaries|length)|format_currency }}
+                                    {% else %}
+                                        $0.00
+                                    {% endif %}
+                                </h2>
+                                <small class="text-white-50">par ebook</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Costs Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Détail des coûts par ebook</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if cost_summaries %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Titre</th>
+                                        <th>Thème</th>
+                                        <th>Public</th>
+                                        <th>Pages</th>
+                                        <th>Statut</th>
+                                        <th>Provider</th>
+                                        <th>Modèle</th>
+                                        <th>Durée</th>
+                                        <th>Date</th>
+                                        <th class="text-end">Tokens</th>
+                                        <th class="text-end">Coût</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for summary in cost_summaries %}
+                                    <tr>
+                                        <td>{{ summary.ebook.id }}</td>
+                                        <td>
+                                            <strong>{{ summary.ebook.title }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if summary.ebook.theme_id %}
+                                                <span class="badge bg-secondary">{{ summary.ebook.theme_id }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if summary.ebook.audience %}
+                                                <span class="badge bg-info">{{ summary.ebook.audience }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if summary.ebook.page_count %}
+                                                {{ summary.ebook.page_count }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if summary.ebook.status.value == "DRAFT" %}
+                                                <span class="badge bg-warning text-dark">Brouillon</span>
+                                            {% elif summary.ebook.status.value == "APPROVED" %}
+                                                <span class="badge bg-success">Approuvé</span>
+                                            {% elif summary.ebook.status.value == "REJECTED" %}
+                                                <span class="badge bg-danger">Rejeté</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if summary.ebook.generation_metadata %}
+                                                <span class="badge bg-dark">{{ summary.ebook.generation_metadata.provider }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if summary.ebook.generation_metadata %}
+                                                <small class="text-muted">{{ summary.ebook.generation_metadata.model }}</small>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if summary.ebook.generation_metadata %}
+                                                <span class="badge bg-info">{{ "%.1f"|format(summary.ebook.generation_metadata.duration_seconds) }}s</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if summary.ebook.created_at %}
+                                                {{ summary.ebook.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            {% if summary.ebook.generation_metadata %}
+                                                <small class="text-muted d-block">
+                                                    <i class="fas fa-sign-in-alt"></i> In: {{ summary.ebook.generation_metadata.prompt_tokens|number_format }}
+                                                </small>
+                                                <small class="text-muted d-block">
+                                                    <i class="fas fa-sign-out-alt"></i> Out: {{ summary.ebook.generation_metadata.completion_tokens|number_format }}
+                                                </small>
+                                                <strong class="text-primary">
+                                                    <i class="fas fa-equals"></i> {{ summary.ebook.generation_metadata.total_tokens|number_format }}
+                                                </strong>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="text-primary">{{ summary.cost|format_currency }}</strong>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Aucun ebook avec coût de génération enregistré.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

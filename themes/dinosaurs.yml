@@ -1,5 +1,5 @@
 id: dinosaurs
-label: "Dinosaures"
+label: "Dinosaurs"
 palette:
   base: ["#35654d", "#6a8f49", "#e0b46b"]
   accents_allowed: ["#ffd166"]

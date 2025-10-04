@@ -8,6 +8,7 @@ from backoffice.domain.entities.ebook import EbookStatus
 from backoffice.domain.entities.pagination import PaginationParams
 from backoffice.domain.errors.error_taxonomy import DomainError
 from backoffice.domain.usecases.approve_ebook import ApproveEbookUseCase
+from backoffice.domain.usecases.get_ebook_costs import GetEbookCostsUseCase
 from backoffice.domain.usecases.get_ebooks import GetEbooksUseCase
 from backoffice.domain.usecases.get_stats import GetStatsUseCase
 from backoffice.domain.usecases.reject_ebook import RejectEbookUseCase
@@ -194,9 +195,16 @@ async def create_ebook(
         # Handle theme-based generation for coloring books
         theme_repository = ThemeRepository()
 
-        # ✨ NEW ARCHITECTURE: Use hexagonal architecture for coloring book generation
-        from backoffice.application.ebook_generation_facade import EbookGenerationFacade
-        from backoffice.domain.entities.generation_request import AgeGroup as NewAgeGroup
+        # ✨ NEW ARCHITECTURE: Use UseCase + Strategy pattern
+        import uuid
+
+        from backoffice.application.strategies.strategy_factory import StrategyFactory
+        from backoffice.domain.entities.generation_request import (
+            AgeGroup as NewAgeGroup,
+            EbookType,
+            GenerationRequest,
+        )
+        from backoffice.domain.usecases.create_ebook import CreateEbookUseCase
 
         # Validate required parameters
         if not theme_id:
@@ -226,89 +234,36 @@ async def create_ebook(
         pages_count = 1 if is_preview else (number_of_pages or 24)
 
         mode_label = "PREVIEW" if is_preview else "PRODUCTION"
-        logger.info(f"🎨 Generating coloring book via NEW ARCHITECTURE ({mode_label} MODE)")
+        logger.info(f"🎨 Generating coloring book via UseCase + Strategy ({mode_label} MODE)")
         logger.info(f"   Theme: {theme.label} ({theme.blocks.subject})")
         logger.info(f"   Age group: {new_age_group.value}")
         logger.info(f"   Pages: {pages_count}")
 
-        # 🚀 Call new architecture facade
-        generation_result = await EbookGenerationFacade.generate_coloring_book(
-            title=title or f"Livre de coloriage - {theme.label}",
+        # Create generation request
+        request_id = str(uuid.uuid4())
+        generation_request = GenerationRequest(
+            title=title or f"Coloring Book - {theme.label}",  # English format
             theme=theme_id,  # Use theme ID for prompt template matching
             age_group=new_age_group,
+            ebook_type=EbookType.COLORING,
             page_count=pages_count,
+            request_id=request_id,
             seed=None,
         )
 
-        logger.info(f"✅ NEW ARCHITECTURE: PDF generated at {generation_result.pdf_uri}")
-        logger.info(f"   Total pages: {len(generation_result.pages_meta)}")
+        # Create strategy and use case with dependencies
+        strategy = StrategyFactory.create_strategy(EbookType.COLORING, request_id=request_id)
+        ebook_repo = factory.get_ebook_repository()
+        file_storage = factory.get_file_storage()
 
-        # 📝 DRAFT workflow: PDF NOT uploaded to Drive automatically
-        # Upload will happen only after manual approval
-        import pathlib
-
-        pdf_path = pathlib.Path(generation_result.pdf_uri.replace("file://", ""))
-        logger.info(f"📝 Ebook created in DRAFT status (awaiting approval): {pdf_path}")
-
-        # 🎯 NEW ARCHITECTURE SHORTCUT: PDF is already generated, save ebook directly
-        import base64
-
-        from backoffice.domain.entities.ebook import Ebook, EbookStatus
-
-        # Build structure_json with pages metadata for regeneration
-        structure_json = {
-            "is_preview": is_preview,  # Store preview mode flag
-            "pages_meta": [
-                {
-                    "page_number": page_meta.page_number,
-                    "title": page_meta.title,
-                    "image_format": page_meta.format,
-                    "image_data_base64": base64.b64encode(page_meta.image_data).decode(),
-                }
-                for page_meta in generation_result.pages_meta
-            ],
-        }
-
-        # Store cover without text (if available) for KDP back cover generation
-        if (
-            hasattr(generation_result, "cover_no_text_bytes")
-            and generation_result.cover_no_text_bytes
-        ):
-            structure_json["cover_no_text_base64"] = base64.b64encode(
-                generation_result.cover_no_text_bytes
-            ).decode()
-            logger.info("✅ Stored cover without text for KDP back cover generation")
-
-        # Create ebook entity in DRAFT status (no Drive upload yet)
-        new_ebook = Ebook(
-            id=0,  # Will be set by repository
-            title=title or f"Livre de coloriage - {theme.label}",
-            author=author or "Auteur Inconnu",
-            created_at=None,  # Will be set by repository
-            status=EbookStatus.DRAFT,  # ✅ DRAFT - awaiting approval
-            preview_url=None,  # Will be set after approval
-            drive_id=None,  # Will be set after approval
-            config=None,  # No config needed for new arch
-            theme_id=theme_id,
-            theme_version=theme_repository.get_theme_version(theme_id),
-            audience=audience,
-            structure_json=structure_json,  # Store pages for regeneration
-            page_count=len(generation_result.pages_meta),
+        create_ebook_usecase = CreateEbookUseCase(
+            ebook_repository=ebook_repo,
+            generation_strategy=strategy,
+            file_storage=file_storage,
         )
 
-        # Save to repository
-        ebook_repo = factory.get_ebook_repository()
-        saved_ebook = await ebook_repo.create(new_ebook)
-        logger.info(f"✅ Ebook saved to database: ID={saved_ebook.id}")
-
-        # Save PDF bytes for DRAFT workflow (for regeneration/approval)
-        try:
-            with open(pdf_path, "rb") as f:
-                pdf_bytes = f.read()
-            await ebook_repo.save_ebook_bytes(saved_ebook.id, pdf_bytes)
-            logger.info(f"✅ PDF bytes saved to database for ebook {saved_ebook.id}")
-        except Exception as e:
-            logger.warning(f"⚠️ Failed to save PDF bytes: {e}")
+        # Execute use case
+        await create_ebook_usecase.execute(generation_request, is_preview=is_preview)
 
         # Get updated ebooks list for response
         from backoffice.domain.entities.pagination import PaginationParams
@@ -352,7 +307,8 @@ async def create_ebook(
                 "current_status": None,
             },
         )
-        response.headers["HX-Trigger"] = '{"ebook:created": true}'
+        # Trigger HTMX event to refresh stats
+        response.headers["HX-Trigger"] = '{"ebookCreated": true}'
         return response
 
     except ValueError as e:
@@ -565,6 +521,40 @@ async def export_ebook_to_kdp(
             status_code=500,
             detail="Error exporting to KDP format. Please try again.",
         ) from e
+
+
+@router.get("/costs")
+async def get_costs_page(request: Request, factory: RepositoryFactoryDep) -> Response:
+    """Display ebook generation costs page.
+
+    Args:
+        request: FastAPI request object
+        factory: Repository factory for data access
+
+    Returns:
+        Rendered costs page template
+    """
+    try:
+        ebook_repo = factory.get_ebook_repository()
+        get_costs_usecase = GetEbookCostsUseCase(ebook_repo)
+        cost_summaries = await get_costs_usecase.execute()
+
+        # Calculate total cost
+        from decimal import Decimal
+
+        total_cost = sum((s.cost for s in cost_summaries), Decimal("0"))
+
+        return templates.TemplateResponse(
+            "costs.html",
+            {
+                "request": request,
+                "cost_summaries": cost_summaries,
+                "total_cost": total_cost,
+            },
+        )
+    except Exception as e:
+        logger.error(f"Error loading costs page: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error loading costs page") from e
 
 
 # Route removed: submit_ebook_for_validation (PENDING status no longer exists)

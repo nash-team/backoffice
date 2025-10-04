@@ -36,6 +36,41 @@ async def login_page(request: Request) -> Any:
     return templates.TemplateResponse("login.html", {"request": request})
 
 
+@pages_router.get("/dashboard/costs")
+async def costs_page(request: Request) -> Any:
+    """Display costs page with data."""
+    from decimal import Decimal
+
+    from backoffice.domain.usecases.get_ebook_costs import GetEbookCostsUseCase
+    from backoffice.infrastructure.database import get_db
+    from backoffice.infrastructure.factories.repository_factory import RepositoryFactory
+
+    # Get database session
+    db = next(get_db())
+    try:
+        # Create repository factory
+        factory = RepositoryFactory(db)
+        ebook_repo = factory.get_ebook_repository()
+
+        # Execute use case
+        get_costs_usecase = GetEbookCostsUseCase(ebook_repo)
+        cost_summaries = await get_costs_usecase.execute()
+
+        # Calculate total cost
+        total_cost = sum((s.cost for s in cost_summaries), Decimal("0"))
+
+        return templates.TemplateResponse(
+            "costs.html",
+            {
+                "request": request,
+                "cost_summaries": cost_summaries,
+                "total_cost": total_cost,
+            },
+        )
+    finally:
+        db.close()
+
+
 # Fonction pour initialiser toutes les routes
 def init_routes(app: FastAPI) -> None:
     app.include_router(pages_router)

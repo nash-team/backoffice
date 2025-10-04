@@ -4,7 +4,7 @@ import logging
 from io import BytesIO
 from typing import cast
 
-import img2pdf  # type: ignore[import-not-found]
+import img2pdf
 from PIL import Image
 
 from backoffice.domain.entities.ebook import (

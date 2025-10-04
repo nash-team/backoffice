@@ -1,5 +1,5 @@
 id: unicorns
-label: "Licornes"
+label: "Unicorns"
 palette:
   base: ["#ffffff", "#ffe8fb"]
   accents_allowed: ["rainbow", "sparkles", "stars"]

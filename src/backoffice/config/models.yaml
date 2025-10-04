@@ -3,14 +3,71 @@
 
 models:
   # Cover generation: colorful, full-bleed
+  # Using Gemini 2.5 Flash Image - BEST quality for children's illustrations ($0.04/image)
   cover:
     provider: openrouter
     model: google/gemini-2.5-flash-image-preview
     supports_vectorization: false
 
+    # Alternative: Gemini Nano Banana (good quality but 13x more expensive)
+    #provider: gemini
+    #model: gemini-2.5-flash-image
+    #supports_vectorization: false
+
+    # Alternative: Local SDXL-turbo (FREE but lower quality)
+    #provider: local
+    #model: stabilityai/sdxl-turbo
+    #supports_vectorization: false
+
+    # Alternative: Local FLUX.1-schnell (FREE but HEAVY: 17GB RAM)
+    #provider: local
+    #model: black-forest-labs/FLUX.1-schnell
+    #supports_vectorization: false
+
+    # Alternative: Hugging Face (FREE but quota limited)
+    #provider: huggingface
+    #model: black-forest-labs/FLUX.1-schnell
+    #supports_vectorization: false
+
+    # Alternative: OpenRouter (requires credits)
+    #provider: openrouter
+    #model: google/gemini-2.5-flash-image-preview
+    #supports_vectorization: false
+
   # Content page generation: B&W coloring pages
-  # Using Gemini via OpenRouter (same as cover, reliable and fast)
+  # Using Local SDXL-Turbo + ColoringBook LoRA + ControlNet LineArt - FREE, FAST (6x faster than base) and professional line art quality!
   coloring_page:
-    provider: openrouter
-    model: google/gemini-2.5-flash-image-preview
+    provider: gemini
+    model: gemini-2.5-flash-image
     supports_vectorization: false
+
+    #provider: local
+    #model: stabilityai/sdxl-turbo
+    #lora: artificialguybr/ColoringBookRedmond-V2
+    #controlnet: diffusers/controlnet-canny-sdxl-1.0
+    #supports_vectorization: false
+
+    # Alternative: Gemini Nano Banana (good quality but 13x more expensive)
+    #provider: gemini
+    #model: gemini-2.5-flash-image
+    #supports_vectorization: false
+
+    # Alternative: Local SDXL-turbo (FREE but lower quality)
+    #provider: local
+    #model: stabilityai/sdxl-turbo
+    #supports_vectorization: false
+
+    # Alternative: Local FLUX.1-schnell (FREE but HEAVY: 17GB RAM)
+    #provider: local
+    #model: black-forest-labs/FLUX.1-schnell
+    #supports_vectorization: false
+
+    # Alternative: Hugging Face (FREE but quota limited)
+    #provider: huggingface
+    #model: black-forest-labs/FLUX.1-schnell
+    #supports_vectorization: false
+
+    # Alternative: OpenRouter Gemini (requires credits)
+    #provider: openrouter
+    #model: google/gemini-2.5-flash-image-preview
+    #supports_vectorization: false
