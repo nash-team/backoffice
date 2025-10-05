@@ -73,6 +73,7 @@ dev = [
   "types-requests",
   "types-python-dateutil",
   "types-pyyaml",
+  "types-pillow",
 
   # Tests & e2e
   "pytest==7.4.3",
@@ -170,6 +171,10 @@ disable_error_code = ["arg-type", "assignment", "union-attr", "return-value", "a
 [[tool.mypy.overrides]]
 module = ["backoffice.features.ebook_export.*"]
 disable_error_code = ["redundant-cast"]
+
+[[tool.mypy.overrides]]
+module = ["img2pdf"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["tests.*", "pytest", "testcontainers.*"]

@@ -38,6 +38,8 @@ def convert_rgb_to_cmyk(
     try:
         # ICC profile conversion
         cmyk_img = ImageCms.profileToProfile(img, icc_rgb, icc_cmyk, outputMode="CMYK")
+        if cmyk_img is None:
+            raise ValueError("ProfileToProfile returned None")
         logger.info(f"✅ Conversion CMYK avec profil {icc_cmyk}")
 
         # Save as TIFF with explicit DPI

@@ -37,7 +37,6 @@ def upgrade() -> None:
         existing_type=postgresql.TIMESTAMP(timezone=True),
         type_=sa.DateTime(),
         nullable=False,
-        existing_server_default=sa.text("now()"),
     )
     op.drop_index("ix_ebooks_id", table_name="ebooks")
     op.drop_column("users", "updated_at")
@@ -59,7 +58,6 @@ def downgrade() -> None:
         existing_type=sa.DateTime(),
         type_=postgresql.TIMESTAMP(timezone=True),
         nullable=True,
-        existing_server_default=sa.text("now()"),
     )
     op.alter_column(
         "ebooks",
