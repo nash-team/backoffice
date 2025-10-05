@@ -166,7 +166,7 @@
 
         <!-- Approve Button (DRAFT → upload to Drive → APPROVED) -->
         <button class="btn btn-success"
-                hx-post="/api/ebooks/{{ ebook.id }}/approve"
+                hx-put="/api/dashboard/ebooks/{{ ebook.id }}/approve"
                 hx-indicator="#approveSpinner-{{ ebook.id }}"
                 hx-disabled-elt="this"
                 hx-on::after-request="
@@ -183,7 +183,7 @@
 
         <!-- Reject Button (DRAFT → REJECTED) -->
         <button class="btn btn-danger"
-                hx-post="/api/ebooks/{{ ebook.id }}/reject"
+                hx-put="/api/dashboard/ebooks/{{ ebook.id }}/reject"
                 hx-indicator="#rejectSpinner-{{ ebook.id }}"
                 hx-disabled-elt="this"
                 hx-confirm="Êtes-vous sûr de vouloir rejeter cet ebook ?"
@@ -203,7 +203,7 @@
         <!-- APPROVED Status Actions: Reject only (if problem found) -->
         {% if ebook.status.value == 'APPROVED' %}
         <button class="btn btn-outline-danger"
-                hx-post="/api/ebooks/{{ ebook.id }}/reject"
+                hx-put="/api/dashboard/ebooks/{{ ebook.id }}/reject"
                 hx-indicator="#rejectApprovedSpinner-{{ ebook.id }}"
                 hx-disabled-elt="this"
                 hx-confirm="Êtes-vous sûr de vouloir rejeter cet ebook approuvé ?"

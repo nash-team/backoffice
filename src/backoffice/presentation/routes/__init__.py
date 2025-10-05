@@ -3,6 +3,9 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 
+from backoffice.features.ebook_lifecycle.presentation.routes import (
+    router as ebook_lifecycle_router,
+)
 from backoffice.features.generation_costs.presentation.routes import (
     pages_router as costs_pages_router,
     router as generation_costs_router,
@@ -50,12 +53,14 @@ async def login_page(request: Request) -> Any:
 def init_routes(app: FastAPI) -> None:
     app.include_router(pages_router)
     app.include_router(auth_router)
+    # Feature routes (registered BEFORE dashboard to take precedence)
+    app.include_router(ebook_lifecycle_router)  # Ebook lifecycle (approval, rejection, stats)
+    app.include_router(generation_costs_router)  # API routes
+    app.include_router(costs_pages_router)  # Page routes
+    # Legacy routes
     app.include_router(dashboard_router)
     app.include_router(ebook_router)
     app.include_router(ebook_operations_router)  # Ebook operations (regeneration, etc.)
     # Legacy theme_router disabled
     # app.include_router(theme_router)
     app.include_router(redirect_router)
-    # Feature routes
-    app.include_router(generation_costs_router)  # API routes
-    app.include_router(costs_pages_router)  # Page routes
