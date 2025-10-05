@@ -8,7 +8,7 @@ from sqlalchemy import engine_from_config, pool
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from backoffice.infrastructure.models.user_model import Base
+from backoffice.features.shared.infrastructure.models.user_model import Base
 
 # Ajouter le répertoire racine au PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))

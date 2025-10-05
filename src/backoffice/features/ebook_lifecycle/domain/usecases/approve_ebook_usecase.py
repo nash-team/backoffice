@@ -2,13 +2,13 @@
 
 import logging
 
-from backoffice.domain.entities.ebook import Ebook, EbookStatus
-from backoffice.domain.errors.error_taxonomy import DomainError, ErrorCode
-from backoffice.domain.ports.ebook.ebook_port import EbookPort
-from backoffice.domain.ports.file_storage_port import FileStoragePort
 from backoffice.features.ebook_lifecycle.domain.events.ebook_approved_event import (
     EbookApprovedEvent,
 )
+from backoffice.features.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
+from backoffice.features.shared.domain.ports.ebook.ebook_port import EbookPort
+from backoffice.features.shared.domain.ports.file_storage_port import FileStoragePort
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)

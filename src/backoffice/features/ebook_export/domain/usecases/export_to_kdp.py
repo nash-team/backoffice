@@ -1,19 +1,27 @@
 """Use case for exporting ebook to Amazon KDP format."""
 
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from backoffice.domain.entities.ebook import (
+from backoffice.features.ebook_export.domain.events.kdp_export_generated_event import (
+    KDPExportGeneratedEvent,
+)
+from backoffice.features.shared.domain.entities.ebook import (
     Ebook,
     EbookStatus,
     KDPExportConfig,
 )
-from backoffice.domain.errors.error_taxonomy import DomainError, ErrorCode
-from backoffice.domain.ports.ebook.ebook_port import EbookPort
-from backoffice.features.ebook_export.domain.events.kdp_export_generated_event import (
-    KDPExportGeneratedEvent,
-)
+from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
+from backoffice.features.shared.domain.ports.ebook.ebook_port import EbookPort
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
+
+if TYPE_CHECKING:
+    from backoffice.features.shared.infrastructure.providers.kdp_assembly_provider import (
+        KDPAssemblyProvider,
+    )
+    from backoffice.features.shared.infrastructure.providers.openrouter_image_provider import (
+        OpenRouterImageProvider,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +33,8 @@ class ExportToKDPUseCase:
         self,
         ebook_repository: EbookPort,
         event_bus: EventBus,
-        image_provider=None,
-        kdp_assembly_provider=None,
+        image_provider: "OpenRouterImageProvider | None" = None,
+        kdp_assembly_provider: "KDPAssemblyProvider | None" = None,
     ):
         self.ebook_repository = ebook_repository
         self.event_bus = event_bus
@@ -118,18 +126,14 @@ class ExportToKDPUseCase:
 
         # 5. Initialize providers if not injected
         if not self.image_provider:
-            from backoffice.infrastructure.providers.openrouter_image_provider import (
-                OpenRouterImageProvider,
-            )
+            from backoffice.features.shared.infrastructure import providers
 
-            self.image_provider = OpenRouterImageProvider()
+            self.image_provider = providers.openrouter_image_provider.OpenRouterImageProvider()
 
         if not self.kdp_assembly_provider:
-            from backoffice.infrastructure.providers.kdp_assembly_provider import (
-                KDPAssemblyProvider,
-            )
+            from backoffice.features.shared.infrastructure import providers
 
-            self.kdp_assembly_provider = KDPAssemblyProvider()
+            self.kdp_assembly_provider = providers.kdp_assembly_provider.KDPAssemblyProvider()
 
         # 6. Get front cover bytes (WITH text - for assembly)
         front_cover_bytes = await self._get_front_cover_bytes(ebook)

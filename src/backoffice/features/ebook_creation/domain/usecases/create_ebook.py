@@ -5,12 +5,14 @@ import logging
 from datetime import datetime
 from typing import cast
 
-from backoffice.domain.entities.ebook import Ebook, EbookStatus
-from backoffice.domain.entities.generation_request import GenerationRequest
-from backoffice.domain.ports.ebook.ebook_port import EbookPort
-from backoffice.domain.ports.ebook_generation_strategy_port import EbookGenerationStrategyPort
-from backoffice.domain.ports.file_storage_port import FileStoragePort
 from backoffice.features.ebook_creation.domain.events.ebook_created_event import EbookCreatedEvent
+from backoffice.features.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.shared.domain.entities.generation_request import GenerationRequest
+from backoffice.features.shared.domain.ports.ebook.ebook_port import EbookPort
+from backoffice.features.shared.domain.ports.ebook_generation_strategy_port import (
+    EbookGenerationStrategyPort,
+)
+from backoffice.features.shared.domain.ports.file_storage_port import FileStoragePort
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)

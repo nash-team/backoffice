@@ -5,9 +5,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 
-from backoffice.domain.cover_generation import CoverGenerationService
-from backoffice.domain.page_generation import ContentPageGenerationService
-from backoffice.domain.pdf_assembly import PDFAssemblyService
 from backoffice.features.ebook_regeneration.domain.entities.page_type import PageType
 from backoffice.features.ebook_regeneration.domain.entities.regeneration_request import (
     RegenerationRequest,
@@ -21,13 +18,16 @@ from backoffice.features.ebook_regeneration.domain.usecases.regenerate_content_p
 from backoffice.features.ebook_regeneration.domain.usecases.regenerate_cover import (
     RegenerateCoverUseCase,
 )
+from backoffice.features.shared.domain.cover_generation import CoverGenerationService
+from backoffice.features.shared.domain.page_generation import ContentPageGenerationService
+from backoffice.features.shared.domain.pdf_assembly import PDFAssemblyService
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
-from backoffice.infrastructure.factories.repository_factory import (
+from backoffice.features.shared.infrastructure.factories.repository_factory import (
     AsyncRepositoryFactory,
     get_async_repository_factory,
 )
-from backoffice.infrastructure.providers.provider_factory import ProviderFactory
-from backoffice.infrastructure.providers.weasyprint_assembly_provider import (
+from backoffice.features.shared.infrastructure.providers.provider_factory import ProviderFactory
+from backoffice.features.shared.infrastructure.providers.weasyprint_assembly_provider import (
     WeasyPrintAssemblyProvider,
 )
 

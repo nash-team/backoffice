@@ -9,11 +9,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import Response
 
-from backoffice.infrastructure.factories.repository_factory import (
+from backoffice.features.shared.infrastructure.factories.repository_factory import (
     AsyncRepositoryFactory,
     get_async_repository_factory,
 )
-from backoffice.presentation.routes.templates import templates
+from backoffice.features.shared.presentation.routes.templates import templates
 
 AsyncRepositoryFactoryDep = Annotated[AsyncRepositoryFactory, Depends(get_async_repository_factory)]
 

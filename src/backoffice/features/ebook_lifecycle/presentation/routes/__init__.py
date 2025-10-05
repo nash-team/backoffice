@@ -18,11 +18,11 @@ from backoffice.features.ebook_lifecycle.domain.usecases.reject_ebook_usecase im
     RejectEbookUseCase,
 )
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
-from backoffice.infrastructure.factories.repository_factory import (
+from backoffice.features.shared.infrastructure.factories.repository_factory import (
     RepositoryFactory,
     get_repository_factory,
 )
-from backoffice.presentation.routes.templates import templates
+from backoffice.features.shared.presentation.routes.templates import templates
 
 RepositoryFactoryDep = Annotated[RepositoryFactory, Depends(get_repository_factory)]
 

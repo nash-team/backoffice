@@ -4,16 +4,16 @@ import base64
 import logging
 from pathlib import Path
 
-from backoffice.domain.entities.ebook import Ebook, EbookStatus
-from backoffice.domain.entities.generation_request import ColorMode, ImageSpec
-from backoffice.domain.page_generation import ContentPageGenerationService
-from backoffice.domain.pdf_assembly import PDFAssemblyService
-from backoffice.domain.ports.assembly_port import AssembledPage
-from backoffice.domain.ports.ebook.ebook_port import EbookPort
-from backoffice.domain.ports.file_storage_port import FileStoragePort
 from backoffice.features.ebook_regeneration.domain.events.content_page_regenerated_event import (
     ContentPageRegeneratedEvent,
 )
+from backoffice.features.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
+from backoffice.features.shared.domain.page_generation import ContentPageGenerationService
+from backoffice.features.shared.domain.pdf_assembly import PDFAssemblyService
+from backoffice.features.shared.domain.ports.assembly_port import AssembledPage
+from backoffice.features.shared.domain.ports.ebook.ebook_port import EbookPort
+from backoffice.features.shared.domain.ports.file_storage_port import FileStoragePort
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)

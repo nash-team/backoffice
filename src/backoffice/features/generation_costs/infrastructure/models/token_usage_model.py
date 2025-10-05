@@ -6,7 +6,7 @@ from decimal import Decimal
 from sqlalchemy import NUMERIC, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from backoffice.infrastructure.models.ebook_model import Base
+from backoffice.features.shared.infrastructure.models.ebook_model import Base
 
 
 class TokenUsageModel(Base):

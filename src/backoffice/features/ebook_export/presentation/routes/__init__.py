@@ -6,11 +6,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response as FastAPIResponse
 
-from backoffice.domain.errors.error_taxonomy import DomainError
 from backoffice.features.ebook_export.domain.usecases.export_ebook_pdf import ExportEbookPdfUseCase
 from backoffice.features.ebook_export.domain.usecases.export_to_kdp import ExportToKDPUseCase
+from backoffice.features.shared.domain.errors.error_taxonomy import DomainError
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
-from backoffice.infrastructure.factories.repository_factory import (
+from backoffice.features.shared.infrastructure.factories.repository_factory import (
     RepositoryFactory,
     get_repository_factory,
 )

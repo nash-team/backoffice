@@ -5,7 +5,24 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backoffice.presentation.routes import init_routes
+from backoffice.features.ebook_creation.presentation.routes import (
+    router as ebook_creation_router,
+)
+from backoffice.features.ebook_creation.presentation.routes.form_routes import (
+    router as ebook_form_router,
+)
+from backoffice.features.ebook_export.presentation.routes import router as ebook_export_router
+from backoffice.features.ebook_lifecycle.presentation.routes import (
+    router as ebook_lifecycle_router,
+)
+from backoffice.features.ebook_listing.presentation.routes import router as ebook_listing_router
+from backoffice.features.ebook_regeneration.presentation.routes import (
+    router as ebook_regeneration_router,
+)
+from backoffice.features.generation_costs.presentation.routes import (
+    router as generation_costs_router,
+)
+from backoffice.features.shared.presentation.routes.auth import router as auth_router
 
 app = FastAPI(title="Backoffice")
 
@@ -42,8 +59,8 @@ app.add_middleware(
 
 BASE_DIR = Path(__file__).resolve().parent
 app.mount(
-    "/presentation/static",
-    StaticFiles(directory=BASE_DIR / "presentation" / "static"),
+    "/static",
+    StaticFiles(directory=BASE_DIR / "features" / "shared" / "presentation" / "static"),
     name="static",
 )
 
@@ -64,8 +81,8 @@ async def test_reset_database() -> tuple[dict[str, str], int] | dict[str, str]:
 
     try:
         # Importer et utiliser les modèles pour reset la DB
-        from backoffice.infrastructure.database import get_db
-        from backoffice.infrastructure.models.ebook_model import EbookModel
+        from backoffice.features.shared.infrastructure.database import get_db
+        from backoffice.features.shared.infrastructure.models.ebook_model import EbookModel
 
         db = next(get_db())
         # Supprimer toutes les données
@@ -77,8 +94,15 @@ async def test_reset_database() -> tuple[dict[str, str], int] | dict[str, str]:
         return {"error": str(e)}, 500
 
 
-# Initialisation des routes
-init_routes(app)
+# Register all feature routes
+app.include_router(auth_router)
+app.include_router(ebook_listing_router)
+app.include_router(ebook_creation_router)
+app.include_router(ebook_form_router)
+app.include_router(ebook_lifecycle_router)
+app.include_router(ebook_export_router)
+app.include_router(ebook_regeneration_router)
+app.include_router(generation_costs_router)
 
 if __name__ == "__main__":
     import uvicorn

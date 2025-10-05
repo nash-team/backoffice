@@ -7,22 +7,22 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import Response
 
-from backoffice.domain.entities.generation_request import (
+from backoffice.features.ebook_creation.domain.entities.creation_request import CreationRequest
+from backoffice.features.ebook_creation.domain.usecases.create_ebook import CreateEbookUseCase
+from backoffice.features.ebook_listing.domain.usecases.get_ebooks import GetEbooksUseCase
+from backoffice.features.shared.domain.entities.generation_request import (
     AgeGroup,
     EbookType,
     GenerationRequest,
 )
-from backoffice.domain.entities.pagination import PaginationParams
-from backoffice.domain.usecases.get_ebooks import GetEbooksUseCase
-from backoffice.features.ebook_creation.domain.entities.creation_request import CreationRequest
-from backoffice.features.ebook_creation.domain.usecases.create_ebook import CreateEbookUseCase
+from backoffice.features.shared.domain.entities.pagination import PaginationParams
+from backoffice.features.shared.infrastructure.adapters.theme_repository import ThemeRepository
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
-from backoffice.infrastructure.adapters.theme_repository import ThemeRepository
-from backoffice.infrastructure.factories.repository_factory import (
+from backoffice.features.shared.infrastructure.factories.repository_factory import (
     RepositoryFactory,
     get_repository_factory,
 )
-from backoffice.presentation.routes.templates import templates
+from backoffice.features.shared.presentation.routes.templates import templates
 
 # Type alias for dependency injection
 RepositoryFactoryDep = Annotated[RepositoryFactory, Depends(get_repository_factory)]
@@ -123,7 +123,9 @@ async def create_ebook(
     )
 
     # Step 6: Create strategy and use case with dependencies
-    from backoffice.application.strategies.strategy_factory import StrategyFactory
+    from backoffice.features.ebook_creation.domain.strategies.strategy_factory import (
+        StrategyFactory,
+    )
 
     strategy = StrategyFactory.create_strategy(EbookType.COLORING, request_id=request_id)
     ebook_repo = factory.get_ebook_repository()

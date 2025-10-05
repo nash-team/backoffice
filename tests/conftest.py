@@ -11,11 +11,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 
-from src.backoffice.infrastructure.database import get_db
-from src.backoffice.main import app
+from backoffice.features.shared.infrastructure.database import get_db
+from backoffice.main import app
 
 # Import models after app to ensure they are registered
-from src.backoffice.infrastructure.models.ebook_model import Base  # noqa: E402
+from backoffice.features.shared.infrastructure.models.ebook_model import Base  # noqa: E402
 
 
 @pytest.fixture(scope="session")
@@ -59,7 +59,7 @@ def test_db_session(test_engine):
         # This handles both committed and uncommitted data
         session.rollback()
         # Truncate all tables to ensure clean state for next test
-        from src.backoffice.infrastructure.models.ebook_model import EbookModel
+        from backoffice.features.shared.infrastructure.models.ebook_model import EbookModel
 
         session.query(EbookModel).delete()
         session.commit()
@@ -76,7 +76,7 @@ def test_client(postgres_container, test_db_session):
     os.environ["DATABASE_URL"] = postgres_container.get_connection_url()
 
     # Clear any cached engine to force reload with new URL
-    from src.backoffice.infrastructure.database import _get_engine
+    from backoffice.features.shared.infrastructure.database import _get_engine
 
     _get_engine.cache_clear()
 

@@ -2,9 +2,9 @@
 
 import logging
 
-from backoffice.domain.errors.error_taxonomy import DomainError, ErrorCode
-from backoffice.domain.ports.ebook.ebook_port import EbookPort
 from backoffice.features.ebook_export.domain.events.ebook_exported_event import EbookExportedEvent
+from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
+from backoffice.features.shared.domain.ports.ebook.ebook_port import EbookPort
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)

@@ -73,6 +73,7 @@ dev = [
   "types-requests",
   "types-python-dateutil",
   "types-pyyaml",
+  "pytest-stubs",
 
   # Tests & e2e
   "pytest==7.4.3",
@@ -116,19 +117,18 @@ known-first-party = ["backoffice"]
 combine-as-imports = true
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "S603", "S607", "S104", "E501", "E402", "I001"]  # Allow subprocess usage, binding, long lines, imports after code and import sorting in tests
-"features/**/tests/**" = ["S101", "E501"]  # Allow asserts and long lines in feature tests
+"tests/**" = ["S101", "S603", "S607", "S104", "E501", "I001"]  # Allow subprocess usage, binding, long lines, import sorting in tests (removed E402)
+"features/**/tests/**" = ["S101", "E501"]  # Allow asserts and long lines in feature tests (E402 enforced for clean imports)
 "src/backoffice/main.py" = ["S104"]  # Allow 0.0.0.0 binding when explicitly configured
-"src/backoffice/infrastructure/adapters/potrace_vectorizer.py" = ["S603", "S607", "S314"]  # Allow subprocess calls for external tool integration and XML parsing
-"src/backoffice/infrastructure/providers/*.py" = ["S101", "F821", "E501"]  # Allow asserts, undefined names from dynamic imports, long lines in docstrings
-"src/backoffice/domain/usecases/create_ebook.py" = ["S101"]  # Allow assert for post-creation validation
+"src/backoffice/features/shared/infrastructure/adapters/potrace_vectorizer.py" = ["S603", "S607", "S314"]  # Allow subprocess calls for external tool integration and XML parsing
+"src/backoffice/features/shared/infrastructure/providers/*.py" = ["S101", "F821", "E501"]  # Allow asserts, undefined names from dynamic imports, long lines in docstrings
 "src/backoffice/migrations/**" = ["E501"]  # Allow long lines in alembic migrations (auto-generated code)
 
 # --- Mypy ---
 [tool.mypy]
 python_version = "3.11"
 plugins = ["pydantic.mypy"]
-mypy_path = "src:features"
+mypy_path = "src"
 namespace_packages = true
 explicit_package_bases = true
 exclude = ["scripts/", "tests/", "features/.*/tests/"]
@@ -157,35 +157,24 @@ module = ["replicate", "torch", "diffusers", "controlnet_aux", "huggingface_hub"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["backoffice.infrastructure.providers.*"]
-disable_error_code = ["import-not-found", "override"]
+module = ["backoffice.features.shared.infrastructure.providers.*"]
+disable_error_code = ["import-not-found", "override", "arg-type", "assignment", "union-attr", "no-any-return", "return-value", "attr-defined", "redundant-cast"]
 
 [[tool.mypy.overrides]]
-module = ["tests.e2e.fakes"]
-disable_error_code = ["override"]
+module = ["backoffice.features.shared.infrastructure.services.*"]
+disable_error_code = ["arg-type", "union-attr", "dict-item"]
 
 [[tool.mypy.overrides]]
-module = [
-    "backoffice.infrastructure.providers.openrouter_image_provider",
-    "backoffice.infrastructure.providers.replicate_image_provider",
-    "backoffice.infrastructure.providers.huggingface_image_provider",
-    "backoffice.infrastructure.adapters.openrouter_image_adapter",
-    "backoffice.infrastructure.adapters.openrouter_pricing_adapter",
-    "backoffice.infrastructure.services.openrouter_service",
-    "backoffice.infrastructure.factories.llm_adapter_factory",
-    "backoffice.domain.entities.ebook_theme",
-    "backoffice.domain.usecases.generate_ebook",
-    "backoffice.migrations.*",
-    "backoffice.infrastructure.adapters.openrouter_content_adapter",
-    "backoffice.infrastructure.adapters.openai_content_adapter",
-    "backoffice.domain.usecases.get_ebook_costs",
-    "backoffice.infrastructure.utils.color_utils",
-    "backoffice.infrastructure.providers.gemini_image_provider",
-    "backoffice.infrastructure.providers.kdp_assembly_provider",
-    "backoffice.infrastructure.providers.local_sd_provider",
-    "backoffice.presentation.routes.ebook_routes"
-]
-disable_error_code = ["arg-type", "assignment", "union-attr", "no-any-return", "import-not-found", "return-value", "dict-item", "import-untyped", "call-arg"]
+module = ["backoffice.features.shared.infrastructure.adapters.*"]
+disable_error_code = ["arg-type", "assignment", "union-attr", "return-value", "attr-defined"]
+
+[[tool.mypy.overrides]]
+module = ["backoffice.features.ebook_export.*"]
+disable_error_code = ["redundant-cast"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*", "pytest", "testcontainers.*"]
+ignore_missing_imports = true
 
 
 
@@ -195,6 +184,28 @@ exclude = ["tests", "features/**/tests", "migrations", "scripts", "alembic", ".v
 
 # Specify dev dependency groups (so deptry ignores them)
 pep621_dev_dependency_groups = ["dev"]
+
+# --- Pytest ---
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+    "src/backoffice/features"
+]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+# Ignore common non-test directories
+norecursedirs = [
+    ".*",
+    "build",
+    "dist",
+    "*.egg",
+    "venv",
+    "__pycache__",
+    "migrations",
+    "static",
+    "templates"
+]
 
 # Ignore internal package imports
 known_first_party = ["backoffice"]

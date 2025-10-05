@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass
 
-from backoffice.domain.entities.ebook import EbookStatus
-from backoffice.domain.ports.ebook.ebook_port import EbookPort
+from backoffice.features.shared.domain.entities.ebook import EbookStatus
+from backoffice.features.shared.domain.ports.ebook.ebook_port import EbookPort
 
 
 @dataclass
