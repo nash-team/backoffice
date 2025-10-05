@@ -4,6 +4,8 @@ from datetime import datetime, UTC
 from backoffice.features.shared.domain.entities.ebook import EbookStatus
 from backoffice.features.shared.infrastructure.models.ebook_model import EbookModel
 
+pytestmark = pytest.mark.integration
+
 
 class TestDashboardPagination:
     """Integration tests for dashboard pagination functionality"""

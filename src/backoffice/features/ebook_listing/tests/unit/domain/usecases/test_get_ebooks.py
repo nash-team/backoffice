@@ -77,7 +77,7 @@ def usecase(repository):
 
 
 @pytest.fixture
-async def sample_ebooks(repository):
+async def _sample_ebooks(repository):
     ebooks = [
         Ebook(1, "Python pour les débutants", "John Doe", datetime.now(), EbookStatus.DRAFT),
         Ebook(2, "FastAPI Masterclass", "Jane Smith", datetime.now(), EbookStatus.APPROVED),

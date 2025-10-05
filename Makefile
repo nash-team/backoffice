@@ -85,8 +85,8 @@ db-status: ## Show current migration status & history
 	alembic current && alembic history
 
 # -------- Quality --------
-lint: ## Ruff lint
-	ruff check .
+lint: ## Ruff lint (excludes tests)
+	ruff check src --exclude '**/tests/**' --exclude 'tests/'
 
 format: ## Ruff format (in place)
 	ruff format .

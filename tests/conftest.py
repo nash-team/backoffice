@@ -1,21 +1,19 @@
 import sys
 from pathlib import Path
 
-# Ajouter le répertoire racine au PYTHONPATH
-root_dir = Path(__file__).parent.parent
-sys.path.insert(0, str(root_dir))
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 
-from backoffice.features.shared.infrastructure.database import get_db
-from backoffice.main import app
+# Ajouter le répertoire racine au PYTHONPATH
+root_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(root_dir))
 
-# Import models after app to ensure they are registered
-from backoffice.features.shared.infrastructure.models.ebook_model import Base  # noqa: E402
+from backoffice.features.shared.infrastructure.database import get_db
+from backoffice.features.shared.infrastructure.models.ebook_model import Base
+from backoffice.main import app
 
 
 @pytest.fixture(scope="session")

@@ -3,6 +3,8 @@ from datetime import datetime
 from backoffice.features.shared.infrastructure.models.ebook_model import EbookModel
 from backoffice.features.shared.domain.entities.ebook import EbookStatus
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def _sample_ebooks(test_db_session):

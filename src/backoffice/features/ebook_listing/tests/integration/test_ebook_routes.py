@@ -1,3 +1,8 @@
+import pytest
+
+pytestmark = pytest.mark.integration
+
+
 def test_get_ebook_preview_success(test_client):
     """Test de récupération réussie de l'URL de prévisualisation"""
     response = test_client.get("/api/dashboard/drive/ebooks/test_drive_id")

@@ -5,6 +5,8 @@ import pytest
 from backoffice.features.shared.domain.entities.ebook import EbookStatus
 from backoffice.features.shared.infrastructure.models.ebook_model import EbookModel
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def sample_ebooks(test_db_session):
