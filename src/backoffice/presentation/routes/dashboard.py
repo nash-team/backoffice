@@ -6,7 +6,6 @@ from fastapi.responses import HTMLResponse
 
 from backoffice.domain.entities.ebook import EbookStatus
 from backoffice.domain.entities.pagination import PaginationParams
-from backoffice.domain.errors.error_taxonomy import DomainError
 from backoffice.domain.usecases.get_ebooks import GetEbooksUseCase
 from backoffice.infrastructure.factories.repository_factory import (
     AsyncRepositoryFactory,
@@ -361,90 +360,99 @@ async def get_ebook_preview_modal(
         raise HTTPException(status_code=500, detail="Error loading ebook preview") from e
 
 
-@router.get("/ebooks/{ebook_id}/pdf")
-async def get_ebook_pdf(ebook_id: int, factory: RepositoryFactoryDep) -> Response:
-    """Serve PDF bytes for DRAFT ebooks (before Drive upload)."""
-    try:
-        from fastapi.responses import Response as FastAPIResponse
-
-        ebook_repo = factory.get_ebook_repository()
-        ebook = await ebook_repo.get_by_id(ebook_id)
-
-        if not ebook:
-            raise HTTPException(status_code=404, detail=f"Ebook with id {ebook_id} not found")
-
-        # Get PDF bytes from repository
-        pdf_bytes = await ebook_repo.get_ebook_bytes(ebook_id)
-
-        if not pdf_bytes:
-            raise HTTPException(
-                status_code=404, detail="PDF not found - may have been deleted after approval"
-            )
-
-        # Return PDF with proper headers
-        return FastAPIResponse(
-            content=pdf_bytes,
-            media_type="application/pdf",
-            headers={
-                "Content-Disposition": f'inline; filename="{ebook.title}.pdf"',
-                "Cache-Control": "public, max-age=3600",
-            },
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error serving PDF for ebook {ebook_id}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Error serving PDF") from e
-
-
-@router.get("/ebooks/{ebook_id}/export-kdp")
-async def export_ebook_to_kdp(
-    ebook_id: int, factory: RepositoryFactoryDep, preview: bool = False
-) -> Response:
-    """Export an approved ebook to Amazon KDP paperback format.
-
-    Args:
-        ebook_id: ID of the ebook
-        preview: If True, display inline (allows DRAFT); if False, download (requires APPROVED)
-    """
-    try:
-        from fastapi.responses import Response as FastAPIResponse
-
-        from backoffice.domain.usecases.export_to_kdp import ExportToKDPUseCase
-
-        ebook_repo = factory.get_ebook_repository()
-        export_usecase = ExportToKDPUseCase(ebook_repo)
-
-        # Execute export (preview_mode=True allows DRAFT, False requires APPROVED)
-        kdp_pdf_bytes = await export_usecase.execute(ebook_id, preview_mode=preview)
-
-        # Get ebook for filename
-        ebook = await ebook_repo.get_by_id(ebook_id)
-        filename = f"{ebook.title}_KDP.pdf" if ebook else f"ebook_{ebook_id}_KDP.pdf"
-
-        # Return PDF (inline for preview, attachment for download)
-        disposition = "inline" if preview else "attachment"
-        return FastAPIResponse(
-            content=kdp_pdf_bytes,
-            media_type="application/pdf",
-            headers={
-                "Content-Disposition": f'{disposition}; filename="{filename}"',
-                "Cache-Control": "no-cache",
-            },
-        )
-    except DomainError as e:
-        logger.warning(f"Domain error exporting ebook {ebook_id} to KDP: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
-    except NotImplementedError as e:
-        logger.warning(f"KDP export not yet implemented for ebook {ebook_id}")
-        raise HTTPException(status_code=501, detail=str(e)) from e
-    except Exception as e:
-        logger.error(f"Unexpected error exporting ebook {ebook_id} to KDP: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="Error exporting to KDP format. Please try again.",
-        ) from e
-
+# LEGACY: GET /api/dashboard/ebooks/{ebook_id}/pdf migrated to features/ebook_export
+# New endpoint: GET /api/ebooks/{ebook_id}/pdf
+#
+# @router.get("/ebooks/{ebook_id}/pdf")
+# async def get_ebook_pdf(ebook_id: int, factory: RepositoryFactoryDep) -> Response:
+#     """Serve PDF bytes for DRAFT ebooks (before Drive upload)."""
+#     try:
+#         from fastapi.responses import Response as FastAPIResponse
+#
+#         ebook_repo = factory.get_ebook_repository()
+#         ebook = await ebook_repo.get_by_id(ebook_id)
+#
+#         if not ebook:
+#             raise HTTPException(status_code=404, detail=f"Ebook with id {ebook_id} not found")
+#
+#         # Get PDF bytes from repository
+#         pdf_bytes = await ebook_repo.get_ebook_bytes(ebook_id)
+#
+#         if not pdf_bytes:
+#             raise HTTPException(
+#                 status_code=404, detail="PDF not found - may have been deleted after approval"
+#             )
+#
+#         # Return PDF with proper headers
+#         return FastAPIResponse(
+#             content=pdf_bytes,
+#             media_type="application/pdf",
+#             headers={
+#                 "Content-Disposition": f'inline; filename="{ebook.title}.pdf"',
+#                 "Cache-Control": "public, max-age=3600",
+#             },
+#         )
+#     except HTTPException:
+#         raise
+#     except Exception as e:
+#         logger.error(f"Error serving PDF for ebook {ebook_id}: {str(e)}", exc_info=True)
+#         raise HTTPException(status_code=500, detail="Error serving PDF") from e
+# LEGACY: GET /api/dashboard/ebooks/{ebook_id}/export-kdp migrated to features/ebook_export
+# New endpoint: GET /api/ebooks/{ebook_id}/export-kdp
+#
+#
+#
+# @router.get("/ebooks/{ebook_id}/export-kdp")
+# async def export_ebook_to_kdp(
+#     ebook_id: int, factory: RepositoryFactoryDep, preview: bool = False
+# ) -> Response:
+#     """Export an approved ebook to Amazon KDP paperback format.
+#
+#     Args:
+#         ebook_id: ID of the ebook
+#         preview: If True, display inline (allows DRAFT); if False, download (requires APPROVED)
+#     """
+#     try:
+#         from fastapi.responses import Response as FastAPIResponse
+#
+#         from backoffice.domain.usecases.export_to_kdp import ExportToKDPUseCase
+#
+#         ebook_repo = factory.get_ebook_repository()
+#         export_usecase = ExportToKDPUseCase(ebook_repo)
+#
+#         # Execute export (preview_mode=True allows DRAFT, False requires APPROVED)
+#         kdp_pdf_bytes = await export_usecase.execute(ebook_id, preview_mode=preview)
+#
+#         # Get ebook for filename
+#         ebook = await ebook_repo.get_by_id(ebook_id)
+#         filename = f"{ebook.title}_KDP.pdf" if ebook else f"ebook_{ebook_id}_KDP.pdf"
+#
+#         # Return PDF (inline for preview, attachment for download)
+#         disposition = "inline" if preview else "attachment"
+#         return FastAPIResponse(
+#             content=kdp_pdf_bytes,
+#             media_type="application/pdf",
+#             headers={
+#                 "Content-Disposition": f'{disposition}; filename="{filename}"',
+#                 "Cache-Control": "no-cache",
+#             },
+#         )
+#     except DomainError as e:
+#         logger.warning(f"Domain error exporting ebook {ebook_id} to KDP: {str(e)}")
+#         raise HTTPException(status_code=400, detail=str(e)) from e
+#         except NotImplementedError as e:
+#             logger.warning(f"KDP export not yet implemented for ebook {ebook_id}")
+#             raise HTTPException(status_code=501, detail=str(e)) from e
+#         except Exception as e:
+#             logger.error(
+#                 f"Unexpected error exporting ebook {ebook_id} to KDP: {str(e)}",
+#                 exc_info=True,
+#             )
+#             raise HTTPException(
+#                 status_code=500,
+#                 detail="Error exporting to KDP format. Please try again.",
+#             ) from e
+#
 
 # Route /costs moved to pages_router in __init__.py (no /api prefix for HTML pages)
 

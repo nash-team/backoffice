@@ -43,7 +43,7 @@
         {% elif ebook.status.value == 'DRAFT' %}
             <!-- Local PDF Embed (DRAFT ebooks - before Drive upload) -->
             <iframe
-                src="/api/dashboard/ebooks/{{ ebook.id }}/pdf"
+                src="/api/ebooks/{{ ebook.id }}/pdf"
                 width="100%"
                 height="600"
                 frameborder="0"
@@ -84,7 +84,7 @@
 
         <!-- KDP Download (only for APPROVED ebooks) -->
         {% if ebook.status.value == 'APPROVED' %}
-        <a href="/api/dashboard/ebooks/{{ ebook.id }}/export-kdp"
+        <a href="/api/ebooks/{{ ebook.id }}/export-kdp"
            class="btn btn-outline-success"
            download
            data-testid="export-kdp-btn">
@@ -294,7 +294,7 @@ function showKDPPreview(ebookId) {
     setTimeout(() => {
         pdfContainer.innerHTML = `
             <iframe
-                src="/api/dashboard/ebooks/${ebookId}/export-kdp?preview=true"
+                src="/api/ebooks/${ebookId}/export-kdp?preview=true"
                 width="100%"
                 height="600"
                 frameborder="0"
