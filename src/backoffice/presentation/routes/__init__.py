@@ -3,6 +3,9 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 
+from backoffice.features.ebook_creation.presentation.routes import (
+    router as ebook_creation_router,
+)
 from backoffice.features.ebook_lifecycle.presentation.routes import (
     router as ebook_lifecycle_router,
 )
@@ -54,6 +57,7 @@ def init_routes(app: FastAPI) -> None:
     app.include_router(pages_router)
     app.include_router(auth_router)
     # Feature routes (registered BEFORE dashboard to take precedence)
+    app.include_router(ebook_creation_router)  # Creation
     app.include_router(ebook_lifecycle_router)  # Lifecycle (approve/reject)
     app.include_router(ebook_regeneration_router)  # Regeneration
     app.include_router(generation_costs_router)  # API routes

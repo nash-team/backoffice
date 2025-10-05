@@ -3,10 +3,22 @@
 
 <form id="ebookForm"
       data-testid="ebook-form"
-      hx-post="/api/dashboard/ebooks"
+      hx-post="/api/ebooks"
       hx-target="#ebooksTableContainer"
       hx-swap="innerHTML"
-      hx-disabled-elt="#createBtn">
+      hx-disabled-elt="#createBtn"
+      hx-on::after-request="
+          if(event.detail.successful) {
+              createToast('Ebook créé avec succès !', 'success');
+              const modal = document.getElementById('previewModal');
+              if (modal) {
+                  const modalInstance = bootstrap.Modal.getInstance(modal);
+                  if (modalInstance) {
+                      modalInstance.hide();
+                  }
+              }
+          }
+      ">
 
   <!-- Type d'ebook (coloriage uniquement) -->
   <input type="hidden" name="ebook_type" value="coloring">
@@ -111,7 +123,7 @@
       <button type="submit"
               class="btn btn-info d-inline-flex align-items-center gap-2"
               data-testid="preview-btn"
-              hx-post="/api/dashboard/ebooks"
+              hx-post="/api/ebooks"
               hx-target="#ebooksTableContainer"
               hx-swap="innerHTML"
               hx-vals='{"preview_mode": "true"}'
@@ -123,7 +135,7 @@
       <button type="submit"
               class="btn btn-primary d-inline-flex align-items-center gap-2"
               data-testid="create-btn"
-              hx-post="/api/dashboard/ebooks"
+              hx-post="/api/ebooks"
               hx-target="#ebooksTableContainer"
               hx-swap="innerHTML"
               hx-vals='{"preview_mode": "false"}'
