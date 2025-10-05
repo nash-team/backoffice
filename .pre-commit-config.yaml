@@ -4,8 +4,7 @@ repos:
     rev: v0.7.1
     hooks:
       - id: ruff
-        args: [--fix]
-        exclude: '^(tests/.*|src/backoffice/features/.*/tests/.*|.*_test\.py|test_.*\.py)$'
+        args: [--fix, --select, I]  # Only check import sorting (pyproject.toml handles per-file ignores for other rules)
       - id: ruff-format
 
   # Typage

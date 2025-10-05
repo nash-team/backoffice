@@ -1,7 +1,8 @@
 """Unit tests for OpenRouter adapters (cover and image generation)."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.infrastructure.providers.openrouter_image_provider import (

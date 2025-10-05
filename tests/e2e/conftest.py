@@ -13,8 +13,8 @@ import socket
 import subprocess
 import sys
 import time
-from pathlib import Path
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 

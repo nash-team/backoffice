@@ -1,11 +1,12 @@
-import pytest
 from datetime import datetime
 
-from backoffice.features.shared.domain.entities.ebook import Ebook, EbookStatus
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError
+import pytest
+
 from backoffice.features.ebook_lifecycle.domain.usecases.approve_ebook_usecase import (
     ApproveEbookUseCase,
 )
+from backoffice.features.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.shared.domain.errors.error_taxonomy import DomainError
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 

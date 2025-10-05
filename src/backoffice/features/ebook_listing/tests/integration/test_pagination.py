@@ -1,5 +1,6 @@
+from datetime import UTC, datetime
+
 import pytest
-from datetime import datetime, UTC
 
 from backoffice.features.shared.domain.entities.ebook import EbookStatus
 from backoffice.features.shared.infrastructure.models.ebook_model import EbookModel

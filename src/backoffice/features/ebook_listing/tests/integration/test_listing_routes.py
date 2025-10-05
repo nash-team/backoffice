@@ -1,7 +1,9 @@
-import pytest
 from datetime import datetime
-from backoffice.features.shared.infrastructure.models.ebook_model import EbookModel
+
+import pytest
+
 from backoffice.features.shared.domain.entities.ebook import EbookStatus
+from backoffice.features.shared.infrastructure.models.ebook_model import EbookModel
 
 pytestmark = pytest.mark.integration
 

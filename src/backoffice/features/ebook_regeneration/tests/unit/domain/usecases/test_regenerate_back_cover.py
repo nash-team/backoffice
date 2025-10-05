@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from backoffice.features.shared.domain.entities.ebook import Ebook, EbookStatus
 from backoffice.features.ebook_regeneration.domain.usecases.regenerate_back_cover import (
     RegenerateBackCoverUseCase,
 )
+from backoffice.features.shared.domain.entities.ebook import Ebook, EbookStatus
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 

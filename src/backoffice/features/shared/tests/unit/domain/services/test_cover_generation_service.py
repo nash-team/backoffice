@@ -2,9 +2,9 @@
 
 import pytest
 
+from backoffice.features.shared.domain.cover_generation import CoverGenerationService
 from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
-from backoffice.features.shared.domain.cover_generation import CoverGenerationService
 from backoffice.features.shared.tests.unit.fakes.fake_cover_port import FakeCoverPort
 
 

@@ -85,8 +85,8 @@ db-status: ## Show current migration status & history
 	alembic current && alembic history
 
 # -------- Quality --------
-lint: ## Ruff lint (excludes tests)
-	ruff check src --exclude '**/tests/**' --exclude 'tests/'
+lint: ## Ruff lint (includes tests via pyproject.toml per-file-ignores)
+	ruff check .
 
 format: ## Ruff format (in place)
 	ruff format .
