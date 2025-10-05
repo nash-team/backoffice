@@ -97,7 +97,7 @@
         {% if ebook.status.value == 'DRAFT' %}
         <button class="btn btn-outline-warning"
                 hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
-                hx-vals='{"page_type": "cover", "page_index": 0}'
+                hx-vals='{"page_type": "cover"}'
                 hx-ext="json-enc"
                 hx-indicator="#regenerateCoverSpinner-{{ ebook.id }}"
                 hx-disabled-elt="this"
