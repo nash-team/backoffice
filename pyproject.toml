@@ -73,7 +73,6 @@ dev = [
   "types-requests",
   "types-python-dateutil",
   "types-pyyaml",
-  "pytest-stubs",
 
   # Tests & e2e
   "pytest==7.4.3",
