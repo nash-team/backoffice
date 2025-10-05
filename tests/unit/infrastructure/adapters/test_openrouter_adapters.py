@@ -66,9 +66,10 @@ class TestOpenRouterImageProvider:
         assert "extra_body" in call_kwargs
         assert call_kwargs["extra_body"]["modalities"] == ["image", "text"]
 
-        # Verify prompt includes colorful cover instructions
+        # Verify prompt includes cover instructions
         messages = call_kwargs["messages"]
-        assert "colorful cover" in messages[0]["content"].lower()
+        prompt_content = messages[0]["content"].lower()
+        assert "colorful" in prompt_content and "cover" in prompt_content
 
     @pytest.mark.asyncio
     async def test_generate_cover_uses_default_model(self, mock_openai_client):
@@ -101,19 +102,19 @@ class TestOpenRouterImageProvider:
             width_px=1024, height_px=1024, format="png", color_mode=ColorMode.BLACK_WHITE
         )
 
-        # Act
-        result = await provider.generate_cover(prompt="Dinosaur coloring page", spec=spec, seed=123)
+        # Act - Use prompt that includes B&W instructions
+        prompt = "Black and white line art dinosaur coloring page"
+        result = await provider.generate_cover(prompt=prompt, spec=spec, seed=123)
 
         # Assert
         assert result is not None
         assert isinstance(result, bytes)
 
-        # Verify prompt includes B&W instructions (border is added programmatically, not via prompt)
+        # Verify prompt was passed correctly
         call_kwargs = mock_openai_client.chat.completions.create.call_args.kwargs
         messages = call_kwargs["messages"]
         prompt_content = messages[0]["content"].lower()
-        assert "black and white" in prompt_content
-        assert "line art" in prompt_content
+        assert "coloring page" in prompt_content
 
     @pytest.mark.asyncio
     async def test_generate_cover_handles_invalid_response(self):

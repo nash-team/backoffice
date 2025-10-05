@@ -63,54 +63,6 @@ class CreateEbookUseCase:
         logger.info(f"   Total pages: {len(generation_result.pages_meta)}")
         logger.info(f"   Duration: {generation_duration:.2f}s")
 
-        # Extract generation metadata if token tracker is available
-
-        from backoffice.domain.value_objects.generation_metadata import GenerationMetadata
-
-        generation_metadata: GenerationMetadata | None = None
-
-        if (
-            hasattr(self.generation_strategy, "token_tracker")
-            and self.generation_strategy.token_tracker
-        ):
-            tracker = self.generation_strategy.token_tracker
-            generation_cost = tracker.get_total_cost()
-            prompt_tokens = tracker.get_total_prompt_tokens()
-            completion_tokens = tracker.get_total_completion_tokens()
-
-            # Extract provider and model from first usage (they're all the same)
-            generation_provider = "unknown"
-            generation_model = "unknown"
-            if tracker.usages:
-                first_usage = tracker.usages[0]
-                generation_model = first_usage.model
-
-                # Detect provider from model name using shared utility
-                from backoffice.domain.utils.provider_detection import detect_provider_from_model
-
-                generation_provider = detect_provider_from_model(generation_model)
-
-            # Create GenerationMetadata Value Object
-            generation_metadata = GenerationMetadata(
-                provider=generation_provider,
-                model=generation_model,
-                cost=generation_cost,
-                prompt_tokens=prompt_tokens,
-                completion_tokens=completion_tokens,
-                duration_seconds=generation_duration,
-                generated_at=datetime.now(),
-            )
-
-            total_tokens = prompt_tokens + completion_tokens
-            logger.info(
-                f"💰 Generation cost: ${generation_cost:.4f} "
-                f"(Tokens: {prompt_tokens} prompt + {completion_tokens} completion "
-                f"= {total_tokens} total)"
-            )
-            logger.info(f"🔧 Provider: {generation_provider} | Model: {generation_model}")
-        else:
-            logger.warning("⚠️ Token tracker not available, cost not tracked")
-
         # 2. Create ebook entity
         ebook = Ebook(
             id=None,
@@ -122,7 +74,6 @@ class CreateEbookUseCase:
             audience=request.age_group.value,
             preview_url=generation_result.pdf_uri,
             page_count=len(generation_result.pages_meta),
-            generation_metadata=generation_metadata,  # Value Object (DDD)
         )
 
         # 3. Store structure in ebook

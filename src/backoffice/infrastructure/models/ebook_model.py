@@ -7,9 +7,8 @@ Il ne doit pas être utilisé directement dans la logique métier ou l'API.
 """
 
 from datetime import datetime
-from decimal import Decimal
 
-from sqlalchemy import JSON, NUMERIC, Integer, LargeBinary, String
+from sqlalchemy import JSON, LargeBinary, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from backoffice.domain.entities.ebook import EbookStatus
@@ -44,14 +43,5 @@ class EbookModel(Base):
     # Page count for KDP export
     page_count: Mapped[int | None]
 
-    # Generation cost tracking (Decimal for precision)
-    generation_cost: Mapped[Decimal | None] = mapped_column(
-        NUMERIC(12, 4), nullable=True, index=True
-    )
-    prompt_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    completion_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
-
-    # Provider and model used for generation
-    generation_provider: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    generation_model: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    generation_duration_seconds: Mapped[float | None] = mapped_column(NUMERIC(10, 2), nullable=True)
+    # Legacy cost tracking columns removed - now in generation_costs feature
+    # See: features/generation_costs/infrastructure/models/token_usage_model.py

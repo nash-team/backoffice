@@ -8,13 +8,14 @@ from backoffice.domain.entities.ebook import EbookStatus
 from backoffice.domain.entities.pagination import PaginationParams
 from backoffice.domain.errors.error_taxonomy import DomainError
 from backoffice.domain.usecases.approve_ebook import ApproveEbookUseCase
-from backoffice.domain.usecases.get_ebook_costs import GetEbookCostsUseCase
 from backoffice.domain.usecases.get_ebooks import GetEbooksUseCase
 from backoffice.domain.usecases.get_stats import GetStatsUseCase
 from backoffice.domain.usecases.reject_ebook import RejectEbookUseCase
 from backoffice.infrastructure.adapters.theme_repository import ThemeRepository
 from backoffice.infrastructure.factories.repository_factory import (
+    AsyncRepositoryFactory,
     RepositoryFactory,
+    get_async_repository_factory,
     get_repository_factory,
 )
 
@@ -23,6 +24,7 @@ from backoffice.presentation.routes.templates import templates
 
 # Type alias pour l'injection de dépendance sécurisée
 RepositoryFactoryDep = Annotated[RepositoryFactory, Depends(get_repository_factory)]
+AsyncRepositoryFactoryDep = Annotated[AsyncRepositoryFactory, Depends(get_async_repository_factory)]
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 logger = logging.getLogger(__name__)
@@ -523,38 +525,7 @@ async def export_ebook_to_kdp(
         ) from e
 
 
-@router.get("/costs")
-async def get_costs_page(request: Request, factory: RepositoryFactoryDep) -> Response:
-    """Display ebook generation costs page.
-
-    Args:
-        request: FastAPI request object
-        factory: Repository factory for data access
-
-    Returns:
-        Rendered costs page template
-    """
-    try:
-        ebook_repo = factory.get_ebook_repository()
-        get_costs_usecase = GetEbookCostsUseCase(ebook_repo)
-        cost_summaries = await get_costs_usecase.execute()
-
-        # Calculate total cost
-        from decimal import Decimal
-
-        total_cost = sum((s.cost for s in cost_summaries), Decimal("0"))
-
-        return templates.TemplateResponse(
-            "costs.html",
-            {
-                "request": request,
-                "cost_summaries": cost_summaries,
-                "total_cost": total_cost,
-            },
-        )
-    except Exception as e:
-        logger.error(f"Error loading costs page: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Error loading costs page") from e
+# Route /costs moved to pages_router in __init__.py (no /api prefix for HTML pages)
 
 
 # Route removed: submit_ebook_for_validation (PENDING status no longer exists)

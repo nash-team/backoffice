@@ -52,19 +52,19 @@ class StrategyFactory:
         Returns:
             ColoringBookStrategy with injected services
         """
-        # Create token tracker if request_id provided
-        token_tracker = None
-        if request_id:
-            from backoffice.domain.services.token_tracker import TokenTracker
-            from backoffice.infrastructure.factories.pricing_factory import PricingFactory
+        # Note: TrackTokenUsageUseCase now created directly by providers via ProviderFactory
+        # Create strategy with service injection (no more token_tracker)
+        track_usage_usecase = None  # Providers will create it themselves if needed
 
-            pricing_adapter = PricingFactory.create_pricing_adapter()
-            token_tracker = TokenTracker(request_id=request_id, pricing_adapter=pricing_adapter)
-            logger.info(f"TokenTracker created for request: {request_id}")
-
-        # Create providers via factory with token tracker
-        cover_provider = ProviderFactory.create_cover_provider(token_tracker=token_tracker)
-        pages_provider = ProviderFactory.create_content_page_provider(token_tracker=token_tracker)
+        # Create providers via factory with usage tracking
+        cover_provider = ProviderFactory.create_cover_provider(
+            track_usage_usecase=track_usage_usecase,
+            request_id=request_id,
+        )
+        pages_provider = ProviderFactory.create_content_page_provider(
+            track_usage_usecase=track_usage_usecase,
+            request_id=request_id,
+        )
         assembly_provider = ProviderFactory.create_assembly_provider()
 
         # Create services with provider injection
@@ -83,12 +83,11 @@ class StrategyFactory:
             assembly_port=assembly_provider,
         )
 
-        # Create strategy with service injection
+        # Create strategy with service injection (no more token_tracker)
         strategy = ColoringBookStrategy(
             cover_service=cover_service,
             pages_service=pages_service,
             assembly_service=assembly_service,
-            token_tracker=token_tracker,
         )
 
         logger.info("✅ ColoringBookStrategy created with dependencies")

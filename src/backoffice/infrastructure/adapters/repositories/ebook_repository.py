@@ -1,5 +1,4 @@
 from datetime import UTC, datetime
-from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
@@ -7,7 +6,6 @@ from backoffice.domain.entities.ebook import Ebook, EbookStatus
 from backoffice.domain.entities.pagination import PaginatedResult, PaginationParams
 from backoffice.domain.ports.ebook.ebook_port import EbookPort
 from backoffice.domain.ports.ebook_query_port import EbookQueryPort
-from backoffice.domain.value_objects.generation_metadata import GenerationMetadata
 from backoffice.infrastructure.models.ebook_model import EbookModel
 
 
@@ -47,21 +45,8 @@ class SqlAlchemyEbookRepository(EbookPort):
 
     async def create(self, ebook: Ebook) -> Ebook:
         """Crée un nouvel ebook."""
-        # Extract generation metadata fields (if present)
-        generation_cost = None
-        prompt_tokens = None
-        completion_tokens = None
-        generation_provider = None
-        generation_model = None
-        generation_duration_seconds = None
-
-        if ebook.generation_metadata:
-            generation_cost = ebook.generation_metadata.cost
-            prompt_tokens = ebook.generation_metadata.prompt_tokens
-            completion_tokens = ebook.generation_metadata.completion_tokens
-            generation_provider = ebook.generation_metadata.provider
-            generation_model = ebook.generation_metadata.model
-            generation_duration_seconds = ebook.generation_metadata.duration_seconds
+        # Legacy cost tracking removed - now in generation_costs feature
+        # Cost data is tracked separately via TokenUsageModel/ImageUsageModel
 
         db_ebook = EbookModel(
             title=ebook.title,
@@ -75,12 +60,6 @@ class SqlAlchemyEbookRepository(EbookPort):
             audience=ebook.audience,
             structure_json=ebook.structure_json,
             page_count=ebook.page_count,
-            generation_cost=generation_cost,
-            prompt_tokens=prompt_tokens,
-            completion_tokens=completion_tokens,
-            generation_provider=generation_provider,
-            generation_model=generation_model,
-            generation_duration_seconds=generation_duration_seconds,
         )
         self.db.add(db_ebook)
         self.db.commit()
@@ -104,21 +83,7 @@ class SqlAlchemyEbookRepository(EbookPort):
         db_ebook.structure_json = ebook.structure_json
         db_ebook.page_count = ebook.page_count
 
-        # Extract generation metadata fields (if present)
-        if ebook.generation_metadata:
-            db_ebook.generation_cost = ebook.generation_metadata.cost
-            db_ebook.prompt_tokens = ebook.generation_metadata.prompt_tokens
-            db_ebook.completion_tokens = ebook.generation_metadata.completion_tokens
-            db_ebook.generation_provider = ebook.generation_metadata.provider
-            db_ebook.generation_model = ebook.generation_metadata.model
-            db_ebook.generation_duration_seconds = ebook.generation_metadata.duration_seconds
-        else:
-            db_ebook.generation_cost = None
-            db_ebook.prompt_tokens = None
-            db_ebook.completion_tokens = None
-            db_ebook.generation_provider = None
-            db_ebook.generation_model = None
-            db_ebook.generation_duration_seconds = None
+        # Legacy cost tracking removed - now in generation_costs feature
 
         self.db.commit()
         self.db.refresh(db_ebook)
@@ -146,25 +111,8 @@ class SqlAlchemyEbookRepository(EbookPort):
         self.db.commit()
 
     def _to_domain(self, db_ebook: EbookModel) -> Ebook:
-        # Reconstruct GenerationMetadata from DB fields (if present)
-        generation_metadata = None
-        if (
-            db_ebook.generation_cost is not None
-            and db_ebook.prompt_tokens is not None
-            and db_ebook.completion_tokens is not None
-            and db_ebook.generation_provider is not None
-            and db_ebook.generation_model is not None
-            and db_ebook.generation_duration_seconds is not None
-        ):
-            generation_metadata = GenerationMetadata(
-                provider=str(db_ebook.generation_provider),
-                model=str(db_ebook.generation_model),
-                cost=Decimal(str(db_ebook.generation_cost)),
-                prompt_tokens=int(db_ebook.prompt_tokens),
-                completion_tokens=int(db_ebook.completion_tokens),
-                duration_seconds=float(db_ebook.generation_duration_seconds),
-                generated_at=db_ebook.created_at,  # Use ebook creation time as proxy
-            )
+        # Legacy generation_metadata removed - now in generation_costs feature
+        # Cost tracking is via TokenUsageModel/ImageUsageModel linked by request_id
 
         return Ebook(
             id=int(db_ebook.id),
@@ -179,5 +127,4 @@ class SqlAlchemyEbookRepository(EbookPort):
             audience=str(db_ebook.audience) if db_ebook.audience else None,
             structure_json=db_ebook.structure_json,
             page_count=db_ebook.page_count,
-            generation_metadata=generation_metadata,
         )

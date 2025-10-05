@@ -91,24 +91,14 @@ class RegenerateBackCoverUseCase:
         front_cover_meta = pages_meta[0]
         front_cover_bytes = base64.b64decode(front_cover_meta["image_data_base64"])
 
-        # Step 2: Remove text from cover using the SAME provider as original generation
+        # Step 2: Remove text from cover using injected provider
         logger.info("🔄 Creating back cover (same image without text)...")
-
-        # Get the original provider from generation_metadata
-        provider_name = "default"
-        if ebook.generation_metadata:
-            provider_name = ebook.generation_metadata.provider
-            model_name = ebook.generation_metadata.model
-            logger.info(f"📌 Using original provider: {provider_name} | Model: {model_name}")
-        else:
-            # Fallback to current provider if metadata not available
-            logger.warning("⚠️ No generation metadata found, using injected provider")
 
         back_cover_data = await self.cover_service.cover_port.remove_text_from_cover(
             cover_bytes=front_cover_bytes
         )
 
-        logger.info(f"✅ Back cover regenerated via {provider_name}: {len(back_cover_data)} bytes")
+        logger.info(f"✅ Back cover regenerated: {len(back_cover_data)} bytes")
 
         # Step 4: Rebuild PDF with new back cover
         assembled_pages = []

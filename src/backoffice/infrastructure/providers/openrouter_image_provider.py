@@ -35,17 +35,21 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
     - B&W coloring pages (ColorMode.BLACK_WHITE)
     """
 
-    def __init__(self, model: str | None = None, token_tracker=None):
+    def __init__(
+        self, model: str | None = None, track_usage_usecase=None, request_id: str | None = None
+    ):
         """Initialize OpenRouter provider.
 
         Args:
             model: Specific model to use (defaults to Gemini 2.5 Flash Image Preview)
-            token_tracker: Optional TokenTracker for cost tracking
+            track_usage_usecase: Optional TrackTokenUsageUseCase for cost tracking via events
+            request_id: Optional request ID for cost tracking
         """
         self.api_key = os.getenv("LLM_API_KEY")
         self.model = model or os.getenv("LLM_IMAGE_MODEL", "google/gemini-2.5-flash-image-preview")
         self.base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-        self.token_tracker = token_tracker
+        self.track_usage_usecase = track_usage_usecase
+        self.request_id = request_id
 
         if self.api_key:
             from openai import AsyncOpenAI
@@ -76,7 +80,6 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
-        token_tracker=None,
     ) -> bytes:
         """Generate a colorful cover image.
 
@@ -84,7 +87,6 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             prompt: Text description of the cover
             spec: Image specifications (dimensions, format, color mode)
             seed: Random seed for reproducibility
-            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             Cover image as bytes
@@ -141,14 +143,9 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                 # Note: OpenRouter doesn't support seed for image generation yet
             )
 
-            # Track usage with REAL cost from OpenRouter (includes platform fees)
-            if response.usage and hasattr(self, "token_tracker") and self.token_tracker:
-                logger.info(
-                    f"🔍 DEBUG: Tracking cost with TokenTracker ID: {id(self.token_tracker)}"
-                )
-                await self.token_tracker.add_usage_from_openrouter_response(
-                    response=response, model=self.model
-                )
+            # Track usage via events (new architecture)
+            if response.usage and self.track_usage_usecase:
+                await self._track_usage_from_response(response)
 
             # Extract image from response
             image_bytes = self._extract_image_from_response(response)
@@ -183,7 +180,6 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
-        token_tracker=None,
     ) -> bytes:
         """Generate a content page (delegates to generate_cover with same logic).
 
@@ -191,7 +187,6 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             prompt: Text description of the page
             spec: ImageSpec specifications (dimensions, format, color mode)
             seed: Random seed for reproducibility
-            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             Page image as bytes
@@ -199,7 +194,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         Raises:
             DomainError: If generation fails
         """
-        return await self.generate_cover(prompt, spec, seed, token_tracker)
+        return await self.generate_cover(prompt, spec, seed)
 
     async def remove_text_from_cover(
         self,
@@ -265,14 +260,9 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                 temperature=0.3,
             )
 
-            # Track usage with REAL cost from OpenRouter (includes platform fees)
-            if response.usage and hasattr(self, "token_tracker") and self.token_tracker:
-                logger.info(
-                    f"🔍 DEBUG: Tracking cost with TokenTracker ID: {id(self.token_tracker)}"
-                )
-                await self.token_tracker.add_usage_from_openrouter_response(
-                    response=response, model=self.model
-                )
+            # Track usage via events (new architecture)
+            if response.usage and self.track_usage_usecase:
+                await self._track_usage_from_response(response)
 
             # Extract transformed image (without text)
             image_bytes = self._extract_image_from_response(response)
@@ -638,14 +628,9 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                 temperature=0.7,
             )
 
-            # Track usage with REAL cost from OpenRouter (includes platform fees)
-            if response.usage and hasattr(self, "token_tracker") and self.token_tracker:
-                logger.info(
-                    f"🔍 DEBUG: Tracking cost with TokenTracker ID: {id(self.token_tracker)}"
-                )
-                await self.token_tracker.add_usage_from_openrouter_response(
-                    response=response, model=self.model
-                )
+            # Track usage via events (new architecture)
+            if response.usage and self.track_usage_usecase:
+                await self._track_usage_from_response(response)
 
             # Extract image from response
             image_bytes = self._extract_image_from_response(response)
@@ -890,3 +875,43 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         buffer = BytesIO()
         img.save(buffer, format="TIFF", compression="tiff_adobe_deflate", dpi=(300, 300))
         return buffer.getvalue()
+
+    async def _track_usage_from_response(self, response) -> None:
+        """Extract usage from OpenRouter response and emit tracking event.
+
+        Args:
+            response: OpenRouter API response with usage data
+        """
+        from decimal import Decimal
+
+        if not response.usage:
+            logger.warning("⚠️ No usage data in OpenRouter response")
+            return
+
+        usage_data = response.usage
+        prompt_tokens = usage_data.prompt_tokens or 0
+        completion_tokens = usage_data.completion_tokens or 0
+
+        # Try to get REAL cost from OpenRouter (includes platform fees)
+        real_cost = Decimal("0")
+        if hasattr(usage_data, "cost") and usage_data.cost is not None:
+            real_cost = Decimal(str(usage_data.cost))
+            logger.info(f"💰 OpenRouter real cost: ${real_cost} (includes platform fees)")
+        else:
+            logger.warning("⚠️ OpenRouter didn't provide cost - using $0.00")
+
+        # Track usage via use case (emits events)
+        await self.track_usage_usecase.execute(
+            request_id=self.request_id or "unknown",
+            model=self.model,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            cost=real_cost,
+        )
+
+        logger.info(
+            f"📊 Tracked - {self.model} | "
+            f"Prompt: {prompt_tokens} | "
+            f"Completion: {completion_tokens} | "
+            f"Cost: ${real_cost}"
+        )

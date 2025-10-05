@@ -1,8 +1,12 @@
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, FastAPI, Request
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Depends, FastAPI, Request
+from fastapi.responses import RedirectResponse, Response
 
+from backoffice.infrastructure.factories.repository_factory import (
+    AsyncRepositoryFactory,
+    get_async_repository_factory,
+)
 from backoffice.presentation.routes.auth import router as auth_router
 from backoffice.presentation.routes.dashboard import router as dashboard_router
 from backoffice.presentation.routes.ebook_routes import (
@@ -10,6 +14,8 @@ from backoffice.presentation.routes.ebook_routes import (
     router as ebook_router,
 )
 from backoffice.presentation.routes.templates import templates
+
+AsyncRepositoryFactoryDep = Annotated[AsyncRepositoryFactory, Depends(get_async_repository_factory)]
 
 # Legacy theme_routes commented - imports legacy code
 # from backoffice.presentation.routes.theme_routes import router as theme_router
@@ -37,27 +43,33 @@ async def login_page(request: Request) -> Any:
 
 
 @pages_router.get("/dashboard/costs")
-async def costs_page(request: Request) -> Any:
-    """Display costs page with data."""
+async def costs_page(request: Request, factory: AsyncRepositoryFactoryDep) -> Response:
+    """Display ebook generation costs page."""
     from decimal import Decimal
 
-    from backoffice.domain.usecases.get_ebook_costs import GetEbookCostsUseCase
-    from backoffice.infrastructure.database import get_db
-    from backoffice.infrastructure.factories.repository_factory import RepositoryFactory
+    from backoffice.features.generation_costs.infrastructure.adapters.token_tracker_repository import (  # noqa: E501
+        TokenTrackerRepository,
+    )
 
-    # Get database session
-    db = next(get_db())
     try:
-        # Create repository factory
-        factory = RepositoryFactory(db)
-        ebook_repo = factory.get_ebook_repository()
-
-        # Execute use case
-        get_costs_usecase = GetEbookCostsUseCase(ebook_repo)
-        cost_summaries = await get_costs_usecase.execute()
+        # Get cost calculations directly from repository
+        token_tracker = TokenTrackerRepository(factory.db)
+        cost_calculations = await token_tracker.get_all_cost_calculations()
 
         # Calculate total cost
-        total_cost = sum((s.cost for s in cost_summaries), Decimal("0"))
+        total_cost = sum((calc.total_cost for calc in cost_calculations), Decimal("0"))
+
+        # Format data for template
+        cost_summaries = [
+            {
+                "request_id": calc.request_id,
+                "total_cost": calc.total_cost,
+                "total_tokens": calc.total_tokens,
+                "api_call_count": calc.api_call_count,
+                "average_cost_per_call": calc.average_cost_per_call,
+            }
+            for calc in cost_calculations
+        ]
 
         return templates.TemplateResponse(
             "costs.html",
@@ -67,8 +79,14 @@ async def costs_page(request: Request) -> Any:
                 "total_cost": total_cost,
             },
         )
-    finally:
-        db.close()
+    except Exception as e:
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error loading costs page: {str(e)}", exc_info=True)
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=500, detail="Error loading costs page") from e
 
 
 # Fonction pour initialiser toutes les routes

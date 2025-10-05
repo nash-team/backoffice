@@ -14,7 +14,6 @@ class CoverGenerationPort(ABC):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
-        token_tracker=None,
     ) -> bytes:
         """Generate a cover image.
 
@@ -22,7 +21,6 @@ class CoverGenerationPort(ABC):
             prompt: Text prompt describing the cover
             spec: Image specifications (dimensions, format, etc.)
             seed: Random seed for reproducibility
-            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             Image data as bytes
@@ -45,7 +43,7 @@ class CoverGenerationPort(ABC):
         """Remove text from cover to create back cover using AI vision.
 
         Provider-agnostic method: each provider implements its own logic
-        (Gemini Vision for OpenRouter, img2img for Replicate, etc.)
+        (Gemini Vision for OpenRouter, etc.)
 
         Args:
             cover_bytes: Original cover image (with text)

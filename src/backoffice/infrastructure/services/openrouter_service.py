@@ -159,14 +159,6 @@ Réponds UNIQUEMENT avec le JSON structuré."""
                 },
             )
 
-            # Log token usage and cost
-            if response.usage and hasattr(self, "token_tracker"):
-                await self.token_tracker.add_usage(
-                    model=self.model,
-                    prompt_tokens=response.usage.prompt_tokens,
-                    completion_tokens=response.usage.completion_tokens,
-                )
-
             json_content = response.choices[0].message.content.strip()
 
             # Validate JSON
@@ -256,14 +248,6 @@ Assure-toi que le contenu soit substantiel (au moins 2000 mots) et éducatif."""
                 },
             )
 
-            # Log token usage and cost
-            if response.usage and hasattr(self, "token_tracker"):
-                await self.token_tracker.add_usage(
-                    model=self.model,
-                    prompt_tokens=response.usage.prompt_tokens,
-                    completion_tokens=response.usage.completion_tokens,
-                )
-
             content = response.choices[0].message.content
 
             # Generate title from the prompt
@@ -282,14 +266,6 @@ Assure-toi que le contenu soit substantiel (au moins 2000 mots) et éducatif."""
                     "X-Title": "Ebook Generator Backoffice",
                 },
             )
-
-            # Log token usage and cost for title generation
-            if title_response.usage and hasattr(self, "token_tracker"):
-                await self.token_tracker.add_usage(
-                    model=self.model,
-                    prompt_tokens=title_response.usage.prompt_tokens,
-                    completion_tokens=title_response.usage.completion_tokens,
-                )
 
             title = title_response.choices[0].message.content.strip()
 

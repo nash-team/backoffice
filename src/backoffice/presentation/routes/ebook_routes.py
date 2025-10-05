@@ -8,13 +8,16 @@ from backoffice.infrastructure.adapters.sources.google_drive_adapter import (
     GoogleDriveError,
 )
 from backoffice.infrastructure.factories.repository_factory import (
+    AsyncRepositoryFactory,
     RepositoryFactory,
+    get_async_repository_factory,
     get_repository_factory,
 )
 from backoffice.presentation.routes.dependencies import auth_service
 
 # Type alias for dependency injection
 RepositoryFactoryDep = Annotated[RepositoryFactory, Depends(get_repository_factory)]
+AsyncRepositoryFactoryDep = Annotated[AsyncRepositoryFactory, Depends(get_async_repository_factory)]
 
 # Configuration du logging
 logging.basicConfig(level=logging.INFO)
@@ -60,7 +63,7 @@ operations_router = APIRouter(prefix="/api/ebooks", tags=["Ebook Operations"])
 @operations_router.post("/{ebook_id}/pages/regenerate")
 async def regenerate_ebook_page(
     ebook_id: int,
-    factory: RepositoryFactoryDep,
+    factory: AsyncRepositoryFactoryDep,
     regeneration_request: Annotated[dict, Body(...)],
 ) -> dict:
     """
@@ -100,12 +103,6 @@ async def regenerate_ebook_page(
         # Create new architecture services
         from backoffice.domain.cover_generation import CoverGenerationService
         from backoffice.domain.pdf_assembly import PDFAssemblyService
-
-        # Initialize services with cost tracking
-        from backoffice.domain.services.token_tracker import TokenTracker
-        from backoffice.infrastructure.adapters.openrouter_pricing_adapter import (
-            OpenRouterPricingAdapter,
-        )
         from backoffice.infrastructure.providers.provider_factory import ProviderFactory
         from backoffice.infrastructure.providers.weasyprint_assembly_provider import (
             WeasyPrintAssemblyProvider,
@@ -116,27 +113,14 @@ async def regenerate_ebook_page(
         if not ebook:
             raise HTTPException(status_code=404, detail=f"Ebook {ebook_id} not found")
 
-        # Use the SAME provider as original generation
-        provider_name = "replicate"  # Default fallback
-        model_name = "black-forest-labs/flux-schnell"  # Default fallback
+        # Setup event-driven cost tracking
+        request_id = f"regenerate-{page_type}-{ebook_id}"
+        track_usage_usecase = factory.get_track_token_usage_usecase()
 
-        if ebook.generation_metadata:
-            provider_name = ebook.generation_metadata.provider
-            model_name = ebook.generation_metadata.model
-            logger.info(
-                f"📌 Using original provider for regeneration: {provider_name} | {model_name}"
-            )
-        else:
-            logger.warning("⚠️ No generation metadata, using default provider: replicate")
-
-        # Create tracker for regeneration cost logging
-        pricing_adapter = OpenRouterPricingAdapter()
-        tracker = TokenTracker(
-            request_id=f"regenerate-{page_type}-{ebook_id}", pricing_adapter=pricing_adapter
+        # Create providers with event-driven tracking
+        cover_provider = ProviderFactory.create_cover_provider(
+            track_usage_usecase=track_usage_usecase, request_id=request_id
         )
-
-        # Create provider using factory (will use the correct provider)
-        cover_provider = ProviderFactory.create_cover_provider(token_tracker=tracker)
         cover_service = CoverGenerationService(cover_port=cover_provider)
         assembly_provider = WeasyPrintAssemblyProvider()
         assembly_service = PDFAssemblyService(assembly_port=assembly_provider)
@@ -176,7 +160,9 @@ async def regenerate_ebook_page(
             # Create page service for content page generation
             from backoffice.domain.page_generation import ContentPageGenerationService
 
-            page_provider = ProviderFactory.create_content_page_provider(token_tracker=tracker)
+            page_provider = ProviderFactory.create_content_page_provider(
+                track_usage_usecase=track_usage_usecase, request_id=request_id
+            )
             page_service = ContentPageGenerationService(page_port=page_provider)
 
             regenerate_usecase = RegenerateContentPageUseCase(
@@ -199,10 +185,7 @@ async def regenerate_ebook_page(
                 prompt_override=prompt_override,
             )
 
-        # Log regeneration cost (not stored in DB, just for visibility)
-        regeneration_cost = tracker.get_total_cost()
-        if regeneration_cost > 0:
-            logger.info(f"💰 {page_type.capitalize()} regeneration cost: ${regeneration_cost:.6f}")
+        # Note: Regeneration costs tracked via generation_costs feature (event-driven)
 
         logger.info(f"Successfully regenerated {page_type} for ebook {ebook_id}")
 

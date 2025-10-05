@@ -25,7 +25,6 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
 
     V1 approach:
     - Log execution plan BEFORE starting
-    - Generate content pages (B&W) using ContentPageGenerationService (SDXL + LoRA)
     - Generate cover (colorful) based on page themes using CoverGenerationService (Gemini)
     - Create back cover (text removal from cover)
     - Assemble PDF using PDFAssemblyService
@@ -39,7 +38,6 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         cover_service: CoverGenerationService,
         pages_service: ContentPageGenerationService,
         assembly_service: PDFAssemblyService,
-        token_tracker=None,
     ):
         """Initialize coloring book strategy.
 
@@ -47,12 +45,10 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
             cover_service: Service for cover generation
             pages_service: Service for content page generation
             assembly_service: Service for PDF assembly
-            token_tracker: Optional TokenTracker for cost tracking
         """
         self.cover_service = cover_service
         self.pages_service = pages_service
         self.assembly_service = assembly_service
-        self.token_tracker = token_tracker
 
     async def generate(self, request: GenerationRequest) -> GenerationResult:
         """Generate a coloring book.
@@ -78,8 +74,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
 
         # Step 1: Generate cover (colorful) FIRST
         logger.info("\n📋 Step 1/4: Generating cover...")
-        if self.token_tracker:
-            logger.debug(f"TokenTracker before cover = ${self.token_tracker.get_total_cost():.6f}")
+        # Cost tracking now handled via events in provider
 
         cover_prompt = self._build_cover_prompt(request, page_prompts=None)
         cover_spec = ImageSpec(
@@ -94,16 +89,10 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
             prompt=cover_prompt,
             spec=cover_spec,
             seed=request.seed,
-            token_tracker=self.token_tracker,
         )
-
-        if self.token_tracker:
-            logger.debug(f"TokenTracker after cover = ${self.token_tracker.get_total_cost():.6f}")
 
         # Step 2: Generate content pages (B&W) SECOND
         logger.info(f"\n📋 Step 2/4: Generating {request.page_count} content pages...")
-        if self.token_tracker:
-            logger.debug(f"TokenTracker before pages = ${self.token_tracker.get_total_cost():.6f}")
 
         page_prompts = self._build_page_prompts(request)
         page_spec = ImageSpec(
@@ -118,27 +107,14 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
             prompts=page_prompts,
             spec=page_spec,
             seed=request.seed,
-            token_tracker=self.token_tracker,
         )
-
-        if self.token_tracker:
-            logger.debug(f"TokenTracker after pages = ${self.token_tracker.get_total_cost():.6f}")
 
         # Step 3: Remove text from cover to create back cover with Gemini Vision
         logger.info("\n📋 Step 3/4: Creating back cover (same image without text)...")
-        if self.token_tracker:
-            logger.debug(
-                f"TokenTracker before back cover = ${self.token_tracker.get_total_cost():.6f}"
-            )
 
         back_cover_data = await self.cover_service.cover_port.remove_text_from_cover(
             cover_bytes=cover_data
         )
-
-        if self.token_tracker:
-            logger.debug(
-                f"TokenTracker after back cover = ${self.token_tracker.get_total_cost():.6f}"
-            )
 
         # Step 4: Assemble PDF
         logger.info("\n📋 Step 4/4: Assembling PDF...")
@@ -240,7 +216,6 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         logger.info("  3. Create back cover (text removal from cover)")
         logger.info("  4. Assemble PDF (WeasyPrint)")
         logger.info("\nQuality settings:")
-        logger.info("  - Pages: 1024x1024, 300 DPI, B&W (FREE with local SDXL)")
         logger.info("  - Cover: 1024x1024, 300 DPI, color (Gemini - $0.04)")
         logger.info("  - Back: Same as cover without text")
         logger.info("=" * 80 + "\n")

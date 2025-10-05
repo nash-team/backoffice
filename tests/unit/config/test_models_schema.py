@@ -198,8 +198,8 @@ class TestModelsConfig:
                     model="stabilityai/sdxl-turbo",
                 ),
                 "custom_type": ModelMapping(  # Extra type
-                    provider="replicate",
-                    model="black-forest-labs/flux-schnell",
+                    provider="local",
+                    model="black-forest-labs/FLUX.1-schnell",
                 ),
             }
         )

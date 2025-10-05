@@ -42,7 +42,6 @@ class CoverGenerationService:
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
-        token_tracker=None,
     ) -> bytes:
         """Generate a cover image with quality validation.
 
@@ -50,7 +49,6 @@ class CoverGenerationService:
             prompt: Text description of the cover
             spec: Image specifications (dimensions, format, color mode)
             seed: Random seed for reproducibility
-            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             Cover image as bytes
@@ -81,7 +79,6 @@ class CoverGenerationService:
             prompt=prompt,
             spec=spec,
             seed=seed,
-            token_tracker=token_tracker,
         )
 
         # Post-validation

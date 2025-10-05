@@ -96,8 +96,8 @@ class ModelRegistry:
                 supports_vectorization=False,
             ),
             "coloring_page": ModelMapping(
-                provider="huggingface",  # Free HF API (not fal-ai)
-                model="artificialguybr/ColoringBookRedmond-V2",
+                provider="gemini",
+                model="gemini-2.5-flash-image",
                 supports_vectorization=False,
             ),
         }

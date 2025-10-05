@@ -22,14 +22,13 @@ dependencies = [
   "passlib[bcrypt]>=1.7.4",
   "python-dotenv>=1.0.0",
 
-  # Base de données (driver utilisé via l’URL SQLAlchemy)
+  # Base de données (drivers sync + async)
   "sqlalchemy>=2.0.23",
-  "psycopg2-binary>=2.9.9",
+  "psycopg2-binary>=2.9.9",  # Sync driver
+  "asyncpg>=0.29.0",         # Async driver for PostgreSQL
 
   # Clients externes (tu les utilises côté app)
   "openai>=1.58.1",  # Updated for httpx 0.28+ compatibility
-  "replicate>=0.25.0",
-  "huggingface-hub>=0.20.0",
   "google-auth>=2.27.0",
   "google-api-python-client>=2.118.0",
 
@@ -118,19 +117,21 @@ combine-as-imports = true
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S603", "S607", "S104", "E501", "E402", "I001"]  # Allow subprocess usage, binding, long lines, imports after code and import sorting in tests
+"features/**/tests/**" = ["S101", "E501"]  # Allow asserts and long lines in feature tests
 "src/backoffice/main.py" = ["S104"]  # Allow 0.0.0.0 binding when explicitly configured
 "src/backoffice/infrastructure/adapters/potrace_vectorizer.py" = ["S603", "S607", "S314"]  # Allow subprocess calls for external tool integration and XML parsing
 "src/backoffice/infrastructure/providers/*.py" = ["S101", "F821", "E501"]  # Allow asserts, undefined names from dynamic imports, long lines in docstrings
 "src/backoffice/domain/usecases/create_ebook.py" = ["S101"]  # Allow assert for post-creation validation
+"src/backoffice/migrations/**" = ["E501"]  # Allow long lines in alembic migrations (auto-generated code)
 
 # --- Mypy ---
 [tool.mypy]
 python_version = "3.11"
 plugins = ["pydantic.mypy"]
-mypy_path = "src"
+mypy_path = "src:features"
 namespace_packages = true
 explicit_package_bases = true
-exclude = ["scripts/", "tests/"]
+exclude = ["scripts/", "tests/", "features/.*/tests/"]
 disallow_untyped_defs = false
 warn_unused_ignores = true
 no_implicit_optional = true
@@ -190,7 +191,7 @@ disable_error_code = ["arg-type", "assignment", "union-attr", "no-any-return", "
 
 # --- Deptry ---
 [tool.deptry]
-exclude = ["tests", "migrations", "scripts", "alembic", ".venv", "venv", "monenv", ".pytest_cache", ".mypy_cache", "build", "dist", "node_modules"]
+exclude = ["tests", "features/**/tests", "migrations", "scripts", "alembic", ".venv", "venv", "monenv", ".pytest_cache", ".mypy_cache", "build", "dist", "node_modules"]
 
 # Specify dev dependency groups (so deptry ignores them)
 pep621_dev_dependency_groups = ["dev"]
@@ -205,12 +206,14 @@ DEP002 = [
     "python-multipart", # Used by FastAPI for form data
     "aiofiles",         # Used by FastAPI for static files
     "psycopg2-binary",  # Used by SQLAlchemy via connection string
+    "asyncpg",          # Used by SQLAlchemy async via connection string (postgresql+asyncpg://)
     "transformers",     # Used by diffusers/torch for local SD (optional, imported dynamically)
     "accelerate",       # Used by diffusers for model loading optimization (optional)
     "sentencepiece",    # Used by transformers for tokenization (optional)
 ]
 DEP004 = [
     "alembic",          # Used in migrations (dev tool but imported in migration files)
+    "pytest",           # Used in feature tests (tests inside features/ folder)
 ]
 DEP001 = [
     "tests",            # Test fakes imported conditionally for E2E tests (via USE_FAKE_PROVIDERS env)

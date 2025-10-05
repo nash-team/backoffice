@@ -66,7 +66,6 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
-        token_tracker=None,
     ) -> bytes:
         """Generate a colorful cover image.
 
@@ -74,7 +73,6 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             prompt: Text description of the cover
             spec: Image specifications (dimensions, format, color mode)
             seed: Random seed for reproducibility
-            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             Cover image as bytes
@@ -166,11 +164,6 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                 logger.info("Adding rounded black border to coloring page...")
                 image_bytes = self._add_rounded_border_to_image(image_bytes)
 
-            # Track usage
-            if token_tracker:
-                usage_metrics = self._create_usage_metrics(self.model, num_images=1)
-                await token_tracker.add_usage_metrics(usage_metrics)
-
             logger.info(f"✅ Generated cover (Gemini Nano Banana): {len(image_bytes)} bytes")
             return image_bytes
 
@@ -197,7 +190,6 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
-        token_tracker=None,
     ) -> bytes:
         """Generate a content page (delegates to generate_cover with same logic).
 
@@ -212,7 +204,7 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         Raises:
             DomainError: If generation fails
         """
-        return await self.generate_cover(prompt, spec, seed, token_tracker)
+        return await self.generate_cover(prompt, spec, seed)
 
     async def remove_text_from_cover(
         self,

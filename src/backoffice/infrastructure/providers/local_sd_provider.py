@@ -213,7 +213,6 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
-        token_tracker=None,
     ) -> bytes:
         """Generate a colorful cover image.
 
@@ -343,11 +342,6 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
                 logger.info("Adding rounded black border to coloring page...")
                 result_bytes = self._add_rounded_border_to_image(result_bytes)
 
-            # Track usage (FREE = $0 cost)
-            if token_tracker:
-                usage_metrics = self._create_usage_metrics(self.model, num_images=1)
-                await token_tracker.add_usage_metrics(usage_metrics)
-
             logger.info(f"✅ Generated cover (LOCAL): {len(result_bytes)} bytes")
             return result_bytes
 
@@ -365,7 +359,6 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
-        token_tracker=None,
     ) -> bytes:
         """Generate a content page (delegates to generate_cover with same logic).
 
@@ -380,7 +373,7 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
         Raises:
             DomainError: If generation fails
         """
-        return await self.generate_cover(prompt, spec, seed, token_tracker)
+        return await self.generate_cover(prompt, spec, seed)
 
     async def remove_text_from_cover(
         self,
@@ -427,8 +420,6 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
             output_buffer = BytesIO()
             img.save(output_buffer, format="PNG")
             final_bytes = output_buffer.getvalue()
-
-            # Track usage (FREE) - no token_tracker needed for this provider
             # (this is a simple PIL operation, not an AI generation)
 
             logger.info(f"✅ Barcode space added (LOCAL): {len(final_bytes)} bytes")

@@ -52,14 +52,17 @@ class ProviderFactory:
         logger.info("🔄 Provider cache cleared")
 
     @staticmethod
-    def create_cover_provider(token_tracker=None) -> CoverGenerationPort:
+    def create_cover_provider(
+        track_usage_usecase=None, request_id: str | None = None
+    ) -> CoverGenerationPort:
         """Create cover generation provider (real or fake).
 
         Uses caching to avoid reloading heavy models (e.g., Local SD).
         Cache key includes LoRA to support multiple model configurations.
 
         Args:
-            token_tracker: Optional TokenTracker for cost tracking
+            track_usage_usecase: Optional TrackTokenUsageUseCase for cost tracking via events
+            request_id: Optional request ID for cost tracking
 
         Returns:
             CoverGenerationPort implementation (cached instance)
@@ -109,25 +112,9 @@ class ProviderFactory:
             )
 
             provider = OpenRouterImageProvider(
-                model=model_mapping.model, token_tracker=token_tracker
-            )
-
-        elif model_mapping.provider == "replicate":
-            from backoffice.infrastructure.providers.replicate_image_provider import (
-                ReplicateImageProvider,
-            )
-
-            provider = ReplicateImageProvider(
-                model=model_mapping.model, token_tracker=token_tracker
-            )
-
-        elif model_mapping.provider == "huggingface":
-            from backoffice.infrastructure.providers.huggingface_image_provider import (
-                HuggingFaceImageProvider,
-            )
-
-            provider = HuggingFaceImageProvider(
-                model=model_mapping.model, token_tracker=token_tracker
+                model=model_mapping.model,
+                track_usage_usecase=track_usage_usecase,
+                request_id=request_id,
             )
 
         elif model_mapping.provider == "local":
@@ -151,7 +138,7 @@ class ProviderFactory:
         else:
             raise ValueError(
                 f"Unknown cover provider: {model_mapping.provider}. "
-                f"Supported: openrouter, replicate, huggingface, local, gemini"
+                f"Supported: openrouter, local, gemini"
             )
 
         # Cache and return (use composite key with LoRA)
@@ -159,14 +146,17 @@ class ProviderFactory:
         return provider
 
     @staticmethod
-    def create_content_page_provider(token_tracker=None) -> ContentPageGenerationPort:
+    def create_content_page_provider(
+        track_usage_usecase=None, request_id: str | None = None
+    ) -> ContentPageGenerationPort:
         """Create content page generation provider (real or fake).
 
         Uses caching to avoid reloading heavy models (e.g., Local SD).
         Cache key includes LoRA to support multiple model configurations.
 
         Args:
-            token_tracker: Optional TokenTracker for cost tracking
+            track_usage_usecase: Optional TrackTokenUsageUseCase for cost tracking via events
+            request_id: Optional request ID for cost tracking
 
         Returns:
             ContentPageGenerationPort implementation (cached instance)
@@ -216,25 +206,9 @@ class ProviderFactory:
             )
 
             provider = OpenRouterImageProvider(
-                model=model_mapping.model, token_tracker=token_tracker
-            )
-
-        elif model_mapping.provider == "replicate":
-            from backoffice.infrastructure.providers.replicate_image_provider import (
-                ReplicateImageProvider,
-            )
-
-            provider = ReplicateImageProvider(
-                model=model_mapping.model, token_tracker=token_tracker
-            )
-
-        elif model_mapping.provider == "huggingface":
-            from backoffice.infrastructure.providers.huggingface_image_provider import (
-                HuggingFaceImageProvider,
-            )
-
-            provider = HuggingFaceImageProvider(
-                model=model_mapping.model, token_tracker=token_tracker
+                model=model_mapping.model,
+                track_usage_usecase=track_usage_usecase,
+                request_id=request_id,
             )
 
         elif model_mapping.provider == "local":
@@ -258,7 +232,7 @@ class ProviderFactory:
         else:
             raise ValueError(
                 f"Unknown content page provider: {model_mapping.provider}. "
-                f"Supported: openrouter, replicate, huggingface, local, gemini"
+                f"Supported: openrouter, local, gemini"
             )
 
         # Cache and return (use composite key with LoRA)

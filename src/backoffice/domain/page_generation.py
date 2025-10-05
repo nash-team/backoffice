@@ -48,7 +48,6 @@ class ContentPageGenerationService:
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
-        token_tracker=None,
     ) -> bytes:
         """Generate a single content page.
 
@@ -56,7 +55,6 @@ class ContentPageGenerationService:
             prompt: Text description for the page
             spec: Image specifications (dimensions, format, color mode)
             seed: Random seed for reproducibility
-            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             Page image as bytes
@@ -75,7 +73,7 @@ class ContentPageGenerationService:
             raise RuntimeError("Content page provider is not available")
 
         # Generate page
-        page_data = await self.page_port.generate_page(prompt, spec, seed, token_tracker)
+        page_data = await self.page_port.generate_page(prompt, spec, seed)
 
         # Post-validation
         QualityValidator.validate_image(
@@ -92,7 +90,6 @@ class ContentPageGenerationService:
         prompts: list[str],
         spec: ImageSpec,
         seed: int | None = None,
-        token_tracker=None,
     ) -> list[bytes]:
         """Generate multiple content pages in batch.
 
@@ -101,7 +98,6 @@ class ContentPageGenerationService:
             prompts: Text descriptions for each page
             spec: Image specifications (dimensions, format, color mode)
             seed: Random seed base for reproducibility
-            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             List of page images as bytes
@@ -130,7 +126,6 @@ class ContentPageGenerationService:
                 spec=spec,
                 seed=seed + i if seed else None,
                 page_number=i + 1,
-                token_tracker=token_tracker,
             )
             for i, prompt in enumerate(prompts)
         ]
@@ -147,7 +142,6 @@ class ContentPageGenerationService:
         spec: ImageSpec,
         seed: int | None,
         page_number: int,
-        token_tracker=None,
     ) -> bytes:
         """Generate a single content page with concurrency control.
 
@@ -156,7 +150,6 @@ class ContentPageGenerationService:
             spec: Image specifications
             seed: Random seed
             page_number: Page number (for logging)
-            token_tracker: Optional TokenTracker for usage tracking
 
         Returns:
             Page image as bytes
@@ -184,7 +177,6 @@ class ContentPageGenerationService:
                 prompt=prompt,
                 spec=spec,
                 seed=seed,
-                token_tracker=token_tracker,
             )
 
             # Post-validation
