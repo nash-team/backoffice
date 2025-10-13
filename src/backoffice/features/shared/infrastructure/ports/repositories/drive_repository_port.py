@@ -9,7 +9,7 @@ que le domaine peut utiliser sans connaître les détails d'implémentation de l
 
 from abc import ABC, abstractmethod
 
-from backoffice.features.shared.domain.entities.ebook import Ebook
+from backoffice.features.ebook.shared.domain.entities.ebook import Ebook
 
 
 class DriveRepositoryPort(ABC):

@@ -2,12 +2,12 @@
 
 import pytest
 
-from backoffice.features.shared.domain.entities.ebook import (
+from backoffice.features.ebook.shared.domain.entities.ebook import (
     calculate_spine_width,
     can_have_spine_text,
     inches_to_px,
 )
-from backoffice.features.shared.infrastructure.utils.color_utils import TEXT_BLACK_CMYK
+from backoffice.features.ebook.shared.infrastructure.utils.color_utils import TEXT_BLACK_CMYK
 
 
 def test_spine_width_calculations():

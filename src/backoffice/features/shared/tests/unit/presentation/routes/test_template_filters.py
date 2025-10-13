@@ -4,7 +4,7 @@ Tests for custom Jinja2 template filters
 
 import pytest
 
-from backoffice.features.shared.domain.entities.ebook import EbookStatus
+from backoffice.features.ebook.shared.domain.entities.ebook import EbookStatus
 from backoffice.features.shared.presentation.routes.templates import (
     EBOOK_STATUS_CONFIG,
     format_ebook_status_class,

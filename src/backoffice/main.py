@@ -1,28 +1,30 @@
 import os
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backoffice.features.ebook_creation.presentation.routes import (
+from backoffice.features.ebook.creation.presentation.routes import (
     router as ebook_creation_router,
 )
-from backoffice.features.ebook_creation.presentation.routes.form_routes import (
+from backoffice.features.ebook.creation.presentation.routes.form_routes import (
     router as ebook_form_router,
 )
-from backoffice.features.ebook_export.presentation.routes import router as ebook_export_router
-from backoffice.features.ebook_lifecycle.presentation.routes import (
+from backoffice.features.ebook.export.presentation.routes import router as ebook_export_router
+from backoffice.features.ebook.lifecycle.presentation.routes import (
     router as ebook_lifecycle_router,
 )
-from backoffice.features.ebook_listing.presentation.routes import router as ebook_listing_router
-from backoffice.features.ebook_regeneration.presentation.routes import (
+from backoffice.features.ebook.listing.presentation.routes import router as ebook_listing_router
+from backoffice.features.ebook.regeneration.presentation.routes import (
     router as ebook_regeneration_router,
 )
 from backoffice.features.generation_costs.presentation.routes import (
+    pages_router as costs_pages_router,
     router as generation_costs_router,
 )
 from backoffice.features.shared.presentation.routes.auth import router as auth_router
+from backoffice.features.shared.presentation.routes.templates import templates
 
 app = FastAPI(title="Backoffice")
 
@@ -65,6 +67,12 @@ app.mount(
 )
 
 
+@app.get("/")
+async def dashboard_page(request: Request):
+    """Serve the main dashboard page."""
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+
+
 @app.get("/healthz")
 async def health_check() -> dict[str, str]:
     return {"status": "ok"}
@@ -81,8 +89,8 @@ async def test_reset_database() -> tuple[dict[str, str], int] | dict[str, str]:
 
     try:
         # Importer et utiliser les modèles pour reset la DB
+        from backoffice.features.ebook.shared.infrastructure.models.ebook_model import EbookModel
         from backoffice.features.shared.infrastructure.database import get_db
-        from backoffice.features.shared.infrastructure.models.ebook_model import EbookModel
 
         db = next(get_db())
         # Supprimer toutes les données
@@ -103,6 +111,7 @@ app.include_router(ebook_lifecycle_router)
 app.include_router(ebook_export_router)
 app.include_router(ebook_regeneration_router)
 app.include_router(generation_costs_router)
+app.include_router(costs_pages_router)
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,6 +1,8 @@
 """Unit tests for PromptTemplateEngine."""
 
-from backoffice.features.shared.domain.prompt_template_engine import PromptTemplateEngine
+from backoffice.features.ebook.shared.domain.services.prompt_template_engine import (
+    PromptTemplateEngine,
+)
 
 
 class TestPromptTemplateEngine:

@@ -9,7 +9,7 @@ Il ne doit pas être utilisé directement dans la logique métier ou l'API.
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.sql import func
 
-from backoffice.features.shared.infrastructure.models.ebook_model import Base
+from backoffice.features.ebook.shared.infrastructure.models.ebook_model import Base
 
 
 class UserModel(Base):

@@ -1,4 +1,4 @@
-from backoffice.features.shared.domain.entities.image_page import (
+from backoffice.features.ebook.shared.domain.entities.image_page import (
     ImageFormat,
     ImagePage,
     ImagePageType,

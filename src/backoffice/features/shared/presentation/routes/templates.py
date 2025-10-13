@@ -21,11 +21,11 @@ FEATURES_DIR = BASE_DIR.parent.parent  # Go up to features/
 # List of template directories (order matters - first found wins)
 template_loaders = [
     FileSystemLoader(str(FEATURES_DIR / "shared" / "presentation" / "templates")),
-    FileSystemLoader(str(FEATURES_DIR / "ebook_listing" / "presentation" / "templates")),
-    FileSystemLoader(str(FEATURES_DIR / "ebook_creation" / "presentation" / "templates")),
-    FileSystemLoader(str(FEATURES_DIR / "ebook_lifecycle" / "presentation" / "templates")),
-    FileSystemLoader(str(FEATURES_DIR / "ebook_regeneration" / "presentation" / "templates")),
-    FileSystemLoader(str(FEATURES_DIR / "ebook_export" / "presentation" / "templates")),
+    FileSystemLoader(str(FEATURES_DIR / "ebook" / "listing" / "presentation" / "templates")),
+    FileSystemLoader(str(FEATURES_DIR / "ebook" / "creation" / "presentation" / "templates")),
+    FileSystemLoader(str(FEATURES_DIR / "ebook" / "lifecycle" / "presentation" / "templates")),
+    FileSystemLoader(str(FEATURES_DIR / "ebook" / "regeneration" / "presentation" / "templates")),
+    FileSystemLoader(str(FEATURES_DIR / "ebook" / "export" / "presentation" / "templates")),
     FileSystemLoader(str(FEATURES_DIR / "generation_costs" / "presentation" / "templates")),
 ]
 

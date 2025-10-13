@@ -121,7 +121,9 @@ combine-as-imports = true
 "**/tests/**" = ["S101", "E501"]  # Allow asserts and long lines in ALL test directories
 "src/backoffice/main.py" = ["S104"]  # Allow 0.0.0.0 binding when explicitly configured
 "src/backoffice/features/shared/infrastructure/adapters/potrace_vectorizer.py" = ["S603", "S607", "S314"]  # Allow subprocess calls for external tool integration and XML parsing
+"src/backoffice/features/ebook/shared/infrastructure/adapters/potrace_vectorizer.py" = ["S603", "S607", "S314"]  # Allow subprocess calls for external tool integration and XML parsing
 "src/backoffice/features/shared/infrastructure/providers/*.py" = ["S101", "F821", "E501"]  # Allow asserts, undefined names from dynamic imports, long lines in docstrings
+"src/backoffice/features/ebook/shared/infrastructure/providers/*.py" = ["S101", "F821", "E501"]  # Allow asserts for type narrowing, undefined names from dynamic imports, long lines
 "src/backoffice/migrations/**" = ["E501"]  # Allow long lines in alembic migrations (auto-generated code)
 
 # --- Mypy ---
@@ -169,7 +171,7 @@ module = ["backoffice.features.shared.infrastructure.adapters.*"]
 disable_error_code = ["arg-type", "assignment", "union-attr", "return-value", "attr-defined"]
 
 [[tool.mypy.overrides]]
-module = ["backoffice.features.ebook_export.*"]
+module = ["backoffice.features.ebook.export.*"]
 disable_error_code = ["redundant-cast"]
 
 [[tool.mypy.overrides]]

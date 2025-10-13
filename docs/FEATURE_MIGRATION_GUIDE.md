@@ -322,14 +322,14 @@ def init_routes(app: FastAPI) -> None:
 - [ ] **Pre-commit** : `pre-commit run --all-files`
   - Vérifier que tous les hooks passent (incluant ruff)
 
-**Exemple `ebook_lifecycle`** :
+**Exemple `ebook/lifecycle`** :
 
 ```bash
 # 1. Tests d'abord
-pytest src/backoffice/features/ebook_lifecycle/ -v
+pytest src/backoffice/features/ebook/lifecycle/ -v
 
 # 2. Vérifications statiques
-mypy src/backoffice/features/ebook_lifecycle/
+mypy src/backoffice/features/ebook/lifecycle/
 deptry .
 
 # 3. Vérifier les templates concernés
@@ -348,7 +348,7 @@ grep -r "hx-put.*approve\|hx-put.*reject" src/backoffice/presentation/templates/
 # - Vérifier les logs pour les 404 ou 500
 
 # 5. Ruff EN DERNIER (formatte automatiquement)
-ruff check --fix src/backoffice/features/ebook_lifecycle/
+ruff check --fix src/backoffice/features/ebook/lifecycle/
 
 # 6. Pre-commit final
 pre-commit run --all-files

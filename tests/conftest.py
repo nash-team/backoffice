@@ -11,8 +11,8 @@ from testcontainers.postgres import PostgresContainer
 root_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(root_dir))
 
+from backoffice.features.ebook.shared.infrastructure.models.ebook_model import Base
 from backoffice.features.shared.infrastructure.database import get_db
-from backoffice.features.shared.infrastructure.models.ebook_model import Base
 from backoffice.main import app
 
 
@@ -57,7 +57,7 @@ def test_db_session(test_engine):
         # This handles both committed and uncommitted data
         session.rollback()
         # Truncate all tables to ensure clean state for next test
-        from backoffice.features.shared.infrastructure.models.ebook_model import EbookModel
+        from backoffice.features.ebook.shared.infrastructure.models.ebook_model import EbookModel
 
         session.query(EbookModel).delete()
         session.commit()

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from backoffice.features.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
 from backoffice.features.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 
 

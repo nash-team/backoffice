@@ -5,7 +5,7 @@ import os
 
 from openai import AsyncOpenAI
 
-from backoffice.features.shared.domain.entities.ebook import EbookConfig
+from backoffice.features.ebook.shared.domain.entities.ebook import EbookConfig
 
 logger = logging.getLogger(__name__)
 

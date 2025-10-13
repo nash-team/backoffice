@@ -52,10 +52,10 @@ This tool **generates complete coloring books** (dinosaurs, pirates, unicorns, e
 
 ```
 src/backoffice/features/
-├── ebook_creation/         # New ebook generation workflow
-├── ebook_lifecycle/        # Approve/Reject/Stats management
-├── ebook_listing/          # Dashboard & pagination
-├── ebook_regeneration/     # Back cover regeneration
+├── ebook/creation/         # New ebook generation workflow
+├── ebook/lifecycle/        # Approve/Reject/Stats management
+├── ebook/listing/          # Dashboard & pagination
+├── ebook/regeneration/     # Back cover regeneration
 ├── generation_costs/       # Cost tracking & analytics
 └── shared/                 # Shared domain & infrastructure
     ├── domain/             # Entities, ports, services (Ebook, ImagePage, etc.)
@@ -196,7 +196,7 @@ make clean             # Remove cache files
 
 ```bash
 # Run specific feature tests
-pytest src/backoffice/features/ebook_creation/tests/unit -v
+pytest src/backoffice/features/ebook/creation/tests/unit -v
 
 # Run integration tests (requires Docker)
 pytest src/backoffice/features/*/tests/integration -v
@@ -213,10 +213,10 @@ pytest --cov=src/backoffice --cov-report=html
 generatorEbook/backoffice/
 ├── src/backoffice/
 │   ├── features/              # Feature modules (100% of code)
-│   │   ├── ebook_creation/
-│   │   ├── ebook_lifecycle/
-│   │   ├── ebook_listing/
-│   │   ├── ebook_regeneration/
+│   │   ├── ebook/creation/
+│   │   ├── ebook/lifecycle/
+│   │   ├── ebook/listing/
+│   │   ├── ebook/regeneration/
 │   │   ├── generation_costs/
 │   │   └── shared/
 │   └── main.py                # FastAPI application entry point
@@ -319,7 +319,7 @@ make test-integration  # (currently disabled due to migration)
    ```
 4. **Commit with conventional commits:**
    ```bash
-   git commit -m "feat(ebook_creation): add new theme support"
+   git commit -m "feat(ebook/creation): add new theme support"
    ```
 5. **Push and create PR**
 

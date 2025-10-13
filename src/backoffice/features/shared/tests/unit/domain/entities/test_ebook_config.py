@@ -1,6 +1,6 @@
 import pytest
 
-from backoffice.features.shared.domain.entities.ebook import EbookConfig
+from backoffice.features.ebook.shared.domain.entities.ebook import EbookConfig
 
 
 class TestEbookConfig:

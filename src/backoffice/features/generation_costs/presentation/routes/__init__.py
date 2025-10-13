@@ -9,7 +9,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import Response
 
-from backoffice.features.shared.infrastructure.factories.repository_factory import (
+from backoffice.features.ebook.shared.infrastructure.factories.repository_factory import (
     AsyncRepositoryFactory,
     get_async_repository_factory,
 )

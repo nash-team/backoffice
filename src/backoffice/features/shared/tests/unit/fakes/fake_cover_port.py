@@ -1,8 +1,8 @@
 """Fake cover generation port for testing."""
 
+from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
 from backoffice.features.shared.domain.entities.generation_request import ImageSpec
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
-from backoffice.features.shared.domain.ports.cover_generation_port import CoverGenerationPort
 
 
 class FakeCoverPort(CoverGenerationPort):

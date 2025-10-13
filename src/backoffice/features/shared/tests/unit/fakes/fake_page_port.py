@@ -1,10 +1,10 @@
 """Fake content page generation port for testing."""
 
-from backoffice.features.shared.domain.entities.generation_request import ImageSpec
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
-from backoffice.features.shared.domain.ports.content_page_generation_port import (
+from backoffice.features.ebook.shared.domain.ports.content_page_generation_port import (
     ContentPageGenerationPort,
 )
+from backoffice.features.shared.domain.entities.generation_request import ImageSpec
+from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
 
 class FakePagePort(ContentPageGenerationPort):

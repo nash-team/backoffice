@@ -2,7 +2,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from backoffice.features.shared.infrastructure.adapters.potrace_vectorizer import PotraceVectorizer
+from backoffice.features.ebook.shared.infrastructure.adapters.potrace_vectorizer import (
+    PotraceVectorizer,
+)
 
 
 @pytest.fixture

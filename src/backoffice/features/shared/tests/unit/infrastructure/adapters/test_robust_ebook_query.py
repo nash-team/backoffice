@@ -9,12 +9,12 @@ from unittest.mock import create_autospec
 import pytest
 from sqlalchemy.orm import Session
 
-from backoffice.features.shared.domain.entities.ebook import Ebook, EbookStatus
-from backoffice.features.shared.domain.entities.pagination import PaginationParams
-from backoffice.features.shared.infrastructure.adapters.queries.sqlalchemy_ebook_query import (
+from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.infrastructure.models.ebook_model import EbookModel
+from backoffice.features.ebook.shared.infrastructure.queries.sqlalchemy_ebook_query import (
     SqlAlchemyEbookQuery,
 )
-from backoffice.features.shared.infrastructure.models.ebook_model import EbookModel
+from backoffice.features.shared.domain.entities.pagination import PaginationParams
 
 
 class TestSqlAlchemyEbookQuery:

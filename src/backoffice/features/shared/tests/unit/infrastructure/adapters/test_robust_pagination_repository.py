@@ -8,12 +8,12 @@ from unittest.mock import create_autospec
 
 import pytest
 
-from backoffice.features.shared.domain.entities.ebook import Ebook, EbookStatus
-from backoffice.features.shared.domain.entities.pagination import PaginatedResult, PaginationParams
-from backoffice.features.shared.domain.ports.ebook_query_port import EbookQueryPort
-from backoffice.features.shared.infrastructure.adapters.repositories.ebook_repository import (
+from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.ports.ebook_query_port import EbookQueryPort
+from backoffice.features.ebook.shared.infrastructure.repositories.ebook_repository import (
     SqlAlchemyEbookRepository,
 )
+from backoffice.features.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 
 
 class TestSqlAlchemyEbookRepositoryPagination:
