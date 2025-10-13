@@ -124,18 +124,18 @@ class ExportToKDPUseCase:
 
         # 5. Initialize providers if not injected
         if not self.image_provider:
-            from backoffice.features.ebook.shared.infrastructure.providers.openrouter_image_provider import (
-                OpenRouterImageProvider,
+            from backoffice.features.ebook.shared.infrastructure.providers import (
+                openrouter_image_provider as or_provider,
             )
 
-            self.image_provider = OpenRouterImageProvider()
+            self.image_provider = or_provider.OpenRouterImageProvider()
 
         if not self.kdp_assembly_provider:
-            from backoffice.features.ebook.shared.infrastructure.providers.kdp_assembly_provider import (
-                KDPAssemblyProvider,
+            from backoffice.features.ebook.shared.infrastructure.providers import (
+                kdp_assembly_provider as kdp_provider,
             )
 
-            self.kdp_assembly_provider = KDPAssemblyProvider()
+            self.kdp_assembly_provider = kdp_provider.KDPAssemblyProvider()
 
         # 6. Get front cover bytes (WITH text - for assembly)
         front_cover_bytes = await self._get_front_cover_bytes(ebook)
