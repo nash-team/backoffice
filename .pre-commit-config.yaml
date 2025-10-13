@@ -56,8 +56,9 @@ repos:
     hooks:
       - id: pytest-unit
         name: pytest-unit
-        entry: pytest
+        entry: python -m pytest
         language: system
         pass_filenames: false
         args: ["-m", "not integration and not e2e and not scenarios", "-q", "--tb=line"]
         types: [python]
+        require_serial: true
