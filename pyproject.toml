@@ -228,6 +228,9 @@ DEP002 = [
     "accelerate",       # Used by diffusers for model loading optimization (optional)
     "sentencepiece",    # Used by transformers for tokenization (optional)
 ]
+DEP003 = [
+    "backoffice",       # This is the local package, not a dependency
+]
 DEP004 = [
     "alembic",          # Used in migrations (dev tool but imported in migration files)
     "pytest",           # Used in feature tests (tests inside features/ folder)
