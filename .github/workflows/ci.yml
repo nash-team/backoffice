@@ -8,6 +8,10 @@ on:
 
 jobs:
   test:
+    # Skip CI for ebook generation PRs
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'ebook-generation-'))
     runs-on: ubuntu-latest
     env:
       SECRET_KEY: test-key-for-ci
