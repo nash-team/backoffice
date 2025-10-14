@@ -16,6 +16,12 @@ on:
 env:
   PYTHON_VERSION: '3.11'
 
+# Permissions explicites pour le GITHUB_TOKEN
+permissions:
+  contents: read
+  issues: read
+  pull-requests: write
+
 jobs:
   # Job 1: Initialisation depuis une issue
   initialize-from-issue:
@@ -42,15 +48,30 @@ jobs:
         run: |
           pip install PyYAML requests python-dotenv
 
-      - name: Parse issue and create spec
-        id: parse
+      - name: Debug - Check token and API access
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number || github.event.inputs.issue_number }}
         run: |
           echo "Issue number: $ISSUE_NUMBER"
+          echo "Repository: ${{ github.repository }}"
+          echo "Testing API access with curl..."
+          curl -s -H "Authorization: token $GITHUB_TOKEN" \
+               -H "Accept: application/vnd.github.v3+json" \
+               https://api.github.com/repos/${{ github.repository }}/issues/$ISSUE_NUMBER \
+               | jq '.title, .state, .labels[].name' || echo "API call failed"
+
+      - name: Parse issue and create spec
+        id: parse
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || github.event.inputs.issue_number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          echo "Parsing issue #$ISSUE_NUMBER..."
           python .github/scripts/parse_issue.py \
             --issue-number $ISSUE_NUMBER \
+            --repo $GITHUB_REPOSITORY \
             --output specs/ebook-$ISSUE_NUMBER.yaml
           echo "spec_file=specs/ebook-$ISSUE_NUMBER.yaml" >> $GITHUB_OUTPUT
 
