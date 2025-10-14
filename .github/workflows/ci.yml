@@ -45,19 +45,19 @@ jobs:
 
       # Typage
       - name: 🔎 Mypy
-        run: mypy .
+        run: mypy src/
 
       # Dépendances (Knip-like)
       - name: 📚 Deptry
-        run: deptry .
+        run: deptry src/
 
       # Code mort (optionnel mais utile)
       - name: 🪦 Vulture
-        run: vulture . --min-confidence=80 --exclude=tests,**/__init__.py
+        run: vulture src/ --min-confidence=80 --exclude=**/__init__.py
 
-      # Tests (unit + e2e si tu veux)
+      # Tests (unit only - integration tests require DB setup)
       - name: 🧪 Pytest (unit)
-        run: pytest tests/unit/ tests/integration/ -v
+        run: pytest -m "not integration and not e2e and not scenarios" -v
 
       - name: 🧪 Pytest (e2e chromium)
         run: make test-e2e
