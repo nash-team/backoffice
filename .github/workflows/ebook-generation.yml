@@ -95,9 +95,21 @@ jobs:
 
           # Check if branch already exists
           if git ls-remote --heads origin $BRANCH_NAME | grep -q $BRANCH_NAME; then
-            echo "Branch $BRANCH_NAME already exists, checking it out..."
+            echo "Branch $BRANCH_NAME already exists, handling existing branch..."
+
+            # Stash any local changes including untracked files
+            git add -A
+            git stash --include-untracked
+
+            # Fetch and checkout the existing branch
             git fetch origin $BRANCH_NAME
             git checkout $BRANCH_NAME
+
+            # Pull latest changes
+            git pull origin $BRANCH_NAME
+
+            # Apply stashed changes
+            git stash pop || true
           else
             echo "Creating new branch $BRANCH_NAME..."
             git checkout -b $BRANCH_NAME
