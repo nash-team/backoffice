@@ -129,46 +129,41 @@ jobs:
           # Push the branch
           git push origin $BRANCH_NAME
 
-          # Check if PR already exists
-          EXISTING_PR=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:$BRANCH_NAME&state=open" \
-            | jq -r '.[0].number')
+          # Check if PR already exists using gh CLI
+          EXISTING_PR=$(gh pr list --repo ${{ github.repository }} --head $BRANCH_NAME --state open --json number --jq '.[0].number' || echo "")
 
-          if [ "$EXISTING_PR" != "null" ] && [ -n "$EXISTING_PR" ]; then
+          if [ -n "$EXISTING_PR" ]; then
             echo "PR #$EXISTING_PR already exists for this branch"
             echo "pr_number=$EXISTING_PR" >> $GITHUB_OUTPUT
           else
-            # Create PR using GitHub API
-            PR_RESPONSE=$(curl -X POST \
-              -H "Authorization: token $GITHUB_TOKEN" \
-              -H "Accept: application/vnd.github.v3+json" \
-              https://api.github.com/repos/${{ github.repository }}/pulls \
-              -d '{
-                "title": "🎨 Ebook #'$ISSUE_NUMBER': Génération automatique",
-                "body": "## 📚 Génération automatique depuis issue #'$ISSUE_NUMBER'\n\nCette PR contient la génération automatique de l'\''ebook demandé.\n\n### ✅ Checklist\n- [ ] Thème validé\n- [ ] Génération lancée\n- [ ] Review effectuée\n- [ ] Upload Drive\n\n### 📊 Status\n- **Issue source**: #'$ISSUE_NUMBER'\n- **Branch**: `'$BRANCH_NAME'`\n- **État**: Draft (en attente de génération)\n\n---\n*Cette PR a été créée automatiquement par GitHub Actions*",
-                "head": "'$BRANCH_NAME'",
-                "base": "main",
-                "draft": true
-              }')
+            # Create PR using gh CLI (this should work even when API is restricted)
+            echo "Creating PR using gh CLI..."
 
-            PR_NUMBER=$(echo $PR_RESPONSE | jq -r '.number')
+            # Create the PR using gh CLI with inline body
+            PR_OUTPUT=$(gh pr create \
+              --repo "${{ github.repository }}" \
+              --title "🎨 Ebook #$ISSUE_NUMBER: Génération automatique" \
+              --body "$(printf '## 📚 Génération automatique depuis issue #%s\n\nCette PR contient la génération automatique de l'"'"'ebook demandé.\n\n### ✅ Checklist\n- [ ] Thème validé\n- [ ] Génération lancée\n- [ ] Review effectuée\n- [ ] Upload Drive\n\n### 📊 Status\n- **Issue source**: #%s\n- **Branch**: `%s`\n- **État**: Draft (en attente de génération)\n\n---\n*Cette PR a été créée automatiquement par GitHub Actions*' "$ISSUE_NUMBER" "$ISSUE_NUMBER" "$BRANCH_NAME")" \
+              --base main \
+              --head "$BRANCH_NAME" \
+              --draft \
+              2>&1)
 
-            if [ "$PR_NUMBER" = "null" ] || [ -z "$PR_NUMBER" ]; then
-              echo "❌ Failed to create PR. Response:"
-              echo $PR_RESPONSE
+            PR_EXIT_CODE=$?
+
+            if [ $PR_EXIT_CODE -eq 0 ]; then
+              # Extract PR number from output (gh pr create returns the PR URL)
+              PR_NUMBER=$(echo "$PR_OUTPUT" | grep -oE '[0-9]+$')
+              echo "✅ PR #$PR_NUMBER created successfully"
+              echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+              # Comment on the issue using gh CLI
+              gh issue comment "$ISSUE_NUMBER" \
+                --repo "${{ github.repository }}" \
+                --body "$(printf '## 🚀 Génération lancée!\n\n✅ PR créée: #%s\n\nLa génération de l'"'"'ebook va maintenant commencer. Vous pouvez suivre le progrès dans la PR.\n\n**Prochaines étapes**:\n1. Validation du thème\n2. Génération des pages\n3. Assemblage PDF\n4. Review manuelle\n5. Upload vers Google Drive' "$PR_NUMBER")"
+            else
+              echo "❌ Failed to create PR. Error:"
+              echo "$PR_OUTPUT"
               exit 1
             fi
-
-            echo "✅ PR #$PR_NUMBER created successfully"
-            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-
-            # Link PR to issue
-            curl -X POST \
-              -H "Authorization: token $GITHUB_TOKEN" \
-              -H "Accept: application/vnd.github.v3+json" \
-              https://api.github.com/repos/${{ github.repository }}/issues/$ISSUE_NUMBER/comments \
-              -d '{
-                "body": "## 🚀 Génération lancée!\n\n✅ PR créée: #'$PR_NUMBER'\n\nLa génération de l'\''ebook va maintenant commencer. Vous pouvez suivre le progrès dans la PR.\n\n**Prochaines étapes**:\n1. Validation du thème\n2. Génération des pages\n3. Assemblage PDF\n4. Review manuelle\n5. Upload vers Google Drive"
-              }'
           fi
