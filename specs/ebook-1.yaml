@@ -8,7 +8,11 @@ target_audience: Enfants 6-10 ans
 language: fr
 special_instructions: null
 metadata:
+<<<<<<< Updated upstream
   created_at: '2025-10-14T15:49:18.619426'
+=======
+  created_at: '2025-10-14T15:58:21.258479'
+>>>>>>> Stashed changes
   requested_by: BlandineRdl
   issue_url: https://github.com/nash-team/backoffice/issues/1
   month: 2025-10
