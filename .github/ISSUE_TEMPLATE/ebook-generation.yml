@@ -1,17 +1,7 @@
----
-name: ebook-generation
-about: Demande de génération d'un nouvel ebook
-title: "[EBOOK]"
-labels: ebook-generation
-assignees: ''
-
----
-
 name: Génération Ebook Mensuelle
 description: Demande de génération d'un nouvel ebook pour le mois en cours
 title: "[EBOOK] "
 labels: ["ebook-generation"]
-assignees: []
 body:
   - type: markdown
     attributes:
@@ -36,16 +26,10 @@ body:
       description: Sélectionnez un thème existant ou créez-en un nouveau
       options:
         - "[NOUVEAU] Créer un nouveau thème"
-        - christmas
-        - halloween
-        - animals
-        - space
-        - underwater
-        - nature
-        - vehicles
-        - fantasy
         - dinosaurs
-        - ocean
+        - neutral-default
+        - pirates
+        - unicorns
     validations:
       required: true
 
@@ -58,7 +42,6 @@ body:
         Style visuel: moderne, minimaliste
         Palette de couleurs: pastels doux
         Ambiance: joyeuse et ludique
-        Détails spécifiques: formes géométriques simples
 
   - type: dropdown
     id: page_count
@@ -70,7 +53,7 @@ body:
         - "26"
         - "28"
         - "30"
-      default: "24"
+      default: 0
     validations:
       required: true
 
@@ -92,9 +75,7 @@ body:
         - fr
         - en
         - es
-        - de
-        - it
-      default: "fr"
+      default: 0
     validations:
       required: true
 
@@ -120,15 +101,3 @@ body:
           required: true
         - label: Les informations fournies sont complètes et correctes
           required: true
-
-  - type: markdown
-    attributes:
-      value: |
-        ---
-        ### 🔄 Processus après soumission
-        1. Un workflow GitHub Actions va démarrer automatiquement
-        2. Une PR draft sera créée avec votre demande
-        3. Si un nouveau thème est demandé, il sera créé dans la PR pour validation
-        4. Une fois la PR passée en "Ready for review", la génération démarrera
-        5. Les PDFs seront disponibles dans les artifacts de la PR
-        6. Après approbation, les fichiers seront uploadés vers Google Drive
