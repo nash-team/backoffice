@@ -1,0 +1,134 @@
+---
+name: ebook-generation
+about: Demande de génération d'un nouvel ebook
+title: "[EBOOK]"
+labels: ebook-generation
+assignees: ''
+
+---
+
+name: Génération Ebook Mensuelle
+description: Demande de génération d'un nouvel ebook pour le mois en cours
+title: "[EBOOK] "
+labels: ["ebook-generation"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📚 Nouvelle génération d'ebook
+        Ce formulaire permet de lancer la génération automatique d'un ebook via GitHub Actions.
+        Une PR sera créée automatiquement avec les artifacts générés.
+
+  - type: input
+    id: title
+    attributes:
+      label: Titre du livre
+      description: Le titre qui apparaîtra sur la couverture
+      placeholder: "Ex: Animaux de la Ferme à Colorier"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: theme
+    attributes:
+      label: Thème
+      description: Sélectionnez un thème existant ou créez-en un nouveau
+      options:
+        - "[NOUVEAU] Créer un nouveau thème"
+        - christmas
+        - halloween
+        - animals
+        - space
+        - underwater
+        - nature
+        - vehicles
+        - fantasy
+        - dinosaurs
+        - ocean
+    validations:
+      required: true
+
+  - type: textarea
+    id: theme_description
+    attributes:
+      label: Description du nouveau thème
+      description: Si vous avez sélectionné "[NOUVEAU] Créer un nouveau thème", décrivez le style visuel souhaité
+      placeholder: |
+        Style visuel: moderne, minimaliste
+        Palette de couleurs: pastels doux
+        Ambiance: joyeuse et ludique
+        Détails spécifiques: formes géométriques simples
+
+  - type: dropdown
+    id: page_count
+    attributes:
+      label: Nombre de pages
+      description: Nombre de pages de contenu (hors couvertures)
+      options:
+        - "24"
+        - "26"
+        - "28"
+        - "30"
+      default: "24"
+    validations:
+      required: true
+
+  - type: input
+    id: target_audience
+    attributes:
+      label: Public cible
+      description: Tranche d'âge et caractéristiques du public visé
+      placeholder: "Ex: Enfants 6-10 ans"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Langue
+      description: Langue pour les prompts et métadonnées
+      options:
+        - fr
+        - en
+        - es
+        - de
+        - it
+      default: "fr"
+    validations:
+      required: true
+
+  - type: textarea
+    id: special_instructions
+    attributes:
+      label: Instructions spéciales
+      description: Instructions supplémentaires pour la génération
+      placeholder: |
+        - Éviter les animaux effrayants
+        - Privilégier les scènes d'intérieur
+        - Inclure des éléments éducatifs
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      description: Veuillez confirmer les points suivants
+      options:
+        - label: J'ai vérifié qu'aucune génération n'est déjà en cours
+          required: true
+        - label: Je comprends que cette génération consommera des crédits API
+          required: true
+        - label: Les informations fournies sont complètes et correctes
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ### 🔄 Processus après soumission
+        1. Un workflow GitHub Actions va démarrer automatiquement
+        2. Une PR draft sera créée avec votre demande
+        3. Si un nouveau thème est demandé, il sera créé dans la PR pour validation
+        4. Une fois la PR passée en "Ready for review", la génération démarrera
+        5. Les PDFs seront disponibles dans les artifacts de la PR
+        6. Après approbation, les fichiers seront uploadés vers Google Drive
