@@ -186,7 +186,7 @@ ignore_missing_imports = true
 
 # --- Deptry ---
 [tool.deptry]
-exclude = ["tests", "features/**/tests", "migrations", "scripts", "alembic", ".venv", "venv", "monenv", ".pytest_cache", ".mypy_cache", "build", "dist", "node_modules"]
+exclude = ["tests", "features/**/tests", "migrations", "scripts", "alembic", ".venv", "venv", "monenv", ".pytest_cache", ".mypy_cache", "build", "dist", "node_modules", ".github/scripts"]
 
 # Specify dev dependency groups (so deptry ignores them)
 pep621_dev_dependency_groups = ["dev"]

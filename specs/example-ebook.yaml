@@ -1,0 +1,38 @@
+# Exemple de spécification d'ebook pour tests locaux
+# Cette spec peut être utilisée avec: make ci-generate SPEC=specs/example-ebook.yaml
+
+issue_number: 999
+title: "Animaux de la Forêt à Colorier"
+theme: animals
+is_new_theme: false
+theme_description: null
+page_count: 24
+target_audience: "Enfants 6-10 ans"
+language: fr
+special_instructions: |
+  - Privilégier les animaux de la forêt européenne
+  - Éviter les prédateurs effrayants
+  - Inclure des éléments de nature (arbres, fleurs)
+
+metadata:
+  created_at: "2025-10-13T14:00:00Z"
+  requested_by: test_user
+  issue_url: "https://github.com/owner/repo/issues/999"
+  month: "2025-10"
+
+build:
+  seed: "test-seed-12345"
+  model: gemini-2.5-flash
+  resolution: 300
+  format: kdp
+  trim_width_inches: 8.0
+  trim_height_inches: 10.0
+  bleed_inches: 0.125
+
+drive:
+  folder_structure: "Ebooks/2025/10-Octobre/ebook-999-animals"
+
+confirmations:
+  - "J'ai vérifié qu'aucune génération n'est déjà en cours"
+  - "Je comprends que cette génération consommera des crédits API"
+  - "Les informations fournies sont complètes et correctes"
