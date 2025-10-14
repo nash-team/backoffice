@@ -5,14 +5,6 @@ on:
   issues:
     types: [opened, reopened]
 
-  # Déclenché quand une PR change d'état draft
-  pull_request:
-    types: [ready_for_review, converted_to_draft]
-
-  # Déclenché lors d'une review de PR
-  pull_request_review:
-    types: [submitted]
-
   # Permet le déclenchement manuel pour tests
   workflow_dispatch:
     inputs:
@@ -25,270 +17,104 @@ env:
   PYTHON_VERSION: '3.11'
 
 jobs:
-  # Job 1: Initialisation depuis une issue
-  initialize-from-issue:
-    name: Initialize from Issue
+  # Job 1: TEST - Juste vérifier que le workflow se déclenche
+  test-trigger:
+    name: Test Workflow Trigger
     runs-on: ubuntu-latest
     if: |
       (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'ebook-generation')) ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.issue_number != '')
 
-    outputs:
-      pr_number: ${{ steps.create-pr.outputs.pr_number }}
-      spec_file: ${{ steps.parse.outputs.spec_file }}
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
+      - name: Check trigger
         run: |
-          pip install PyYAML requests python-dotenv
+          echo "✅ Workflow triggered successfully!"
+          echo "Event: ${{ github.event_name }}"
+          echo "Issue Number: ${{ github.event.issue.number || github.event.inputs.issue_number }}"
 
-      - name: Parse issue and create spec
-        id: parse
+      - name: Check issue details
+        if: github.event_name == 'issues'
+        run: |
+          echo "Issue Title: ${{ github.event.issue.title }}"
+          echo "Issue Body Length: ${#ISSUE_BODY}"
+          echo "Labels: ${{ join(github.event.issue.labels.*.name, ', ') }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ github.event.issue.number || github.event.inputs.issue_number }}
-        run: |
-          python scripts/ci/parse_issue.py \
-            --issue-number $ISSUE_NUMBER \
-            --output specs/ebook-$ISSUE_NUMBER.yaml
-          echo "spec_file=specs/ebook-$ISSUE_NUMBER.yaml" >> $GITHUB_OUTPUT
+          ISSUE_BODY: ${{ github.event.issue.body }}
 
-      - name: Create draft PR
-        id: create-pr
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ github.event.issue.number || github.event.inputs.issue_number }}
-        run: |
-          # Create a new branch
-          BRANCH_NAME="ebook-generation-$ISSUE_NUMBER"
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git checkout -b $BRANCH_NAME
-
-          # Commit the spec file
-          git add specs/
-          git commit -m "feat: Add ebook generation spec for issue #$ISSUE_NUMBER"
-          git push origin $BRANCH_NAME
-
-          # Create PR using GitHub API
-          PR_RESPONSE=$(curl -X POST \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/pulls \
-            -d '{
-              "title": "Ebook #'$ISSUE_NUMBER': Generation automatique",
-              "body": "## 📚 Génération automatique depuis issue #'$ISSUE_NUMBER'\n\nCette PR contient la génération automatique de l'\''ebook.\n\n### Status\n- [ ] Thème validé\n- [ ] Génération lancée\n- [ ] Review effectuée\n- [ ] Upload Drive\n\n---\nIssue: #'$ISSUE_NUMBER'",
-              "head": "'$BRANCH_NAME'",
-              "base": "main",
-              "draft": true
-            }')
-
-          PR_NUMBER=$(echo $PR_RESPONSE | jq -r '.number')
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-
-          # Link PR to issue
-          curl -X POST \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/issues/$ISSUE_NUMBER/comments \
-            -d '{
-              "body": "🚀 PR créée: #'$PR_NUMBER'\n\nLa génération va démarrer une fois la PR passée en Ready for Review."
-            }'
-
-  # Job 2: Vérification et création de thème si nécessaire
-  theme-validation:
-    name: Theme Validation
-    runs-on: ubuntu-latest
-    needs: initialize-from-issue
-    if: needs.initialize-from-issue.outputs.pr_number != ''
-
-    steps:
-      - name: Checkout PR branch
-        uses: actions/checkout@v4
-        with:
-          ref: ebook-generation-${{ github.event.issue.number || github.event.inputs.issue_number }}
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        run: |
-          pip install PyYAML jsonschema requests
-
-      - name: Check and create theme if needed
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SPEC_FILE: ${{ needs.initialize-from-issue.outputs.spec_file }}
-          PR_NUMBER: ${{ needs.initialize-from-issue.outputs.pr_number }}
-        run: |
-          python scripts/ci/validate_theme.py \
-            --spec $SPEC_FILE \
-            --pr-number $PR_NUMBER
-
-  # Job 3: Build (déclenché quand la PR passe en Ready for Review)
-  build-ebook:
-    name: Build Ebook
-    runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.draft == false &&
-      contains(github.event.pull_request.title, 'Ebook #')
-
-    concurrency:
-      group: pr-${{ github.event.pull_request.number }}
-      cancel-in-progress: false
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-
-      - name: Extract issue number from PR title
-        id: extract
-        run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          ISSUE_NUMBER=$(echo $PR_TITLE | grep -oP 'Ebook #\K\d+')
-          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
-
-      - name: Generate ebook
-        env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GITHUB_SHA: ${{ github.sha }}
-        run: |
-          python scripts/ci/generate_ebook.py \
-            --spec specs/ebook-${{ steps.extract.outputs.issue_number }}.yaml \
-            --output-dir dist \
-            --seed $GITHUB_SHA
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: ebook-${{ steps.extract.outputs.issue_number }}
-          path: |
-            dist/interior.pdf
-            dist/cover.pdf
-            dist/kdp-package.zip
-            dist/preview.pdf
-            dist/thumbnails/
-            dist/costs.json
-            dist/provenance.json
-          retention-days: 14
-
-      - name: Comment PR with links
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          COSTS=$(cat dist/costs.json | jq -r '.estimated_usd')
-
-          curl -X POST \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-            -d '{
-              "body": "## ✅ Génération terminée!\n\n### 📦 Artifacts\n- [📖 Interior PDF](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n- [🎨 Cover PDF](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n- [📦 KDP Package](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n### 💰 Coût\nEstimé: $'$COSTS' USD\n\n### ⏱️ Durée\n${{ job.duration }} minutes\n\n---\n**Prochaine étape**: Approuvez cette PR pour uploader vers Google Drive."
-            }'
-
-  # Job 4: Upload to Drive (après approbation)
-  publish-to-drive:
-    name: Publish to Google Drive
-    runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'pull_request_review' &&
-      github.event.review.state == 'approved' &&
-      contains(github.event.pull_request.title, 'Ebook #')
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        run: |
-          pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client PyYAML
-
-      - name: Extract issue number
-        id: extract
-        run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          ISSUE_NUMBER=$(echo $PR_TITLE | grep -oP 'Ebook #\K\d+')
-          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: ebook-${{ steps.extract.outputs.issue_number }}
-          path: dist/
-
-      - name: Upload to Google Drive
-        env:
-          GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
-        run: |
-          # Create credentials file from secret
-          echo "$GOOGLE_DRIVE_CREDENTIALS" > google-credentials.json
-
-          python scripts/ci/upload_to_drive.py \
-            --spec specs/ebook-${{ steps.extract.outputs.issue_number }}.yaml \
-            --artifacts-dir dist \
-            --credentials google-credentials.json
-
-          # Clean up credentials
-          rm google-credentials.json
-
-      - name: Merge PR and close issue
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Squash merge the PR
-          curl -X PUT \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/merge \
-            -d '{
-              "merge_method": "squash",
-              "commit_title": "feat: Generate ebook from issue #${{ steps.extract.outputs.issue_number }}",
-              "commit_message": "Automated ebook generation completed successfully"
-            }'
-
-          # Close the issue with success message
-          curl -X PATCH \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/issues/${{ steps.extract.outputs.issue_number }} \
-            -d '{
-              "state": "closed"
-            }'
-
-          curl -X POST \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/issues/${{ steps.extract.outputs.issue_number }}/comments \
-            -d '{
-              "body": "## ✅ Ebook généré avec succès!\n\nL'\''ebook a été uploadé vers Google Drive.\nPR #${{ github.event.pull_request.number }} mergée."
-            }'
+  # PHASE 2 - À DÉCOMMENTER APRÈS TEST
+  # initialize-from-issue:
+  #   name: Initialize from Issue
+  #   runs-on: ubuntu-latest
+  #   if: |
+  #     (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'ebook-generation')) ||
+  #     (github.event_name == 'workflow_dispatch' && github.event.inputs.issue_number != '')
+  #
+  #   outputs:
+  #     pr_number: ${{ steps.create-pr.outputs.pr_number }}
+  #     spec_file: ${{ steps.parse.outputs.spec_file }}
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: ${{ env.PYTHON_VERSION }}
+  #
+  #     - name: Install dependencies
+  #       run: |
+  #         pip install PyYAML requests python-dotenv
+  #
+  #     - name: Parse issue and create spec
+  #       id: parse
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         ISSUE_NUMBER: ${{ github.event.issue.number || github.event.inputs.issue_number }}
+  #       run: |
+  #         python scripts/ci/parse_issue.py \
+  #           --issue-number $ISSUE_NUMBER \
+  #           --output specs/ebook-$ISSUE_NUMBER.yaml
+  #         echo "spec_file=specs/ebook-$ISSUE_NUMBER.yaml" >> $GITHUB_OUTPUT
+  #
+  #     - name: Create draft PR
+  #       id: create-pr
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         ISSUE_NUMBER: ${{ github.event.issue.number || github.event.inputs.issue_number }}
+  #       run: |
+  #         # Create a new branch
+  #         BRANCH_NAME="ebook-generation-$ISSUE_NUMBER"
+  #         git config user.name "GitHub Actions"
+  #         git config user.email "actions@github.com"
+  #         git checkout -b $BRANCH_NAME
+  #
+  #         # Commit the spec file
+  #         git add specs/
+  #         git commit -m "feat: Add ebook generation spec for issue #$ISSUE_NUMBER"
+  #         git push origin $BRANCH_NAME
+  #
+  #         # Create PR using GitHub API
+  #         PR_RESPONSE=$(curl -X POST \
+  #           -H "Authorization: token $GITHUB_TOKEN" \
+  #           -H "Accept: application/vnd.github.v3+json" \
+  #           https://api.github.com/repos/${{ github.repository }}/pulls \
+  #           -d '{
+  #             "title": "Ebook #'$ISSUE_NUMBER': Generation automatique",
+  #             "body": "## 📚 Génération automatique depuis issue #'$ISSUE_NUMBER'\n\nCette PR contient la génération automatique de l'\''ebook.\n\n### Status\n- [ ] Thème validé\n- [ ] Génération lancée\n- [ ] Review effectuée\n- [ ] Upload Drive\n\n---\nIssue: #'$ISSUE_NUMBER'",
+  #             "head": "'$BRANCH_NAME'",
+  #             "base": "main",
+  #             "draft": true
+  #           }')
+  #
+  #         PR_NUMBER=$(echo $PR_RESPONSE | jq -r '.number')
+  #         echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+  #
+  #         # Link PR to issue
+  #         curl -X POST \
+  #           -H "Authorization: token $GITHUB_TOKEN" \
+  #           -H "Accept: application/vnd.github.v3+json" \
+  #           https://api.github.com/repos/${{ github.repository }}/issues/$ISSUE_NUMBER/comments \
+  #           -d '{
+  #             "body": "🚀 PR créée: #'$PR_NUMBER'\n\nLa génération va démarrer une fois la PR passée en Ready for Review."
+  #           }'
