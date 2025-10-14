@@ -139,31 +139,52 @@ jobs:
             # Create PR using gh CLI (this should work even when API is restricted)
             echo "Creating PR using gh CLI..."
 
-            # Create the PR using gh CLI with inline body
-            PR_OUTPUT=$(gh pr create \
+            # Ensure we're authenticated properly
+            gh auth status
+
+            # Create the PR using gh CLI with inline body (add timeout and debug)
+            echo "Running: gh pr create --repo ${{ github.repository }} --base main --head $BRANCH_NAME --draft"
+
+            PR_OUTPUT=$(timeout 30 gh pr create \
               --repo "${{ github.repository }}" \
               --title "🎨 Ebook #$ISSUE_NUMBER: Génération automatique" \
               --body "$(printf '## 📚 Génération automatique depuis issue #%s\n\nCette PR contient la génération automatique de l'"'"'ebook demandé.\n\n### ✅ Checklist\n- [ ] Thème validé\n- [ ] Génération lancée\n- [ ] Review effectuée\n- [ ] Upload Drive\n\n### 📊 Status\n- **Issue source**: #%s\n- **Branch**: `%s`\n- **État**: Draft (en attente de génération)\n\n---\n*Cette PR a été créée automatiquement par GitHub Actions*' "$ISSUE_NUMBER" "$ISSUE_NUMBER" "$BRANCH_NAME")" \
               --base main \
               --head "$BRANCH_NAME" \
               --draft \
-              2>&1)
+              2>&1 || true)
 
-            PR_EXIT_CODE=$?
+            echo "PR creation output: $PR_OUTPUT"
 
-            if [ $PR_EXIT_CODE -eq 0 ]; then
-              # Extract PR number from output (gh pr create returns the PR URL)
-              PR_NUMBER=$(echo "$PR_OUTPUT" | grep -oE '[0-9]+$')
-              echo "✅ PR #$PR_NUMBER created successfully"
-              echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            # Check if PR was created successfully (gh returns the PR URL on success)
+            if echo "$PR_OUTPUT" | grep -q "github.com.*pull"; then
+              # Extract PR number from URL (format: https://github.com/owner/repo/pull/123)
+              PR_NUMBER=$(echo "$PR_OUTPUT" | grep -oE 'pull/[0-9]+' | grep -oE '[0-9]+')
 
-              # Comment on the issue using gh CLI
-              gh issue comment "$ISSUE_NUMBER" \
-                --repo "${{ github.repository }}" \
-                --body "$(printf '## 🚀 Génération lancée!\n\n✅ PR créée: #%s\n\nLa génération de l'"'"'ebook va maintenant commencer. Vous pouvez suivre le progrès dans la PR.\n\n**Prochaines étapes**:\n1. Validation du thème\n2. Génération des pages\n3. Assemblage PDF\n4. Review manuelle\n5. Upload vers Google Drive' "$PR_NUMBER")"
+              if [ -n "$PR_NUMBER" ]; then
+                echo "✅ PR #$PR_NUMBER created successfully"
+                echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+                # Comment on the issue using gh CLI
+                gh issue comment "$ISSUE_NUMBER" \
+                  --repo "${{ github.repository }}" \
+                  --body "$(printf '## 🚀 Génération lancée!\n\n✅ PR créée: #%s\n\nLa génération de l'"'"'ebook va maintenant commencer. Vous pouvez suivre le progrès dans la PR.\n\n**Prochaines étapes**:\n1. Validation du thème\n2. Génération des pages\n3. Assemblage PDF\n4. Review manuelle\n5. Upload vers Google Drive' "$PR_NUMBER")"
+              else
+                echo "⚠️ PR might have been created but couldn't extract PR number"
+                echo "Output was: $PR_OUTPUT"
+              fi
+            elif echo "$PR_OUTPUT" | grep -qi "already exists"; then
+              echo "⚠️ PR already exists or branch conflict"
+              # Try to find the existing PR
+              EXISTING_PR=$(gh pr list --repo ${{ github.repository }} --head $BRANCH_NAME --state open --json number --jq '.[0].number' || echo "")
+              if [ -n "$EXISTING_PR" ]; then
+                echo "Found existing PR #$EXISTING_PR"
+                echo "pr_number=$EXISTING_PR" >> $GITHUB_OUTPUT
+              fi
             else
               echo "❌ Failed to create PR. Error:"
               echo "$PR_OUTPUT"
-              exit 1
+              # Don't exit with error, continue with workflow
+              echo "pr_number=" >> $GITHUB_OUTPUT
             fi
           fi
