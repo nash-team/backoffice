@@ -53,7 +53,7 @@ jobs:
 
       # Code mort (optionnel mais utile)
       - name: 🪦 Vulture
-        run: vulture src/ --min-confidence=80 --exclude=**/__init__.py
+        run: vulture src/ .vulture_whitelist.py --min-confidence=80 --exclude='**/__init__.py'
 
       # Tests (unit only - integration tests require DB setup)
       - name: 🧪 Pytest (unit)
