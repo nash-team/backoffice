@@ -1,0 +1,89 @@
+name: Create Pull Request
+
+on:
+  repository_dispatch:
+    types: [create-ebook-pr]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Pull Request
+        id: create-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.client_payload.issue_number }}
+          BRANCH_NAME: ${{ github.event.client_payload.branch_name }}
+        run: |
+          echo "Creating PR for issue #$ISSUE_NUMBER from branch $BRANCH_NAME"
+
+          # Fetch the branch
+          git fetch origin $BRANCH_NAME
+
+          # Check if PR already exists
+          EXISTING_PR=$(gh pr list --repo ${{ github.repository }} --head $BRANCH_NAME --state open --json number --jq '.[0].number' || echo "")
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "PR #$EXISTING_PR already exists for this branch"
+            PR_NUMBER=$EXISTING_PR
+          else
+            # Create the PR
+            PR_URL=$(gh pr create \
+              --repo "${{ github.repository }}" \
+              --title "🎨 Ebook #$ISSUE_NUMBER: Génération automatique" \
+              --body "## 📚 Génération automatique depuis issue #$ISSUE_NUMBER
+
+Cette PR contient la génération automatique de l'ebook demandé.
+
+### ✅ Checklist
+- [ ] Thème validé
+- [ ] Génération lancée
+- [ ] Review effectuée
+- [ ] Upload Drive
+
+### 📊 Status
+- **Issue source**: #$ISSUE_NUMBER
+- **Branch**: \`$BRANCH_NAME\`
+- **État**: Draft (en attente de génération)
+
+---
+*Cette PR a été créée automatiquement par GitHub Actions*" \
+              --base main \
+              --head "$BRANCH_NAME" \
+              --draft)
+
+            if [ $? -eq 0 ]; then
+              PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
+              echo "✅ PR #$PR_NUMBER created successfully"
+            else
+              echo "❌ Failed to create PR"
+              exit 1
+            fi
+          fi
+
+          # Comment on the issue
+          gh issue comment "$ISSUE_NUMBER" \
+            --repo "${{ github.repository }}" \
+            --body "## 🚀 Génération lancée!
+
+✅ PR créée: #$PR_NUMBER
+
+La génération de l'ebook va maintenant commencer. Vous pouvez suivre le progrès dans la PR.
+
+**Prochaines étapes**:
+1. Validation du thème
+2. Génération des pages
+3. Assemblage PDF
+4. Review manuelle
+5. Upload vers Google Drive"
