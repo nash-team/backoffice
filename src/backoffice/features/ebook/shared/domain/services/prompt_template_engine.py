@@ -83,7 +83,7 @@ class PromptTemplateEngine:
         if not theme_file.exists():
             raise FileNotFoundError(f"Theme file not found: {theme_file}")
 
-        with open(theme_file, "r", encoding="utf-8") as f:
+        with open(theme_file, encoding="utf-8") as f:
             theme_data = yaml.safe_load(f)
 
         # Check if coloring_page_templates section exists
@@ -161,8 +161,8 @@ class PromptTemplateEngine:
                 if theme_normalized in theme_id or theme_id in theme_normalized:
                     logger.info(f"Theme '{theme}' matched to '{theme_id}' (partial match)")
                     return self.load_template_from_yaml(theme_id)
-        except Exception:
-            pass  # Continue to fallback
+        except Exception as e:
+            logger.debug(f"Error during theme template search: {e}. Continuing to fallback.")
 
         # No match found
         logger.warning(
@@ -178,7 +178,9 @@ class PromptTemplateEngine:
                 f"Failed to load neutral-default template: {e}. " f"Using hardcoded fallback"
             )
             return PromptTemplate(
-                base_structure="Line art coloring page of {SUBJECT} in a {ENV}, {SHOT}, {COMPOSITION}.",
+                base_structure=(
+                    "Line art coloring page of {SUBJECT} in a {ENV}, {SHOT}, {COMPOSITION}."
+                ),
                 variables={
                     "SHOT": ["close-up", "medium", "wide"],
                     "SUBJECT": ["simple character", "cute animal", "friendly object"],
@@ -187,7 +189,8 @@ class PromptTemplateEngine:
                 },
                 quality_settings=(
                     "Black and white line art coloring page style. "
-                    "IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading. "
+                    "IMPORTANT: Use ONLY black lines on white background, "
+                    "NO colors, NO gray shading. "
                     "Bold clean outlines, closed shapes, thick black lines. "
                     "NO FRAME, NO BORDER around the illustration. "
                     "Illustration extends naturally to image boundaries. "

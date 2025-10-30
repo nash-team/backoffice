@@ -160,11 +160,11 @@ async def create_ebook(
     # Step 3: Parse audience enum
     try:
         audience_enum = Audience(audience)
-    except ValueError:
+    except ValueError as err:
         raise ValueError(
             f"Invalid audience: '{audience}'. Must be 'children' or 'adults'. "
             f"Check config/branding/audiences.yaml"
-        )
+        ) from err
 
     # Step 4: Determine page count based on mode
     # Preview mode: 1 page (+ cover + back cover = 3 images)

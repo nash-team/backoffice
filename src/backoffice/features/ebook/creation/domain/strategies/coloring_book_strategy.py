@@ -3,7 +3,6 @@
 import logging
 from pathlib import Path
 
-from backoffice.features.ebook.shared.domain.entities.theme_profile import ThemeProfile
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_generation_strategy_port import (
     EbookGenerationStrategyPort,
@@ -56,7 +55,8 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
             cover_service: Service for cover generation
             pages_service: Service for content page generation
             assembly_service: Service for PDF assembly
-            theme_repository: Repository for loading theme configurations (optional, creates default if None)
+            theme_repository: Repository for loading theme configurations
+                (optional, creates default if None)
         """
         self.cover_service = cover_service
         self.pages_service = pages_service
@@ -264,7 +264,11 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         )
         forbidden_str = ", ".join(theme_profile.palette.forbidden_keywords)
 
-        base_prompt = f"""Coloring book cover. {style_guide['illustration']['style']}, {style_guide['mood']['overall']}.
+        # Extract style guide values
+        illustration_style = style_guide["illustration"]["style"]
+        mood = style_guide["mood"]["overall"]
+
+        base_prompt = f"""Coloring book cover. {illustration_style}, {mood}.
 
 Scene: {theme_profile.blocks.subject}, {theme_profile.blocks.environment}
 
@@ -294,7 +298,8 @@ Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
             front_cover_bytes: Front cover for color extraction
 
         Returns:
-            Back cover prompt for line art generation based on theme configuration and brand identity
+            Back cover prompt for line art generation based on theme
+            configuration and brand identity
         """
 
         from backoffice.config import ConfigLoader
@@ -315,8 +320,9 @@ Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
         bg_hex = "#{:02x}{:02x}{:02x}".format(*bg_color)
 
         # Build prompt using theme configuration + brand identity
+        theme_label = theme_profile.label
         prompt_parts = [
-            f"Create a simple LINE ART illustration for a {theme_profile.label} coloring book back cover.",
+            f"Create a simple LINE ART illustration for a {theme_label} coloring book back cover.",
             "",
             "BRAND STYLE (line art version):",
             f"- Illustration: {style_guide['illustration']['style']} (simplified for back cover)",

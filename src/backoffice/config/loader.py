@@ -3,7 +3,6 @@
 Loads configuration files from the config/ directory at project root.
 """
 
-from functools import lru_cache
 from pathlib import Path
 from typing import Any, cast
 
@@ -35,8 +34,8 @@ class ConfigLoader:
             raise FileNotFoundError(f"Config directory not found: {config_dir}")
 
         self.config_dir = config_dir
+        self._cache: dict[str, dict[str, Any]] = {}
 
-    @lru_cache(maxsize=32)
     def _load_yaml(self, relative_path: str) -> dict[str, Any]:
         """Load and cache a YAML file.
 
@@ -49,13 +48,19 @@ class ConfigLoader:
         Raises:
             FileNotFoundError: If config file doesn't exist
         """
+        # Check cache first
+        if relative_path in self._cache:
+            return self._cache[relative_path]
+
         full_path = self.config_dir / relative_path
 
         if not full_path.exists():
             raise FileNotFoundError(f"Config file not found: {full_path}")
 
-        with open(full_path, "r", encoding="utf-8") as f:
-            return cast(dict[str, Any], yaml.safe_load(f))
+        with open(full_path, encoding="utf-8") as f:
+            result = cast(dict[str, Any], yaml.safe_load(f))
+            self._cache[relative_path] = result
+            return result
 
     # KDP configurations
     def load_kdp_specifications(self) -> dict[str, Any]:
