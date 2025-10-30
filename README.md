@@ -107,6 +107,210 @@ config/
 
 ---
 
+## Testing & Development with YAML Themes
+
+### Available Themes
+
+The system comes with 4 pre-configured themes in `config/branding/themes/`:
+
+- **`dinosaurs.yml`** - Prehistoric creatures, jungle environments
+- **`pirates.yml`** - Maritime adventures, treasure hunting
+- **`unicorns.yml`** - Magical fantasy, rainbows
+- **`neutral-default.yml`** - Fallback theme for generic content
+
+### Theme File Structure
+
+Each theme YAML file contains three main sections:
+
+```yaml
+id: dinosaurs                           # Unique identifier
+label: "Dinosaurs"                      # Display name in UI
+
+# Color palette for cover generation
+palette:
+  base: ["#35654d", "#6a8f49", "#e0b46b"]
+  accents_allowed: ["#ffd166"]
+  forbidden_keywords: ["rainbow", "neon"]
+
+# Cover generation prompt (full-color cover)
+prompt_blocks:
+  subject: "a cute but majestic T-Rex dinosaur"
+  environment: "lush jungle, tropical plants"
+  tone: "adventurous, exciting, kid-friendly"
+  positives: ["highly detailed", "professional"]
+  negatives: ["no text", "no borders"]
+
+# Content pages generation (B&W line art)
+coloring_page_templates:
+  base_structure: "Line art coloring page of a {SPECIES} {ACTION} in a {ENV}..."
+
+  variables:
+    SPECIES: ["T-Rex", "Triceratops", "Diplodocus"]
+    ACTION: ["roaring", "eating leaves", "running"]
+    ENV: ["lush jungle", "volcanic plain"]
+    SHOT: ["close-up", "medium", "wide"]
+    FOCUS: ["head", "full body", "group of 2-3"]
+    COMPOSITION: ["left-facing", "right-facing", "front"]
+
+  quality_settings: |
+    Black and white line art only.
+    Bold clean outlines, closed shapes, thick black lines.
+    No frame, no border around the illustration.
+    Printable 300 DPI, simple to medium detail for kids.
+```
+
+### Creating a New Theme
+
+**Step 1: Copy an existing theme**
+
+```bash
+cp config/branding/themes/dinosaurs.yml config/branding/themes/robots.yml
+```
+
+**Step 2: Edit the new theme file**
+
+Open `config/branding/themes/robots.yml` and modify:
+
+1. **ID and Label:**
+   ```yaml
+   id: robots
+   label: "Robots"
+   ```
+
+2. **Color Palette:**
+   ```yaml
+   palette:
+     base: ["#2e3440", "#5e81ac", "#88c0d0"]  # Cool metallic blues
+     accents_allowed: ["#ebcb8b"]              # Yellow/gold accents
+     forbidden_keywords: ["organic", "natural"]
+   ```
+
+3. **Cover Prompts:**
+   ```yaml
+   prompt_blocks:
+     subject: "a friendly robot with LED eyes"
+     environment: "futuristic city, digital background"
+     tone: "innovative, tech-forward, kid-friendly"
+   ```
+
+4. **Variables for Coloring Pages:**
+   ```yaml
+   variables:
+     SPECIES: ["humanoid robot", "flying drone", "robot dog"]
+     ACTION: ["waving", "computing", "building"]
+     ENV: ["futuristic lab", "space station", "robot factory"]
+   ```
+
+**Step 3: Test your new theme**
+
+```bash
+# Start the server
+make run
+
+# Go to http://localhost:8001
+# Click "Create New Ebook"
+# Select "Robots" from the theme dropdown
+```
+
+### Testing Without Consuming API Credits
+
+Use these environment variables to test theme changes without calling real AI APIs:
+
+```bash
+# Test with fake data (no API calls)
+USE_FAKE_CATALOG=true \
+USE_FAKE_OUTLINE_GENERATOR=true \
+USE_FAKE_COVER_GENERATOR=true \
+make run
+```
+
+**Available test variables:**
+
+| Variable | Purpose |
+|----------|---------|
+| `USE_FAKE_CATALOG=true` | Use mock database data |
+| `USE_FAKE_OUTLINE_GENERATOR=true` | Skip AI text generation (uses templates) |
+| `USE_FAKE_COVER_GENERATOR=true` | Skip AI image generation (uses placeholders) |
+
+**Example - Full fake generation for testing:**
+
+```bash
+# Add to your .env file for testing:
+USE_FAKE_CATALOG=true
+USE_FAKE_OUTLINE_GENERATOR=true
+USE_FAKE_COVER_GENERATOR=true
+
+# Then run normally:
+make run
+```
+
+This allows you to:
+- Test theme configurations instantly
+- Iterate on prompt structures without cost
+- Verify YAML syntax and structure
+- Debug template variables
+
+### Modifying Existing Themes
+
+**Common modifications:**
+
+1. **Add new dinosaur species:**
+   ```yaml
+   # In config/branding/themes/dinosaurs.yml
+   variables:
+     SPECIES:
+       - "T-Rex"
+       - "Spinosaurus"  # ← Add new species here
+   ```
+
+2. **Adjust line art complexity:**
+   ```yaml
+   quality_settings: |
+     Printable 300 DPI, VERY SIMPLE detail for kids age 3-5.  # ← Simpler
+     # Or:
+     Printable 300 DPI, HIGHLY DETAILED for adults.           # ← More complex
+   ```
+
+3. **Change color palette:**
+   ```yaml
+   palette:
+     base: ["#your-hex-color", "#another-color"]
+   ```
+
+### Debugging Theme Issues
+
+**Theme not appearing in dropdown:**
+
+```bash
+# Check logs when starting server
+make run
+
+# Look for: "Loaded theme: your-theme-name"
+# If not found, check YAML syntax
+```
+
+**Common YAML errors:**
+
+- ❌ Using tabs instead of spaces (use 2 spaces)
+- ❌ Missing required fields (`id`, `label`, `prompt_blocks`)
+- ❌ Invalid hex color codes (must be `#RRGGBB`)
+- ❌ Unquoted strings with special characters
+
+**Validate YAML syntax:**
+
+```bash
+# Use Python to check YAML validity
+python -c "import yaml; yaml.safe_load(open('config/branding/themes/your-theme.yml'))"
+```
+
+**Theme loads but generation fails:**
+
+1. Check that all `{VARIABLES}` in `base_structure` have corresponding lists
+2. Verify `quality_settings` prompt is clear and specific
+3. Test with `USE_FAKE_*` variables first to isolate issues
+
+---
+
 ## Prerequisites
 
 - **Python 3.11+**
@@ -158,12 +362,14 @@ ENVIRONMENT=development
 ### 3. Setup Database
 
 ```bash
-# Run migrations (if using Alembic)
-make migrate
+# Run Alembic migrations to create/update database tables
+make db-migrate
 
-# Or create tables manually
-make db-create
+# Check current migration status
+make db-status
 ```
+
+**Note:** The `make db-migrate` command will automatically create all necessary tables based on SQLAlchemy models.
 
 ### 4. Run the Application
 
@@ -173,9 +379,9 @@ make run
 
 **Access:**
 
-- **Dashboard:** <http://localhost:8000>
-- **API Docs:** <http://localhost:8000/docs>
-- **Health Check:** <http://localhost:8000/healthz>
+- **Dashboard:** <http://localhost:8001>
+- **API Docs:** <http://localhost:8001/docs>
+- **Health Check:** <http://localhost:8001/healthz>
 
 ---
 
@@ -183,7 +389,7 @@ make run
 
 ### Generate a Coloring Book
 
-1. **Go to dashboard:** <http://localhost:8000>
+1. **Go to dashboard:** <http://localhost:8001>
 2. **Click "Create New Ebook"**
 3. **Fill the form:**
    - Title (e.g., "Dinosaur Adventure Coloring Book")
@@ -214,14 +420,15 @@ make run
 
 ```bash
 make help              # Show all commands
-make run               # Start server (localhost:8000)
+make run               # Start server (localhost:8001)
 make test              # Run all unit tests (177 tests)
 make test-unit         # Run unit tests only
 make test-smoke        # Run E2E smoke test (health check)
 make lint              # Run ruff linting
 make format            # Format code with ruff
-make type-check        # Run mypy type checking
-make db-create         # Create database tables
+make typecheck         # Run mypy type checking
+make db-migrate        # Run database migrations
+make db-status         # Show migration status
 make clean             # Remove cache files
 ```
 
@@ -349,7 +556,7 @@ make test-integration  # (currently disabled due to migration)
    ```bash
    make test
    make lint
-   make type-check
+   make typecheck
    ```
 
 4. **Commit with conventional commits:**
