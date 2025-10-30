@@ -1,0 +1,140 @@
+# Amazon KDP specifications for paperback printing
+# Official requirements + ColorDream configurations
+
+# Available book formats
+formats:
+  standard_coloring_book:
+    name: "Standard Coloring Book"
+    trim_size_inches:
+      width: 8.0
+      height: 10.0
+    bleed_inches: 0.125
+    dpi: 300
+    margins_inches:
+      top: 0.5
+      bottom: 0.5
+      inner: 0.75  # Gutter pour reliure
+      outer: 0.5
+
+  large_coloring_book:
+    name: "Large Format"
+    trim_size_inches:
+      width: 8.5
+      height: 11.0
+    bleed_inches: 0.125
+    dpi: 300
+    margins_inches:
+      top: 0.5
+      bottom: 0.5
+      inner: 0.75
+      outer: 0.5
+
+  square_format:
+    name: "Square Book"
+    trim_size_inches:
+      width: 8.5
+      height: 8.5
+    bleed_inches: 0.125
+    dpi: 300
+    margins_inches:
+      top: 0.5
+      bottom: 0.5
+      inner: 0.625
+      outer: 0.5
+
+# Spine calculations
+spine:
+  min_width_inches: 0.0625  # Hard minimum for any spine
+  recommended_width_inches: 0.08  # Recommended for text readability
+  min_margin_inches: 0.0625  # Top/bottom margins
+  text_requirements:
+    min_pages_for_text: 100  # Need 100+ pages for spine text
+    font_size_min: 7  # Minimum readable font size
+
+# Paper type specifications
+paper_types:
+  premium_color:
+    display_name: "Premium Color (70lb)"
+    spine_formula: 0.002347  # inches per page
+    min_pages: 24
+    max_pages: 828
+    cost_factor: 1.2  # Pour calcul prix
+
+  standard_color:
+    display_name: "Standard Color (60lb)"
+    spine_formula: 0.002252
+    min_pages: 24
+    max_pages: 828
+    cost_factor: 1.0
+
+  white:
+    display_name: "Black & White (55lb)"
+    spine_formula: 0.002252
+    min_pages: 24
+    max_pages: 828
+    cost_factor: 0.8
+
+  cream:
+    display_name: "Cream (55lb)"
+    spine_formula: 0.0025
+    min_pages: 24
+    max_pages: 828
+    cost_factor: 0.8
+
+# Color management
+color_profiles:
+  rgb:
+    profile: "sRGB.icc"
+    description: "Standard RGB for digital"
+  cmyk:
+    profile: "CoatedFOGRA39.icc"
+    description: "Europe printing standard"
+    alternative: "USWebCoatedSWOP.icc"  # US alternative
+
+# Cover options
+cover:
+  finish_types:
+    glossy:
+      name: "Glossy"
+      cost_factor: 1.0
+    matte:
+      name: "Matte"
+      cost_factor: 1.1
+
+  # Barcode placement
+  barcode:
+    width_inches: 2.0
+    height_inches: 1.5
+    position: "bottom_right"
+    margin_inches: 0.25
+
+# Validation rules
+validation:
+  cover:
+    min_resolution_px: 2550  # Pour 8.5" at 300 DPI
+    min_dpi: 300
+    max_file_size_mb: 650
+    supported_formats: ["pdf", "jpg", "png"]
+
+  interior:
+    min_resolution_px: 2175  # Pour 7.25" content area
+    min_dpi: 300
+    max_file_size_mb: 650
+
+  filenames:
+    pattern: "^[a-zA-Z0-9_-]+$"
+    max_length: 100
+
+# Export settings
+export:
+  pdf_version: "1.4"  # KDP requirement
+  embed_fonts: true
+  compress_images: true
+  compression_quality: 0.95
+
+# ColorDream defaults
+defaults:
+  format: "square_format"
+  paper_type: "premium_color"
+  cover_finish: "glossy"
+  include_barcode: true

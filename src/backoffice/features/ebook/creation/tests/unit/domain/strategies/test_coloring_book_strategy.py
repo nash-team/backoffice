@@ -13,7 +13,7 @@ from backoffice.features.ebook.shared.domain.services.page_generation import (
 )
 from backoffice.features.ebook.shared.domain.services.pdf_assembly import PDFAssemblyService
 from backoffice.features.shared.domain.entities.generation_request import (
-    AgeGroup,
+    Audience,
     EbookType,
     GenerationRequest,
 )
@@ -56,7 +56,7 @@ class TestColoringBookStrategy:
         request = GenerationRequest(
             title="Test Book",
             theme="Animals",
-            age_group=AgeGroup.PRESCHOOL,
+            audience=Audience.CHILDREN,
             ebook_type=EbookType.COLORING,
             page_count=24,
             request_id="test-123",
@@ -104,7 +104,7 @@ class TestColoringBookStrategy:
         request = GenerationRequest(
             title="Test Book",
             theme="Animals",
-            age_group=AgeGroup.PRESCHOOL,
+            audience=Audience.CHILDREN,
             ebook_type=EbookType.COLORING,
             page_count=24,  # KDP minimum
             request_id="test-456",
@@ -144,7 +144,7 @@ class TestColoringBookStrategy:
         request = GenerationRequest(
             title="Test Book",
             theme="Animals",
-            age_group=AgeGroup.PRESCHOOL,
+            audience=Audience.CHILDREN,
             ebook_type=EbookType.COLORING,
             page_count=24,
             request_id="test-789",

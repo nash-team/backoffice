@@ -1,0 +1,74 @@
+id: unicorns
+label: "Unicorns"
+palette:
+  base: ["#ffffff", "#ffe8fb"]
+  accents_allowed: ["rainbow", "sparkles", "stars"]
+  forbidden_keywords: []
+
+# Cover prompts (colorful)
+prompt_blocks:
+  subject: "a cute magical unicorn with rainbow mane and sparkling wings, centered"
+  environment: "enchanted landscape, soft clouds, butterflies"
+  tone: "whimsical, joyful"
+  positives: ["bright saturated colors", "glossy", "professional children's book cover"]
+  negatives: ["no text", "no mockup", "no borders", "no open book", "no realistic gore"]
+
+# Coloring page prompts (B&W line art)
+coloring_page_templates:
+  base_structure: "Line art coloring page of a {UNICORN} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+
+  variables:
+    SHOT:
+      - "close-up"
+      - "medium"
+      - "wide"
+      - "magical scene"
+
+    UNICORN:
+      - "cute magical unicorn"
+      - "unicorn with rainbow mane"
+      - "unicorn with sparkling wings"
+      - "baby unicorn"
+      - "elegant unicorn"
+      - "playful unicorn"
+
+    ACTION:
+      - "prancing"
+      - "flying"
+      - "playing"
+      - "resting"
+      - "dancing"
+      - "jumping over rainbow"
+      - "spreading sparkles"
+
+    ENV:
+      - "enchanted landscape"
+      - "soft clouds"
+      - "magical meadow"
+      - "starry sky"
+      - "flower garden"
+      - "rainbow bridge"
+      - "crystal castle background"
+
+    FOCUS:
+      - "head with horn"
+      - "full body"
+      - "with butterflies"
+      - "with stars"
+      - "with flowers"
+
+    COMPOSITION:
+      - "left-facing"
+      - "right-facing"
+      - "front"
+      - "3/4 view"
+      - "jumping"
+
+  quality_settings: |
+    Black and white line art coloring page style.
+    IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading.
+    Bold clean outlines, closed shapes, thick black lines.
+    NO FRAME, NO BORDER around the illustration.
+    Illustration extends naturally to image boundaries.
+    Printable 300 DPI, simple to medium detail for kids age 4-8.
+    No text, no logo, no watermark.

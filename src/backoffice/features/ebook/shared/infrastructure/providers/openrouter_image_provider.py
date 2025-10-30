@@ -537,51 +537,6 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
 
     # DEPRECATED: Back cover is now generated directly in coloring_book_strategy.py
     # This method is no longer used since we extract back cover from structure_json
-    def _get_theme_primary_color(self, theme: str) -> tuple[int, int, int]:
-        """Get primary color from theme palette.
-
-        Args:
-            theme: Theme name (e.g., 'pirates', 'unicorns')
-
-        Returns:
-            RGB tuple of the primary theme color
-        """
-        from pathlib import Path
-
-        from backoffice.features.ebook.shared.domain.entities.theme_profile import (
-            load_theme_from_yaml,
-        )
-
-        # Theme colors mapping with fallbacks
-        theme_colors = {
-            "pirates": (47, 79, 79),  # #2f4f4f - slate blue/gray
-            "unicorns": (255, 182, 193),  # Pink
-            "dinosaurs": (34, 139, 34),  # Forest green
-        }
-
-        # Try to load from YAML theme file
-        try:
-            themes_dir = Path(__file__).parent.parent.parent.parent / "themes"
-            theme_file = themes_dir / f"{theme.lower()}.yml"
-
-            if theme_file.exists():
-                theme_profile = load_theme_from_yaml(theme_file)
-                # Use first base color from palette
-                hex_color = theme_profile.palette.base[0]
-                # Convert hex to RGB
-                hex_color = hex_color.lstrip("#")
-                r = int(hex_color[0:2], 16)
-                g = int(hex_color[2:4], 16)
-                b = int(hex_color[4:6], 16)
-                return (r, g, b)
-        except Exception as e:
-            logger.warning(f"Could not load theme palette for {theme}: {e}")
-
-        # Fallback to hardcoded colors
-        return theme_colors.get(theme.lower(), (135, 206, 235))  # Default sky blue
-
-    # DEPRECATED: Back cover is now generated directly in coloring_book_strategy.py
-    # This method is no longer used since we extract back cover from structure_json
     async def _generate_line_art_back_cover(
         self,
         back_config: BackCoverConfig,

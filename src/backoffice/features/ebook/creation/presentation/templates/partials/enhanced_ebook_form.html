@@ -41,31 +41,31 @@
               data-testid="theme-select"
               required>
         <option value="">Sélectionnez un thème...</option>
-        <option value="dinosaurs">Dinosaures</option>
-        <option value="unicorns">Licornes</option>
-        <option value="pirates">Pirates</option>
+        {% for theme in themes %}
+        <option value="{{ theme.id }}" title="{{ theme.description }}">{{ theme.label }}</option>
+        {% endfor %}
       </select>
       <div class="form-text">
         💡 <strong>Tip :</strong> Le thème déterminera automatiquement le style et les couleurs des illustrations.
       </div>
     </div>
 
-    <!-- Sélection de l'âge -->
+    <!-- Sélection de l'audience -->
     <div class="mb-3">
       <label for="audience" class="form-label">
-        <strong>Tranche d'âge</strong>
+        <strong>Audience</strong>
         <small class="text-muted">(Public cible)</small>
       </label>
       <select class="form-select" id="audience" name="audience"
               data-testid="audience-select"
               required>
-        <option value="">Sélectionnez une tranche d'âge...</option>
-        <option value="3-5">3-5 ans (Tout petits)</option>
-        <option value="6-8">6-8 ans (Premiers lecteurs)</option>
-        <option value="9-12">9-12 ans (Pré-adolescents)</option>
+        <option value="">Sélectionnez une audience...</option>
+        {% for audience in audiences %}
+        <option value="{{ audience.id }}" title="{{ audience.complexity }}">{{ audience.label }}</option>
+        {% endfor %}
       </select>
       <div class="form-text">
-        💡 <strong>Tip :</strong> L'âge influence la complexité et le style des illustrations.
+        💡 <strong>Tip :</strong> L'audience influence la complexité et le style des illustrations.
       </div>
     </div>
   </div>

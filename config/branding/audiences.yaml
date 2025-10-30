@@ -1,0 +1,54 @@
+# Target audiences for coloring books
+# Marketing positioning and characteristics
+
+audiences:
+  children:
+    id: "children"
+    label: "Enfants"
+    description: "Livres de coloriage pour enfants"
+
+    # Image generation hints
+    style:
+      complexity: "simple"
+      line_width: "thick"
+      details: "minimal"
+
+    # Marketing copy
+    benefits:
+      - "Simplicité et clarté"
+      - "Éveille la créativité"
+      - "Parfait pour l'apprentissage"
+      - "Développe la motricité fine"
+
+    # Recommended themes
+    popular_themes:
+      - "dinosaurs"
+      - "unicorns"
+      - "pirates"
+
+  adults:
+    id: "adults"
+    label: "Adultes & Familles"
+    description: "Livres de coloriage pour moments de détente"
+
+    # Image generation hints
+    style:
+      complexity: "detailed"
+      line_width: "medium"
+      details: "elaborate"
+
+    # Marketing copy
+    benefits:
+      - "Relaxation et déstressage"
+      - "Méditation créative"
+      - "Art-thérapie"
+      - "Activité familiale"
+
+    # Recommended themes
+    popular_themes:
+      - "mandalas"
+      - "nature"
+      - "geometric"
+
+# Default audience (for form)
+default: "children"

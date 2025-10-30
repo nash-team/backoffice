@@ -1,0 +1,77 @@
+id: dinosaurs
+label: "Dinosaurs"
+palette:
+  base: ["#35654d", "#6a8f49", "#e0b46b"]
+  accents_allowed: ["#ffd166"]
+  forbidden_keywords: ["rainbow", "neon", "pastel gradient"]
+
+# Cover prompts (colorful)
+prompt_blocks:
+  subject: "a cute but majestic T-Rex dinosaur, centered composition"
+  environment: "lush jungle, tropical plants, distant volcano, other dinosaurs in background"
+  tone: "adventurous, exciting, kid-friendly"
+  positives: ["highly detailed", "glossy", "professional children's book cover", "Amazon bestseller style"]
+  negatives: ["no text", "no mockup", "no borders", "no open book", "no low-res", "no distorted anatomy"]
+
+# Coloring page prompts (B&W line art)
+coloring_page_templates:
+  base_structure: "Line art coloring page of a {SPECIES} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+
+  variables:
+    SHOT:
+      - "close-up"
+      - "medium"
+      - "wide"
+      - "silhouette"
+
+    SPECIES:
+      - "T-Rex"
+      - "Triceratops"
+      - "Diplodocus"
+      - "Stegosaurus"
+      - "Pteranodon"
+      - "Ankylosaurus"
+      - "Velociraptor"
+      - "Brachiosaurus"
+
+    ACTION:
+      - "roaring"
+      - "eating leaves"
+      - "running"
+      - "sleeping"
+      - "hatching"
+      - "playing"
+      - "swimming"
+      - "flying"
+
+    ENV:
+      - "lush jungle"
+      - "volcanic plain"
+      - "riverbank"
+      - "tropical forest"
+      - "desert"
+      - "prehistoric landscape"
+      - "mountains"
+
+    FOCUS:
+      - "head"
+      - "full body"
+      - "group of 2-3"
+      - "parent & baby"
+      - "footprint pattern"
+
+    COMPOSITION:
+      - "left-facing"
+      - "right-facing"
+      - "front"
+      - "3/4 view"
+      - "top-down"
+
+  quality_settings: |
+    Black and white line art coloring page style.
+    IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading.
+    Bold clean outlines, closed shapes, thick black lines.
+    NO FRAME, NO BORDER around the illustration.
+    Illustration extends naturally to image boundaries.
+    Printable 300 DPI, simple to medium detail for kids age 4-8.
+    No text, no logo, no watermark.

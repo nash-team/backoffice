@@ -1,0 +1,67 @@
+# ColorDream Brand Identity
+# Visual identity, mascot, and branding elements for ebook covers
+
+brand:
+  name: "ColoriDream"
+  tagline: "Coloring Adventures for Kids"
+  copyright: "© 2025 ColoriDream"
+
+visual_identity:
+  logo:
+    text: "ColoriDream"
+    font: "Pacifico"  # Google Font
+    size_pt: 24
+    color: "#FF6B9D"
+    position: "bottom-right"
+    margin_inches: 0.25
+    enabled: false  # Not yet implemented
+
+  mascot:
+    enabled: false  # Not yet implemented
+    name: "Sparky"
+    design: "rainbow butterfly with paintbrush"
+    size_ratio: 0.10  # 10% de l'image
+    position: "top-right"
+    margin_inches: 0.25
+    opacity: 0.9
+
+  color_scheme:
+    primary: "#667eea"      # Purple-blue
+    secondary: "#764ba2"    # Purple
+    accent: "#FF6B9D"       # Pink
+    background: "#ffffff"   # White
+    text: "#2d3748"         # Dark gray
+
+# Cover generation guidelines
+cover_elements:
+  always_include:
+    - "theme_elements"
+
+  optional:
+    - "author_name"
+    - "subtitle"
+    - "series_number"
+
+  never_include:
+    - "realistic_photography_style"
+    - "thin_delicate_lines"
+    - "overly_complex_backgrounds"
+    - "dark_scary_themes"
+    - "text_overlays"
+
+# Style guidelines for consistency
+style_guidelines:
+  illustration:
+    style: "cartoon, whimsical, kid-friendly"
+    line_weight: "bold and clear"
+    colors: "bright, saturated, cheerful"
+    detail_level: "moderate, age-appropriate"
+
+  composition:
+    focus: "centered, single main subject"
+    background: "simple, complementary"
+    whitespace: "balanced, not cluttered"
+
+  mood:
+    overall: "joyful, inviting, fun"
+    avoid: "scary, realistic, complex"

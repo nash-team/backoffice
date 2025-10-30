@@ -1,0 +1,148 @@
+# Model Configuration for Ebook Generation
+# ===========================================
+# This is the SOURCE OF TRUTH for model selection.
+# API keys are stored in .env (secrets only)
+#
+# Supported Providers:
+#   - openrouter: Unified API for multiple models (OpenRouter.ai)
+#   - gemini: Google Gemini Direct API (AI Studio)
+#   - local: Local Stable Diffusion (100% FREE, requires GPU)
+#
+# Configuration per image type (cover, coloring_page)
+
+models:
+  # ========================================
+  # COVER GENERATION
+  # ========================================
+  # Purpose: Full-color, vibrant cover illustration
+  # Requirements: High quality, child-friendly style, fast generation
+  # Current: Gemini 2.5 Flash via OpenRouter ($0.04/image)
+
+  cover:
+    provider: openrouter
+    model: google/gemini-2.5-flash-image-preview
+    supports_vectorization: false
+
+    # Alternative Options:
+    # ---------------------
+
+    # Option 1: Gemini Direct (same quality, requires GEMINI_API_KEY)
+    #provider: gemini
+    #model: gemini-2.5-flash-image
+    #supports_vectorization: false
+
+    # Option 2: FLUX.1-schnell via OpenRouter (highest quality, $0.003/image)
+    #provider: openrouter
+    #model: black-forest-labs/flux-schnell
+    #supports_vectorization: false
+
+    # Option 3: Local FLUX.1-schnell (FREE but HEAVY: 17GB disk, 32GB RAM)
+    #provider: local
+    #model: black-forest-labs/FLUX.1-schnell
+    #supports_vectorization: false
+
+  # ========================================
+  # CONTENT PAGE GENERATION (Coloring Pages)
+  # ========================================
+  # Purpose: Black & white line art for coloring
+  # Requirements: Clean lines, simple shapes, age-appropriate detail
+  # Current: Gemini Direct (professional line art quality)
+
+  coloring_page:
+    provider: gemini
+    model: gemini-2.5-flash-image
+    supports_vectorization: false
+
+    # Alternative Options:
+    # ---------------------
+
+    # Option 1: Gemini via OpenRouter (same model, unified billing)
+    #provider: openrouter
+    #model: google/gemini-2.5-flash-image-preview
+    #supports_vectorization: false
+
+    # Option 2: SDXL-turbo Local (FREE, fast, 2.5GB disk, 8GB RAM)
+    #provider: local
+    #model: stabilityai/sdxl-turbo
+    #supports_vectorization: false
+
+    # Option 3: FLUX.1-schnell Local (FREE, best quality, 17GB disk, 32GB RAM)
+    #provider: local
+    #model: black-forest-labs/FLUX.1-schnell
+    #supports_vectorization: false
+
+    # Option 4: Local with LoRA fine-tuning (for specialized styles)
+    #provider: local
+    #model: stabilityai/sdxl-turbo
+    #lora: path/to/coloring-book-lora.safetensors
+    #lora_scale: 0.8
+    #supports_vectorization: false
+
+    # Option 5: Local with ControlNet (for precise composition control)
+    #provider: local
+    #model: stabilityai/sdxl-turbo
+    #controlnet: lllyasviel/control_v11p_sd15_canny
+    #controlnet_conditioning_scale: 0.5
+    #supports_vectorization: false
+
+
+# ========================================
+# PROVIDER CONFIGURATION NOTES
+# ========================================
+#
+# OpenRouter (provider: openrouter)
+# ----------------------------------
+# - Requires: OPENROUTER_API_KEY in .env
+# - Base URL: OPENROUTER_BASE_URL in .env (default: https://openrouter.ai/api/v1)
+# - Models: google/gemini-*, black-forest-labs/flux-*, etc.
+# - Pricing: Pay-per-use, varies by model ($0.003 - $0.04/image)
+# - Docs: https://openrouter.ai/docs
+#
+# Gemini Direct (provider: gemini)
+# ---------------------------------
+# - Requires: GEMINI_API_KEY in .env
+# - Models: gemini-2.5-flash-image, gemini-2.0-flash-exp-image, etc.
+# - Pricing: Free tier available, then pay-per-use
+# - Note: Not available in all countries via AI Studio
+# - Docs: https://ai.google.dev/gemini-api/docs
+#
+# Local Stable Diffusion (provider: local)
+# -----------------------------------------
+# - Requires: HF_API_TOKEN in .env (for gated models like FLUX)
+# - Models: Any HuggingFace diffusion model
+#   * stabilityai/sdxl-turbo (2.5GB, fast, good quality)
+#   * black-forest-labs/FLUX.1-schnell (17GB, slow, excellent quality)
+# - Pricing: 100% FREE (no API costs)
+# - Requirements:
+#   * Disk: 3-20GB for model weights
+#   * RAM: 8GB min (SDXL), 32GB+ (FLUX)
+#   * GPU: NVIDIA 6GB+ VRAM recommended (or set LOCAL_SD_USE_CPU=true)
+# - Configuration: See .env for LOCAL_SD_* variables
+# - Docs: https://huggingface.co/docs/diffusers
+#
+# Advanced Options (Local only):
+# - lora: Path to LoRA weights for style transfer
+# - lora_scale: LoRA influence strength (0.0-1.0, default 0.8)
+# - controlnet: HuggingFace ControlNet model ID for composition control
+# - controlnet_conditioning_scale: ControlNet influence (0.0-1.0, default 0.5)
+
+
+# ========================================
+# QUICK START EXAMPLES
+# ========================================
+#
+# 1. All Gemini Direct (requires GEMINI_API_KEY):
+#    cover: provider=gemini, model=gemini-2.5-flash-image
+#    coloring_page: provider=gemini, model=gemini-2.5-flash-image
+#
+# 2. All OpenRouter (requires OPENROUTER_API_KEY):
+#    cover: provider=openrouter, model=google/gemini-2.5-flash-image-preview
+#    coloring_page: provider=openrouter, model=google/gemini-2.5-flash-image-preview
+#
+# 3. All Local FREE (requires GPU, HF_API_TOKEN):
+#    cover: provider=local, model=black-forest-labs/FLUX.1-schnell
+#    coloring_page: provider=local, model=stabilityai/sdxl-turbo
+#
+# 4. Hybrid (best quality/cost balance):
+#    cover: provider=openrouter, model=black-forest-labs/flux-schnell ($0.003)
+#    coloring_page: provider=gemini, model=gemini-2.5-flash-image (free tier)

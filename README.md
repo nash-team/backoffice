@@ -20,12 +20,14 @@ This tool **generates complete coloring books** (dinosaurs, pirates, unicorns, e
 ## Key Features
 
 ### 🎨 AI-Powered Generation
+
 - **Gemini 2.5 Flash Image Preview** via OpenRouter for high-quality illustrations
 - **Potrace vectorization** for clean line art conversion
 - **Seed-based generation** for reproducible results
 - **Batch processing** with quality checks
 
 ### 📚 KDP-Compliant Output
+
 - **Trim size:** 8.0" × 10.0" (203mm × 254mm)
 - **Bleed:** 0.125" (3.175mm) on all sides
 - **Resolution:** 300 DPI (print quality)
@@ -33,6 +35,7 @@ This tool **generates complete coloring books** (dinosaurs, pirates, unicorns, e
 - **Page count:** 24-30 pages (customizable)
 
 ### 🔄 Editorial Workflow
+
 - **Dashboard:** View all generated ebooks with stats
 - **Status tracking:** DRAFT → APPROVED → PUBLISHED → REJECTED
 - **Preview:** In-browser PDF preview
@@ -40,6 +43,7 @@ This tool **generates complete coloring books** (dinosaurs, pirates, unicorns, e
 - **Drive integration:** Upload approved PDFs to Google Drive
 
 ### 💰 Cost Management
+
 - **Per-ebook tracking:** Track API costs for each generation
 - **Statistics dashboard:** Total costs, average per book
 - **Provider logs:** Detailed cost breakdown per API call
@@ -72,6 +76,37 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed technical documentation.
 
 ---
 
+## Configuration
+
+All configuration is externalized in YAML files under `config/`:
+
+```
+config/
+├── branding/
+│   ├── audiences.yaml         # Target audiences (children, adults)
+│   ├── identity.yaml          # Brand identity, colors, mascot
+│   └── themes/                # ✨ Coloring book themes
+│       ├── dinosaurs.yml
+│       ├── pirates.yml
+│       ├── unicorns.yml
+│       └── neutral-default.yml
+├── business/
+│   └── limits.yaml            # Page limits, formats, defaults
+├── generation/
+│   └── models.yaml            # AI model configuration
+└── kdp/
+    └── specifications.yaml    # Amazon KDP specs (trim, bleed, DPI)
+```
+
+**Key points:**
+
+- **Themes** define prompts, palettes, and style guidelines for each coloring book type
+- **Audiences** control complexity (simple for children, detailed for adults)
+- **KDP specs** ensure compliance with Amazon printing requirements
+- All config is validated at runtime and cached for performance
+
+---
+
 ## Prerequisites
 
 - **Python 3.11+**
@@ -95,9 +130,6 @@ python -m venv venv
 source venv/bin/activate  # Unix/macOS
 # or
 .\venv\Scripts\activate   # Windows
-
-# Install dependencies
-pip install -r requirements.txt
 ```
 
 ### 2. Configure Environment
@@ -140,9 +172,10 @@ make run
 ```
 
 **Access:**
-- **Dashboard:** http://localhost:8000
-- **API Docs:** http://localhost:8000/docs
-- **Health Check:** http://localhost:8000/healthz
+
+- **Dashboard:** <http://localhost:8000>
+- **API Docs:** <http://localhost:8000/docs>
+- **Health Check:** <http://localhost:8000/healthz>
 
 ---
 
@@ -150,7 +183,7 @@ make run
 
 ### Generate a Coloring Book
 
-1. **Go to dashboard:** http://localhost:8000
+1. **Go to dashboard:** <http://localhost:8000>
 2. **Click "Create New Ebook"**
 3. **Fill the form:**
    - Title (e.g., "Dinosaur Adventure Coloring Book")
@@ -301,9 +334,9 @@ make test-integration  # (currently disabled due to migration)
 ### Generation fails
 
 - **Check OpenRouter API key** in `.env`
-- **Check API credits** at https://openrouter.ai
+- **Check API credits** at <https://openrouter.ai>
 - **Review logs** in terminal for error messages
-- **Verify theme** is supported (dinosaurs, pirates, unicorns, etc.)
+- **Verify theme** is supported (check `config/branding/themes/` for available themes)
 
 ---
 
@@ -312,15 +345,19 @@ make test-integration  # (currently disabled due to migration)
 1. **Create feature branch:** `git checkout -b feature/my-feature`
 2. **Write tests first** (TDD recommended)
 3. **Run checks:**
+
    ```bash
    make test
    make lint
    make type-check
    ```
+
 4. **Commit with conventional commits:**
+
    ```bash
    git commit -m "feat(ebook/creation): add new theme support"
    ```
+
 5. **Push and create PR**
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for architecture guidelines.

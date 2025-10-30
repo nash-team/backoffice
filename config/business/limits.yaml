@@ -1,0 +1,25 @@
+# Business constraints for ebook generation
+# Extracted from hardcoded values in constants.py
+
+ebook:
+  pages:
+    min: 24  # Amazon KDP minimum for paperback
+    max: 30  # Current project limit
+
+  formats:
+    default: "pdf"
+    supported:
+      - pdf
+
+  engines:
+    default: "weasyprint"
+    supported:
+      - weasyprint
+
+# Image generation constraints (from providers)
+images:
+  cover:
+    min_pixels: 2550  # For 8.5" at 300 DPI
+
+  content:
+    min_pixels: 2175  # For 7.25" content area at 300 DPI

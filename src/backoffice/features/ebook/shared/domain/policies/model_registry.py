@@ -46,7 +46,18 @@ class ModelRegistry:
         """
         if cls._instance is None:
             if config_path is None:
-                config_path = Path(__file__).parent.parent.parent / "config" / "models.yaml"
+                # Find project root by looking for config/ directory
+                current = Path(__file__).resolve()
+                while current.parent != current:
+                    config_dir = current / "config"
+                    if config_dir.exists() and (config_dir / "generation").exists():
+                        config_path = config_dir / "generation" / "models.yaml"
+                        break
+                    current = current.parent
+                else:
+                    raise FileNotFoundError(
+                        "Could not find config/generation/models.yaml in project tree"
+                    )
             cls._instance = cls(config_path)
         return cls._instance
 

@@ -12,9 +12,9 @@ class ThemeRepository:
 
     def __init__(self, themes_directory: Path | None = None):
         if themes_directory is None:
-            # Default to themes directory at project root
+            # Default to config/branding/themes directory at project root
             project_root = Path(__file__).parent.parent.parent.parent.parent
-            themes_directory = project_root / "themes"
+            themes_directory = project_root / "config" / "branding" / "themes"
 
         self.themes_directory = themes_directory
         self._theme_loader = ThemeLoader(themes_directory)

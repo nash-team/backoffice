@@ -79,7 +79,7 @@ class CreateEbookUseCase:
             created_at=datetime.now(),
             status=EbookStatus.DRAFT,
             theme_id=request.theme,
-            audience=request.age_group.value,
+            audience=request.audience.value,
             preview_url=generation_result.pdf_uri,
             page_count=len(generation_result.pages_meta),
         )
@@ -133,7 +133,7 @@ class CreateEbookUseCase:
                     metadata={
                         "title": request.title,
                         "theme": request.theme,
-                        "age_group": request.age_group.value,
+                        "audience": request.audience.value,
                         "ebook_id": str(ebook.id),
                     },
                 )

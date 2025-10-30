@@ -154,18 +154,20 @@ class TestPromptTemplateEngine:
         # Assert - Should use same template
         assert prompts_full == prompts_partial
 
-    def test_generate_prompts_age_group_customization(self):
-        """Test that age group is included in prompts."""
+    def test_generate_prompts_audience_parameter(self):
+        """Test that audience parameter is accepted (for future use)."""
         # Arrange
         engine = PromptTemplateEngine(seed=42)
 
-        # Act
-        prompts_default = engine.generate_prompts(theme="dinosaurs", count=2)
-        prompts_custom = engine.generate_prompts(theme="dinosaurs", count=2, age_group="5-7")
+        # Act - audience parameter is optional and not currently used in prompt
+        prompts_children = engine.generate_prompts(theme="dinosaurs", count=2, audience="children")
+        prompts_adults = engine.generate_prompts(theme="dinosaurs", count=2, audience="adults")
 
-        # Assert
-        assert "age 4-8" in prompts_default[0]
-        assert "age 5-7" in prompts_custom[0]
+        # Assert - both should generate valid prompts with quality settings from YAML
+        assert len(prompts_children) == 2
+        assert len(prompts_adults) == 2
+        assert "Black and white line art" in prompts_children[0]
+        assert "Black and white line art" in prompts_adults[0]
 
     def test_generate_prompts_zero_count(self):
         """Test generating zero prompts."""

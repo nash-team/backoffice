@@ -1,21 +1,29 @@
 """
 Configuration constants for the ebook generation system.
 
-This module centralizes all magic numbers, default values, and configuration
-constants to improve maintainability and reduce duplication.
+Values are now loaded from YAML config files in config/ directory.
+This module provides backward compatibility for existing imports.
 """
 
 from enum import Enum
 
-# Default values for ebook generation
-DEFAULT_EBOOK_FORMAT = "pdf"
-DEFAULT_PDF_ENGINE = "weasyprint"
+from backoffice.config import ConfigLoader
 
-# Ebook configuration validation
+# Initialize config loader
+_config = ConfigLoader()
+
+# Default values for ebook generation (from config/business/limits.yaml)
+DEFAULT_EBOOK_FORMAT = _config.get_default_format()
+DEFAULT_PDF_ENGINE = _config.get_default_engine()
+
+# Ebook configuration validation (from config/business/limits.yaml)
+_page_limits = _config.get_page_limits()
+MIN_PAGES = _page_limits["min"]
+MAX_PAGES = _page_limits["max"]
+
+# Legacy: chapters no longer used for coloring books
 MIN_CHAPTERS = 1
 MAX_CHAPTERS = 15
-MIN_PAGES = 24  # Amazon KDP minimum for paperback printing
-MAX_PAGES = 30
 
 
 # Page format constants for different ebook types with KDP compliance
@@ -26,6 +34,6 @@ class PageFormat(Enum):
     SQUARE_8_5 = "SQUARE_8_5"
 
 
-# DPI validation constants (used by image providers)
-COVER_MIN_PIXELS_SQUARE = 2550  # For 8.5" at 300 DPI
-CONTENT_MIN_PIXELS_SQUARE = 2175  # For 7.25" content area at 300 DPI
+# DPI validation constants (from config/business/limits.yaml)
+COVER_MIN_PIXELS_SQUARE = _config.get_cover_min_pixels()
+CONTENT_MIN_PIXELS_SQUARE = _config.get_content_min_pixels()

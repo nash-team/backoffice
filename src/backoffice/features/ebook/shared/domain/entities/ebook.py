@@ -1,8 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Literal
 
+from backoffice.config import ConfigLoader
 from backoffice.features.ebook.shared.domain.constants import (
     DEFAULT_EBOOK_FORMAT,
     DEFAULT_PDF_ENGINE,
@@ -11,6 +11,9 @@ from backoffice.features.ebook.shared.domain.constants import (
     MIN_CHAPTERS,
     MIN_PAGES,
 )
+
+# Initialize config loader for KDP specs
+_config = ConfigLoader()
 
 
 class EbookStatus(Enum):
@@ -84,32 +87,55 @@ class BackCoverConfig:
 
 @dataclass
 class KDPExportConfig:
-    """Configuration for Amazon KDP paperback export."""
+    """Configuration for Amazon KDP paperback export.
 
-    trim_size: tuple[float, float] = (8.0, 10.0)  # pouces (largeur, hauteur)
-    bleed_size: float = 0.125  # pouces (obligatoire KDP)
-    paper_type: Literal["premium_color", "standard_color", "white", "cream"] = "premium_color"
-    include_barcode: bool = True
-    cover_finish: Literal["glossy", "matte"] = "glossy"
-    icc_rgb_profile: str = "sRGB.icc"
-    icc_cmyk_profile: str = "CoatedFOGRA39.icc"  # Europe (ou US Web Coated SWOP v2)
+    All default values and valid options are loaded from config/kdp/specifications.yaml
+    This allows modifying KDP specs without touching code.
+    """
+
+    trim_size: tuple[float, float] = field(default_factory=lambda: _config.get_kdp_trim_size())
+    bleed_size: float = field(default_factory=lambda: _config.get_kdp_bleed())
+    paper_type: str = field(default_factory=lambda: _config.get_default_paper_type())
+    include_barcode: bool = field(default_factory=lambda: _config.get_default_include_barcode())
+    cover_finish: str = field(default_factory=lambda: _config.get_default_cover_finish())
+    icc_rgb_profile: str = field(default_factory=lambda: _config.get_color_profiles()["rgb"])
+    icc_cmyk_profile: str = field(default_factory=lambda: _config.get_color_profiles()["cmyk"])
+
+    def __post_init__(self):
+        """Validate config values against YAML specifications."""
+        # Validate paper_type
+        valid_papers = _config.get_valid_paper_types()
+        if self.paper_type not in valid_papers:
+            raise ValueError(
+                f"Invalid paper_type: '{self.paper_type}'. "
+                f"Must be one of: {', '.join(valid_papers)}. "
+                f"Check config/kdp/specifications.yaml"
+            )
+
+        # Validate cover_finish
+        valid_finishes = _config.get_valid_cover_finishes()
+        if self.cover_finish not in valid_finishes:
+            raise ValueError(
+                f"Invalid cover_finish: '{self.cover_finish}'. "
+                f"Must be one of: {', '.join(valid_finishes)}. "
+                f"Check config/kdp/specifications.yaml"
+            )
 
 
 # KDP utility functions
 def calculate_spine_width(page_count: int, paper_type: str) -> float:
-    """Calculate spine width in inches according to KDP formulas."""
-    formulas = {
-        "premium_color": 0.002347,
-        "standard_color": 0.002252,
-        "white": 0.002252,
-        "cream": 0.0025,
-    }
-    return page_count * formulas[paper_type]
+    """Calculate spine width in inches according to KDP formulas.
+
+    Formula loaded from config/kdp/specifications.yaml
+    """
+    formula = _config.get_spine_formula(paper_type)
+    return page_count * formula
 
 
-MIN_SPINE_WIDTH_FOR_TEXT = 0.0625  # pouces (hard minimum)
-RECOMMENDED_SPINE_WIDTH = 0.08  # pouces (recommandé pour lisibilité)
-MIN_SPINE_MARGIN = 0.0625  # pouces (marge haut/bas spine)
+# Spine width constants (from config/kdp/specifications.yaml)
+MIN_SPINE_WIDTH_FOR_TEXT = _config.get_spine_min_width()
+RECOMMENDED_SPINE_WIDTH = _config.get_spine_recommended_width()
+MIN_SPINE_MARGIN = _config.get_spine_min_width()  # Same as min width
 
 
 def can_have_spine_text(page_count: int, paper_type: str) -> tuple[bool, str]:

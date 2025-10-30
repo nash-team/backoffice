@@ -11,13 +11,16 @@ class EbookType(str, Enum):
     # TODO: STORY type to be implemented in future
 
 
-class AgeGroup(str, Enum):
-    """Target age group."""
+class Audience(str, Enum):
+    """Target audience for coloring books.
 
-    TODDLER = "2-4"
-    PRESCHOOL = "4-6"
-    EARLY_ELEMENTARY = "6-8"
-    ELEMENTARY = "8-12"
+    Maps to config/branding/audiences.yaml:
+    - CHILDREN: Simple, clear designs for kids
+    - ADULTS: Detailed, intricate designs for adults
+    """
+
+    CHILDREN = "children"
+    ADULTS = "adults"
 
 
 class ColorMode(str, Enum):
@@ -34,7 +37,7 @@ class GenerationRequest:
     Attributes:
         title: Ebook title
         theme: Theme description
-        age_group: Target age group
+        audience: Target audience (children/adults)
         ebook_type: Type of ebook
         page_count: Number of pages to generate
         seed: Random seed for reproducibility (optional)
@@ -43,7 +46,7 @@ class GenerationRequest:
 
     title: str
     theme: str
-    age_group: AgeGroup
+    audience: Audience
     ebook_type: EbookType
     page_count: int
     request_id: str

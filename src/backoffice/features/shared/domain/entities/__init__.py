@@ -1,7 +1,7 @@
 """Domain entities and DTOs."""
 
 from backoffice.features.shared.domain.entities.generation_request import (
-    AgeGroup,
+    Audience,
     ColorMode,
     EbookType,
     GenerationRequest,
@@ -11,7 +11,7 @@ from backoffice.features.shared.domain.entities.generation_request import (
 )
 
 __all__ = [
-    "AgeGroup",
+    "Audience",
     "ColorMode",
     "EbookType",
     "GenerationRequest",

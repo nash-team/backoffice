@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 
+from backoffice.features.ebook.shared.domain.entities.theme_profile import ThemeProfile
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_generation_strategy_port import (
     EbookGenerationStrategyPort,
@@ -14,6 +15,9 @@ from backoffice.features.ebook.shared.domain.services.page_generation import (
 from backoffice.features.ebook.shared.domain.services.pdf_assembly import PDFAssemblyService
 from backoffice.features.ebook.shared.domain.services.prompt_template_engine import (
     PromptTemplateEngine,
+)
+from backoffice.features.ebook.shared.infrastructure.adapters.theme_repository import (
+    ThemeRepository,
 )
 from backoffice.features.shared.domain.entities.generation_request import (
     ColorMode,
@@ -44,6 +48,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         cover_service: CoverGenerationService,
         pages_service: ContentPageGenerationService,
         assembly_service: PDFAssemblyService,
+        theme_repository: ThemeRepository | None = None,
     ):
         """Initialize coloring book strategy.
 
@@ -51,10 +56,12 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
             cover_service: Service for cover generation
             pages_service: Service for content page generation
             assembly_service: Service for PDF assembly
+            theme_repository: Repository for loading theme configurations (optional, creates default if None)
         """
         self.cover_service = cover_service
         self.pages_service = pages_service
         self.assembly_service = assembly_service
+        self.theme_repository = theme_repository or ThemeRepository()
 
     async def generate(self, request: GenerationRequest) -> GenerationResult:
         """Generate a coloring book.
@@ -71,7 +78,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         logger.info(f"🎨 Starting coloring book generation: {request.title}")
         logger.info(f"   Request ID: {request.request_id}")
         logger.info(f"   Theme: {request.theme}")
-        logger.info(f"   Age group: {request.age_group.value}")
+        logger.info(f"   Audience: {request.audience.value}")
         logger.info(f"   Page count: {request.page_count}")
         logger.info(f"   Seed: {request.seed}")
 
@@ -211,7 +218,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         logger.info(f"Title: {request.title}")
         logger.info(f"Type: {request.ebook_type.value}")
         logger.info(f"Theme: {request.theme}")
-        logger.info(f"Age group: {request.age_group.value}")
+        logger.info(f"Audience: {request.audience.value}")
         logger.info(
             f"Total pages: {request.page_count + 1} (1 cover + {request.page_count} content)"
         )
@@ -229,38 +236,49 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
     def _build_cover_prompt(
         self, request: GenerationRequest, page_prompts: list[str] | None = None
     ) -> str:
-        """Build prompt for cover generation WITH text.
+        """Build prompt for cover generation WITH text using theme YAML configuration.
 
         Args:
             request: Generation request
             page_prompts: Optional list of page prompts to inspire cover (if pages generated first)
 
         Returns:
-            Cover prompt
+            Cover prompt based on theme configuration and brand identity
         """
-        # Base cover prompt with quality instructions
-        base_prompt = (
-            f"Create a vibrant, colorful cover illustration for a children's coloring book. "
-            f"Title text: '{request.title}'. "
-            f"Theme: {request.theme}. "
-            f"Style: Soft watercolor illustration, hand-drawn children's book art "
-            f"with gentle, harmonious colors. "
-            f"Natural composition with 2-4 cheerful characters, proper proportions. "
-            f"Warm, inviting atmosphere with balanced pastel and bright colors. "
-            f"Clean, friendly illustration without borders or frames. "
-            f"IMPORTANT: Only display the title text '{request.title}'. "
-            f"DO NOT include any age labels (like 'Ages 2-4', '4-8', etc.), "
-            f"audience information, or any other text besides the title. "
-            f"If you need to indicate it's for children, you can use the word 'children' "
-            f"but NEVER specify age ranges."
+        from backoffice.config import ConfigLoader
+
+        # Load theme from YAML
+        theme_profile = self.theme_repository.get_theme_by_id(request.theme)
+
+        # Load brand identity for style guidelines
+        config = ConfigLoader()
+        identity = config.load_brand_identity()
+        style_guide = identity["style_guidelines"]
+
+        # Build simplified, direct prompt (less verbose = better AI compliance)
+        colors_str = ", ".join(theme_profile.palette.base[:3])
+        accents_str = (
+            ", ".join(theme_profile.palette.accents_allowed)
+            if theme_profile.palette.accents_allowed
+            else "white"
         )
+        forbidden_str = ", ".join(theme_profile.palette.forbidden_keywords)
+
+        base_prompt = f"""Coloring book cover. {style_guide['illustration']['style']}, {style_guide['mood']['overall']}.
+
+Scene: {theme_profile.blocks.subject}, {theme_profile.blocks.environment}
+
+Colors to use: {colors_str}, {accents_str}
+Do NOT use: {forbidden_str}, turquoise, cyan
+
+Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
 
         # If pages were generated first, add context from page themes
         if page_prompts and len(page_prompts) > 0:
             # Extract common visual elements from first few pages (max 3 for brevity)
             sample_pages = page_prompts[: min(3, len(page_prompts))]
             context = (
-                " The book includes pages featuring: "
+                "\n\nCONTEXT: The book includes pages featuring: "
                 + ", ".join(prompt.split(".")[0].lower() for prompt in sample_pages)
                 + "."
             )
@@ -269,53 +287,100 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         return base_prompt
 
     def _build_back_cover_prompt(self, request: GenerationRequest, front_cover_bytes: bytes) -> str:
-        """Build prompt for back cover generation (line art style).
+        """Build prompt for back cover generation (line art style) using theme YAML configuration.
 
         Args:
             request: Generation request
             front_cover_bytes: Front cover for color extraction
 
         Returns:
-            Back cover prompt for line art generation
+            Back cover prompt for line art generation based on theme configuration and brand identity
         """
 
+        from backoffice.config import ConfigLoader
         from backoffice.features.ebook.shared.infrastructure.utils.color_utils import (
             extract_dominant_color_exact,
         )
+
+        # Load theme from YAML
+        theme_profile = self.theme_repository.get_theme_by_id(request.theme)
+
+        # Load brand identity for style guidelines
+        config = ConfigLoader()
+        identity = config.load_brand_identity()
+        style_guide = identity["style_guidelines"]
 
         # Extract background color from front cover
         bg_color = extract_dominant_color_exact(front_cover_bytes)
         bg_hex = "#{:02x}{:02x}{:02x}".format(*bg_color)
 
-        return (
-            f"Create a simple LINE ART illustration for a {request.theme} "
-            f"coloring book back cover.\n"
-            f"\n"
-            f"STYLE REQUIREMENTS:\n"
-            f"- BLACK LINE ART ONLY (coloring book outline style)\n"
-            f"- Background color: {bg_hex} (solid color, same as front cover)\n"
-            f"- Clean, thick black lines (2-3px)\n"
-            f"- NO interior shading, NO gradients, NO text\n"
-            f"- Simple, centered composition\n"
-            f"- Theme: {request.theme}\n"
-            f"- Simpler than front cover (this is the back)\n"
-            f"- Full-bleed design filling the entire frame\n"
-            f"\n"
-            f"IMPORTANT - BARCODE SPACE:\n"
-            f"- MUST leave a PLAIN WHITE EMPTY RECTANGLE in the bottom-right corner\n"
-            f"- DO NOT draw any barcode, lines, or patterns in this space\n"
-            f"- Just a solid white empty box\n"
-            f"- Rectangle size: approximately 15% of image width, 8% of image height\n"
-            f"- Position: bottom-right corner with small margin from edges\n"
-            f"- Keep all illustrations AWAY from this white rectangle area\n"
-            f"\n"
-            f"Examples for {request.theme} theme:\n"
-            f"- Pirates: Simple ship outline, treasure chest, compass\n"
-            f"- Unicorns: Single unicorn silhouette, stars, rainbow outline\n"
-            f"- Dinosaurs: T-Rex outline, palm trees, volcano\n"
-            f"\n"
-            f"Target age: {request.age_group.value}"
+        # Build prompt using theme configuration + brand identity
+        prompt_parts = [
+            f"Create a simple LINE ART illustration for a {theme_profile.label} coloring book back cover.",
+            "",
+            "BRAND STYLE (line art version):",
+            f"- Illustration: {style_guide['illustration']['style']} (simplified for back cover)",
+            f"- Line weight: {style_guide['illustration']['line_weight']}",
+            f"- Mood: {style_guide['mood']['overall']}",
+            "",
+            "⚠️ CRITICAL STYLE REQUIREMENTS (MUST FOLLOW EXACTLY):",
+            "- BLACK LINE ART ONLY (coloring book outline style)",
+            f"- Background color: {bg_hex} (solid color, EXACTLY as front cover)",
+            "- Clean, thick black lines (2-3px width)",
+            "- ABSOLUTELY NO interior shading",
+            "- ABSOLUTELY NO gradients",
+            "- ABSOLUTELY NO text or letters",
+            "- ABSOLUTELY NO colors except black lines and the specified background",
+            "- Simple, centered composition",
+            "- Simpler than front cover (this is the back)",
+            "- Full-bleed design filling the entire frame",
+            "",
+            "⛔ FORBIDDEN ELEMENTS:",
+            "- NO rainbow colors",
+            "- NO bright neon",
+            "- NO text, numbers, or age labels",
+            "- NO filled colors inside the line art",
+            "",
+            # Subject from theme (simplified for back cover)
+            f"SUBJECT: Simplified version of - {theme_profile.blocks.subject}",
+            "",
+            # Environment from theme
+            f"ENVIRONMENT: {theme_profile.blocks.environment}",
+            "",
+            "MUST INCLUDE (from theme):",
+        ]
+
+        # Add some positives from theme (limit to 3 for back cover simplicity)
+        for positive in theme_profile.blocks.positives[:3]:
+            prompt_parts.append(f"- {positive}")
+
+        prompt_parts.extend(
+            [
+                "",
+                "MUST AVOID (from theme):",
+            ]
         )
+
+        # Add negatives from theme
+        for negative in theme_profile.blocks.negatives:
+            prompt_parts.append(f"- {negative}")
+
+        prompt_parts.extend(
+            [
+                "",
+                "IMPORTANT - BARCODE SPACE:",
+                "- MUST leave a PLAIN WHITE EMPTY RECTANGLE in the bottom-right corner",
+                "- DO NOT draw any barcode, lines, or patterns in this space",
+                "- Just a solid white empty box",
+                "- Rectangle size: approximately 15% of image width, 8% of image height",
+                "- Position: bottom-right corner with small margin from edges",
+                "- Keep all illustrations AWAY from this white rectangle area",
+                "",
+                f"Target audience: {request.audience.value}",
+            ]
+        )
+
+        return "\n".join(prompt_parts)
 
     def _build_page_prompts(self, request: GenerationRequest) -> list[str]:
         """Build prompts for content page generation using template engine.
@@ -331,7 +396,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
 
         # Generate varied prompts based on theme
         prompts = engine.generate_prompts(
-            theme=request.theme, count=request.page_count, age_group=request.age_group.value
+            theme=request.theme, count=request.page_count, audience=request.audience.value
         )
 
         logger.info(f"Generated {len(prompts)} varied prompts using template engine")
