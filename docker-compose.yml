@@ -38,9 +38,6 @@ services:
       # Database (psycopg2 for Alembic, asyncpg for app runtime)
       DATABASE_URL: postgresql://backoffice:dev_password@postgres:5432/backoffice_dev
 
-      # Security
-      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
-
       # API Keys (override with .env file)
       GEMINI_API_KEY: ${GEMINI_API_KEY:-your_gemini_key_here}
       LLM_API_KEY: ${LLM_API_KEY:-your_llm_key_here}

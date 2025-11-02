@@ -17,7 +17,7 @@ dependencies = [
   # Modèles & validation
   "pydantic[email]>=2.4.2",
 
-  # Authentification & sécurité
+  # Authentification & sécurité (auth not currently used, kept for future)
   "python-jose[cryptography]>=3.3.0",
   "passlib[bcrypt]>=1.7.4",
   "python-dotenv>=1.0.0",

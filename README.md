@@ -301,7 +301,7 @@ Docker Compose provides an isolated, reproducible environment with PostgreSQL in
 git clone <your-repo-url>
 cd backoffice
 
-# 2. Copy environment variables
+# 2. Copy environment variables (optional, works with defaults)
 cp .env.example .env
 # Edit .env and add your API keys (GEMINI_API_KEY, LLM_API_KEY)
 
