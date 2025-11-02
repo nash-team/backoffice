@@ -2,7 +2,8 @@
 # Essential commands for local development workflow
 
 .PHONY: help install run clean test test-unit test-e2e db-migrate db-status setup dev \
-        lint format typecheck deps deadcode precommit
+        lint format typecheck deps deadcode precommit \
+        docker-build docker-up docker-down docker-logs docker-shell docker-test docker-clean
 
 .DEFAULT_GOAL := help
 
@@ -106,3 +107,27 @@ deadcode: ## Vulture (dead code)
 
 precommit: ## Run all pre-commit hooks on all files
 	pre-commit run --all-files
+
+# -------- Docker --------
+docker-build: ## Build Docker images
+	docker compose build
+
+docker-up: ## Start all services (detached)
+	docker compose up -d
+
+docker-down: ## Stop all services
+	docker compose down
+
+docker-logs: ## Show logs from all services
+	docker compose logs -f
+
+docker-shell: ## Open shell in app container
+	docker compose exec app bash
+
+docker-test: ## Run tests inside Docker container
+	docker compose exec app pytest src/backoffice/features/*/tests/unit -v
+
+docker-clean: ## Stop services and remove volumes
+	docker compose down -v
+
+docker-dev: docker-up ## Alias for docker-up (start services)

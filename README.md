@@ -172,12 +172,14 @@ cp config/branding/themes/dinosaurs.yml config/branding/themes/robots.yml
 Open `config/branding/themes/robots.yml` and modify:
 
 1. **ID and Label:**
+
    ```yaml
    id: robots
    label: "Robots"
    ```
 
 2. **Color Palette:**
+
    ```yaml
    palette:
      base: ["#2e3440", "#5e81ac", "#88c0d0"]  # Cool metallic blues
@@ -186,6 +188,7 @@ Open `config/branding/themes/robots.yml` and modify:
    ```
 
 3. **Cover Prompts:**
+
    ```yaml
    prompt_blocks:
      subject: "a friendly robot with LED eyes"
@@ -194,6 +197,7 @@ Open `config/branding/themes/robots.yml` and modify:
    ```
 
 4. **Variables for Coloring Pages:**
+
    ```yaml
    variables:
      SPECIES: ["humanoid robot", "flying drone", "robot dog"]
@@ -206,43 +210,6 @@ Open `config/branding/themes/robots.yml` and modify:
 ```bash
 # Start the server
 make run
-
-# Go to http://localhost:8001
-# Click "Create New Ebook"
-# Select "Robots" from the theme dropdown
-```
-
-### Testing Without Consuming API Credits
-
-Use these environment variables to test theme changes without calling real AI APIs:
-
-```bash
-# Test with fake data (no API calls)
-USE_FAKE_CATALOG=true \
-USE_FAKE_OUTLINE_GENERATOR=true \
-USE_FAKE_COVER_GENERATOR=true \
-make run
-```
-
-**Available test variables:**
-
-| Variable | Purpose |
-|----------|---------|
-| `USE_FAKE_CATALOG=true` | Use mock database data |
-| `USE_FAKE_OUTLINE_GENERATOR=true` | Skip AI text generation (uses templates) |
-| `USE_FAKE_COVER_GENERATOR=true` | Skip AI image generation (uses placeholders) |
-
-**Example - Full fake generation for testing:**
-
-```bash
-# Add to your .env file for testing:
-USE_FAKE_CATALOG=true
-USE_FAKE_OUTLINE_GENERATOR=true
-USE_FAKE_COVER_GENERATOR=true
-
-# Then run normally:
-make run
-```
 
 This allows you to:
 - Test theme configurations instantly
@@ -264,6 +231,7 @@ This allows you to:
    ```
 
 2. **Adjust line art complexity:**
+
    ```yaml
    quality_settings: |
      Printable 300 DPI, VERY SIMPLE detail for kids age 3-5.  # ← Simpler
@@ -272,6 +240,7 @@ This allows you to:
    ```
 
 3. **Change color palette:**
+
    ```yaml
    palette:
      base: ["#your-hex-color", "#another-color"]
@@ -315,13 +284,91 @@ python -c "import yaml; yaml.safe_load(open('config/branding/themes/your-theme.y
 
 - **Python 3.11+**
 - **PostgreSQL** (or SQLite for local dev)
-- **Docker** (for integration tests with testcontainers)
+- **Docker & Docker Compose** (optional, for containerized development)
 - **OpenRouter API Key** (for image generation via Gemini)
 - **Google Drive API credentials** (optional, for PDF upload)
 
 ---
 
-## Quick Start
+## 🐳 Docker Setup (Recommended for Teams)
+
+Docker Compose provides an isolated, reproducible environment with PostgreSQL included.
+
+### Quick Start with Docker
+
+```bash
+# 1. Clone the repository
+git clone <your-repo-url>
+cd backoffice
+
+# 2. Copy environment variables
+cp .env.example .env
+# Edit .env and add your API keys (GEMINI_API_KEY, LLM_API_KEY)
+
+# 3. Build and start services
+make docker-up
+# Or manually: docker compose up -d
+
+# 4. Access the application
+open http://localhost:8001
+```
+
+### Docker Commands
+
+```bash
+# Build images
+make docker-build
+
+# Start services (detached)
+make docker-up
+
+# View logs
+make docker-logs
+
+# Stop services
+make docker-down
+
+# Open shell in app container
+make docker-shell
+
+# Run tests inside container
+make docker-test
+
+# Clean everything (removes volumes)
+make docker-clean
+```
+
+### What's Included
+
+- **PostgreSQL 15** (exposed on port 5432)
+- **Application** (exposed on port 8001)
+- **Automatic migrations** on startup
+- **Hot reload** (source code mounted as volume)
+
+### Configuration
+
+The `docker-compose.yml` uses environment variables from your `.env` file. Key variables:
+
+```env
+# Database (configured automatically in docker-compose.yml)
+DATABASE_URL=postgresql://backoffice:dev_password@postgres:5432/backoffice_dev
+
+# Security (auto-generated in docker-compose.yml for dev)
+SECRET_KEY=dev-secret-key-change-in-production
+
+# API Keys (REQUIRED - add your own keys)
+GEMINI_API_KEY=your_gemini_key_here
+LLM_API_KEY=your_openrouter_key_here
+
+# Feature flags for testing
+USE_FAKE_PROVIDERS=false  # Set to "true" to skip real API calls
+```
+
+**Note**: The Docker setup works out-of-the-box with default values. You only need to add your API keys if you want to test real image generation.
+
+---
+
+## Quick Start (Local Development)
 
 ### 1. Clone & Install
 

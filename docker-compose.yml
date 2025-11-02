@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: backoffice_postgres
+    environment:
+      POSTGRES_USER: backoffice
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: backoffice_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U backoffice"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backoffice_network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backoffice_app
+    command: >
+      sh -c "
+        echo 'Waiting for PostgreSQL...' &&
+        export PYTHONPATH=/app/src &&
+        alembic upgrade head &&
+        uvicorn backoffice.main:app --host 0.0.0.0 --port 8001 --reload
+      "
+    ports:
+      - "8001:8001"
+    environment:
+      # Database (psycopg2 for Alembic, asyncpg for app runtime)
+      DATABASE_URL: postgresql://backoffice:dev_password@postgres:5432/backoffice_dev
+
+      # Security
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+
+      # API Keys (override with .env file)
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-your_gemini_key_here}
+      LLM_API_KEY: ${LLM_API_KEY:-your_llm_key_here}
+
+      # Feature flags for testing
+      USE_FAKE_PROVIDERS: ${USE_FAKE_PROVIDERS:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      # Mount source code for hot reload
+      - ./src:/app/src
+      - ./migrations:/app/migrations
+      - ./alembic.ini:/app/alembic.ini
+
+      # Mount data directories
+      - ./data:/app/data
+
+      # Prevent overwriting cache
+      - /app/__pycache__
+    networks:
+      - backoffice_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  backoffice_network:
+    driver: bridge
