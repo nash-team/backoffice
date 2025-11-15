@@ -27,6 +27,9 @@ def add_barcode_space(
     barcode_width_inches: float = 2.0,
     barcode_height_inches: float = 1.2,
     barcode_margin_inches: float = 0.25,
+    image_includes_bleeds: bool = False,
+    bleed_size_inches: float = 0.125,
+    has_right_bleed: bool = False,
 ) -> bytes:
     """Add white rectangle for KDP barcode on back cover.
 
@@ -34,13 +37,26 @@ def add_barcode_space(
     - Width: 2.0" / 50.8 mm (default)
     - Height: 1.2" / 30.5 mm (default)
     - Position: Bottom-right
-    - Margin: 0.25" from edges (default)
+    - Margin: 0.25" from TRIM edges (default)
+
+    IMPORTANT: The margin is always measured from the TRIM edges (cut lines),
+    not from the image edges.
+
+    For KDP back covers in full cover assembly:
+    - Image has LEFT bleed (38px) + trim (2550px) = 2588px width
+    - NO right bleed (spine comes right after)
+    - So right edge of image = right edge of trim
+    - Barcode should be margin_from_trim (75px) from right edge of IMAGE
 
     Args:
         image_bytes: Back cover image bytes (PNG format)
         barcode_width_inches: Barcode width in inches (default: 2.0)
         barcode_height_inches: Barcode height in inches (default: 1.2)
-        barcode_margin_inches: Margin from edges in inches (default: 0.25)
+        barcode_margin_inches: Margin from TRIM edges in inches (default: 0.25)
+        image_includes_bleeds: Whether image already includes bleeds (default: False)
+        bleed_size_inches: Bleed size in inches if included (default: 0.125)
+        has_right_bleed: Whether image has bleed on right edge (default: False)
+                        For KDP back covers, this is False (spine comes after)
 
     Returns:
         Image bytes with white barcode space reserved
@@ -50,8 +66,13 @@ def add_barcode_space(
     """
     logger.info(
         f'Adding KDP barcode space: {barcode_width_inches}" × {barcode_height_inches}" '
-        f'with {barcode_margin_inches}" margin'
+        f'with {barcode_margin_inches}" margin from trim edges'
     )
+    if image_includes_bleeds:
+        logger.info(
+            f"   Image includes bleeds of {bleed_size_inches}\" "
+            f"(right bleed: {'Yes' if has_right_bleed else 'No'})"
+        )
 
     try:
         img = Image.open(BytesIO(image_bytes))
@@ -62,35 +83,73 @@ def add_barcode_space(
         # Convert inches to pixels @ 300 DPI (exact KDP dimensions)
         rect_w = inches_to_px(barcode_width_inches)  # 2.0" = 600px
         rect_h = inches_to_px(barcode_height_inches)  # 1.2" = 360px
-        margin = inches_to_px(barcode_margin_inches)  # 0.25" = 75px
+        margin_from_trim = inches_to_px(barcode_margin_inches)  # 0.25" = 75px
 
-        # Bottom-right white rectangle
-        x1 = w - rect_w - margin
-        y1 = h - rect_h - margin
-        x2 = w - margin
-        y2 = h - margin
+        # ✅ Position barcode based on trim edges
+        if image_includes_bleeds:
+            bleed_px = inches_to_px(bleed_size_inches)  # 0.125" = 38px
+
+            # For KDP back covers: [left_bleed(38)][trim(2550)][NO right bleed]
+            # Right edge of image = right edge of trim
+            # Barcode should be margin_from_trim from right trim edge
+            if has_right_bleed:
+                # Standard case: bleeds on both sides
+                x1 = w - bleed_px - margin_from_trim - rect_w
+                x2 = w - bleed_px - margin_from_trim
+            else:
+                # KDP back cover case: NO right bleed, spine comes after
+                # Right edge of image = right edge of trim
+                x1 = w - margin_from_trim - rect_w
+                x2 = w - margin_from_trim
+
+            # Bottom: always has bleed
+            y1 = h - bleed_px - margin_from_trim - rect_h
+            y2 = h - bleed_px - margin_from_trim
+
+            logger.info(
+                f"   Barcode positioned at {margin_from_trim}px from right trim edge "
+                f"(right bleed: {'Yes' if has_right_bleed else 'No - spine follows'})"
+            )
+        else:
+            # No bleeds: image edge = trim edge
+            x1 = w - rect_w - margin_from_trim
+            y1 = h - rect_h - margin_from_trim
+            x2 = w - margin_from_trim
+            y2 = h - margin_from_trim
 
         # Validate dimensions fit within image
         if x1 < 0 or y1 < 0:
             logger.warning(
-                f"⚠️ Barcode space ({rect_w}×{rect_h}px + {margin}px margin) "
+                f"⚠️ Barcode space ({rect_w}×{rect_h}px + {margin_from_trim}px margin) "
                 f"too large for image ({w}×{h}px), adjusting..."
             )
             # Fallback to percentage-based if dimensions don't fit
             rect_w = min(rect_w, int(w * 0.3))
             rect_h = min(rect_h, int(h * 0.2))
-            margin = min(margin, int(w * 0.02))
+            margin_from_trim = min(margin_from_trim, int(w * 0.02))
 
-            x1 = max(0, w - rect_w - margin)
-            y1 = max(0, h - rect_h - margin)
-            x2 = w - margin
-            y2 = h - margin
+            # Recalculate with adjusted dimensions
+            if image_includes_bleeds:
+                bleed_px = inches_to_px(bleed_size_inches)
+                if has_right_bleed:
+                    x1 = max(0, w - bleed_px - margin_from_trim - rect_w)
+                    x2 = w - bleed_px - margin_from_trim
+                else:
+                    x1 = max(0, w - margin_from_trim - rect_w)
+                    x2 = w - margin_from_trim
+                y1 = max(0, h - bleed_px - margin_from_trim - rect_h)
+                y2 = h - bleed_px - margin_from_trim
+            else:
+                x1 = max(0, w - rect_w - margin_from_trim)
+                y1 = max(0, h - rect_h - margin_from_trim)
+                x2 = w - margin_from_trim
+                y2 = h - margin_from_trim
 
         draw.rectangle((x1, y1, x2, y2), fill=(255, 255, 255))
 
         logger.info(
             f"✅ KDP barcode space added: ({x1}, {y1}) to ({x2}, {y2}) "
-            f"= {rect_w}×{rect_h}px with {margin}px margin"
+            f"= {rect_w}×{rect_h}px with {margin_from_trim}px margin from trim edge"
         )
 
         # Convert back to bytes

@@ -160,6 +160,13 @@ class ExportToKDPUseCase:
 
         logger.info(f"✅ KDP export completed: {len(kdp_pdf_bytes)} bytes")
 
+        # 8b. Visual validation against KDP template
+        await self._validate_cover_against_template(
+            back_cover_bytes=back_cover_bytes,
+            front_cover_bytes=front_cover_bytes,
+            page_count=ebook.page_count,
+        )
+
         # 9. Emit domain event
         await self.event_bus.publish(
             KDPExportGeneratedEvent(
@@ -226,3 +233,49 @@ class ExportToKDPUseCase:
         back_cover_bytes = base64.b64decode(back_cover_page["image_data_base64"])
         logger.info(f"✅ Extracted back cover from ebook structure: {len(back_cover_bytes)} bytes")
         return back_cover_bytes
+
+    async def _validate_cover_against_template(
+        self,
+        back_cover_bytes: bytes,
+        front_cover_bytes: bytes,
+        page_count: int,
+    ) -> None:
+        """Validate assembled full cover against official KDP template.
+
+        This validation is informational only (logs warnings, doesn't fail export).
+
+        Args:
+            back_cover_bytes: Back cover image bytes
+            front_cover_bytes: Front cover image bytes
+            page_count: Number of pages for spine calculation
+        """
+        try:
+            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.visual_validator import (
+                assemble_full_kdp_cover,
+                validate_full_cover_against_template,
+            )
+
+            logger.info("🔍 Validating KDP cover against official template...")
+
+            # Assemble full cover (same logic as KDPAssemblyProvider but in PNG)
+            full_cover_bytes = assemble_full_kdp_cover(
+                back_cover_bytes=back_cover_bytes,
+                front_cover_bytes=front_cover_bytes,
+                page_count=page_count,
+            )
+
+            # Validate against template
+            validation_result = validate_full_cover_against_template(full_cover_bytes)
+
+            if validation_result.get("valid"):
+                logger.info(f"✅ {validation_result['message']}")
+            else:
+                logger.warning(f"⚠️ {validation_result['message']}")
+                logger.warning(
+                    f"   Cover size: {validation_result.get('cover_size')} vs "
+                    f"expected: {validation_result.get('expected_size')}"
+                )
+
+        except Exception as e:
+            # Don't fail export if validation fails - just log warning
+            logger.warning(f"⚠️ KDP template validation failed (non-critical): {str(e)}")
