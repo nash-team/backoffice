@@ -24,6 +24,28 @@ jobs:
       - name: ⬇️ Checkout
         uses: actions/checkout@v4
 
+      - name: 🧹 Free up disk space
+        run: |
+          echo "Disk space before cleanup:"
+          df -h
+
+          # Remove unnecessary tools and libraries
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+
+          # Remove large packages
+          sudo apt-get remove -y '^aspnetcore-.*' '^dotnet-.*' '^llvm-.*' 'php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+          sudo apt-get autoremove -y
+          sudo apt-get clean
+
+          # Clean docker images
+          docker rmi $(docker image ls -aq) || true
+
+          echo "Disk space after cleanup:"
+          df -h
+
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
@@ -33,7 +55,7 @@ jobs:
       - name: 📦 Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .[dev]
+          pip install --no-cache-dir -e .[dev]
           python -m playwright install --with-deps chromium
 
       # Installe les navigateurs + deps système pour Playwright
