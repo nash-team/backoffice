@@ -1,0 +1,83 @@
+id: christmas-creepy-cute
+label: "Christmas Creepy But Cute"
+palette:
+  base: ["#8b0000", "#1a4d2e", "#1c1c1c", "#f5f5f5"]
+  accents_allowed: ["#ff6600", "#6a0dad", "#f8f8ff"]
+  forbidden_keywords: ["rainbow", "pastel", "bright neon", "vibrant gradient"]
+
+# Cover prompts (colorful)
+prompt_blocks:
+  subject: "a cute but spooky Christmas character (friendly skeleton Santa, adorable zombie reindeer, or vampire elf with big eyes), centered composition, Tim Burton style"
+  environment: "haunted house decorated with Christmas lights, snowy cemetery with festive ornaments, dark toy workshop with twinkling decorations, misty forest with glowing Christmas trees"
+  tone: "festive yet mysterious, whimsical spooky, kid-friendly dark, Tim Burton aesthetic, cute creepy"
+  positives: ["highly detailed", "cute but creepy", "glossy", "professional children's book cover", "Amazon bestseller style", "friendly spooky", "adorable gothic"]
+  negatives: ["no text", "no mockup", "no borders", "no open book", "no realistic gore", "no truly scary elements", "no nightmares", "no blood"]
+
+# Coloring page prompts (B&W line art)
+coloring_page_templates:
+  base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+
+  variables:
+    SHOT:
+      - "close-up"
+      - "medium"
+      - "wide"
+      - "atmospheric scene"
+
+    CHARACTER:
+      - "friendly skeleton Santa with big smile"
+      - "cute zombie reindeer with antlers"
+      - "adorable vampire elf"
+      - "friendly ghost snowman"
+      - "cute haunted gingerbread man"
+      - "sweet gothic Christmas angel"
+      - "playful friendly Krampus"
+      - "skeleton gift wrapper with bow tie"
+      - "cheerful zombie caroler"
+      - "kind vampire toy maker"
+
+    ACTION:
+      - "delivering festive gifts"
+      - "decorating spooky Christmas tree"
+      - "dancing with friendly ghosts"
+      - "flying with cute bats"
+      - "making magical cookies"
+      - "singing cheerful carols"
+      - "wrapping mysterious presents"
+      - "riding sleigh through mist"
+      - "hanging glowing ornaments"
+      - "playing with haunted toys"
+
+    ENV:
+      - "haunted house with twinkling Christmas lights"
+      - "snowy cemetery with festive decorations"
+      - "dark toy workshop with candy canes"
+      - "misty forest with glowing ornaments"
+      - "gothic fireplace with stockings"
+      - "cobweb-covered Christmas tree"
+      - "moonlit snowy rooftop with chimney"
+      - "spooky North Pole with stars"
+
+    FOCUS:
+      - "head with festive Santa hat"
+      - "full body"
+      - "with Christmas props"
+      - "group of friendly creatures"
+      - "holding ornament or gift"
+      - "skeleton details visible"
+
+    COMPOSITION:
+      - "left-facing"
+      - "right-facing"
+      - "front"
+      - "3/4 view"
+      - "flying or jumping"
+
+  quality_settings: |
+    Black and white line art coloring page style.
+    IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading.
+    Bold clean outlines, closed shapes, thick black lines.
+    NO FRAME, NO BORDER around the illustration.
+    Illustration extends naturally to image boundaries.
+    Printable 300 DPI, simple to medium detail for kids age 4-8.
+    No text, no logo, no watermark.
