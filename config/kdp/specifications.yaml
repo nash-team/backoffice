@@ -135,6 +135,6 @@ export:
 # ColorDream defaults
 defaults:
   format: "square_format"
-  paper_type: "premium_color"
+  paper_type: "standard_color"  # Standard Color (60lb) - matches KDP template spine calc
   cover_finish: "glossy"
   include_barcode: true
