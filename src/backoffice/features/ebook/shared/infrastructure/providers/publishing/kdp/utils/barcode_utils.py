@@ -4,8 +4,8 @@ This module provides utilities to add white rectangle space for Amazon KDP barco
 on back covers, following official KDP specifications.
 
 Official KDP barcode requirements:
-- Width: 2.0 inches (600px @ 300 DPI)
-- Height: 1.5 inches (450px @ 300 DPI)
+- Width: 2.0 inches / 50.8 mm (600px @ 300 DPI)
+- Height: 1.2 inches / 30.5 mm (360px @ 300 DPI)
 - Position: Bottom-right corner
 - Margin: 0.25 inches from edges (75px @ 300 DPI)
 
@@ -25,21 +25,21 @@ logger = logging.getLogger(__name__)
 def add_barcode_space(
     image_bytes: bytes,
     barcode_width_inches: float = 2.0,
-    barcode_height_inches: float = 1.5,
+    barcode_height_inches: float = 1.2,
     barcode_margin_inches: float = 0.25,
 ) -> bytes:
     """Add white rectangle for KDP barcode on back cover.
 
     Uses exact KDP specifications from config/kdp/specifications.yaml:
-    - Width: 2.0" (default)
-    - Height: 1.5" (default)
+    - Width: 2.0" / 50.8 mm (default)
+    - Height: 1.2" / 30.5 mm (default)
     - Position: Bottom-right
     - Margin: 0.25" from edges (default)
 
     Args:
         image_bytes: Back cover image bytes (PNG format)
         barcode_width_inches: Barcode width in inches (default: 2.0)
-        barcode_height_inches: Barcode height in inches (default: 1.5)
+        barcode_height_inches: Barcode height in inches (default: 1.2)
         barcode_margin_inches: Margin from edges in inches (default: 0.25)
 
     Returns:
@@ -61,7 +61,7 @@ def add_barcode_space(
 
         # Convert inches to pixels @ 300 DPI (exact KDP dimensions)
         rect_w = inches_to_px(barcode_width_inches)  # 2.0" = 600px
-        rect_h = inches_to_px(barcode_height_inches)  # 1.5" = 450px
+        rect_h = inches_to_px(barcode_height_inches)  # 1.2" = 360px
         margin = inches_to_px(barcode_margin_inches)  # 0.25" = 75px
 
         # Bottom-right white rectangle

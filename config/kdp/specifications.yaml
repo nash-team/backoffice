@@ -104,7 +104,7 @@ cover:
   # Barcode placement
   barcode:
     width_inches: 2.0
-    height_inches: 1.5
+    height_inches: 1.2  # KDP official spec: 50.8mm x 30.5mm (2.0" x 1.2")
     position: "bottom_right"
     margin_inches: 0.25
 

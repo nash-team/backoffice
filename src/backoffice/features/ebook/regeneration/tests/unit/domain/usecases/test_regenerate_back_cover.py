@@ -89,7 +89,7 @@ async def test_regenerate_back_cover_success():
     mock_cover_service.cover_port.remove_text_from_cover.assert_called_once_with(
         cover_bytes=front_cover_bytes,
         barcode_width_inches=2.0,
-        barcode_height_inches=1.5,
+        barcode_height_inches=1.2,
         barcode_margin_inches=0.25,
     )
 

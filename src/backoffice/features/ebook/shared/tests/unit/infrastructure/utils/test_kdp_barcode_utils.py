@@ -25,7 +25,7 @@ def sample_cover_image() -> bytes:
 
 
 def test_add_barcode_space_default_kdp_dimensions(sample_cover_image):
-    """Test adding barcode space with default KDP dimensions (2.0" × 1.5" with 0.25" margin)."""
+    """Test adding barcode space with default KDP dimensions (2.0" × 1.2" with 0.25" margin)."""
     result_bytes = add_barcode_space(sample_cover_image)
 
     # Verify result is valid image
@@ -34,17 +34,17 @@ def test_add_barcode_space_default_kdp_dimensions(sample_cover_image):
 
     # Verify white rectangle exists at bottom-right
     # KDP specs @ 300 DPI:
-    # - Barcode: 2.0" × 1.5" = 600×450px
+    # - Barcode: 2.0" × 1.2" = 600×360px
     # - Margin: 0.25" = 75px
 
     # Expected white rectangle position:
     # x1 = 2550 - 600 - 75 = 1875
-    # y1 = 2550 - 450 - 75 = 2025
+    # y1 = 2550 - 360 - 75 = 2115
     # x2 = 2550 - 75 = 2475
     # y2 = 2550 - 75 = 2475
 
     # Sample pixels inside barcode area (should be white)
-    center_barcode = result_img.getpixel((2100, 2250))  # Inside barcode area
+    center_barcode = result_img.getpixel((2100, 2300))  # Inside barcode area
     assert center_barcode == (255, 255, 255), "Barcode area should be white"
 
     # Sample pixels outside barcode area (should NOT be white)
@@ -118,7 +118,7 @@ def test_add_barcode_space_exact_kdp_compliance():
 
     KDP specs:
     - Width: 2.0" = 600px @ 300 DPI
-    - Height: 1.5" = 450px @ 300 DPI
+    - Height: 1.2" = 360px @ 300 DPI
     - Margin: 0.25" = 75px @ 300 DPI
     """
     # Create exact KDP size cover (8.5" × 8.5" @ 300 DPI)
@@ -132,15 +132,15 @@ def test_add_barcode_space_exact_kdp_compliance():
 
     # Verify exact white rectangle bounds
     # x1 = 2550 - 600 - 75 = 1875
-    # y1 = 2550 - 450 - 75 = 2025
+    # y1 = 2550 - 360 - 75 = 2115
     # x2 = 2550 - 75 = 2475
     # y2 = 2550 - 75 = 2475
 
     # Test corners of white rectangle
-    top_left_barcode = result_img.getpixel((1876, 2026))  # Just inside top-left
+    top_left_barcode = result_img.getpixel((1876, 2116))  # Just inside top-left
     assert top_left_barcode == (255, 255, 255)
 
-    top_right_barcode = result_img.getpixel((2474, 2026))  # Just inside top-right
+    top_right_barcode = result_img.getpixel((2474, 2116))  # Just inside top-right
     assert top_right_barcode == (255, 255, 255)
 
     bottom_left_barcode = result_img.getpixel((1876, 2474))  # Just inside bottom-left
@@ -150,8 +150,8 @@ def test_add_barcode_space_exact_kdp_compliance():
     assert bottom_right_barcode == (255, 255, 255)
 
     # Test pixels just outside rectangle (should NOT be white)
-    above_rectangle = result_img.getpixel((2100, 2020))  # Above barcode
+    above_rectangle = result_img.getpixel((2100, 2110))  # Above barcode
     assert above_rectangle != (255, 255, 255), "Area above barcode should not be white"
 
-    left_of_rectangle = result_img.getpixel((1870, 2250))  # Left of barcode
+    left_of_rectangle = result_img.getpixel((1870, 2300))  # Left of barcode
     assert left_of_rectangle != (255, 255, 255), "Area left of barcode should not be white"
