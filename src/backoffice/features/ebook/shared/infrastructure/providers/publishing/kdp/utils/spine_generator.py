@@ -13,7 +13,7 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     can_have_spine_text,
     inches_to_px,
 )
-from backoffice.features.ebook.shared.infrastructure.utils.color_utils import (
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
     ensure_cmyk,
     extract_dominant_color_faded,
 )

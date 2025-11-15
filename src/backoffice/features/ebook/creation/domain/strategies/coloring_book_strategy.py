@@ -125,8 +125,16 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         # Step 3: Remove text from cover to create back cover with Gemini Vision
         logger.info("\n📋 Step 3/4: Creating back cover (same image without text)...")
 
+        # Load KDP config for barcode dimensions
+        from backoffice.features.ebook.shared.domain.entities.ebook import KDPExportConfig
+
+        kdp_config = KDPExportConfig()
+
         back_cover_data = await self.cover_service.cover_port.remove_text_from_cover(
-            cover_bytes=cover_data
+            cover_bytes=cover_data,
+            barcode_width_inches=kdp_config.barcode_width,
+            barcode_height_inches=kdp_config.barcode_height,
+            barcode_margin_inches=kdp_config.barcode_margin,
         )
 
         # Step 4: Assemble PDF
@@ -303,7 +311,7 @@ Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
         """
 
         from backoffice.config import ConfigLoader
-        from backoffice.features.ebook.shared.infrastructure.utils.color_utils import (
+        from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
             extract_dominant_color_exact,
         )
 

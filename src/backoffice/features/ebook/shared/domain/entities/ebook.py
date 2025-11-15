@@ -100,6 +100,9 @@ class KDPExportConfig:
     cover_finish: str = field(default_factory=lambda: _config.get_default_cover_finish())
     icc_rgb_profile: str = field(default_factory=lambda: _config.get_color_profiles()["rgb"])
     icc_cmyk_profile: str = field(default_factory=lambda: _config.get_color_profiles()["cmyk"])
+    barcode_width: float = field(default_factory=lambda: _config.get_barcode_width())
+    barcode_height: float = field(default_factory=lambda: _config.get_barcode_height())
+    barcode_margin: float = field(default_factory=lambda: _config.get_barcode_margin())
 
     def __post_init__(self):
         """Validate config values against YAML specifications."""

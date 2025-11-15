@@ -14,6 +14,9 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
 from backoffice.features.ebook.shared.domain.value_objects.usage_metrics import UsageMetrics
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.barcode_utils import (
+    add_barcode_space,
+)
 from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
@@ -211,16 +214,22 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
     async def remove_text_from_cover(
         self,
         cover_bytes: bytes,
+        barcode_width_inches: float = 2.0,
+        barcode_height_inches: float = 1.5,
+        barcode_margin_inches: float = 0.25,
     ) -> bytes:
         """Remove text from cover to create back cover.
 
-        Simple PIL-based solution: add white rectangle for barcode space.
+        Simple PIL-based solution: add white rectangle for barcode space using KDP specs.
 
         Args:
             cover_bytes: Original cover image (with text)
+            barcode_width_inches: KDP barcode width in inches (default: 2.0)
+            barcode_height_inches: KDP barcode height in inches (default: 1.5)
+            barcode_margin_inches: KDP barcode margin in inches (default: 0.25)
 
         Returns:
-            Same image with barcode space (for back cover)
+            Same image with KDP-compliant barcode space (for back cover)
 
         Raises:
             DomainError: If transformation fails
@@ -228,33 +237,16 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         logger.info("🗑️  Removing text from cover (Gemini: PIL-based fallback)...")
 
         try:
-            # Add barcode space programmatically with PIL
-            logger.info("📦 Adding barcode space with PIL...")
-            img = Image.open(BytesIO(cover_bytes))
+            # Add KDP barcode space using centralized utility
+            logger.info("📦 Adding KDP barcode space...")
+            final_bytes = add_barcode_space(
+                cover_bytes,
+                barcode_width_inches=barcode_width_inches,
+                barcode_height_inches=barcode_height_inches,
+                barcode_margin_inches=barcode_margin_inches,
+            )
 
-            draw = ImageDraw.Draw(img)
-
-            w, h = img.size
-            rect_w = int(w * 0.15)  # 15% width
-            rect_h = int(w * 0.08)  # 8% height
-            margin = int(w * 0.02)  # 2% margin
-
-            # Bottom-right white rectangle
-            x1 = w - rect_w - margin
-            y1 = h - rect_h - margin
-            x2 = w - margin
-            y2 = h - margin
-
-            draw.rectangle((x1, y1, x2, y2), fill=(255, 255, 255))
-
-            # Convert back to bytes
-            output_buffer = BytesIO()
-            img.save(output_buffer, format="PNG")
-            final_bytes = output_buffer.getvalue()
-
-            # Track usage (FREE - just PIL operation, no API call)
-
-            logger.info(f"✅ Barcode space added (Gemini): {len(final_bytes)} bytes")
+            logger.info(f"✅ KDP barcode space added (Gemini): {len(final_bytes)} bytes")
             return final_bytes
 
         except Exception as e:

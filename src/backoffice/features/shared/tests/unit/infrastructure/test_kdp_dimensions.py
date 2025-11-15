@@ -7,7 +7,9 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     can_have_spine_text,
     inches_to_px,
 )
-from backoffice.features.ebook.shared.infrastructure.utils.color_utils import TEXT_BLACK_CMYK
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
+    TEXT_BLACK_CMYK,
+)
 
 
 def test_spine_width_calculations():

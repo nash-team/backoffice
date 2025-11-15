@@ -147,6 +147,8 @@ class ContentPageGenerationService:
     ) -> bytes:
         """Generate a single content page with concurrency control.
 
+        Logs progress for each page generation.
+
         Args:
             prompt: Text description of the page
             spec: Image specifications
@@ -179,6 +181,12 @@ class ContentPageGenerationService:
                 prompt=prompt,
                 spec=spec,
                 seed=seed,
+            )
+
+            # Log successful generation
+            logger.info(
+                f"✅ Page {page_number} generated successfully "
+                f"({len(image_data):,} bytes, {spec.width_px}x{spec.height_px}px)"
             )
 
             # Post-validation

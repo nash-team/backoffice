@@ -102,7 +102,7 @@ class ProviderFactory:
 
         provider: CoverGenerationPort
         if model_mapping.provider == "openrouter":
-            from backoffice.features.ebook.shared.infrastructure.providers import (
+            from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (
                 openrouter_image_provider,
             )
 
@@ -115,7 +115,7 @@ class ProviderFactory:
             )
 
         elif model_mapping.provider == "local":
-            from backoffice.features.ebook.shared.infrastructure.providers import (
+            from backoffice.features.ebook.shared.infrastructure.providers.images.local_sd import (
                 local_sd_provider,
             )
 
@@ -128,7 +128,7 @@ class ProviderFactory:
             )
 
         elif model_mapping.provider == "gemini":
-            from backoffice.features.ebook.shared.infrastructure.providers import (
+            from backoffice.features.ebook.shared.infrastructure.providers.images.gemini import (
                 gemini_image_provider,
             )
 
@@ -195,7 +195,7 @@ class ProviderFactory:
 
         provider: ContentPageGenerationPort
         if model_mapping.provider == "openrouter":
-            from backoffice.features.ebook.shared.infrastructure.providers import (
+            from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (
                 openrouter_image_provider,
             )
 
@@ -208,7 +208,7 @@ class ProviderFactory:
             )
 
         elif model_mapping.provider == "local":
-            from backoffice.features.ebook.shared.infrastructure.providers import (
+            from backoffice.features.ebook.shared.infrastructure.providers.images.local_sd import (
                 local_sd_provider,
             )
 
@@ -221,7 +221,7 @@ class ProviderFactory:
             )
 
         elif model_mapping.provider == "gemini":
-            from backoffice.features.ebook.shared.infrastructure.providers import (
+            from backoffice.features.ebook.shared.infrastructure.providers.images.gemini import (
                 gemini_image_provider,
             )
 

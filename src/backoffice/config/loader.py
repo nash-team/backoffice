@@ -216,6 +216,21 @@ class ConfigLoader:
         specs = self.load_kdp_specifications()
         return cast(dict[str, Any], specs["validation"])
 
+    def get_barcode_width(self) -> float:
+        """Get KDP barcode width in inches (default: 2.0)."""
+        specs = self.load_kdp_specifications()
+        return cast(float, specs["cover"]["barcode"]["width_inches"])
+
+    def get_barcode_height(self) -> float:
+        """Get KDP barcode height in inches (default: 1.5)."""
+        specs = self.load_kdp_specifications()
+        return cast(float, specs["cover"]["barcode"]["height_inches"])
+
+    def get_barcode_margin(self) -> float:
+        """Get KDP barcode margin in inches (default: 0.25)."""
+        specs = self.load_kdp_specifications()
+        return cast(float, specs["cover"]["barcode"]["margin_inches"])
+
     # Business limits
     def load_business_limits(self) -> dict[str, Any]:
         """Load business constraints (pages, formats, etc.)."""

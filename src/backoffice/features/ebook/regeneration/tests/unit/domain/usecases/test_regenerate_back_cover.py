@@ -87,7 +87,10 @@ async def test_regenerate_back_cover_success():
     assert result.id == ebook_id
     mock_repo.get_by_id.assert_called_once_with(ebook_id)
     mock_cover_service.cover_port.remove_text_from_cover.assert_called_once_with(
-        cover_bytes=front_cover_bytes
+        cover_bytes=front_cover_bytes,
+        barcode_width_inches=2.0,
+        barcode_height_inches=1.5,
+        barcode_margin_inches=0.25,
     )
 
     # Verify structure_json was updated with new back cover

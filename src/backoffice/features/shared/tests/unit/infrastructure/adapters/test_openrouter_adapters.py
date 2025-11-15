@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from backoffice.features.ebook.shared.infrastructure.providers.openrouter_image_provider import (
+from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter.openrouter_image_provider import (
     OpenRouterImageProvider,
 )
 from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec

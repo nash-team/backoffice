@@ -12,9 +12,17 @@ class ThemeRepository:
 
     def __init__(self, themes_directory: Path | None = None):
         if themes_directory is None:
-            # Default to config/branding/themes directory at project root
-            project_root = Path(__file__).parent.parent.parent.parent.parent
-            themes_directory = project_root / "config" / "branding" / "themes"
+            # Find project root by looking for config/ directory
+            current = Path(__file__).resolve()
+            while current.parent != current:
+                config_dir = current / "config" / "branding" / "themes"
+                if config_dir.exists():
+                    themes_directory = config_dir
+                    break
+                current = current.parent
+
+            if themes_directory is None:
+                raise FileNotFoundError("Could not find config/branding/themes in project tree")
 
         self.themes_directory = themes_directory
         self._theme_loader = ThemeLoader(themes_directory)

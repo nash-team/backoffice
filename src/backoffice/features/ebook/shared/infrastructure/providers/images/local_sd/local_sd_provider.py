@@ -12,6 +12,9 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
 from backoffice.features.ebook.shared.domain.value_objects.usage_metrics import UsageMetrics
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.barcode_utils import (
+    add_barcode_space,
+)
 from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
@@ -314,11 +317,40 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
             if self.controlnet_id:
                 control_image = self._preprocess_for_controlnet(spec)
 
+            # Auto-downscale if requested size is too large for SDXL memory
+            # SDXL works best with sizes up to 1024x1280
+            MAX_SDXL_DIM = 1280
+            target_width = spec.width_px
+            target_height = spec.height_px
+            needs_upscaling = False
+
+            if spec.width_px > MAX_SDXL_DIM or spec.height_px > MAX_SDXL_DIM:
+                # Calculate optimal generation size (preserve aspect ratio)
+                aspect_ratio = spec.width_px / spec.height_px
+                if spec.height_px > spec.width_px:
+                    # Portrait orientation (like KDP 8x10)
+                    gen_height = MAX_SDXL_DIM
+                    gen_width = int(gen_height * aspect_ratio)
+                else:
+                    # Landscape or square
+                    gen_width = MAX_SDXL_DIM
+                    gen_height = int(gen_width / aspect_ratio)
+
+                logger.info(
+                    f"📐 Auto-downscaling for generation: "
+                    f"{spec.width_px}x{spec.height_px} → {gen_width}x{gen_height} "
+                    f"(will upscale to KDP specs after)"
+                )
+                needs_upscaling = True
+            else:
+                gen_width = spec.width_px
+                gen_height = spec.height_px
+
             # Build pipeline parameters
             pipeline_params = {
                 "prompt": full_prompt,
-                "height": spec.height_px,
-                "width": spec.width_px,
+                "height": gen_height,
+                "width": gen_width,
                 "num_inference_steps": num_steps,
                 "guidance_scale": guidance,
                 "generator": generator,
@@ -333,6 +365,13 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
             result = self.pipeline(**pipeline_params)
 
             pil_image = result.images[0]
+
+            # Upscale to target KDP specs if needed (high-quality LANCZOS)
+            if needs_upscaling:
+                logger.info(f"🔍 Upscaling to KDP specs: {target_width}x{target_height}")
+                pil_image = pil_image.resize(
+                    (target_width, target_height), Image.Resampling.LANCZOS
+                )
 
             # Convert to bytes
             buffer = BytesIO()
@@ -380,17 +419,23 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
     async def remove_text_from_cover(
         self,
         cover_bytes: bytes,
+        barcode_width_inches: float = 2.0,
+        barcode_height_inches: float = 1.5,
+        barcode_margin_inches: float = 0.25,
     ) -> bytes:
         """Remove text from cover to create back cover.
 
         Note: Local SD doesn't have a text removal model yet.
-        We'll use a simple PIL-based solution (add barcode space).
+        We'll use a simple PIL-based solution with KDP-compliant barcode space.
 
         Args:
             cover_bytes: Original cover image (with text)
+            barcode_width_inches: KDP barcode width in inches (default: 2.0)
+            barcode_height_inches: KDP barcode height in inches (default: 1.5)
+            barcode_margin_inches: KDP barcode margin in inches (default: 0.25)
 
         Returns:
-            Same image with barcode space (for back cover)
+            Same image with KDP-compliant barcode space (for back cover)
 
         Raises:
             DomainError: If transformation fails
@@ -398,33 +443,16 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
         logger.info("🗑️  Removing text from cover (Local SD: PIL-based fallback)...")
 
         try:
-            # Add barcode space programmatically with PIL
-            logger.info("📦 Adding barcode space with PIL...")
-            img = Image.open(BytesIO(cover_bytes))
-            from PIL import ImageDraw
+            # Add KDP barcode space using centralized utility
+            logger.info("📦 Adding KDP barcode space...")
+            final_bytes = add_barcode_space(
+                cover_bytes,
+                barcode_width_inches=barcode_width_inches,
+                barcode_height_inches=barcode_height_inches,
+                barcode_margin_inches=barcode_margin_inches,
+            )
 
-            draw = ImageDraw.Draw(img)
-
-            w, h = img.size
-            rect_w = int(w * 0.15)  # 15% width
-            rect_h = int(w * 0.08)  # 8% height
-            margin = int(w * 0.02)  # 2% margin
-
-            # Bottom-right white rectangle
-            x1 = w - rect_w - margin
-            y1 = h - rect_h - margin
-            x2 = w - margin
-            y2 = h - margin
-
-            draw.rectangle((x1, y1, x2, y2), fill=(255, 255, 255))
-
-            # Convert back to bytes
-            output_buffer = BytesIO()
-            img.save(output_buffer, format="PNG")
-            final_bytes = output_buffer.getvalue()
-            # (this is a simple PIL operation, not an AI generation)
-
-            logger.info(f"✅ Barcode space added (LOCAL): {len(final_bytes)} bytes")
+            logger.info(f"✅ KDP barcode space added (LOCAL): {len(final_bytes)} bytes")
             return final_bytes
 
         except Exception as e:

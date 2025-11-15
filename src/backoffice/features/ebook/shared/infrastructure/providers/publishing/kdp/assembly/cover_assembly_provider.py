@@ -13,8 +13,12 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     calculate_spine_width,
     inches_to_px,
 )
-from backoffice.features.ebook.shared.infrastructure.utils.color_utils import ensure_cmyk
-from backoffice.features.ebook.shared.infrastructure.utils.spine_generator import generate_spine
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
+    ensure_cmyk,
+)
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.spine_generator import (
+    generate_spine,
+)
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
 logger = logging.getLogger(__name__)

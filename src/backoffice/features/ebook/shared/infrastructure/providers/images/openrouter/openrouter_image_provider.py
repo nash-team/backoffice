@@ -18,11 +18,14 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
     ContentPageGenerationPort,
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
-from backoffice.features.ebook.shared.infrastructure.utils.color_utils import (
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.barcode_utils import (
+    add_barcode_space,
+)
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
     TEXT_BLACK_CMYK,
     convert_rgb_to_cmyk,
 )
-from backoffice.features.ebook.shared.infrastructure.utils.spine_generator import (
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.spine_generator import (
     get_font_path,
     load_font_safe,
 )
@@ -215,14 +218,20 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
     async def remove_text_from_cover(
         self,
         cover_bytes: bytes,
+        barcode_width_inches: float = 2.0,
+        barcode_height_inches: float = 1.5,
+        barcode_margin_inches: float = 0.25,
     ) -> bytes:
         """Remove text from cover to create back cover using Gemini vision.
 
         Args:
             cover_bytes: Original cover image (with text)
+            barcode_width_inches: KDP barcode width in inches (default: 2.0)
+            barcode_height_inches: KDP barcode height in inches (default: 1.5)
+            barcode_margin_inches: KDP barcode margin in inches (default: 0.25)
 
         Returns:
-            Same image without text (for back cover)
+            Same image without text with KDP-compliant barcode space (for back cover)
 
         Raises:
             DomainError: If transformation fails
@@ -286,34 +295,16 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             image_bytes = self._extract_image_from_response(response)
             logger.info(f"✅ Text removed by Gemini: {len(image_bytes)} bytes")
 
-            # Step 2: Add barcode space programmatically with PIL
-            logger.info("📦 Adding barcode space with PIL...")
-            from io import BytesIO
+            # Step 2: Add KDP barcode space using centralized utility
+            logger.info("📦 Adding KDP barcode space...")
+            final_bytes = add_barcode_space(
+                image_bytes,
+                barcode_width_inches=barcode_width_inches,
+                barcode_height_inches=barcode_height_inches,
+                barcode_margin_inches=barcode_margin_inches,
+            )
 
-            from PIL import Image, ImageDraw
-
-            img = Image.open(BytesIO(image_bytes))
-            draw = ImageDraw.Draw(img)
-
-            w, h = img.size
-            rect_w = int(w * 0.15)  # 15% width
-            rect_h = int(h * 0.08)  # 8% height
-            margin = int(w * 0.02)  # 2% margin
-
-            # Bottom-right white rectangle
-            x1 = w - rect_w - margin
-            y1 = h - rect_h - margin
-            x2 = w - margin
-            y2 = h - margin
-
-            draw.rectangle((x1, y1, x2, y2), fill=(255, 255, 255))
-
-            # Convert back to bytes
-            output = BytesIO()
-            img.save(output, format="PNG")
-            final_bytes = output.getvalue()
-
-            logger.info(f"✅ Barcode space added: {len(final_bytes)} bytes")
+            logger.info(f"✅ KDP barcode space added: {len(final_bytes)} bytes")
             return final_bytes
 
         except Exception as e:
@@ -507,7 +498,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             DomainError: If generation fails
         """
         # 1. Extract vibrant background color from front cover (not gray)
-        from backoffice.features.ebook.shared.infrastructure.utils.color_utils import (
+        from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
             extract_dominant_color_exact,
         )
 

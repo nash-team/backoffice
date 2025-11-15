@@ -16,9 +16,11 @@ from backoffice.features.shared.domain.errors.error_taxonomy import DomainError,
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 if TYPE_CHECKING:
-    from backoffice.features.ebook.shared.infrastructure.providers import (
-        kdp_assembly_provider,
+    from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (
         openrouter_image_provider,
+    )
+    from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (
+        cover_assembly_provider,
     )
 
 logger = logging.getLogger(__name__)
@@ -32,7 +34,7 @@ class ExportToKDPUseCase:
         ebook_repository: EbookPort,
         event_bus: EventBus,
         image_provider: "openrouter_image_provider.OpenRouterImageProvider | None" = None,
-        kdp_assembly_provider: "kdp_assembly_provider.KDPAssemblyProvider | None" = None,
+        kdp_assembly_provider: "cover_assembly_provider.KDPAssemblyProvider | None" = None,
     ):
         self.ebook_repository = ebook_repository
         self.event_bus = event_bus
@@ -124,15 +126,15 @@ class ExportToKDPUseCase:
 
         # 5. Initialize providers if not injected
         if not self.image_provider:
-            from backoffice.features.ebook.shared.infrastructure.providers import (
+            from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (
                 openrouter_image_provider as or_provider,
             )
 
             self.image_provider = or_provider.OpenRouterImageProvider()
 
         if not self.kdp_assembly_provider:
-            from backoffice.features.ebook.shared.infrastructure.providers import (
-                kdp_assembly_provider as kdp_provider,
+            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (
+                cover_assembly_provider as kdp_provider,
             )
 
             self.kdp_assembly_provider = kdp_provider.KDPAssemblyProvider()
