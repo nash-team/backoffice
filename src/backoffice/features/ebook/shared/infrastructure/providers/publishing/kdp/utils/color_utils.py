@@ -1,4 +1,10 @@
-"""Color utilities for KDP export (CMYK conversion, color extraction)."""
+"""Color utilities for KDP export (RGB handling, color extraction).
+
+IMPORTANT: KDP requires RGB, not CMYK!
+- Cover PDFs: RGB only (KDP converts to CMYK for print)
+- Interior images: RGB or grayscale
+- Never submit CMYK files to KDP (automatic rejection risk)
+"""
 
 import colorsys
 import logging
@@ -10,8 +16,8 @@ from PIL.Image import Image as PILImage
 
 logger = logging.getLogger(__name__)
 
-# ✅ CMYK black K 100% in PIL (8-bit channels: 0-255)
-TEXT_BLACK_CMYK = (0, 0, 0, 255)
+# ✅ RGB black for text
+TEXT_BLACK_RGB = (0, 0, 0)
 
 
 def convert_rgb_to_cmyk(
@@ -135,25 +141,31 @@ def extract_dominant_color_exact(image_bytes: bytes) -> tuple[int, int, int]:
     return cast(tuple[int, int, int], fallback_rgb_raw)
 
 
-def ensure_cmyk(img: PILImage, icc_cmyk: str = "CoatedFOGRA39.icc") -> PILImage:
-    """Force image to CMYK mode. Use before assembly.
+def ensure_rgb(img: PILImage) -> PILImage:
+    """Force image to RGB mode (required by KDP).
+
+    KDP requires RGB color mode, NOT CMYK!
+    KDP will handle the CMYK conversion automatically for print.
 
     Args:
         img: PIL Image in any mode
-        icc_cmyk: Target CMYK profile
 
     Returns:
-        Image in CMYK mode
+        Image in RGB mode
     """
-    if img.mode == "CMYK":
+    if img.mode == "RGB":
         return img
 
-    if img.mode != "RGB":
-        img = img.convert("RGB")
+    # Convert CMYK, RGBA, L, etc. to RGB
+    if img.mode == "CMYK":
+        logger.info("Converting CMYK to RGB (KDP requirement)")
+        return img.convert("RGB")
 
-    try:
-        result_img = ImageCms.profileToProfile(img, "sRGB.icc", icc_cmyk, outputMode="CMYK")
-        return cast(PILImage, result_img)
-    except Exception as e:
-        logger.warning(f"⚠️ Normalisation CMYK échouée, conversion naïve: {e}")
-        return img.convert("CMYK")
+    if img.mode == "RGBA":
+        # Handle transparency by compositing on white background
+        rgb_img = Image.new("RGB", img.size, (255, 255, 255))
+        rgb_img.paste(img, mask=img.split()[3] if len(img.split()) == 4 else None)
+        return rgb_img
+
+    # For grayscale, palette, etc.
+    return img.convert("RGB")

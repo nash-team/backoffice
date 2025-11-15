@@ -15,7 +15,7 @@ from backoffice.features.shared.domain.errors.error_taxonomy import DomainError,
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 if TYPE_CHECKING:
-    from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (
+    from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (  # noqa: E501
         interior_assembly_provider,
     )
 
@@ -118,12 +118,11 @@ class ExportToKDPInteriorUseCase:
                 include_barcode=kdp_config.include_barcode,
                 cover_finish=kdp_config.cover_finish,
                 icc_rgb_profile=kdp_config.icc_rgb_profile,
-                icc_cmyk_profile=kdp_config.icc_cmyk_profile,
             )
 
         # 5. Initialize provider if not injected
         if not self.kdp_interior_assembly_provider:
-            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (
+            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (  # noqa: E501
                 interior_assembly_provider as kdp_provider,
             )
 

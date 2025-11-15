@@ -26,7 +26,9 @@ class EbookModel(Base):
     author: Mapped[str] = mapped_column(String(255))
     status: Mapped[str] = mapped_column(String(20), default=EbookStatus.DRAFT.value)
     preview_url: Mapped[str | None]
-    drive_id: Mapped[str | None]
+    drive_id: Mapped[str | None]  # Legacy field for backward compatibility
+    drive_id_cover: Mapped[str | None]  # KDP Cover PDF Drive ID
+    drive_id_interior: Mapped[str | None]  # KDP Interior PDF Drive ID
     created_at: Mapped[datetime]
 
     # Theme-based generation fields

@@ -18,12 +18,8 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
     ContentPageGenerationPort,
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
-from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.barcode_utils import (
-    add_barcode_space,
-)
 from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
-    TEXT_BLACK_CMYK,
-    convert_rgb_to_cmyk,
+    TEXT_BLACK_RGB,
 )
 from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.spine_generator import (
     get_font_path,
@@ -295,17 +291,10 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             image_bytes = self._extract_image_from_response(response)
             logger.info(f"✅ Text removed by Gemini: {len(image_bytes)} bytes")
 
-            # Step 2: Add KDP barcode space using centralized utility
-            logger.info("📦 Adding KDP barcode space...")
-            final_bytes = add_barcode_space(
-                image_bytes,
-                barcode_width_inches=barcode_width_inches,
-                barcode_height_inches=barcode_height_inches,
-                barcode_margin_inches=barcode_margin_inches,
-            )
-
-            logger.info(f"✅ KDP barcode space added: {len(final_bytes)} bytes")
-            return final_bytes
+            # Return image without text
+            # Barcode space will be added during KDP export, not here
+            logger.info(f"✅ Back cover ready (no barcode space): {len(image_bytes)} bytes")
+            return image_bytes
 
         except Exception as e:
             logger.error(f"❌ Gemini transformation failed: {str(e)}")
@@ -484,15 +473,20 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
     ) -> bytes:
         """Generate KDP back cover with line art from cover + text.
 
+        DEPRECATED: Back cover is now generated directly in coloring_book_strategy.py
+        using Gemini Vision text removal. This method is kept for backward compatibility.
+
+        IMPORTANT: KDP requires RGB, not CMYK!
+
         Args:
             back_config: Back cover configuration
             spec: Image specifications
             front_cover_bytes: Front cover for dominant color extraction
             front_cover_no_text_bytes: Front cover WITHOUT text for line art
-            kdp_config: KDP export configuration
+            kdp_config: KDP export configuration (icc profiles are now ignored)
 
         Returns:
-            CMYK TIFF back cover bytes at 300 DPI
+            RGB PNG back cover bytes at 300 DPI
 
         Raises:
             DomainError: If generation fails
@@ -515,18 +509,12 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             background_color=background_color,
         )
 
-        # 3. Convert to CMYK BEFORE adding text
-        bg_cmyk_bytes = convert_rgb_to_cmyk(
-            bg_bytes, kdp_config.icc_rgb_profile, kdp_config.icc_cmyk_profile
-        )
-
-        # 4. Add text + barcode zone (on CMYK image)
-        final_bytes = self._add_back_cover_text(bg_cmyk_bytes, back_config, spec, kdp_config)
+        # 3. Add text + barcode zone (on RGB image - KDP requirement)
+        final_bytes = self._add_back_cover_text(bg_bytes, back_config, spec, kdp_config)
 
         logger.info(f"✅ Generated back cover: {len(final_bytes)} bytes")
         return final_bytes
 
-    # DEPRECATED: Back cover is now generated directly in coloring_book_strategy.py
     # This method is no longer used since we extract back cover from structure_json
     async def _generate_line_art_back_cover(
         self,
@@ -751,29 +739,31 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
 
     def _add_back_cover_text(
         self,
-        image_cmyk_bytes: bytes,
+        image_rgb_bytes: bytes,
         back_config: BackCoverConfig,
         spec: ImageSpec,
         kdp_config: KDPExportConfig,
     ) -> bytes:
-        """Add text and barcode zone to back cover CMYK image.
+        """Add text and barcode zone to back cover RGB image.
+
+        IMPORTANT: KDP requires RGB, not CMYK!
 
         Args:
-            image_cmyk_bytes: CMYK background image
+            image_rgb_bytes: RGB background image
             back_config: Back cover configuration
             spec: Image specifications
             kdp_config: KDP export configuration
 
         Returns:
-            CMYK TIFF with text and barcode zone
+            RGB PNG with text and barcode zone
         """
-        img = Image.open(BytesIO(image_cmyk_bytes))
-        if img.mode != "CMYK":
-            raise DomainError(
-                code=ErrorCode.VALIDATION_ERROR,
-                message=f"Image must be CMYK, got: {img.mode}",
-                actionable_hint="Ensure CMYK conversion before text addition",
-            )
+        from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
+            ensure_rgb,
+        )
+
+        img = Image.open(BytesIO(image_rgb_bytes))
+        # Ensure RGB mode (KDP requirement)
+        img = ensure_rgb(img)
 
         draw = ImageDraw.Draw(img)
 
@@ -795,7 +785,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         x = (img.width - text_width) // 2
         y = (img.height - text_height) // 2
 
-        draw.text((x, y), text, fill=TEXT_BLACK_CMYK, font=title_font)
+        draw.text((x, y), text, fill=TEXT_BLACK_RGB, font=title_font)
 
         # 2. Copyright (bottom left, in TRIM)
         if back_config.include_copyright:
@@ -814,11 +804,11 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             draw.text(
                 (copyright_x, copyright_y),
                 copyright_text,
-                fill=TEXT_BLACK_CMYK,
+                fill=TEXT_BLACK_RGB,
                 font=copyright_font,
             )
 
-        # 3. Barcode zone (pure white CMYK, in TRIM)
+        # 3. Barcode zone (pure white RGB, in TRIM)
         BARCODE_WIDTH = inches_to_px(2.0)
         BARCODE_HEIGHT = inches_to_px(1.2)
         QUIET_ZONE = inches_to_px(0.125)
@@ -840,12 +830,12 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                 barcode_x + BARCODE_WIDTH + QUIET_ZONE,
                 barcode_y + BARCODE_HEIGHT + QUIET_ZONE,
             ),
-            fill=(0, 0, 0, 0),  # White in CMYK
+            fill=(255, 255, 255),  # White in RGB
         )
 
-        # Save with DPI
+        # Save with DPI (PNG format for RGB - KDP requirement)
         buffer = BytesIO()
-        img.save(buffer, format="TIFF", compression="tiff_adobe_deflate", dpi=(300, 300))
+        img.save(buffer, format="PNG", dpi=(300, 300))
         return buffer.getvalue()
 
     async def _track_usage_from_response(self, response) -> None:

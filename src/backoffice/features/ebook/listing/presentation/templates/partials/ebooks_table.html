@@ -24,28 +24,13 @@
                 </td>
                 <td>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-primary btn-action"
-                                hx-get="/api/dashboard/ebooks/{{ ebook.id }}/preview"
-                                hx-target="#ebookPreviewModal .modal-content"
-                                hx-swap="innerHTML"
-                                hx-trigger="click"
-                                hx-indicator="#viewSpinner-{{ ebook.id }}"
-                                hx-disabled-elt="this"
-                                hx-on::after-request="
-                                    const modal = document.getElementById('ebookPreviewModal');
-                                    if (modal) {
-                                      let modalInstance = bootstrap.Modal.getInstance(modal);
-                                      if (!modalInstance) {
-                                        modalInstance = new bootstrap.Modal(modal);
-                                      }
-                                      modalInstance.show();
-                                    }
-                                "
-                                aria-label="Voir l'ebook {{ ebook.title }}"
-                                data-testid="view-ebook-btn">
-                            <span id="viewSpinner-{{ ebook.id }}" class="spinner-border spinner-border-sm htmx-indicator" aria-hidden="true"></span>
-                            <span class="button-content">Voir</span>
-                        </button>
+                        <a href="/api/dashboard/ebooks/{{ ebook.id }}"
+                           class="btn btn-sm btn-primary btn-action"
+                           aria-label="Voir l'ebook {{ ebook.title }}"
+                           data-testid="view-ebook-btn">
+                            <i class="fas fa-eye me-1"></i>
+                            Voir
+                        </a>
                         {% include "partials/validation_buttons.html" %}
                     </div>
                 </td>

@@ -22,6 +22,36 @@ from backoffice.features.ebook.shared.domain.entities.ebook import inches_to_px
 logger = logging.getLogger(__name__)
 
 
+def remove_barcode_space_for_preview(
+    image_bytes: bytes,
+    barcode_width_inches: float = 2.0,
+    barcode_height_inches: float = 1.2,
+    barcode_margin_inches: float = 0.25,
+) -> bytes:
+    """Remove white barcode rectangle from back cover for visual preview.
+
+    This function is used to restore the original design under the barcode space
+    for KDP cover previews where we want to see the full design with the template overlay.
+
+    Note: This doesn't restore the original content - it just fills the white rectangle
+    with a neutral color or makes it transparent. The KDP template overlay will show
+    where the barcode will be positioned.
+
+    Args:
+        image_bytes: Back cover image bytes with barcode space (PNG format)
+        barcode_width_inches: Barcode width in inches (default: 2.0)
+        barcode_height_inches: Barcode height in inches (default: 1.2)
+        barcode_margin_inches: Margin from edges in inches (default: 0.25)
+
+    Returns:
+        Image bytes with barcode space removed (transparent or filled with design color)
+    """
+    # For now, just return the original image
+    # The white rectangle will stay, but the KDP template overlay will show where it should be
+    # TODO: Could implement content-aware fill or transparency if needed
+    return image_bytes
+
+
 def add_barcode_space(
     image_bytes: bytes,
     barcode_width_inches: float = 2.0,
@@ -64,21 +94,22 @@ def add_barcode_space(
     Raises:
         ValueError: If image format is invalid
     """
-    logger.info(
-        f'Adding KDP barcode space: {barcode_width_inches}" × {barcode_height_inches}" '
+    logger.warning(
+        f'📦 DEBUG: Adding KDP barcode space: {barcode_width_inches}" × {barcode_height_inches}" '
         f'with {barcode_margin_inches}" margin from trim edges'
     )
-    if image_includes_bleeds:
-        logger.info(
-            f"   Image includes bleeds of {bleed_size_inches}\" "
-            f"(right bleed: {'Yes' if has_right_bleed else 'No'})"
-        )
 
     try:
         img = Image.open(BytesIO(image_bytes))
         draw = ImageDraw.Draw(img)
 
         w, h = img.size
+
+        logger.warning(f"   Image size: {w}×{h}px")
+        logger.warning(
+            f"   Image includes bleeds: {image_includes_bleeds} "
+            f'(bleed: {bleed_size_inches}", right bleed: {has_right_bleed})'
+        )
 
         # Convert inches to pixels @ 300 DPI (exact KDP dimensions)
         rect_w = inches_to_px(barcode_width_inches)  # 2.0" = 600px
@@ -106,7 +137,7 @@ def add_barcode_space(
             y1 = h - bleed_px - margin_from_trim - rect_h
             y2 = h - bleed_px - margin_from_trim
 
-            logger.info(
+            logger.warning(
                 f"   Barcode positioned at {margin_from_trim}px from right trim edge "
                 f"(right bleed: {'Yes' if has_right_bleed else 'No - spine follows'})"
             )
@@ -145,14 +176,15 @@ def add_barcode_space(
                 x2 = w - margin_from_trim
                 y2 = h - margin_from_trim
 
+        logger.warning(f"   Barcode rectangle position: x1={x1}, y1={y1}, x2={x2}, y2={y2}")
+        logger.warning(f"   Barcode size: {rect_w}×{rect_h}px with {margin_from_trim}px margin")
+        logger.warning(f"   Calculation: x1 = {w} - {rect_w} - {margin_from_trim} = {x1}")
+
         draw.rectangle((x1, y1, x2, y2), fill=(255, 255, 255))
 
-        logger.info(
-            f"✅ KDP barcode space added: ({x1}, {y1}) to ({x2}, {y2}) "
-            f"= {rect_w}×{rect_h}px with {margin_from_trim}px margin from trim edge"
-        )
+        logger.warning("✅ KDP barcode space added successfully")
 
-        # Convert back to bytes
+        # Convert back to bytes using PNG (RGB mode for KDP)
         buffer = BytesIO()
         img.save(buffer, format="PNG")
         return buffer.getvalue()

@@ -116,15 +116,14 @@ class ConfigLoader:
         return cast(float, specs["spine"]["recommended_width_inches"])
 
     def get_color_profiles(self) -> dict[str, str]:
-        """Get ICC color profiles (RGB/CMYK).
+        """Get ICC color profiles (RGB).
 
         Returns:
-            {"rgb": "profile.icc", "cmyk": "profile.icc"}
+            {"rgb": "profile.icc"}
         """
         specs = self.load_kdp_specifications()
         return {
             "rgb": specs["color_profiles"]["rgb"]["profile"],
-            "cmyk": specs["color_profiles"]["cmyk"]["profile"],
         }
 
     # New methods for enhanced config

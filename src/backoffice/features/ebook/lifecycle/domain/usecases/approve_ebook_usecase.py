@@ -1,7 +1,11 @@
-"""Use case for approving an ebook and uploading it to storage."""
+"""Use case for approving an ebook and uploading KDP files to storage."""
 
 import logging
 
+from backoffice.features.ebook.export.domain.usecases.export_to_kdp import ExportToKDPUseCase
+from backoffice.features.ebook.export.domain.usecases.export_to_kdp_interior import (
+    ExportToKDPInteriorUseCase,
+)
 from backoffice.features.ebook.lifecycle.domain.events.ebook_approved_event import (
     EbookApprovedEvent,
 )
@@ -15,13 +19,15 @@ logger = logging.getLogger(__name__)
 
 
 class ApproveEbookUseCase:
-    """Use case for approving an ebook and uploading it to Drive.
+    """Use case for approving an ebook and uploading KDP files to Drive.
 
     This use case handles the complete approval workflow:
     1. Validates ebook status (must be DRAFT)
-    2. Uploads PDF to Google Drive
-    3. Updates ebook status to APPROVED
-    4. Emits EbookApprovedEvent
+    2. Generates KDP Cover PDF (back + spine + front)
+    3. Generates KDP Interior PDF (content pages only)
+    4. Uploads both PDFs to Google Drive
+    5. Updates ebook status to APPROVED with Drive IDs
+    6. Emits EbookApprovedEvent
     """
 
     def __init__(
@@ -43,13 +49,13 @@ class ApproveEbookUseCase:
         logger.info("ApproveEbookUseCase initialized")
 
     async def execute(self, ebook_id: int) -> Ebook:
-        """Approve an ebook and upload it to storage.
+        """Approve an ebook and upload KDP files to storage.
 
         Args:
             ebook_id: ID of the ebook to approve
 
         Returns:
-            Updated ebook entity with APPROVED status and Drive ID
+            Updated ebook entity with APPROVED status and Drive IDs for Cover and Interior
 
         Raises:
             DomainError: If ebook not found, not in DRAFT status, or upload fails
@@ -79,62 +85,120 @@ class ApproveEbookUseCase:
                 actionable_hint="Check Drive credentials and configuration",
             )
 
-        # 4. Get ebook bytes from repository (should be stored during generation)
-        ebook_bytes = await self.ebook_repository.get_ebook_bytes(ebook_id)
-        if not ebook_bytes:
+        logger.info(f"Approving ebook {ebook_id}: '{ebook.title}'")
+
+        # 4. Generate KDP Cover PDF (back + spine + front)
+        try:
+            logger.info("Generating KDP Cover PDF...")
+            export_kdp_use_case = ExportToKDPUseCase(
+                ebook_repository=self.ebook_repository, event_bus=self.event_bus
+            )
+            cover_pdf_bytes = await export_kdp_use_case.execute(
+                ebook_id=ebook_id,
+                preview_mode=True,  # Allow DRAFT during approval
+            )
+            logger.info(f"✅ KDP Cover PDF generated: {len(cover_pdf_bytes)} bytes")
+        except Exception as e:
+            logger.error(f"❌ Failed to generate KDP Cover PDF: {e}")
             raise DomainError(
                 code=ErrorCode.VALIDATION_ERROR,
-                message="Ebook bytes not found, cannot upload to storage",
-                actionable_hint="Regenerate the ebook",
-            )
+                message=f"Failed to generate KDP Cover PDF: {str(e)}",
+                actionable_hint="Ensure ebook has valid cover and back cover",
+            ) from e
 
-        logger.info(f"Approving ebook {ebook_id}: '{ebook.title}' ({len(ebook_bytes)} bytes)")
-
-        # 5. Upload to Drive
+        # 5. Generate KDP Interior PDF (content pages only)
         try:
-            filename = f"{ebook.title}.pdf"
-            metadata = {
-                "title": ebook.title,
+            logger.info("Generating KDP Interior PDF...")
+            export_interior_use_case = ExportToKDPInteriorUseCase(
+                ebook_repository=self.ebook_repository, event_bus=self.event_bus
+            )
+            interior_pdf_bytes = await export_interior_use_case.execute(
+                ebook_id=ebook_id,
+                preview_mode=True,  # Allow DRAFT during approval
+            )
+            logger.info(f"✅ KDP Interior PDF generated: {len(interior_pdf_bytes)} bytes")
+        except Exception as e:
+            logger.error(f"❌ Failed to generate KDP Interior PDF: {e}")
+            raise DomainError(
+                code=ErrorCode.VALIDATION_ERROR,
+                message=f"Failed to generate KDP Interior PDF: {str(e)}",
+                actionable_hint="Ensure ebook has valid content pages",
+            ) from e
+
+        # 6. Upload KDP Cover to Drive
+        try:
+            cover_filename = f"{ebook.title}_Cover_KDP.pdf"
+            cover_metadata = {
+                "title": f"{ebook.title} - Cover KDP",
                 "author": ebook.author,
                 "format": "pdf",
             }
 
-            storage_result = await self.file_storage.upload_ebook(
-                file_bytes=ebook_bytes,
-                filename=filename,
-                metadata=metadata,
+            cover_result = await self.file_storage.upload_ebook(
+                file_bytes=cover_pdf_bytes,
+                filename=cover_filename,
+                metadata=cover_metadata,
             )
 
             logger.info(
-                f"✅ Ebook uploaded to Drive: {storage_result.get('storage_id')} "
-                f"(URL: {storage_result.get('storage_url')})"
+                f"✅ KDP Cover uploaded to Drive: {cover_result.get('storage_id')} "
+                f"(URL: {cover_result.get('storage_url')})"
             )
-
-            # 6. Update ebook with Drive info and APPROVED status
-            ebook.drive_id = storage_result.get("storage_id")
-            ebook.preview_url = storage_result.get("storage_url")
-            ebook.status = EbookStatus.APPROVED
-
-            # 7. Save updated ebook
-            updated_ebook = await self.ebook_repository.save(ebook)
-
-            # 8. Emit domain event
-            await self.event_bus.publish(
-                EbookApprovedEvent(
-                    ebook_id=ebook_id,
-                    drive_id=updated_ebook.drive_id,
-                    storage_url=updated_ebook.preview_url,
-                    title=updated_ebook.title,
-                )
-            )
-
-            logger.info(f"✅ Ebook {ebook_id} approved and uploaded successfully")
-            return updated_ebook
-
         except Exception as e:
-            logger.error(f"❌ Failed to upload ebook {ebook_id} to storage: {e}")
+            logger.error(f"❌ Failed to upload KDP Cover to storage: {e}")
             raise DomainError(
                 code=ErrorCode.PROVIDER_TIMEOUT,
-                message=f"Failed to upload ebook to storage: {str(e)}",
+                message=f"Failed to upload KDP Cover to storage: {str(e)}",
                 actionable_hint="Check Drive API credentials and quota",
             ) from e
+
+        # 7. Upload KDP Interior to Drive
+        try:
+            interior_filename = f"{ebook.title}_Interior_KDP.pdf"
+            interior_metadata = {
+                "title": f"{ebook.title} - Interior KDP",
+                "author": ebook.author,
+                "format": "pdf",
+            }
+
+            interior_result = await self.file_storage.upload_ebook(
+                file_bytes=interior_pdf_bytes,
+                filename=interior_filename,
+                metadata=interior_metadata,
+            )
+
+            logger.info(
+                f"✅ KDP Interior uploaded to Drive: {interior_result.get('storage_id')} "
+                f"(URL: {interior_result.get('storage_url')})"
+            )
+        except Exception as e:
+            logger.error(f"❌ Failed to upload KDP Interior to storage: {e}")
+            raise DomainError(
+                code=ErrorCode.PROVIDER_TIMEOUT,
+                message=f"Failed to upload KDP Interior to storage: {str(e)}",
+                actionable_hint="Check Drive API credentials and quota",
+            ) from e
+
+        # 8. Update ebook with Drive IDs and APPROVED status
+        ebook.drive_id_cover = cover_result.get("storage_id")
+        ebook.drive_id_interior = interior_result.get("storage_id")
+        ebook.status = EbookStatus.APPROVED
+
+        # 9. Save updated ebook
+        updated_ebook = await self.ebook_repository.save(ebook)
+
+        # 10. Emit domain event
+        await self.event_bus.publish(
+            EbookApprovedEvent(
+                ebook_id=ebook_id,
+                drive_id=updated_ebook.drive_id_cover,  # Use cover ID as primary
+                storage_url=cover_result.get("storage_url"),
+                title=updated_ebook.title,
+            )
+        )
+
+        logger.info(
+            f"✅ Ebook {ebook_id} approved: 2 KDP files uploaded to Drive "
+            f"(Cover: {ebook.drive_id_cover}, Interior: {ebook.drive_id_interior})"
+        )
+        return updated_ebook

@@ -14,7 +14,7 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     inches_to_px,
 )
 from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
-    ensure_cmyk,
+    ensure_rgb,
     extract_dominant_color_faded,
 )
 
@@ -74,9 +74,11 @@ def generate_spine(
     paper_type: str,
     title: str,
     author: str,
-    icc_cmyk_profile: str = "CoatedFOGRA39.icc",
 ) -> bytes:
-    """Generate spine in CMYK.
+    """Generate spine in RGB (KDP requirement).
+
+    IMPORTANT: KDP requires RGB, not CMYK!
+    KDP will convert to CMYK automatically for print.
 
     Args:
         front_cover_bytes: Front cover for dominant color extraction
@@ -86,10 +88,9 @@ def generate_spine(
         paper_type: Paper type for spine width calculation
         title: Book title
         author: Author name
-        icc_cmyk_profile: CMYK ICC profile
 
     Returns:
-        CMYK TIFF spine image bytes at 300 DPI
+        RGB PNG spine image bytes at 300 DPI
     """
     can_text, reason = can_have_spine_text(page_count, paper_type)
 
@@ -103,11 +104,11 @@ def generate_spine(
         dominant = extract_dominant_color_faded(front_cover_bytes)
         spine_img = create_gradient(dominant, spine_width_px, spine_height_px)
 
-    # Normalize to CMYK
-    spine_cmyk = ensure_cmyk(spine_img, icc_cmyk_profile)
+    # Normalize to RGB (KDP requirement)
+    spine_rgb = ensure_rgb(spine_img)
 
     buffer = BytesIO()
-    spine_cmyk.save(buffer, format="TIFF", compression="tiff_adobe_deflate", dpi=(300, 300))
+    spine_rgb.save(buffer, format="PNG", dpi=(300, 300))
     return buffer.getvalue()
 
 
@@ -121,7 +122,7 @@ def create_spine_with_text(width: int, height: int, title: str, author: str) -> 
         author: Author name
 
     Returns:
-        RGB image (will be converted to CMYK later)
+        RGB image (KDP requirement)
     """
     font = load_font_safe(get_font_path("PlayfairDisplay-Bold.ttf"), 24)
 

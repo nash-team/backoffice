@@ -14,9 +14,6 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
 from backoffice.features.ebook.shared.domain.value_objects.usage_metrics import UsageMetrics
-from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.barcode_utils import (
-    add_barcode_space,
-)
 from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
@@ -220,43 +217,27 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
     ) -> bytes:
         """Remove text from cover to create back cover.
 
-        Simple PIL-based solution: add white rectangle for barcode space using KDP specs.
+        For Gemini, we just return the cover without text.
+        The barcode space will be added later during KDP export assembly, not here.
 
         Args:
             cover_bytes: Original cover image (with text)
-            barcode_width_inches: KDP barcode width in inches (default: 2.0)
-            barcode_height_inches: KDP barcode height in inches (default: 1.5)
-            barcode_margin_inches: KDP barcode margin in inches (default: 0.25)
+            barcode_width_inches: Unused (kept for interface compatibility)
+            barcode_height_inches: Unused (kept for interface compatibility)
+            barcode_margin_inches: Unused (kept for interface compatibility)
 
         Returns:
-            Same image with KDP-compliant barcode space (for back cover)
+            Same image without text (barcode space will be added during KDP export)
 
         Raises:
             DomainError: If transformation fails
         """
-        logger.info("🗑️  Removing text from cover (Gemini: PIL-based fallback)...")
+        logger.info("🗑️  Removing text from cover (Gemini: returning cover as-is)...")
 
-        try:
-            # Add KDP barcode space using centralized utility
-            logger.info("📦 Adding KDP barcode space...")
-            final_bytes = add_barcode_space(
-                cover_bytes,
-                barcode_width_inches=barcode_width_inches,
-                barcode_height_inches=barcode_height_inches,
-                barcode_margin_inches=barcode_margin_inches,
-            )
-
-            logger.info(f"✅ KDP barcode space added (Gemini): {len(final_bytes)} bytes")
-            return final_bytes
-
-        except Exception as e:
-            logger.error(f"❌ Gemini text removal failed: {str(e)}")
-            raise DomainError(
-                code=ErrorCode.PROVIDER_TIMEOUT,
-                message=f"Gemini text removal failed: {str(e)}",
-                actionable_hint="Check image format",
-                context={"provider": "gemini", "error": str(e)},
-            ) from e
+        # Just return the cover - barcode space will be added during KDP export
+        # not during back cover generation
+        logger.info(f"✅ Back cover ready (no barcode space): {len(cover_bytes)} bytes")
+        return cover_bytes
 
     def _add_rounded_border_to_image(
         self,

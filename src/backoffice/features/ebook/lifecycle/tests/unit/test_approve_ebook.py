@@ -89,7 +89,18 @@ class TestApproveEbookUseCase:
 
     @pytest.fixture
     def draft_ebook(self):
-        """Sample draft ebook."""
+        """Sample draft ebook with KDP-ready structure."""
+        import base64
+        from io import BytesIO
+
+        from PIL import Image
+
+        # Generate fake page image (2626x2626 for KDP)
+        img = Image.new("RGB", (2626, 2626), (255, 255, 255))
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+        img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
         return Ebook(
             id=1,
             title="Test Ebook",
@@ -98,6 +109,37 @@ class TestApproveEbookUseCase:
             status=EbookStatus.DRAFT,
             preview_url=None,
             drive_id=None,
+            page_count=26,  # Required for KDP export
+            structure_json={
+                "pages_meta": [
+                    {
+                        "page_number": 0,
+                        "title": "Cover",
+                        "image_data_base64": img_base64,
+                        "format": "PNG",
+                        "color_mode": "COLOR",
+                    }
+                ]
+                + [
+                    {
+                        "page_number": i + 1,
+                        "title": f"Page {i + 1}",
+                        "image_data_base64": img_base64,
+                        "format": "PNG",
+                        "color_mode": "BLACK_WHITE",
+                    }
+                    for i in range(24)  # 24 interior pages
+                ]
+                + [
+                    {
+                        "page_number": 25,
+                        "title": "Back Cover",
+                        "image_data_base64": img_base64,
+                        "format": "PNG",
+                        "color_mode": "BLACK_WHITE",
+                    }
+                ]
+            },
         )
 
     @pytest.mark.asyncio
@@ -116,13 +158,15 @@ class TestApproveEbookUseCase:
         assert result.id == draft_ebook.id
         assert result.title == draft_ebook.title
         assert result.author == draft_ebook.author
-        assert result.drive_id is not None  # Should be uploaded to Drive
-        assert result.preview_url is not None
+        # Check new dual Drive IDs (KDP Cover and KDP Interior)
+        assert result.drive_id_cover is not None  # KDP Cover uploaded to Drive
+        assert result.drive_id_interior is not None  # KDP Interior uploaded to Drive
 
         # Verify the ebook is persisted with correct status
         persisted_ebook = await ebook_repository.get_by_id(1)
         assert persisted_ebook.status == EbookStatus.APPROVED
-        assert persisted_ebook.drive_id is not None
+        assert persisted_ebook.drive_id_cover is not None
+        assert persisted_ebook.drive_id_interior is not None
 
     @pytest.mark.asyncio
     async def test_approve_emits_approved_event(

@@ -170,10 +170,6 @@ color_profiles:
   rgb:
     profile: "AdobeRGB.icc"  # Au lieu de sRGB
     description: "Adobe RGB for wider gamut"
-
-  cmyk:
-    profile: "USWebCoatedSWOP.icc"  # Alternative US
-    description: "US printing standard"
 ```
 
 ## 📤 Export PDF

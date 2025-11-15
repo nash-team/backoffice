@@ -57,7 +57,11 @@ class Ebook:
     created_at: datetime | None
     status: EbookStatus = EbookStatus.DRAFT
     preview_url: str | None = None
-    drive_id: str | None = None  # ID du fichier dans Google Drive
+    drive_id: str | None = (
+        None  # ID du fichier dans Google Drive (legacy, kept for backward compatibility)
+    )
+    drive_id_cover: str | None = None  # KDP Cover PDF Drive ID
+    drive_id_interior: str | None = None  # KDP Interior PDF Drive ID
     config: EbookConfig | None = None
 
     # Theme-based generation metadata
@@ -99,7 +103,6 @@ class KDPExportConfig:
     include_barcode: bool = field(default_factory=lambda: _config.get_default_include_barcode())
     cover_finish: str = field(default_factory=lambda: _config.get_default_cover_finish())
     icc_rgb_profile: str = field(default_factory=lambda: _config.get_color_profiles()["rgb"])
-    icc_cmyk_profile: str = field(default_factory=lambda: _config.get_color_profiles()["cmyk"])
     barcode_width: float = field(default_factory=lambda: _config.get_barcode_width())
     barcode_height: float = field(default_factory=lambda: _config.get_barcode_height())
     barcode_margin: float = field(default_factory=lambda: _config.get_barcode_margin())

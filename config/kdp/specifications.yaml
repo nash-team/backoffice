@@ -86,10 +86,6 @@ color_profiles:
   rgb:
     profile: "sRGB.icc"
     description: "Standard RGB for digital"
-  cmyk:
-    profile: "CoatedFOGRA39.icc"
-    description: "Europe printing standard"
-    alternative: "USWebCoatedSWOP.icc"  # US alternative
 
 # Cover options
 cover:

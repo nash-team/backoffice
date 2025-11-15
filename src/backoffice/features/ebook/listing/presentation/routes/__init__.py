@@ -167,6 +167,26 @@ async def get_ebook_preview_modal(
         raise HTTPException(status_code=500, detail="Error loading ebook preview") from e
 
 
+@router.get("/ebooks/{ebook_id}", response_class=HTMLResponse)
+async def get_ebook_detail_page(
+    ebook_id: int, request: Request, factory: RepositoryFactoryDep
+) -> Response:
+    """Display dedicated ebook detail page with PDF viewer and actions."""
+    try:
+        ebook_repo = factory.get_ebook_repository()
+        ebook = await ebook_repo.get_by_id(ebook_id)
+
+        if not ebook:
+            raise HTTPException(status_code=404, detail=f"Ebook with id {ebook_id} not found")
+
+        return templates.TemplateResponse("ebook_detail.html", {"request": request, "ebook": ebook})
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error loading ebook detail page {ebook_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error loading ebook detail") from e
+
+
 @router.get("/drive/ebooks/{drive_id}")
 async def get_drive_preview_url(drive_id: str) -> Response:
     """Generate Google Drive preview URL for an ebook."""

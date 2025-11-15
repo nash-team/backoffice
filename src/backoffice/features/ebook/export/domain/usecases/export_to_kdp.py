@@ -16,10 +16,10 @@ from backoffice.features.shared.domain.errors.error_taxonomy import DomainError,
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 if TYPE_CHECKING:
-    from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (
+    from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (  # noqa: E501
         openrouter_image_provider,
     )
-    from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (
+    from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (  # noqa: E501
         cover_assembly_provider,
     )
 
@@ -117,23 +117,22 @@ class ExportToKDPUseCase:
             kdp_config = KDPExportConfig(
                 trim_size=kdp_config.trim_size,
                 bleed_size=kdp_config.bleed_size,
-                paper_type="standard_color",  # Use standard_color for books < 24 pages
+                paper_type="standard_color",
                 include_barcode=kdp_config.include_barcode,
                 cover_finish=kdp_config.cover_finish,
                 icc_rgb_profile=kdp_config.icc_rgb_profile,
-                icc_cmyk_profile=kdp_config.icc_cmyk_profile,
             )
 
         # 5. Initialize providers if not injected
         if not self.image_provider:
-            from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (
+            from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (  # noqa: E501
                 openrouter_image_provider as or_provider,
             )
 
             self.image_provider = or_provider.OpenRouterImageProvider()
 
         if not self.kdp_assembly_provider:
-            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (
+            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (  # noqa: E501
                 cover_assembly_provider as kdp_provider,
             )
 
@@ -250,7 +249,7 @@ class ExportToKDPUseCase:
             page_count: Number of pages for spine calculation
         """
         try:
-            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.visual_validator import (
+            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.visual_validator import (  # noqa: E501
                 assemble_full_kdp_cover,
                 validate_full_cover_against_template,
             )

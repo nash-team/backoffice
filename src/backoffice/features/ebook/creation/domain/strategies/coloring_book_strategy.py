@@ -91,8 +91,8 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
 
         cover_prompt = self._build_cover_prompt(request, page_prompts=None)
         cover_spec = ImageSpec(
-            width_px=1024,
-            height_px=1024,
+            width_px=2626,
+            height_px=2626,
             format="PNG",
             dpi=300,
             color_mode=ColorMode.COLOR,
@@ -109,8 +109,8 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
 
         page_prompts = self._build_page_prompts(request)
         page_spec = ImageSpec(
-            width_px=1024,
-            height_px=1024,
+            width_px=2626,
+            height_px=2626,
             format="PNG",
             dpi=300,
             color_mode=ColorMode.BLACK_WHITE,
@@ -237,7 +237,8 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         logger.info("  3. Create back cover (text removal from cover)")
         logger.info("  4. Assemble PDF (WeasyPrint)")
         logger.info("\nQuality settings:")
-        logger.info("  - Cover: 1024x1024, 300 DPI, color (Gemini - $0.04)")
+        logger.info('  - Cover: 2626x2626, 300 DPI, color (KDP 8.5×8.5" + bleed)')
+        logger.info("  - Pages: 2626x2626, 300 DPI, B&W line art")
         logger.info("  - Back: Same as cover without text")
         logger.info("=" * 80 + "\n")
 
@@ -311,7 +312,7 @@ Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
         """
 
         from backoffice.config import ConfigLoader
-        from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
+        from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (  # noqa: E501
             extract_dominant_color_exact,
         )
 

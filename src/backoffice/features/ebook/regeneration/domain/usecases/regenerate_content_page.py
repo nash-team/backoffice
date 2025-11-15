@@ -107,8 +107,8 @@ class RegenerateContentPageUseCase:
 
         # Step 1: Generate new page with B&W coloring style
         page_spec = ImageSpec(
-            width_px=1024,
-            height_px=1024,
+            width_px=2626,
+            height_px=2626,
             format="PNG",
             dpi=300,
             color_mode=ColorMode.BLACK_WHITE,

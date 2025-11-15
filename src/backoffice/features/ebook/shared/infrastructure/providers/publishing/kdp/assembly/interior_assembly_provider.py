@@ -86,6 +86,37 @@ class KDPInteriorAssemblyProvider:
                 actionable_hint="Ebook must have content pages between cover and back",
             )
 
+        # 3b. Auto-complete to KDP minimum (24 pages) if needed
+        min_pages_required = 24  # KDP minimum for standard_color
+        if len(interior_pages) < min_pages_required:
+            pages_to_add = min_pages_required - len(interior_pages)
+            logger.info(
+                f"⚠️ Interior has {len(interior_pages)} pages (< {min_pages_required}), "
+                f"adding {pages_to_add} blank page(s) for KDP compliance"
+            )
+
+            # Generate blank white page (2626x2626 for 8.5" + bleed @ 300 DPI)
+            blank_img = Image.new("RGB", (2626, 2626), (255, 255, 255))
+            buffer = BytesIO()
+            blank_img.save(buffer, format="PNG")
+            blank_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+            # Add blank pages before the validation
+            for i in range(pages_to_add):
+                interior_pages.append(
+                    {
+                        "page_number": len(interior_pages) + 1,
+                        "title": f"Blank Page {i + 1}",
+                        "image_data_base64": blank_base64,
+                        "format": "PNG",
+                        "color_mode": "BLACK_WHITE",
+                    }
+                )
+
+            logger.info(
+                f"✅ Added {pages_to_add} blank page(s), new total: {len(interior_pages)} interior pages"
+            )
+
         # 4. Process each interior page
         processed_images = []
         for idx, page_meta in enumerate(interior_pages, start=1):

@@ -12,9 +12,6 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
 from backoffice.features.ebook.shared.domain.value_objects.usage_metrics import UsageMetrics
-from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.barcode_utils import (
-    add_barcode_space,
-)
 from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
@@ -440,20 +437,13 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
         Raises:
             DomainError: If transformation fails
         """
-        logger.info("🗑️  Removing text from cover (Local SD: PIL-based fallback)...")
+        logger.info("🗑️  Removing text from cover (Local SD: returning cover as-is)...")
 
         try:
-            # Add KDP barcode space using centralized utility
-            logger.info("📦 Adding KDP barcode space...")
-            final_bytes = add_barcode_space(
-                cover_bytes,
-                barcode_width_inches=barcode_width_inches,
-                barcode_height_inches=barcode_height_inches,
-                barcode_margin_inches=barcode_margin_inches,
-            )
-
-            logger.info(f"✅ KDP barcode space added (LOCAL): {len(final_bytes)} bytes")
-            return final_bytes
+            # Just return the cover - barcode space will be added during KDP export
+            # not during back cover generation
+            logger.info(f"✅ Back cover ready (no barcode space): {len(cover_bytes)} bytes")
+            return cover_bytes
 
         except Exception as e:
             logger.error(f"❌ Local SD text removal failed: {str(e)}")

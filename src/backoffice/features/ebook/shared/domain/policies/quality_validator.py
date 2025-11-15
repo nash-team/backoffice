@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 # V1: Hardcoded limits instead of complex policy system
 MAX_PAGES = 30  # Aligned with KDP maximum (24-30 pages supported)
-MAX_RESOLUTION_PX = 2048
+MAX_RESOLUTION_PX = 2626  # KDP requirement: 8.5" + 0.125" bleed @ 300 DPI
 
 
 class QualityValidator:

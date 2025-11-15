@@ -81,7 +81,7 @@ class TestApproveEbookUseCase:
 
     @pytest.fixture
     def draft_ebook(self):
-        """Sample draft ebook"""
+        """Sample draft ebook with KDP structure"""
         return Ebook(
             id=1,
             title="Test Ebook",
@@ -90,6 +90,28 @@ class TestApproveEbookUseCase:
             status=EbookStatus.DRAFT,
             preview_url=None,
             drive_id=None,
+            drive_id_cover=None,
+            drive_id_interior=None,
+            page_count=24,
+            structure_json={
+                "pages_meta": [
+                    {
+                        "page_number": 0,
+                        "title": "Cover",
+                        "image_data_base64": "aGVsbG8=",  # base64 for "hello"
+                    },
+                    {
+                        "page_number": 1,
+                        "title": "Page 1",
+                        "image_data_base64": "aGVsbG8=",
+                    },
+                    {
+                        "page_number": 24,
+                        "title": "Back Cover",
+                        "image_data_base64": "aGVsbG8=",
+                    },
+                ]
+            },
         )
 
     @pytest.fixture
@@ -106,28 +128,73 @@ class TestApproveEbookUseCase:
         )
 
     @pytest.mark.asyncio
-    async def test_approve_pending_ebook_success(
-        self, approve_ebook_usecase, ebook_repository, draft_ebook
-    ):
-        """Should successfully approve a draft ebook and upload to Drive"""
+    async def test_approve_pending_ebook_success(self, ebook_repository, file_storage, draft_ebook):
+        """Should successfully approve a draft ebook and upload 2 KDP files to Drive"""
         # Arrange
         ebook_repository.add_ebook(draft_ebook)
 
-        # Act
-        result = await approve_ebook_usecase.execute(1)
+        # Create a modified use case that injects fake export behavior
+        # by monkey-patching the export use cases in the module
+        import backoffice.features.ebook.lifecycle.domain.usecases.approve_ebook_usecase as approve_module
 
-        # Assert
-        assert result.status == EbookStatus.APPROVED
-        assert result.id == draft_ebook.id
-        assert result.title == draft_ebook.title
-        assert result.author == draft_ebook.author
-        assert result.drive_id is not None  # Should be uploaded to Drive
-        assert result.preview_url is not None
+        # Store original classes
+        original_cover_export = approve_module.ExportToKDPUseCase
+        original_interior_export = approve_module.ExportToKDPInteriorUseCase
 
-        # Verify the ebook is persisted with correct status
-        persisted_ebook = await ebook_repository.get_by_id(1)
-        assert persisted_ebook.status == EbookStatus.APPROVED
-        assert persisted_ebook.drive_id is not None
+        # Create fake export use cases
+        class FakeExportToKDPUseCase:
+            def __init__(self, ebook_repository, event_bus):
+                pass
+
+            async def execute(self, ebook_id: int, preview_mode: bool = False) -> bytes:
+                return b"%PDF-1.4 fake cover pdf content"
+
+        class FakeExportToKDPInteriorUseCase:
+            def __init__(self, ebook_repository, event_bus):
+                pass
+
+            async def execute(self, ebook_id: int, preview_mode: bool = False) -> bytes:
+                return b"%PDF-1.4 fake interior pdf content"
+
+        # Temporarily replace the real use cases with fakes
+        approve_module.ExportToKDPUseCase = FakeExportToKDPUseCase
+        approve_module.ExportToKDPInteriorUseCase = FakeExportToKDPInteriorUseCase
+
+        try:
+            # Create use case with fakes
+            event_bus = EventBus()
+            use_case = ApproveEbookUseCase(ebook_repository, file_storage, event_bus)
+
+            # Act
+            result = await use_case.execute(1)
+
+            # Assert
+            assert result.status == EbookStatus.APPROVED
+            assert result.id == draft_ebook.id
+            assert result.title == draft_ebook.title
+            assert result.author == draft_ebook.author
+
+            # Verify 2 KDP files were uploaded to Drive
+            assert result.drive_id_cover is not None  # Cover KDP uploaded
+            assert result.drive_id_interior is not None  # Interior KDP uploaded
+            assert len(file_storage._uploaded_files) == 2  # 2 files uploaded
+
+            # Verify filenames are correct
+            uploaded_files = list(file_storage._uploaded_files.values())
+            filenames = [f["filename"] for f in uploaded_files]
+            assert "Test Ebook_Cover_KDP.pdf" in filenames
+            assert "Test Ebook_Interior_KDP.pdf" in filenames
+
+            # Verify the ebook is persisted with correct status and Drive IDs
+            persisted_ebook = await ebook_repository.get_by_id(1)
+            assert persisted_ebook.status == EbookStatus.APPROVED
+            assert persisted_ebook.drive_id_cover is not None
+            assert persisted_ebook.drive_id_interior is not None
+
+        finally:
+            # Restore original classes
+            approve_module.ExportToKDPUseCase = original_cover_export
+            approve_module.ExportToKDPInteriorUseCase = original_interior_export
 
     @pytest.mark.asyncio
     async def test_approve_rejected_ebook_success(self, approve_ebook_usecase, ebook_repository):

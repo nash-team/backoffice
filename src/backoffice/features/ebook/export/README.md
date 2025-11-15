@@ -305,8 +305,7 @@ class KDPExportConfig:
     paper_type: str = "premium_color"              # or "standard_color"
     include_barcode: bool = True
     cover_finish: str = "glossy"
-    icc_rgb_profile: str = "sRGB_v4_ICC"
-    icc_cmyk_profile: str = "USWebCoatedSWOP"
+    icc_rgb_profile: str = "sRGB_v4_ICC"           # KDP requires RGB
 ```
 
 ### Paper Type Auto-Adjustment

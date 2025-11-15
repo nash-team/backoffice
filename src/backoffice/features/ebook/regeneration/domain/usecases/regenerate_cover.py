@@ -100,8 +100,8 @@ class RegenerateCoverUseCase:
 
         # Step 2: Generate new cover
         cover_spec = ImageSpec(
-            width_px=1024,
-            height_px=1024,
+            width_px=2626,
+            height_px=2626,
             format="PNG",
             dpi=300,
             color_mode=ColorMode.COLOR,

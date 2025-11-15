@@ -8,7 +8,7 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     inches_to_px,
 )
 from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
-    TEXT_BLACK_CMYK,
+    TEXT_BLACK_RGB,
 )
 
 
@@ -58,9 +58,9 @@ def test_dimensions_rounded_to_even():
     assert trim_width % 2 == 0, f"Trim width should be even: {trim_width}"
 
 
-def test_text_black_cmyk_value():
-    """Test that K 100% is correctly represented in PIL (255, not 100)."""
-    assert TEXT_BLACK_CMYK == (0, 0, 0, 255), "K 100% should be (0,0,0,255) in PIL"
+def test_text_black_rgb_value():
+    """Test that black is correctly represented in RGB (KDP requirement)."""
+    assert TEXT_BLACK_RGB == (0, 0, 0), "Black should be (0, 0, 0) in RGB"
 
 
 def test_inches_to_px_accuracy():

@@ -13,8 +13,11 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     calculate_spine_width,
     inches_to_px,
 )
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.barcode_utils import (
+    add_barcode_space,
+)
 from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
-    ensure_cmyk,
+    ensure_rgb,
 )
 from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.spine_generator import (
     generate_spine,
@@ -32,7 +35,7 @@ class KDPAssemblyProvider:
     - Spine (center)
     - Front cover (right)
     - Proper bleed (0.125" on all outer edges)
-    - CMYK color mode
+    - RGB color mode (KDP requirement - will convert to CMYK for print)
     - 300 DPI resolution
     """
 
@@ -47,12 +50,12 @@ class KDPAssemblyProvider:
 
         Args:
             ebook: Ebook entity with metadata
-            back_cover_bytes: Back cover image bytes (CMYK TIFF)
-            front_cover_bytes: Front cover image bytes (will be converted to CMYK)
+            back_cover_bytes: Back cover image bytes (RGB PNG/JPEG)
+            front_cover_bytes: Front cover image bytes (RGB PNG/JPEG)
             kdp_config: KDP export configuration
 
         Returns:
-            PDF bytes ready for KDP upload
+            PDF bytes ready for KDP upload (RGB mode - KDP will convert to CMYK)
 
         Raises:
             DomainError: If assembly fails or requirements not met
@@ -81,7 +84,7 @@ class KDPAssemblyProvider:
             f"bleed={bleed_px}px, spine={spine_width_px}px"
         )
 
-        # 2. Generate spine
+        # 2. Generate spine (RGB format - KDP requirement)
         spine_bytes = generate_spine(
             front_cover_bytes=front_cover_bytes,
             spine_width_px=spine_width_px,
@@ -90,13 +93,12 @@ class KDPAssemblyProvider:
             paper_type=kdp_config.paper_type,
             title=ebook.title,
             author=ebook.author,
-            icc_cmyk_profile=kdp_config.icc_cmyk_profile,
         )
 
-        # 3. Load and normalize all to CMYK
-        back_img = ensure_cmyk(Image.open(BytesIO(back_cover_bytes)), kdp_config.icc_cmyk_profile)
-        spine_img = ensure_cmyk(Image.open(BytesIO(spine_bytes)), kdp_config.icc_cmyk_profile)
-        front_img = ensure_cmyk(Image.open(BytesIO(front_cover_bytes)), kdp_config.icc_cmyk_profile)
+        # 3. Load and normalize all to RGB (KDP requirement)
+        back_img = ensure_rgb(Image.open(BytesIO(back_cover_bytes)))
+        spine_img = ensure_rgb(Image.open(BytesIO(spine_bytes)))
+        front_img = ensure_rgb(Image.open(BytesIO(front_cover_bytes)))
 
         # 4. ✅ Validate dimensions
         expected_back = (trim_width_px + bleed_px, trim_height_px + 2 * bleed_px)
@@ -131,7 +133,25 @@ class KDPAssemblyProvider:
 
         logger.info(f"Full cover dimensions: {total_width}x{total_height}px")
 
-        full_cover = Image.new("CMYK", (total_width, total_height), (0, 0, 0, 0))
+        # RGB mode with white background (KDP requirement)
+        full_cover = Image.new("RGB", (total_width, total_height), (255, 255, 255))
+
+        # Add barcode space to back cover BEFORE pasting
+        # (back cover has left bleed + trim, no right bleed - spine comes after)
+        logger.info("📦 Adding KDP barcode space to back cover...")
+        back_buffer = BytesIO()
+        # Use PNG format (RGB mode for KDP)
+        back_img.save(back_buffer, format="PNG")
+        back_with_barcode = add_barcode_space(
+            back_buffer.getvalue(),
+            barcode_width_inches=kdp_config.barcode_width,
+            barcode_height_inches=kdp_config.barcode_height,
+            barcode_margin_inches=kdp_config.barcode_margin,
+            image_includes_bleeds=True,
+            bleed_size_inches=kdp_config.bleed_size,
+            has_right_bleed=False,  # NO right bleed - spine comes right after
+        )
+        back_img = ensure_rgb(Image.open(BytesIO(back_with_barcode)))
 
         # Paste back (position 0)
         full_cover.paste(back_img, (0, 0))
@@ -142,14 +162,12 @@ class KDPAssemblyProvider:
         # Paste front
         full_cover.paste(front_img, (bleed_px + trim_width_px + spine_width_px, 0))
 
-        # 6. Save as TIFF with DPI
+        # 6. Save as PNG with DPI (RGB mode for KDP)
         cover_buffer = BytesIO()
-        full_cover.save(
-            cover_buffer, format="TIFF", compression="tiff_adobe_deflate", dpi=(300, 300)
-        )
+        full_cover.save(cover_buffer, format="PNG", dpi=(300, 300))
         cover_tiff_bytes = cover_buffer.getvalue()
 
-        # 7. ✅ Convert to PDF with img2pdf (preserves CMYK)
+        # 7. ✅ Convert to PDF with img2pdf (preserves RGB - KDP will convert to CMYK for print)
         layout = img2pdf.get_fixed_dpi_layout_fun((300, 300))
         pdf_bytes = cast(bytes, img2pdf.convert([cover_tiff_bytes], layout_fun=layout))
 

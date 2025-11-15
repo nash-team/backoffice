@@ -1,0 +1,511 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ ebook.title }} - Détails{% endblock %}
+
+{% block content %}
+<!-- Header with Breadcrumb and Back Button -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <div>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-2">
+                                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">{{ ebook.title }}</li>
+                            </ol>
+                        </nav>
+                        <h2 class="mb-0">
+                            <i class="fas fa-book me-2"></i>{{ ebook.title }}
+                        </h2>
+                        <p class="text-muted mb-0">par {{ ebook.author }}</p>
+                    </div>
+                    <div>
+                        <a href="/" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Retour à la liste
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Status Badge and Meta Info -->
+                <div class="mb-4 d-flex gap-2 align-items-center flex-wrap">
+                    <span class="badge {{ ebook.status|ebook_status_class }} fs-6">
+                        {{ ebook.status|ebook_status_label }}
+                    </span>
+                    <span class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>{{ ebook.created_at|date }}
+                    </span>
+                    {% if ebook.theme_id %}
+                    <span class="badge bg-secondary">
+                        <i class="fas fa-palette me-1"></i>{{ ebook.theme_id }}
+                    </span>
+                    {% endif %}
+                    {% if ebook.page_count %}
+                    <span class="text-muted">
+                        <i class="fas fa-file-pdf me-1"></i>{{ ebook.page_count }} pages
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Main Content: 2 Columns Layout -->
+                <div class="row g-4">
+                    <!-- Left Column: PDF Viewer (85%) -->
+                    <div class="col-lg-10">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-eye me-2"></i>Aperçu PDF
+                                </h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="pdf-viewer-container" style="min-height: 800px; border-radius: 0.375rem; background: #f8f9fa;">
+                                    {% if ebook.preview_url %}
+                                        <!-- Google Drive PDF Embed (APPROVED ebooks) -->
+                                        <iframe
+                                            src="https://drive.google.com/file/d/{{ ebook.drive_id }}/preview"
+                                            width="100%"
+                                            height="800"
+                                            frameborder="0"
+                                            allow="autoplay"
+                                            style="border-radius: 0.375rem;"
+                                            data-testid="pdf-viewer">
+                                        </iframe>
+                                    {% elif ebook.status.value == 'DRAFT' %}
+                                        <!-- Local PDF Embed (DRAFT ebooks - before Drive upload) -->
+                                        <iframe
+                                            src="/api/ebooks/{{ ebook.id }}/pdf"
+                                            width="100%"
+                                            height="800"
+                                            frameborder="0"
+                                            style="border-radius: 0.375rem;"
+                                            data-testid="pdf-viewer">
+                                        </iframe>
+                                    {% else %}
+                                        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted" style="min-height: 800px;">
+                                            <i class="fas fa-file-pdf fa-4x mb-3"></i>
+                                            <p>Aucun aperçu disponible</p>
+                                            <small>Le PDF est en cours de génération</small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Actions Sidebar (15%, sticky) -->
+                    <div class="col-lg-2">
+                        <div class="sticky-top" style="top: 20px;">
+                            <!-- ========== SECTION 1: PRÉVISUALISATION ========== -->
+                            {% if ebook.status.value in ['DRAFT', 'APPROVED'] %}
+                            <div class="card mb-3 border-info shadow-sm">
+                                <div class="card-header bg-info bg-opacity-10 border-info">
+                                    <h6 class="mb-0 text-info">
+                                        <i class="fas fa-eye me-2"></i>Prévisualisation
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-outline-info"
+                                                onclick="showFullPDFPreview(this)"
+                                                data-ebook-id="{{ ebook.id }}"
+                                                data-status="{{ ebook.status.value }}"
+                                                data-drive-id="{{ ebook.drive_id or '' }}"
+                                                data-testid="preview-full-pdf-btn">
+                                            <i class="fas fa-file-pdf me-2"></i>
+                                            Aperçu PDF Complet
+                                        </button>
+                                        <button class="btn btn-outline-info"
+                                                onclick="showKDPCoverPreview({{ ebook.id }})"
+                                                data-testid="preview-kdp-cover-btn">
+                                            <i class="fas fa-ruler-combined me-2"></i>
+                                            Aperçu Cover KDP
+                                        </button>
+                                        <button class="btn btn-outline-info"
+                                                onclick="showKDPInteriorPreview({{ ebook.id }})"
+                                                data-testid="preview-kdp-interior-btn">
+                                            <i class="fas fa-book-open me-2"></i>
+                                            Aperçu Interior KDP
+                                        </button>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Visualisez les PDF KDP avant téléchargement
+                                    </small>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- ========== SECTION 2: TÉLÉCHARGEMENTS ========== -->
+                            {% if ebook.status.value in ['DRAFT', 'APPROVED'] %}
+                            <div class="card mb-3 border-success shadow-sm">
+                                <div class="card-header bg-success bg-opacity-10 border-success">
+                                    <h6 class="mb-0 text-success">
+                                        <i class="fas fa-download me-2"></i>Téléchargements
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <a href="/api/ebooks/{{ ebook.id }}/export-kdp?preview=true"
+                                           class="btn btn-success"
+                                           download
+                                           data-testid="download-kdp-cover-btn">
+                                            <i class="fas fa-file-download me-2"></i>
+                                            Cover KDP
+                                        </a>
+                                        <a href="/api/ebooks/{{ ebook.id }}/export-kdp/interior?preview=true"
+                                           class="btn btn-success"
+                                           download
+                                           data-testid="download-kdp-interior-btn">
+                                            <i class="fas fa-file-download me-2"></i>
+                                            Interior KDP
+                                        </a>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Fichiers prêts pour Amazon KDP
+                                    </small>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- ========== SECTION 3: GOOGLE DRIVE (APPROVED uniquement) ========== -->
+                            {% if ebook.status.value == 'APPROVED' %}
+                            <div class="card mb-3 border-primary shadow-sm">
+                                <div class="card-header bg-primary bg-opacity-10 border-primary">
+                                    <h6 class="mb-0 text-primary">
+                                        <i class="fab fa-google-drive me-2"></i>Google Drive
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        {% if ebook.drive_id_cover %}
+                                        <a href="https://drive.google.com/file/d/{{ ebook.drive_id_cover }}/view"
+                                           target="_blank"
+                                           class="btn btn-primary"
+                                           data-testid="open-drive-cover-btn">
+                                            <i class="fas fa-external-link-alt me-2"></i>
+                                            Ouvrir Cover
+                                        </a>
+                                        {% endif %}
+                                        {% if ebook.drive_id_interior %}
+                                        <a href="https://drive.google.com/file/d/{{ ebook.drive_id_interior }}/view"
+                                           target="_blank"
+                                           class="btn btn-primary"
+                                           data-testid="open-drive-interior-btn">
+                                            <i class="fas fa-external-link-alt me-2"></i>
+                                            Ouvrir Interior
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-cloud me-1"></i>
+                                        Fichiers sur Google Drive
+                                    </small>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- ========== SECTION 4: RÉGÉNÉRATION (DRAFT uniquement) ========== -->
+                            {% if ebook.status.value == 'DRAFT' %}
+                            <div class="card mb-3 border-warning shadow-sm">
+                                <div class="card-header bg-warning bg-opacity-10 border-warning">
+                                    <h6 class="mb-0 text-warning">
+                                        <i class="fas fa-sync-alt me-2"></i>Régénération
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Complete to 24 pages button (if interior < 24 pages) -->
+                                    {% set interior_pages = (ebook.structure_json.pages_meta|length - 2) if ebook.structure_json and ebook.structure_json.pages_meta else 0 %}
+                                    {% if interior_pages > 0 and interior_pages < 24 %}
+                                    <button class="btn btn-outline-info w-100 mb-2"
+                                            hx-post="/api/ebooks/{{ ebook.id }}/complete-pages"
+                                            hx-indicator="#completePagesSpinner"
+                                            hx-disabled-elt="this"
+                                            hx-on::after-request="
+                                                if(event.detail.successful) {
+                                                    createToast('Ebook complété à 24 pages intérieures !', 'success');
+                                                    setTimeout(() => { location.reload(); }, 2000);
+                                                }
+                                            "
+                                            data-testid="complete-pages-btn">
+                                        <span id="completePagesSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+                                        <i class="fas fa-plus-square me-2"></i>
+                                        Compléter à 24 pages (KDP)
+                                    </button>
+                                    <small class="text-muted d-block mb-3">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        {{ interior_pages }} pages intérieures → ajoute {{ 24 - interior_pages }} blanche(s) pour KDP
+                                    </small>
+                                    {% endif %}
+
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-outline-warning"
+                                                hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
+                                                hx-vals='{"page_type": "cover"}'
+                                                hx-ext="json-enc"
+                                                hx-indicator="#regenerateCoverSpinner"
+                                                hx-disabled-elt="this"
+                                                hx-on::after-request="
+                                                    if(event.detail.successful) {
+                                                        createToast('Couverture régénérée !', 'success');
+                                                        setTimeout(() => { location.reload(); }, 2000);
+                                                    }
+                                                "
+                                                data-testid="regenerate-cover-btn">
+                                            <span id="regenerateCoverSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+                                            <i class="fas fa-sync-alt me-2"></i>
+                                            Couverture
+                                        </button>
+
+                                        <button class="btn btn-outline-warning"
+                                                hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
+                                                hx-vals='{"page_type": "back_cover"}'
+                                                hx-ext="json-enc"
+                                                hx-indicator="#regenerateBackSpinner"
+                                                hx-disabled-elt="this"
+                                                hx-on::after-request="
+                                                    if(event.detail.successful) {
+                                                        createToast('4ème de couv. régénérée !', 'success');
+                                                        setTimeout(() => { location.reload(); }, 2000);
+                                                    }
+                                                "
+                                                data-testid="regenerate-back-cover-btn">
+                                            <span id="regenerateBackSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+                                            <i class="fas fa-sync-alt me-2"></i>
+                                            4ème de couv.
+                                        </button>
+
+                                        <!-- Pages selection with checkboxes -->
+                                        <div class="card border-0 bg-light p-2">
+                                            <form id="regenerateForm">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <small class="text-muted fw-bold">
+                                                        <i class="fas fa-palette me-1"></i>Pages à régénérer
+                                                    </small>
+                                                    <div>
+                                                        <button type="button" class="btn btn-sm btn-link p-0 me-2" onclick="document.querySelectorAll('.page-checkbox').forEach(c => c.checked = true)">
+                                                            Tout
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-link p-0" onclick="document.querySelectorAll('.page-checkbox').forEach(c => c.checked = false)">
+                                                            Aucun
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div id="pageCheckboxes" class="mb-2" style="max-height: 200px; overflow-y: auto;">
+                                                    {% if ebook.structure_json and ebook.structure_json.pages_meta %}
+                                                        {% for page in ebook.structure_json.pages_meta %}
+                                                            {% if page.page_number > 0 and page.page_number < (ebook.structure_json.pages_meta|length - 1) %}
+                                                            <div class="form-check">
+                                                                <input class="form-check-input page-checkbox"
+                                                                       type="checkbox"
+                                                                       name="pages"
+                                                                       value="{{ page.page_number }}"
+                                                                       id="page-{{ page.page_number }}">
+                                                                <label class="form-check-label small" for="page-{{ page.page_number }}">
+                                                                    Page {{ page.page_number }}
+                                                                </label>
+                                                            </div>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </div>
+                                                <button type="button"
+                                                        class="btn btn-warning btn-sm w-100"
+                                                        hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
+                                                        hx-ext="json-enc"
+                                                        hx-include="[name='pages']:checked"
+                                                        hx-indicator="#regenerateSelectedSpinner"
+                                                        hx-disabled-elt="this"
+                                                        hx-on::before-request="
+                                                            const selectedPages = Array.from(document.querySelectorAll('.page-checkbox:checked')).map(c => parseInt(c.value));
+                                                            if (selectedPages.length === 0) {
+                                                                createToast('Sélectionnez au moins une page', 'warning');
+                                                                event.preventDefault();
+                                                                return false;
+                                                            }
+                                                            event.detail.parameters = {
+                                                                page_type: 'content_page',
+                                                                page_indices: selectedPages
+                                                            };
+                                                        "
+                                                        hx-on::after-request="
+                                                            if(event.detail.successful) {
+                                                                const resp = JSON.parse(event.detail.xhr.response);
+                                                                createToast(resp.message, 'success');
+                                                                setTimeout(() => { location.reload(); }, 2000);
+                                                            }
+                                                        "
+                                                        id="regenerateSelectedBtn">
+                                                    <span id="regenerateSelectedSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+                                                    <i class="fas fa-sync-alt me-1"></i>
+                                                    Régénérer sélection
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-magic me-1"></i>
+                                        Sélectionnez et régénérez
+                                    </small>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- ========== SECTION 5: ACTIONS ========== -->
+                            <div class="card border-secondary shadow-sm">
+                                <div class="card-header bg-secondary bg-opacity-10 border-secondary">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-tasks me-2"></i>Actions
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if ebook.status.value == 'DRAFT' %}
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-success"
+                                                hx-put="/api/dashboard/ebooks/{{ ebook.id }}/approve"
+                                                hx-indicator="#approveSpinner"
+                                                hx-disabled-elt="this"
+                                                hx-on::after-request="
+                                                    if(event.detail.successful) {
+                                                        createToast('Ebook approuvé : 2 fichiers KDP sur Drive !', 'success');
+                                                        setTimeout(() => { location.reload(); }, 2000);
+                                                    }
+                                                "
+                                                data-testid="approve-btn">
+                                            <span id="approveSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+                                            <i class="fas fa-check me-2"></i>
+                                            Approuver
+                                        </button>
+
+                                        <button class="btn btn-danger"
+                                                hx-put="/api/dashboard/ebooks/{{ ebook.id }}/reject"
+                                                hx-indicator="#rejectSpinner"
+                                                hx-disabled-elt="this"
+                                                hx-confirm="Êtes-vous sûr de vouloir rejeter cet ebook ?"
+                                                hx-on::after-request="
+                                                    if(event.detail.successful) {
+                                                        createToast('Ebook rejeté', 'info');
+                                                        setTimeout(() => { location.reload(); }, 2000);
+                                                    }
+                                                "
+                                                data-testid="reject-btn">
+                                            <span id="rejectSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+                                            <i class="fas fa-times me-2"></i>
+                                            Rejeter
+                                        </button>
+                                    </div>
+                                    {% elif ebook.status.value == 'APPROVED' %}
+                                    <button class="btn btn-outline-danger w-100"
+                                            hx-put="/api/dashboard/ebooks/{{ ebook.id }}/reject"
+                                            hx-confirm="Êtes-vous sûr de vouloir rejeter cet ebook approuvé ?"
+                                            hx-on::after-request="
+                                                if(event.detail.successful) {
+                                                    createToast('Ebook rejeté', 'info');
+                                                    setTimeout(() => { location.reload(); }, 2000);
+                                                }
+                                            "
+                                            data-testid="reject-approved-btn">
+                                        <i class="fas fa-times me-2"></i>
+                                        Rejeter
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- ========== SECTION 6: INFORMATIONS ========== -->
+                            <div class="card mt-3 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-info-circle me-2"></i>Informations
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row mb-0 small">
+                                        <dt class="col-sm-4">ID:</dt>
+                                        <dd class="col-sm-8">{{ ebook.id }}</dd>
+
+                                        {% if ebook.config and ebook.config.format %}
+                                        <dt class="col-sm-4">Format:</dt>
+                                        <dd class="col-sm-8">{{ ebook.config.format|upper }}</dd>
+                                        {% endif %}
+
+                                        {% if ebook.config and ebook.config.number_of_pages %}
+                                        <dt class="col-sm-4">Pages:</dt>
+                                        <dd class="col-sm-8">{{ ebook.config.number_of_pages }}</dd>
+                                        {% endif %}
+
+                                        {% if ebook.audience %}
+                                        <dt class="col-sm-4">Public:</dt>
+                                        <dd class="col-sm-8">{{ ebook.audience }}</dd>
+                                        {% endif %}
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function showFullPDFPreview(button) {
+        // Simply reload the page to restore the original PDF viewer state
+        location.reload();
+    }
+
+    function showKDPCoverPreview(ebookId) {
+        const pdfContainer = document.querySelector('.pdf-viewer-container');
+        if (!pdfContainer) return;
+
+        pdfContainer.innerHTML = `
+            <div class="d-flex flex-column align-items-center justify-content-center h-100" style="min-height: 800px;">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Génération de l'aperçu cover KDP...</span>
+                </div>
+                <p class="text-muted">Assemblage: back + spine + front avec overlay KDP...</p>
+            </div>
+        `;
+
+        setTimeout(() => {
+            pdfContainer.innerHTML = `
+                <div class="text-center p-4" style="background: #f8f9fa; border-radius: 0.375rem; overflow: auto;">
+                    <img
+                        src="/api/ebooks/${ebookId}/kdp-cover-preview"
+                        alt="KDP Cover Preview"
+                        style="max-width: 100%; height: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
+                        data-testid="kdp-cover-preview-img">
+                    <p class="text-muted mt-3 small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Vérifiez que le contenu est dans les zones de sécurité
+                    </p>
+                </div>
+            `;
+        }, 100);
+    }
+
+    function showKDPInteriorPreview(ebookId) {
+        const pdfContainer = document.querySelector('.pdf-viewer-container');
+        if (!pdfContainer) return;
+
+        pdfContainer.innerHTML = `
+            <div class="d-flex flex-column align-items-center justify-content-center h-100" style="min-height: 800px;">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Génération de l'aperçu Interior KDP...</span>
+                </div>
+                <p class="text-muted">Pages intérieures uniquement...</p>
+            </div>
+        `;
+
+        setTimeout(() => {
+            pdfContainer.innerHTML = `
+                <iframe
+                    src="/api/ebooks/${ebookId}/export-kdp/interior?preview=true"
+                    width="100%"
+                    height="800"
+                    frameborder="0"
+                    style="border-radius: 0.375rem;"
+                    data-testid="kdp-interior-preview">
+                </iframe>
+            `;
+        }, 100);
+    }
+</script>
+{% endblock %}

@@ -22,7 +22,7 @@ config/
 │       ├── formats            # Book formats (square, standard, large)
 │       ├── paper_types        # Paper types with spine formulas
 │       ├── spine              # Spine width calculations
-│       ├── color_profiles     # ICC profiles (RGB/CMYK)
+│       ├── color_profiles     # ICC profiles (RGB)
 │       ├── cover              # Cover finishes and barcode specs
 │       ├── validation         # File validation rules
 │       ├── export             # PDF export settings
@@ -47,12 +47,14 @@ config/
 ### What goes where?
 
 **`config/` (YAML files)** - Business Configuration:
+
 - ✅ Which model to use (`openrouter`, `gemini`, `local`)
 - ✅ Which specific model (`gemini-2.5-flash-image`, `flux-schnell`, etc.)
 - ✅ KDP specifications, business limits, brand identity
 - ✅ Safe to commit to git (no secrets)
 
 **`.env` file** - Secrets & API Keys:
+
 - 🔐 `OPENROUTER_API_KEY=sk-or-xxx`
 - 🔐 `GEMINI_API_KEY=AIza-xxx`
 - 🔐 `HF_API_TOKEN=hf_xxx`
@@ -60,6 +62,7 @@ config/
 - ❌ NEVER commit to git
 
 **Example**: To switch from OpenRouter to Gemini Direct:
+
 1. Edit `config/generation/models.yaml` (change `provider: openrouter` → `provider: gemini`)
 2. Add `GEMINI_API_KEY=xxx` to `.env` if not already there
 3. Done!
