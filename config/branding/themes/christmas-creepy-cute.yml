@@ -2,20 +2,23 @@ id: christmas-creepy-cute
 label: "Christmas Creepy But Cute"
 
 palette:
-  base: ["#7b0f0f", "#16412a", "#0f0f0f", "#f7f7f7"]
-  accents_allowed: ["#d45500", "#5d0ca8", "#f3f2ff"]
-  forbidden_keywords: ["rainbow", "pastel", "neon", "hyper-saturated", "gradient"]
+  base: ["#8b2f2f", "#16412a", "#2d2d2d", "#fff9f0"]
+  accents_allowed: ["#d45500", "#d4a017", "#ff9a56", "#ffd700"]
+  forbidden_keywords: ["rainbow", "pastel", "neon", "hyper-saturated", "gradient", "cold blue", "icy"]
 
 prompt_blocks:
   subject: "a cute creepy Christmas creature (friendly skeleton Santa, sweet zombie reindeer, tiny vampire elf, or smiling ghost snowman), centered, expressive eyes, soft spooky aesthetic"
-  environment: "haunted Christmas village with lanterns, snowy graveyard with ornaments, eerie toy workshop with glowing lights, moonlit forest decorated with garlands"
-  tone: "festive dark, whimsical creepy, Tim Burton inspired, adorable gothic, child-friendly spooky"
+  environment: "cozy haunted Christmas village with warm lanterns, snowy graveyard with glowing ornaments, inviting toy workshop with fireplace, moonlit forest with twinkling lights and candles"
+  tone: "cozy dark, whimsical creepy, Tim Burton inspired, adorable gothic, child-friendly spooky, warm candlelight ambiance, inviting haunted charm"
   positives:
     - "high detail"
     - "cute but creepy balance"
     - "festive gothic style"
-    - "soft shadows"
-    - "professional children’s book cover"
+    - "soft warm shadows"
+    - "warm candlelight glow"
+    - "cozy atmosphere"
+    - "inviting despite spooky"
+    - "professional children's book cover"
     - "Amazon bestseller look"
     - "glossy illustration"
   negatives:
@@ -63,14 +66,14 @@ coloring_page_templates:
       - "playing with haunted toys"
 
     ENV:
-      - "haunted house with Christmas lights"
-      - "snowy cemetery with festive ornaments"
-      - "dark toy workshop with garlands"
-      - "misty pine forest with glowing decorations"
-      - "gothic fireplace with stockings"
-      - "cobweb Christmas tree"
-      - "moonlit snowy rooftop"
-      - "creepy North Pole village"
+      - "cozy haunted cottage with fireplace and Christmas lights"
+      - "warm candlelit cemetery with festive ornaments"
+      - "inviting toy workshop with hot cocoa mugs"
+      - "snowy village with glowing windows"
+      - "gothic fireplace with crackling fire and stockings"
+      - "warm attic filled with vintage Christmas decorations"
+      - "moonlit snowy rooftop with lanterns"
+      - "friendly North Pole village with warm lights"
 
     FOCUS:
       - "head with festive hat"
