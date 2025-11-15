@@ -15,6 +15,9 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     calculate_spine_width,
     inches_to_px,
 )
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.barcode_utils import (
+    add_barcode_space,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -70,36 +73,53 @@ def assemble_full_kdp_cover(
 
     # Calculate full cover dimensions @ 300 DPI
     bleed_px = inches_to_px(config.bleed_size)  # 0.125" = 38px
-    trim_px = inches_to_px(8.5)  # 2550px (but we use actual image size)
 
-    # Full width: bleed + back (8.5") + bleed + spine + bleed + front (8.5") + bleed
-    # But since covers already include content, we just add bleeds around them
-    full_width = (
-        bleed_px + back.width + bleed_px + spine_width_px + bleed_px + front.width + bleed_px
-    )
+    # ✅ KDP full cover structure (matches cover_assembly_provider.py):
+    # [LEFT_BLEED][BACK_TRIM][SPINE][FRONT_TRIM][RIGHT_BLEED]
+    # Total: 38 + 2550 + spine + 2550 + 38 = 5192px + spine
+    full_width = bleed_px + back.width + spine_width_px + front.width + bleed_px
     full_height = bleed_px + back.height + bleed_px
 
     logger.info(
-        f"📐 Assembling full KDP cover: {full_width}×{full_height}px "
-        f'({full_width / 300:.3f}" × {full_height / 300:.3f}" @ 300 DPI)'
+        f"Assembling full KDP cover: {full_width}×{full_height}px "
+        f'({full_width / 300:.3f}" × {full_height / 300:.3f}" @ 300 DPI) '
+        f"with {spine_width_px}px spine for {page_count} pages"
     )
-    logger.info(f'   Spine: {spine_width_inches:.4f}" ({spine_width_px}px) for {page_count} pages')
 
     # Create blank canvas with bleeds
     canvas = Image.new("RGB", (full_width, full_height), color=(255, 255, 255))
 
-    # Paste back cover (with bleed on left and top)
+    # ✅ Add barcode space to back cover for KDP validation preview
+    # Note: Back cover from DB is raw (no barcode). We add it here to simulate
+    # the final KDP export and validate positioning against the KDP template.
+    logger.info("Adding KDP barcode space to back cover for validation preview...")
+    back_buffer = BytesIO()
+    back.save(back_buffer, format="PNG")
+    back_with_barcode = add_barcode_space(
+        back_buffer.getvalue(),
+        barcode_width_inches=config.barcode_width,
+        barcode_height_inches=config.barcode_height,
+        barcode_margin_inches=config.barcode_margin,
+        image_includes_bleeds=False,  # Back cover is 2550×2550 (no bleeds yet)
+        bleed_size_inches=config.bleed_size,
+        has_right_bleed=False,  # NO right bleed - spine comes after
+    )
+    back = Image.open(BytesIO(back_with_barcode)).convert("RGB")
+
+    # ✅ Paste back cover at (bleed_px, bleed_px) - creates left bleed
     canvas.paste(back, (bleed_px, bleed_px))
 
-    # Spine position (between back and front, with bleeds)
-    spine_x = bleed_px + back.width + bleed_px
+    # ✅ Spine position: immediately after back trim (NO gap, NO extra bleed)
+    # Position: left_bleed + back_width = 38 + 2550 = 2588px
+    spine_x = bleed_px + back.width
     # Draw spine color (use back cover's dominant color or white)
     spine_region = (spine_x, bleed_px, spine_x + spine_width_px, bleed_px + back.height)
     draw = ImageDraw.Draw(canvas)
     draw.rectangle(spine_region, fill=(240, 240, 240))  # Light gray for spine
 
-    # Paste front cover (after spine, with bleed on right)
-    front_x = spine_x + spine_width_px + bleed_px
+    # ✅ Paste front cover: immediately after spine (NO gap, NO extra bleed)
+    # Position: spine_x + spine_width = 2588 + 16 = 2604px
+    front_x = spine_x + spine_width_px
     canvas.paste(front, (front_x, bleed_px))
 
     # Convert to bytes
