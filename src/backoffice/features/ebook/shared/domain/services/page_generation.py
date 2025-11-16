@@ -3,6 +3,7 @@
 import asyncio
 import hashlib
 import logging
+import random
 from typing import ClassVar
 
 from backoffice.features.ebook.shared.domain.policies.quality_validator import QualityValidator
@@ -56,7 +57,7 @@ class ContentPageGenerationService:
         Args:
             prompt: Text description for the page
             spec: Image specifications (dimensions, format, color mode)
-            seed: Random seed for reproducibility
+            seed: Random seed for reproducibility (auto-generated if None)
 
         Returns:
             Page image as bytes
@@ -65,6 +66,11 @@ class ContentPageGenerationService:
             DomainError: If generation or validation fails
         """
         logger.info("🎨 Generating single content page")
+
+        # Auto-generate seed if not provided (ensures unique images each time)
+        if seed is None:
+            seed = random.randint(1, 2**31 - 1)  # Max int32 for compatibility
+            logger.info(f"🎲 Auto-generated random seed: {seed}")
 
         # Pre-validation
         QualityValidator.validate_color_mode(spec, is_cover=False)
@@ -99,7 +105,7 @@ class ContentPageGenerationService:
             prompts: List of text prompts (one per page)
             prompts: Text descriptions for each page
             spec: Image specifications (dimensions, format, color mode)
-            seed: Random seed base for reproducibility
+            seed: Random seed base for reproducibility (auto-generated if None)
 
         Returns:
             List of page images as bytes
@@ -112,6 +118,12 @@ class ContentPageGenerationService:
             f"🎨 Generating {page_count} content pages (max concurrent: {self.max_concurrent})"
         )
 
+        # Auto-generate base seed if not provided
+        # Each page will get seed+i to ensure uniqueness while maintaining reproducibility
+        if seed is None:
+            seed = random.randint(1, 2**31 - 1000)  # Leave room for seed+i increments
+            logger.info(f"🎲 Auto-generated base seed: {seed} (pages will use seed+0, seed+1, ...)")
+
         # Pre-validation
         QualityValidator.validate_color_mode(spec, is_cover=False)
         QualityValidator.validate_request(page_count=page_count, spec=spec)
@@ -122,11 +134,12 @@ class ContentPageGenerationService:
             raise RuntimeError("Content page provider is not available")
 
         # Generate pages in batch with concurrency control
+        # Each page gets seed+i to ensure uniqueness
         tasks = [
             self._generate_single_page(
                 prompt=prompt,
                 spec=spec,
-                seed=seed + i if seed else None,
+                seed=seed + i,  # Now seed is never None
                 page_number=i + 1,
             )
             for i, prompt in enumerate(prompts)

@@ -2,6 +2,7 @@
 
 import hashlib
 import logging
+import random
 from typing import ClassVar
 
 from backoffice.features.ebook.shared.domain.policies.quality_validator import QualityValidator
@@ -48,7 +49,7 @@ class CoverGenerationService:
         Args:
             prompt: Text description of the cover
             spec: Image specifications (dimensions, format, color mode)
-            seed: Random seed for reproducibility
+            seed: Random seed for reproducibility (auto-generated if None)
 
         Returns:
             Cover image as bytes
@@ -57,6 +58,11 @@ class CoverGenerationService:
             DomainError: If generation or validation fails
         """
         logger.info(f"🎨 Generating cover: {spec.width_px}x{spec.height_px} {spec.format}")
+
+        # Auto-generate seed if not provided (ensures unique images each time)
+        if seed is None:
+            seed = random.randint(1, 2**31 - 1)  # Max int32 for compatibility
+            logger.info(f"🎲 Auto-generated random seed: {seed}")
 
         # Pre-validation
         QualityValidator.validate_color_mode(spec, is_cover=True)
@@ -74,7 +80,7 @@ class CoverGenerationService:
             raise RuntimeError("Cover provider is not available")
 
         # Generate cover
-        logger.info(f"Calling cover provider with prompt: {prompt[:100]}...")
+        logger.info(f"Calling cover provider with seed={seed}, prompt: {prompt[:100]}...")
         image_data = await self.cover_port.generate_cover(
             prompt=prompt,
             spec=spec,
