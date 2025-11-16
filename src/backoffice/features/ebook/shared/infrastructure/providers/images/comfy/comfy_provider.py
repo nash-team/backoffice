@@ -176,6 +176,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
             )
 
         self._load_workflow(spec, True)
+        self.workflow["31"]["inputs"]["seed"] = seed
 
         # Build prompt based on color mode
         # if spec.color_mode == ColorMode.BLACK_WHITE:
@@ -279,6 +280,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
             )
 
         self._load_workflow(spec, False)
+        self.workflow["31"]["inputs"]["seed"] = seed
 
         # Build prompt based on color mode
         # if spec.color_mode == ColorMode.BLACK_WHITE:
