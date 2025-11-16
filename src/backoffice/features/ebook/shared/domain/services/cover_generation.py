@@ -61,7 +61,7 @@ class CoverGenerationService:
 
         # Auto-generate seed if not provided (ensures unique images each time)
         if seed is None:
-            seed = random.randint(1, 2**31 - 1)  # Max int32 for compatibility
+            seed = random.randint(1, 2**31 - 1)  # noqa: S311 - Not crypto, just image generation
             logger.info(f"🎲 Auto-generated random seed: {seed}")
 
         # Pre-validation

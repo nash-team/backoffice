@@ -69,7 +69,7 @@ class ContentPageGenerationService:
 
         # Auto-generate seed if not provided (ensures unique images each time)
         if seed is None:
-            seed = random.randint(1, 2**31 - 1)  # Max int32 for compatibility
+            seed = random.randint(1, 2**31 - 1)  # noqa: S311 - Not crypto, just image generation
             logger.info(f"🎲 Auto-generated random seed: {seed}")
 
         # Pre-validation
@@ -121,7 +121,7 @@ class ContentPageGenerationService:
         # Auto-generate base seed if not provided
         # Each page will get seed+i to ensure uniqueness while maintaining reproducibility
         if seed is None:
-            seed = random.randint(1, 2**31 - 1000)  # Leave room for seed+i increments
+            seed = random.randint(1, 2**31 - 1000)  # noqa: S311 - Not crypto, just image generation
             logger.info(f"🎲 Auto-generated base seed: {seed} (pages will use seed+0, seed+1, ...)")
 
         # Pre-validation

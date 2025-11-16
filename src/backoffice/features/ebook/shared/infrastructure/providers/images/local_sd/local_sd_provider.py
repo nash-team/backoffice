@@ -279,10 +279,8 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
 
             assert self.pipeline is not None  # _load_model() ensures this
 
-            # Set seed for reproducibility
-            generator = None
-            if seed is not None:
-                generator = torch.Generator(device=self.pipeline.device).manual_seed(seed)
+            # Set seed for reproducibility (seed is always provided by service layer)
+            generator = torch.Generator(device=self.pipeline.device).manual_seed(seed)
 
             # Generate image (adapt params based on model type)
             model_lower = self.model.lower()
