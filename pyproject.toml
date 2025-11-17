@@ -17,9 +17,7 @@ dependencies = [
   # Modèles & validation
   "pydantic[email]>=2.4.2",
 
-  # Authentification & sécurité (auth not currently used, kept for future)
-  "python-jose[cryptography]>=3.3.0",
-  "passlib[bcrypt]>=1.7.4",
+  # Environment variables
   "python-dotenv>=1.0.0",
 
   # Base de données (drivers sync + async)
@@ -49,9 +47,6 @@ dependencies = [
   # HTTP client for external API calls
   "httpx>=0.25.1",
 
-  # Retry logic for API calls
-  "tenacity>=9.0.0",
-
   # YAML parsing for theme configuration
   "pyyaml>=6.0",
 
@@ -68,8 +63,6 @@ dev = [
 
   # Stubs (typing only)
   "types-psutil",
-  "types-python-jose",
-  "types-passlib",
   "types-requests",
   "types-python-dateutil",
   "types-pyyaml",
@@ -242,6 +235,5 @@ DEP001 = [
 # Déclare les mappings nom PyPI -> package importable
 [tool.deptry.package_module_name_map]
 "google-api-python-client" = "googleapiclient"
-"python-jose"              = "jose"
 "psycopg2-binary"          = "psycopg2"
 "pillow"                   = "PIL"

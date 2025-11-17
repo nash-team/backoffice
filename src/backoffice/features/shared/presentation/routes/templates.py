@@ -26,7 +26,6 @@ template_loaders = [
     FileSystemLoader(str(FEATURES_DIR / "ebook" / "lifecycle" / "presentation" / "templates")),
     FileSystemLoader(str(FEATURES_DIR / "ebook" / "regeneration" / "presentation" / "templates")),
     FileSystemLoader(str(FEATURES_DIR / "ebook" / "export" / "presentation" / "templates")),
-    FileSystemLoader(str(FEATURES_DIR / "generation_costs" / "presentation" / "templates")),
 ]
 
 # Create Jinja2Templates with ChoiceLoader (searches directories in order)

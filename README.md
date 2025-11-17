@@ -11,7 +11,6 @@ This tool **generates complete coloring books** (dinosaurs, pirates, unicorns, e
 - **Back cover generation** (text-removed line art)
 - **PDF assembly** (KDP-ready format: 8×10", 300 DPI, bleed margins)
 - **Quality validation** (editorial approval workflow)
-- **Cost tracking** (API costs per generation)
 
 **Use case:** Create professional coloring books in minutes instead of weeks, ready for Amazon print-on-demand.
 
@@ -42,12 +41,6 @@ This tool **generates complete coloring books** (dinosaurs, pirates, unicorns, e
 - **Regeneration:** Regenerate back cover if needed
 - **Drive integration:** Upload approved PDFs to Google Drive
 
-### 💰 Cost Management
-
-- **Per-ebook tracking:** Track API costs for each generation
-- **Statistics dashboard:** Total costs, average per book
-- **Provider logs:** Detailed cost breakdown per API call
-
 ---
 
 ## Architecture
@@ -60,7 +53,7 @@ src/backoffice/features/
 ├── ebook/lifecycle/        # Approve/Reject/Stats management
 ├── ebook/listing/          # Dashboard & pagination
 ├── ebook/regeneration/     # Back cover regeneration
-├── generation_costs/       # Cost tracking & analytics
+├── ebook/export/           # KDP PDF export
 └── shared/                 # Shared domain & infrastructure
     ├── domain/             # Entities, ports, services (Ebook, ImagePage, etc.)
     ├── infrastructure/     # Adapters (DB, APIs, file storage)
@@ -70,7 +63,7 @@ src/backoffice/features/
 
 **Tests co-localized:** Each feature has its own `tests/unit/` and `tests/integration/` directories.
 
-**Current status:** ✅ 177 tests passing (137 unit, 40 integration disabled)
+**Current status:** ✅ 146 tests passing (all unit tests, integration tests disabled)
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed technical documentation.
 
@@ -454,11 +447,6 @@ make run
 3. **Reject** → Add feedback, mark for revision
 4. **Regenerate back cover** if needed (removes text from cover)
 
-### Track Costs
-
-- **Stats page:** View total generation costs
-- **Per-ebook costs:** See cost breakdown in ebook details
-
 ---
 
 ## Development Commands
@@ -468,7 +456,7 @@ make run
 ```bash
 make help              # Show all commands
 make run               # Start server (localhost:8001)
-make test              # Run all unit tests (177 tests)
+make test              # Run all unit tests (146 tests)
 make test-unit         # Run unit tests only
 make test-smoke        # Run E2E smoke test (health check)
 make lint              # Run ruff linting
@@ -504,7 +492,7 @@ generatorEbook/backoffice/
 │   │   ├── ebook/lifecycle/
 │   │   ├── ebook/listing/
 │   │   ├── ebook/regeneration/
-│   │   ├── generation_costs/
+│   │   ├── ebook/export/
 │   │   └── shared/
 │   └── main.py                # FastAPI application entry point
 ├── tests/
@@ -525,8 +513,8 @@ generatorEbook/backoffice/
 
 **Chicago-style testing** (fakes > mocks):
 
-- **Unit tests (137):** Fast, use fake implementations (no I/O)
-- **Integration tests (40):** PostgreSQL via testcontainers
+- **Unit tests (146):** Fast, use fake implementations (no I/O)
+- **Integration tests:** Temporarily disabled
 - **E2E tests (1):** Minimal smoke test (health check only)
 
 **Co-localized tests:** Each feature has tests beside the code.
@@ -546,14 +534,14 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for testing philosophy.
 
 | Category | Technology |
 |----------|-----------|
-| **Framework** | FastAPI (async Python web framework) |
-| **Database** | PostgreSQL + SQLAlchemy (async ORM) |
-| **AI Generation** | OpenRouter API (Gemini 2.5 Flash) |
+| **Framework** | FastAPI (Python web framework) |
+| **Database** | PostgreSQL + SQLAlchemy (sync ORM) |
+| **AI Generation** | OpenRouter API (Gemini 2.5 Flash) / Local Stable Diffusion |
 | **Vectorization** | Potrace (PNG → SVG line art) |
 | **PDF Generation** | WeasyPrint (HTML/CSS → PDF) |
 | **File Storage** | Google Drive API |
 | **Templates** | Jinja2 (with HTMX for dynamic UI) |
-| **Testing** | pytest + pytest-asyncio + Playwright |
+| **Testing** | pytest + Playwright |
 | **Type Checking** | mypy (via type hints) |
 | **Linting** | ruff (linting + formatting) |
 

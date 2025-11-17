@@ -75,8 +75,6 @@ class Ebook:
     # Page count for KDP export
     page_count: int | None = None
 
-    # Note: Generation costs now tracked via generation_costs feature (event-driven)
-
 
 # KDP Export configurations
 @dataclass

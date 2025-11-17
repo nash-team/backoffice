@@ -19,13 +19,6 @@ from backoffice.features.ebook.listing.presentation.routes import router as eboo
 from backoffice.features.ebook.regeneration.presentation.routes import (
     router as ebook_regeneration_router,
 )
-from backoffice.features.generation_costs.presentation.routes import (
-    pages_router as costs_pages_router,
-    router as generation_costs_router,
-)
-
-# Auth not currently used - uncomment if needed
-# from backoffice.features.shared.presentation.routes.auth import router as auth_router
 from backoffice.features.shared.presentation.routes.templates import templates
 
 app = FastAPI(title="Backoffice")
@@ -105,15 +98,12 @@ async def test_reset_database() -> tuple[dict[str, str], int] | dict[str, str]:
 
 
 # Register all feature routes
-# app.include_router(auth_router)  # Auth not used
 app.include_router(ebook_listing_router)
 app.include_router(ebook_creation_router)
 app.include_router(ebook_form_router)
 app.include_router(ebook_lifecycle_router)
 app.include_router(ebook_export_router)
 app.include_router(ebook_regeneration_router)
-app.include_router(generation_costs_router)
-app.include_router(costs_pages_router)
 
 if __name__ == "__main__":
     import uvicorn

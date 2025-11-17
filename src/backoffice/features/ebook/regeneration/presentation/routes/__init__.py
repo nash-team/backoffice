@@ -24,8 +24,8 @@ from backoffice.features.ebook.shared.domain.services.page_generation import (
 )
 from backoffice.features.ebook.shared.domain.services.pdf_assembly import PDFAssemblyService
 from backoffice.features.ebook.shared.infrastructure.factories.repository_factory import (
-    AsyncRepositoryFactory,
-    get_async_repository_factory,
+    RepositoryFactory,
+    get_repository_factory,
 )
 from backoffice.features.ebook.shared.infrastructure.providers.provider_factory import (
     ProviderFactory,
@@ -36,7 +36,7 @@ from backoffice.features.ebook.shared.infrastructure.providers.weasyprint_assemb
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 # Type alias for dependency injection
-AsyncRepositoryFactoryDep = Annotated[AsyncRepositoryFactory, Depends(get_async_repository_factory)]
+RepositoryFactoryDep = Annotated[RepositoryFactory, Depends(get_repository_factory)]
 
 router = APIRouter(prefix="/api/ebooks", tags=["Ebook Regeneration"])
 logger = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 async def regenerate_ebook_page(
     ebook_id: int,
     request: Request,
-    factory: AsyncRepositoryFactoryDep,
+    factory: RepositoryFactoryDep,
     regeneration_request: Annotated[dict, Body(...)],
 ) -> dict:
     """Regenerate one or more pages of an ebook.
@@ -89,10 +89,6 @@ async def regenerate_ebook_page(
         file_storage = factory.get_file_storage()
         event_bus = EventBus()
 
-        # Setup event-driven cost tracking
-        request_id = f"regenerate-{page_type.value}-{ebook_id}"
-        track_usage_usecase = factory.get_track_token_usage_usecase()
-
         # Create services
         assembly_provider = WeasyPrintAssemblyProvider()
         assembly_service = PDFAssemblyService(assembly_port=assembly_provider)
@@ -104,9 +100,7 @@ async def regenerate_ebook_page(
 
         if page_type == PageType.COVER:
             logger.info(f"Regenerating cover for ebook {ebook_id}")
-            cover_provider = ProviderFactory.create_cover_provider(
-                track_usage_usecase=track_usage_usecase, request_id=request_id
-            )
+            cover_provider = ProviderFactory.create_cover_provider()
             cover_service = CoverGenerationService(cover_port=cover_provider)
 
             regenerate_usecase = RegenerateCoverUseCase(
@@ -123,9 +117,7 @@ async def regenerate_ebook_page(
 
         elif page_type == PageType.BACK_COVER:
             logger.info(f"Regenerating back_cover for ebook {ebook_id}")
-            cover_provider = ProviderFactory.create_cover_provider(
-                track_usage_usecase=track_usage_usecase, request_id=request_id
-            )
+            cover_provider = ProviderFactory.create_cover_provider()
             cover_service = CoverGenerationService(cover_port=cover_provider)
 
             regenerate_usecase = RegenerateBackCoverUseCase(
@@ -141,9 +133,7 @@ async def regenerate_ebook_page(
             )
 
         else:  # PageType.CONTENT_PAGE
-            page_provider = ProviderFactory.create_content_page_provider(
-                track_usage_usecase=track_usage_usecase, request_id=request_id
-            )
+            page_provider = ProviderFactory.create_content_page_provider()
             page_service = ContentPageGenerationService(page_port=page_provider)
 
             regenerate_usecase = RegenerateContentPageUseCase(
@@ -220,7 +210,7 @@ async def regenerate_ebook_page(
 @router.post("/{ebook_id}/complete-pages")
 async def complete_ebook_pages(
     ebook_id: int,
-    factory: AsyncRepositoryFactoryDep,
+    factory: RepositoryFactoryDep,
     target_pages: int = 24,
 ) -> dict:
     """Complete ebook with blank pages to reach KDP minimum (24 pages).

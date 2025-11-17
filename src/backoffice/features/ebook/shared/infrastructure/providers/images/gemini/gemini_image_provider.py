@@ -13,7 +13,6 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
     ContentPageGenerationPort,
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
-from backoffice.features.ebook.shared.domain.value_objects.usage_metrics import UsageMetrics
 from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
@@ -300,28 +299,3 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         buffer = BytesIO()
         bordered_img.save(buffer, format="PNG")
         return buffer.getvalue()
-
-    def _create_usage_metrics(self, model: str, num_images: int = 1) -> UsageMetrics:
-        """Create usage metrics for Gemini response.
-
-        Args:
-            model: Model ID used
-            num_images: Number of images generated
-
-        Returns:
-            UsageMetrics with cost calculation
-        """
-        total_cost = self.COST_PER_IMAGE * num_images
-
-        logger.info(
-            f"📊 Gemini usage (Nano Banana 🍌) - {model} | "
-            f"Images: {num_images} | "
-            f"Cost: ${total_cost:.6f}"
-        )
-
-        return UsageMetrics(
-            model=model,
-            prompt_tokens=0,  # Gemini doesn't expose token usage for images
-            completion_tokens=0,
-            cost=total_cost,
-        )

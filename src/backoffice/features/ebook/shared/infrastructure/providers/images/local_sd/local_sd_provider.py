@@ -11,7 +11,6 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
     ContentPageGenerationPort,
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
-from backoffice.features.ebook.shared.domain.value_objects.usage_metrics import UsageMetrics
 from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
@@ -554,30 +553,3 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
         except Exception as e:
             logger.warning(f"⚠️  ControlNet preprocessing failed: {str(e)}, continuing without it")
             return None
-
-    def _create_usage_metrics(self, model: str, num_images: int = 1) -> UsageMetrics:
-        """Create usage metrics for Local SD response.
-
-        Local SD is FREE (runs on your machine).
-
-        Args:
-            model: Model ID used
-            num_images: Number of images generated
-
-        Returns:
-            UsageMetrics with cost = $0
-        """
-        total_cost = self.COST_PER_IMAGE * num_images
-
-        logger.info(
-            f"📊 Local SD usage (FREE) - {model} | "
-            f"Images: {num_images} | "
-            f"Cost: ${total_cost:.6f} 🎉"
-        )
-
-        return UsageMetrics(
-            model=model,
-            prompt_tokens=0,  # Local SD doesn't expose token usage
-            completion_tokens=0,
-            cost=total_cost,
-        )

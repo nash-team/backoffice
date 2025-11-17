@@ -195,7 +195,7 @@ async def create_ebook(
         StrategyFactory,
     )
 
-    strategy = StrategyFactory.create_strategy(EbookType.COLORING, request_id=request_id)
+    strategy = StrategyFactory.create_strategy(EbookType.COLORING)
     ebook_repo = factory.get_ebook_repository()
     file_storage = factory.get_file_storage()
     event_bus = EventBus()

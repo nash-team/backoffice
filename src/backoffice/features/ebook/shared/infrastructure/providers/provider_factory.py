@@ -54,17 +54,11 @@ class ProviderFactory:
         logger.info("🔄 Provider cache cleared")
 
     @staticmethod
-    def create_cover_provider(
-        track_usage_usecase=None, request_id: str | None = None
-    ) -> CoverGenerationPort:
+    def create_cover_provider() -> CoverGenerationPort:
         """Create cover generation provider (real or fake).
 
         Uses caching to avoid reloading heavy models (e.g., Local SD).
         Cache key includes LoRA to support multiple model configurations.
-
-        Args:
-            track_usage_usecase: Optional TrackTokenUsageUseCase for cost tracking via events
-            request_id: Optional request ID for cost tracking
 
         Returns:
             CoverGenerationPort implementation (cached instance)
@@ -110,8 +104,6 @@ class ProviderFactory:
 
             provider = OpenRouterImageProvider(
                 model=model_mapping.model,
-                track_usage_usecase=track_usage_usecase,
-                request_id=request_id,
             )
 
         elif model_mapping.provider == "local":
@@ -147,17 +139,11 @@ class ProviderFactory:
         return provider
 
     @staticmethod
-    def create_content_page_provider(
-        track_usage_usecase=None, request_id: str | None = None
-    ) -> ContentPageGenerationPort:
+    def create_content_page_provider() -> ContentPageGenerationPort:
         """Create content page generation provider (real or fake).
 
         Uses caching to avoid reloading heavy models (e.g., Local SD).
         Cache key includes LoRA to support multiple model configurations.
-
-        Args:
-            track_usage_usecase: Optional TrackTokenUsageUseCase for cost tracking via events
-            request_id: Optional request ID for cost tracking
 
         Returns:
             ContentPageGenerationPort implementation (cached instance)
@@ -203,8 +189,6 @@ class ProviderFactory:
 
             provider = OpenRouterImageProvider(
                 model=model_mapping.model,
-                track_usage_usecase=track_usage_usecase,
-                request_id=request_id,
             )
 
         elif model_mapping.provider == "local":

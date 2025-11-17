@@ -28,14 +28,11 @@ class StrategyFactory:
     """
 
     @staticmethod
-    def create_strategy(
-        ebook_type: EbookType, request_id: str | None = None
-    ) -> EbookGenerationStrategyPort:
+    def create_strategy(ebook_type: EbookType) -> EbookGenerationStrategyPort:
         """Create generation strategy for ebook type.
 
         Args:
             ebook_type: Type of ebook to generate
-            request_id: Optional request ID for token tracking
 
         Returns:
             Strategy instance with injected dependencies
@@ -46,33 +43,20 @@ class StrategyFactory:
         logger.info(f"Creating strategy for ebook type: {ebook_type.value}")
 
         if ebook_type == EbookType.COLORING:
-            return StrategyFactory._create_coloring_book_strategy(request_id)
+            return StrategyFactory._create_coloring_book_strategy()
         else:
             raise ValueError(f"Ebook type {ebook_type.value} not yet supported")
 
     @staticmethod
-    def _create_coloring_book_strategy(request_id: str | None = None) -> ColoringBookStrategy:
+    def _create_coloring_book_strategy() -> ColoringBookStrategy:
         """Create coloring book strategy with dependencies.
-
-        Args:
-            request_id: Optional request ID for token tracking
 
         Returns:
             ColoringBookStrategy with injected services
         """
-        # Note: TrackTokenUsageUseCase now created directly by providers via ProviderFactory
-        # Create strategy with service injection (no more token_tracker)
-        track_usage_usecase = None  # Providers will create it themselves if needed
-
-        # Create providers via factory with usage tracking
-        cover_provider = ProviderFactory.create_cover_provider(
-            track_usage_usecase=track_usage_usecase,
-            request_id=request_id,
-        )
-        pages_provider = ProviderFactory.create_content_page_provider(
-            track_usage_usecase=track_usage_usecase,
-            request_id=request_id,
-        )
+        # Create providers via factory
+        cover_provider = ProviderFactory.create_cover_provider()
+        pages_provider = ProviderFactory.create_content_page_provider()
         assembly_provider = ProviderFactory.create_assembly_provider()
 
         # Create services with provider injection
