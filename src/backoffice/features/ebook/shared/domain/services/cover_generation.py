@@ -43,6 +43,7 @@ class CoverGenerationService:
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
+        workflow_params: dict[str, str] | None = None,
     ) -> bytes:
         """Generate a cover image with quality validation.
 
@@ -50,6 +51,7 @@ class CoverGenerationService:
             prompt: Text description of the cover
             spec: Image specifications (dimensions, format, color mode)
             seed: Random seed for reproducibility (auto-generated if None)
+            workflow_params: Optional workflow-specific parameters (for ComfyUI, etc.)
 
         Returns:
             Cover image as bytes
@@ -85,6 +87,7 @@ class CoverGenerationService:
             prompt=prompt,
             spec=spec,
             seed=seed,
+            workflow_params=workflow_params,
         )
 
         # Post-validation

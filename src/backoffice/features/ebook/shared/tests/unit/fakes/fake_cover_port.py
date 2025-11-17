@@ -41,6 +41,7 @@ class FakeCoverPort(CoverGenerationPort):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
+        workflow_params: dict[str, str] | None = None,
     ) -> bytes:
         """Generate fake cover image.
 
@@ -48,6 +49,7 @@ class FakeCoverPort(CoverGenerationPort):
             prompt: Text prompt
             spec: Image specifications
             seed: Random seed
+            workflow_params: Optional workflow parameters (ignored in fake)
 
         Returns:
             Fake image bytes
