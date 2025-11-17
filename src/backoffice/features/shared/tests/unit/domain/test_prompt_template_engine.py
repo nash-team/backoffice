@@ -1,5 +1,7 @@
 """Unit tests for PromptTemplateEngine."""
 
+import pytest
+
 from backoffice.features.ebook.shared.domain.services.prompt_template_engine import (
     PromptTemplateEngine,
 )
@@ -15,8 +17,8 @@ class TestPromptTemplateEngine:
         engine2 = PromptTemplateEngine(seed=42)
 
         # Act
-        prompts1 = engine1.generate_prompts(theme="dinosaures", count=5)
-        prompts2 = engine2.generate_prompts(theme="dinosaures", count=5)
+        prompts1 = engine1.generate_prompts(theme="dinosaurs", count=5)
+        prompts2 = engine2.generate_prompts(theme="dinosaurs", count=5)
 
         # Assert
         assert len(prompts1) == 5
@@ -30,8 +32,8 @@ class TestPromptTemplateEngine:
         engine2 = PromptTemplateEngine(seed=99)
 
         # Act
-        prompts1 = engine1.generate_prompts(theme="dinosaures", count=5)
-        prompts2 = engine2.generate_prompts(theme="dinosaures", count=5)
+        prompts1 = engine1.generate_prompts(theme="dinosaurs", count=5)
+        prompts2 = engine2.generate_prompts(theme="dinosaurs", count=5)
 
         # Assert
         assert len(prompts1) == 5
@@ -56,7 +58,7 @@ class TestPromptTemplateEngine:
         engine = PromptTemplateEngine(seed=42)
 
         # Act
-        prompts = engine.generate_prompts(theme="dinosaures", count=3)
+        prompts = engine.generate_prompts(theme="dinosaurs", count=3)
 
         # Assert - Check for essential keywords
         for prompt in prompts:
@@ -128,19 +130,18 @@ class TestPromptTemplateEngine:
             assert "no scary elements" in prompt
             assert "no violence" in prompt
 
-    def test_generate_prompts_unknown_theme_uses_generic(self):
-        """Test that unknown theme falls back to generic template."""
+    def test_generate_prompts_unknown_theme_raises_error(self):
+        """Test that unknown theme raises FileNotFoundError with helpful message."""
         # Arrange
         engine = PromptTemplateEngine(seed=42)
 
-        # Act
-        prompts = engine.generate_prompts(theme="unknown_theme", count=3)
+        # Act & Assert
+        with pytest.raises(FileNotFoundError) as exc_info:
+            engine.generate_prompts(theme="unknown_theme", count=3)
 
-        # Assert
-        assert len(prompts) == 3
-        for prompt in prompts:
-            assert "Line art coloring page" in prompt
-            assert "full page" in prompt or "Illustration extends naturally" in prompt
+        # Check error message contains available themes
+        assert "No template found for theme 'unknown_theme'" in str(exc_info.value)
+        assert "Available themes:" in str(exc_info.value)
 
     def test_generate_prompts_partial_theme_match(self):
         """Test that partial theme name matches (e.g., 'dino' -> 'dinosaurs')."""
@@ -175,7 +176,7 @@ class TestPromptTemplateEngine:
         engine = PromptTemplateEngine(seed=42)
 
         # Act
-        prompts = engine.generate_prompts(theme="dinosaures", count=0)
+        prompts = engine.generate_prompts(theme="dinosaurs", count=0)
 
         # Assert
         assert len(prompts) == 0

@@ -5,70 +5,77 @@ palette:
   accents_allowed: ["#ffd700", "#ff6347"]
   forbidden_keywords: ["bright neon", "rainbow", "pastel"]
 
-# Cover prompts (colorful)
-prompt_blocks:
-  subject: "a friendly cartoon pirate with treasure chest, centered composition"
-  environment: "pirate ship deck, ocean waves, treasure island in background"
-  tone: "adventurous, fun, swashbuckling"
-  positives: ["vibrant colors", "detailed", "professional children's book cover", "engaging"]
-  negatives: ["no text", "no mockup", "no borders", "no open book", "no scary elements", "no violence"]
+# ==========================================
+# COVER TEMPLATES (colorful, full-bleed)
+# ==========================================
+cover_templates:
+  default:
+    prompt_blocks:
+      subject: "a friendly cartoon pirate with treasure chest, centered composition"
+      environment: "pirate ship deck, ocean waves, treasure island in background"
+      tone: "adventurous, fun, swashbuckling"
+      positives: ["vibrant colors", "detailed", "professional children's book cover", "engaging"]
+      negatives: ["no text", "no mockup", "no borders", "no open book", "no scary elements", "no violence"]
 
-# Coloring page prompts (B&W line art)
+# ==========================================
+# COLORING PAGE TEMPLATES (B&W line art)
+# ==========================================
 coloring_page_templates:
-  base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+  default:
+    base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
 
-  variables:
-    SHOT:
-      - "close-up"
-      - "medium"
-      - "wide"
-      - "action scene"
+    variables:
+      SHOT:
+        - "close-up"
+        - "medium"
+        - "wide"
+        - "action scene"
 
-    CHARACTER:
-      - "friendly cartoon pirate"
-      - "pirate captain with hat"
-      - "young pirate kid"
-      - "pirate crew member"
-      - "parrot companion"
-      - "pirate with treasure map"
+      CHARACTER:
+        - "friendly cartoon pirate"
+        - "pirate captain with hat"
+        - "young pirate kid"
+        - "pirate crew member"
+        - "parrot companion"
+        - "pirate with treasure map"
 
-    ACTION:
-      - "searching for treasure"
-      - "sailing"
-      - "digging for treasure"
-      - "looking through telescope"
-      - "celebrating"
-      - "climbing rigging"
-      - "steering ship"
+      ACTION:
+        - "searching for treasure"
+        - "sailing"
+        - "digging for treasure"
+        - "looking through telescope"
+        - "celebrating"
+        - "climbing rigging"
+        - "steering ship"
 
-    ENV:
-      - "pirate ship deck"
-      - "treasure island"
-      - "beach with palm trees"
-      - "ocean waves"
-      - "treasure cave"
-      - "dock"
-      - "tropical island"
+      ENV:
+        - "pirate ship deck"
+        - "treasure island"
+        - "beach with palm trees"
+        - "ocean waves"
+        - "treasure cave"
+        - "dock"
+        - "tropical island"
 
-    FOCUS:
-      - "pirate with treasure chest"
-      - "full body"
-      - "with ship"
-      - "with parrot"
-      - "with flag"
+      FOCUS:
+        - "pirate with treasure chest"
+        - "full body"
+        - "with ship"
+        - "with parrot"
+        - "with flag"
 
-    COMPOSITION:
-      - "left-facing"
-      - "right-facing"
-      - "front"
-      - "3/4 view"
-      - "action pose"
+      COMPOSITION:
+        - "left-facing"
+        - "right-facing"
+        - "front"
+        - "3/4 view"
+        - "action pose"
 
-  quality_settings: |
-    Black and white line art coloring page style.
-    IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading.
-    Bold clean outlines, closed shapes, thick black lines.
-    NO FRAME, NO BORDER around the illustration.
-    Illustration extends naturally to image boundaries.
-    Printable 300 DPI, simple to medium detail for kids age 4-8.
-    No text, no logo, no watermark, no scary elements, no violence.
+    quality_settings: |
+      Black and white line art coloring page style.
+      IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading.
+      Bold clean outlines, closed shapes, thick black lines.
+      NO FRAME, NO BORDER around the illustration.
+      Illustration extends naturally to image boundaries.
+      Printable 300 DPI, simple to medium detail for kids age 4-8.
+      No text, no logo, no watermark, no scary elements, no violence.

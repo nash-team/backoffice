@@ -55,7 +55,7 @@ class TestColoringBookStrategy:
 
         request = GenerationRequest(
             title="Test Book",
-            theme="Animals",
+            theme="dinosaurs",
             audience=Audience.CHILDREN,
             ebook_type=EbookType.COLORING,
             page_count=24,
@@ -103,7 +103,7 @@ class TestColoringBookStrategy:
 
         request = GenerationRequest(
             title="Test Book",
-            theme="Animals",
+            theme="dinosaurs",
             audience=Audience.CHILDREN,
             ebook_type=EbookType.COLORING,
             page_count=24,  # KDP minimum
@@ -143,7 +143,7 @@ class TestColoringBookStrategy:
 
         request = GenerationRequest(
             title="Test Book",
-            theme="Animals",
+            theme="dinosaurs",
             audience=Audience.CHILDREN,
             ebook_type=EbookType.COLORING,
             page_count=24,

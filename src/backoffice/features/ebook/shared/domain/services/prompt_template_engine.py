@@ -24,11 +24,13 @@ class PromptTemplate:
         base_structure: Base prompt structure with {VARIABLE} placeholders
         variables: Dict of variable names to list of possible values
         quality_settings: Common quality/technical requirements
+        workflow_params: Free-form dict for workflow-specific params (ComfyUI, etc.)
     """
 
     base_structure: str
     variables: dict[str, list[str]]
     quality_settings: str
+    workflow_params: dict[str, str | float | int] | None = None
 
 
 class PromptTemplateEngine:
@@ -65,14 +67,18 @@ class PromptTemplateEngine:
         self.themes_directory = themes_directory
         logger.info(f"PromptTemplateEngine initialized with themes from: {themes_directory}")
 
-    def load_template_from_yaml(self, theme_id: str) -> PromptTemplate:
+    def load_template_from_yaml(
+        self, theme_id: str, model_id: str | None = None, template_type: str = "coloring_page"
+    ) -> PromptTemplate:
         """Load prompt template from theme YAML file.
 
         Args:
             theme_id: Theme ID (e.g., "dinosaurs", "unicorns")
+            model_id: Model ID (e.g., "black-forest-labs/FLUX.1-schnell") - optional
+            template_type: Type of template ("coloring_page" or "cover")
 
         Returns:
-            PromptTemplate loaded from YAML
+            PromptTemplate loaded from YAML (model-specific or default)
 
         Raises:
             FileNotFoundError: If theme file doesn't exist
@@ -86,37 +92,90 @@ class PromptTemplateEngine:
         with open(theme_file, encoding="utf-8") as f:
             theme_data = yaml.safe_load(f)
 
-        # Check if coloring_page_templates section exists
-        if "coloring_page_templates" not in theme_data:
-            raise ValueError(
-                f"Theme '{theme_id}' missing 'coloring_page_templates' section in {theme_file}"
-            )
-
-        templates = theme_data["coloring_page_templates"]
-
-        return PromptTemplate(
-            base_structure=templates["base_structure"],
-            variables=templates["variables"],
-            quality_settings=templates["quality_settings"],
+        # Determine section name based on template type
+        section_name = (
+            "coloring_page_templates" if template_type == "coloring_page" else "cover_templates"
         )
 
-    def generate_prompts(self, theme: str, count: int, audience: str | None = None) -> list[str]:
+        # Check if section exists
+        if section_name not in theme_data:
+            raise ValueError(f"Theme '{theme_id}' missing '{section_name}' section in {theme_file}")
+
+        templates = theme_data[section_name]
+
+        # Try to load model-specific template first, then fallback to default
+        if model_id and model_id in templates:
+            logger.info(
+                f"Using {template_type} template for model '{model_id}' in theme '{theme_id}'"
+            )
+            template_data = templates[model_id]
+        elif "default" in templates:
+            logger.info(
+                f"Model '{model_id}' not found, "
+                f"using default {template_type} template for theme '{theme_id}'"
+            )
+            template_data = templates["default"]
+        else:
+            raise ValueError(
+                f"Theme '{theme_id}' has no model-specific template for '{model_id}' "
+                f"and no default template in {section_name}"
+            )
+
+        # Handle old format (prompt_blocks for cover) vs new format
+        if template_type == "cover" and "prompt_blocks" in template_data:
+            # Old format: assemble from blocks
+            blocks = template_data["prompt_blocks"]
+            prompt = (
+                f"{blocks['subject']}, {blocks['environment']}, {blocks['tone']}. "
+                f"{', '.join(blocks['positives'])}"
+            )
+            return PromptTemplate(
+                base_structure=prompt,
+                variables={},
+                quality_settings="",
+                workflow_params={"negative": ", ".join(blocks["negatives"])},
+            )
+        elif template_type == "cover" and "prompt" in template_data:
+            # New format: direct prompt
+            return PromptTemplate(
+                base_structure=template_data["prompt"],
+                variables={},
+                quality_settings="",
+                workflow_params=template_data.get("workflow_params", None),
+            )
+        else:
+            # Coloring page format (with variables)
+            return PromptTemplate(
+                base_structure=template_data["base_structure"],
+                variables=template_data["variables"],
+                quality_settings=template_data["quality_settings"],
+                workflow_params=template_data.get("workflow_params", None),
+            )
+
+    def generate_prompts(
+        self,
+        theme: str,
+        count: int,
+        audience: str | None = None,
+        model_id: str | None = None,
+    ) -> list[str]:
         """Generate varied prompts for coloring pages.
 
         Args:
             theme: Theme name (e.g., "dinosaurs", "unicorns")
             count: Number of prompts to generate
             audience: Target audience ("children" or "adults") - optional
+            model_id: Model ID for model-specific templates - optional
 
         Returns:
             List of complete prompts ready for image generation
         """
         # Load template from YAML
-        template = self._find_template(theme)
+        template = self._find_template(theme, model_id)
 
         logger.info(
             f"Generating {count} prompts for theme '{theme}' "
-            f"(audience={audience}, seed={self.seed})"
+            f"(model={model_id}, audience={audience}, seed={self.seed})"
         )
 
         prompts = []
@@ -131,16 +190,89 @@ class PromptTemplateEngine:
 
         return prompts
 
-    def _find_template(self, theme: str) -> PromptTemplate:
-        """Find template matching the theme.
+    def generate_prompts_with_params(
+        self,
+        theme: str,
+        count: int,
+        audience: str | None = None,
+        model_id: str | None = None,
+    ) -> dict[str, list[str] | dict[str, str | float | int]]:
+        """Generate varied prompts with workflow params.
+
+        Args:
+            theme: Theme name (e.g., "dinosaurs", "unicorns")
+            count: Number of prompts to generate
+            audience: Target audience ("children" or "adults") - optional
+            model_id: Model ID for model-specific templates - optional
+
+        Returns:
+            Dict with "prompts" (list of strings) and "workflow_params" (dict)
+        """
+        # Load template from YAML
+        template = self._find_template(theme, model_id)
+
+        logger.info(
+            f"Generating {count} prompts with params for theme '{theme}' "
+            f"(model={model_id}, audience={audience}, seed={self.seed})"
+        )
+
+        prompts = []
+        for i in range(count):
+            # Generate prompt with random variables
+            prompt = self._generate_single_prompt(template, i, audience)
+            prompts.append(prompt)
+
+            # Log first and last for debugging
+            if i == 0 or i == count - 1:
+                logger.debug(f"Prompt {i+1}/{count}: {prompt[:150]}...")
+
+        return {
+            "prompts": prompts,
+            "workflow_params": template.workflow_params or {},
+        }
+
+    def generate_cover_prompt(
+        self, theme: str, model_id: str | None = None
+    ) -> dict[str, str | dict[str, str | float | int]]:
+        """Generate cover prompt with workflow params.
+
+        Args:
+            theme: Theme name (e.g., "dinosaurs", "unicorns")
+            model_id: Model ID for model-specific templates - optional
+
+        Returns:
+            Dict with "prompt" (string) and "workflow_params" (dict)
+        """
+        # Load cover template from YAML
+        template = self._find_template(theme, model_id, template_type="cover")
+
+        logger.info(f"Generating cover prompt for theme '{theme}' (model={model_id})")
+
+        # Cover prompts don't have variables (or have empty variables)
+        prompt = template.base_structure
+        if template.quality_settings:
+            prompt = f"{prompt} {template.quality_settings}"
+
+        return {
+            "prompt": prompt,
+            "workflow_params": template.workflow_params or {},
+        }
+
+    def _find_template(
+        self, theme: str, model_id: str | None = None, template_type: str = "coloring_page"
+    ) -> PromptTemplate:
+        """Find template matching the theme and model.
 
         Loads from YAML file. Supports:
         - Exact match: "dinosaurs" -> dinosaurs.yml
         - Partial match: "dino" -> dinosaurs.yml
-        - Falls back to neutral-default if not found
+        - Model-specific templates with fallback to default
+        - Falls back to neutral-default if theme not found
 
         Args:
             theme: Theme to search for (ID or partial match)
+            model_id: Model ID for model-specific templates (optional)
+            template_type: Type of template ("coloring_page" or "cover")
 
         Returns:
             Matching template or fallback
@@ -150,7 +282,7 @@ class PromptTemplateEngine:
 
         # Try exact match first
         try:
-            return self.load_template_from_yaml(theme_normalized)
+            return self.load_template_from_yaml(theme_normalized, model_id, template_type)
         except (FileNotFoundError, ValueError):
             pass  # Try partial match
 
@@ -160,44 +292,15 @@ class PromptTemplateEngine:
                 theme_id = theme_file.stem
                 if theme_normalized in theme_id or theme_id in theme_normalized:
                     logger.info(f"Theme '{theme}' matched to '{theme_id}' (partial match)")
-                    return self.load_template_from_yaml(theme_id)
+                    return self.load_template_from_yaml(theme_id, model_id, template_type)
         except Exception as e:
             logger.debug(f"Error during theme template search: {e}. Continuing to fallback.")
 
-        # No match found
-        logger.warning(
-            f"No template found for theme '{theme}'. " f"Falling back to neutral-default"
+        # No match found - raise error instead of silent fallback
+        raise FileNotFoundError(
+            f"No template found for theme '{theme}'. Available themes: "
+            f"{', '.join([f.stem for f in self.themes_directory.glob('*.yml')])}"
         )
-
-        # Fallback to neutral-default
-        try:
-            return self.load_template_from_yaml("neutral-default")
-        except (FileNotFoundError, ValueError) as e:
-            # Ultimate fallback - hardcoded generic template
-            logger.error(
-                f"Failed to load neutral-default template: {e}. " f"Using hardcoded fallback"
-            )
-            return PromptTemplate(
-                base_structure=(
-                    "Line art coloring page of {SUBJECT} in a {ENV}, {SHOT}, {COMPOSITION}."
-                ),
-                variables={
-                    "SHOT": ["close-up", "medium", "wide"],
-                    "SUBJECT": ["simple character", "cute animal", "friendly object"],
-                    "ENV": ["simple background", "nature scene", "minimal setting"],
-                    "COMPOSITION": ["centered", "left-facing", "right-facing", "front view"],
-                },
-                quality_settings=(
-                    "Black and white line art coloring page style. "
-                    "IMPORTANT: Use ONLY black lines on white background, "
-                    "NO colors, NO gray shading. "
-                    "Bold clean outlines, closed shapes, thick black lines. "
-                    "NO FRAME, NO BORDER around the illustration. "
-                    "Illustration extends naturally to image boundaries. "
-                    "Printable 300 DPI, simple detail for kids age 4-8. "
-                    "No text, no logo, no watermark."
-                ),
-            )
 
     def _generate_single_prompt(
         self, template: PromptTemplate, index: int, audience: str | None
