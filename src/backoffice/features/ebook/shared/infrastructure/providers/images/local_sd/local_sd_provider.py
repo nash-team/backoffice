@@ -5,12 +5,15 @@ import os
 from decimal import Decimal
 from io import BytesIO
 
-from PIL import Image, ImageDraw
+from PIL import Image
 
 from backoffice.features.ebook.shared.domain.ports.content_page_generation_port import (
     ContentPageGenerationPort,
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
+from backoffice.features.ebook.shared.infrastructure.utils.image_borders import (
+    add_rounded_border_to_image,
+)
 from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
@@ -460,6 +463,8 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
     ) -> bytes:
         """Add a rounded black border to the image with white margin.
 
+        Delegates to shared utility function.
+
         Args:
             image_bytes: Original image bytes
             border_width: Width of the border in pixels (default: 5px)
@@ -469,50 +474,12 @@ class LocalStableDiffusionProvider(CoverGenerationPort, ContentPageGenerationPor
         Returns:
             Image bytes with border and margin added
         """
-
-        # Load image
-        img = Image.open(BytesIO(image_bytes)).convert("RGB")
-        orig_width, orig_height = img.size
-
-        # Skip if image too small
-        if orig_width < 100 or orig_height < 100:
-            logger.warning(f"Image too small ({orig_width}x{orig_height}) for border, skipping")
-            return image_bytes
-
-        # Calculate new dimensions with margin
-        total_padding = margin * 2
-        new_width = orig_width
-        new_height = orig_height
-
-        # Create white background with padding
-        bordered_img = Image.new("RGB", (new_width, new_height), (255, 255, 255))
-
-        # Shrink original image to leave margin
-        content_width = new_width - total_padding
-        content_height = new_height - total_padding
-        img_resized = img.resize((content_width, content_height), Image.Resampling.LANCZOS)
-
-        # Paste resized image centered with margin
-        bordered_img.paste(img_resized, (margin, margin))
-
-        # Draw the black rounded rectangle border
-        draw = ImageDraw.Draw(bordered_img)
-        draw.rounded_rectangle(
-            (
-                margin - border_width // 2,
-                margin - border_width // 2,
-                new_width - margin + border_width // 2 - 1,
-                new_height - margin + border_width // 2 - 1,
-            ),
-            radius=corner_radius,
-            outline=(0, 0, 0),
-            width=border_width,
+        return add_rounded_border_to_image(
+            image_bytes=image_bytes,
+            border_width=border_width,
+            corner_radius=corner_radius,
+            margin=margin,
         )
-
-        # Save and return
-        buffer = BytesIO()
-        bordered_img.save(buffer, format="PNG")
-        return buffer.getvalue()
 
     def _preprocess_for_controlnet(self, spec: ImageSpec) -> Image.Image | None:
         """Preprocess image for ControlNet Canny edge detection.

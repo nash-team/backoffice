@@ -6,7 +6,6 @@ import os
 from datetime import datetime
 from io import BytesIO
 
-import httpx
 from PIL import Image, ImageDraw
 
 from backoffice.features.ebook.shared.domain.entities.ebook import (
@@ -18,12 +17,18 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
     ContentPageGenerationPort,
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
+from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter.response_extractor import (
+    OpenRouterResponseExtractor,
+)
 from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
     TEXT_BLACK_RGB,
 )
 from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.spine_generator import (
     get_font_path,
     load_font_safe,
+)
+from backoffice.features.ebook.shared.infrastructure.utils.image_borders import (
+    add_rounded_border_to_image,
 )
 from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
@@ -61,9 +66,11 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                 api_key=self.api_key,
                 base_url=self.base_url,
             )
+            self.extractor = OpenRouterResponseExtractor(model=self.model or "unknown")
             logger.info(f"OpenRouterImageProvider initialized: {self.model}")
         else:
             self.client = None
+            self.extractor = OpenRouterResponseExtractor(model=self.model or "unknown")
             logger.warning("LLM_API_KEY not found")
 
     def is_available(self) -> bool:
@@ -291,26 +298,6 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                 context={"provider": "openrouter", "model": self.model, "error": str(e)},
             ) from e
 
-    def _download_image_sync(self, url: str) -> bytes:
-        """Download image from URL synchronously.
-
-        Args:
-            url: URL to download from
-
-        Returns:
-            Image data as bytes
-        """
-        import asyncio
-
-        async def download() -> bytes:
-            async with httpx.AsyncClient() as client:
-                resp = await client.get(url)
-                resp.raise_for_status()
-                return resp.content
-
-        result: bytes = asyncio.run(download())
-        return result
-
     def _add_rounded_border_to_image(
         self,
         image_bytes: bytes,
@@ -319,6 +306,8 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         margin: int = 50,
     ) -> bytes:
         """Add a rounded black border to the image with white margin.
+
+        Delegates to shared utility function.
 
         Args:
             image_bytes: Original image bytes
@@ -329,53 +318,17 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         Returns:
             Image bytes with border and margin added
         """
-        # Load image
-        img = Image.open(BytesIO(image_bytes)).convert("RGB")
-        orig_width, orig_height = img.size
-
-        # Calculate new dimensions with margin
-        # margin is the white space INSIDE the border
-        total_padding = margin * 2  # margin on each side
-        new_width = orig_width
-        new_height = orig_height
-
-        # Adjust values if image is too small (for testing with tiny images)
-        if orig_width < 100 or orig_height < 100:
-            logger.warning(f"Image too small ({orig_width}x{orig_height}) for border, skipping")
-            return image_bytes
-
-        # Create white background with padding
-        bordered_img = Image.new("RGB", (new_width, new_height), (255, 255, 255))
-
-        # Shrink original image to leave margin
-        content_width = new_width - total_padding
-        content_height = new_height - total_padding
-        img_resized = img.resize((content_width, content_height), Image.Resampling.LANCZOS)
-
-        # Paste resized image centered with margin
-        bordered_img.paste(img_resized, (margin, margin))
-
-        # Draw the black rounded rectangle border
-        draw = ImageDraw.Draw(bordered_img)
-        draw.rounded_rectangle(
-            (
-                margin - border_width // 2,
-                margin - border_width // 2,
-                new_width - margin + border_width // 2 - 1,
-                new_height - margin + border_width // 2 - 1,
-            ),
-            radius=corner_radius,
-            outline=(0, 0, 0),
-            width=border_width,
+        return add_rounded_border_to_image(
+            image_bytes=image_bytes,
+            border_width=border_width,
+            corner_radius=corner_radius,
+            margin=margin,
         )
-
-        # Save and return
-        buffer = BytesIO()
-        bordered_img.save(buffer, format="PNG")
-        return buffer.getvalue()
 
     def _extract_image_from_response(self, response) -> bytes:
         """Extract image bytes from OpenRouter response.
+
+        Delegates to OpenRouterResponseExtractor for clean separation of concerns.
 
         Args:
             response: OpenRouter API response
@@ -386,68 +339,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         Raises:
             DomainError: If image extraction fails
         """
-        # Try multiple extraction strategies
-        try:
-            message = response.choices[0].message
-
-            # Strategy 0: Check for images array in message (Gemini 2.5 format)
-            if hasattr(message, "images") and message.images:
-                logger.info("📸 Found images array in message (Gemini format)")
-                first_image = message.images[0]
-
-                # Extract from image_url.url
-                if isinstance(first_image, dict) and "image_url" in first_image:
-                    image_url = first_image["image_url"]["url"]
-
-                    # Check if it's base64 data URL
-                    if "base64," in image_url:
-                        logger.info("Extracting base64 image from images array...")
-                        base64_data = image_url.split("base64,", 1)[1]
-                        return base64.b64decode(base64_data)
-
-                    # Check if it's HTTP URL
-                    if image_url.startswith("http"):
-                        logger.info("Downloading image from images array URL...")
-                        return self._download_image_sync(image_url)
-
-            # Strategy 1: Direct content parsing (for other models)
-            content = message.content
-
-            if isinstance(content, str):
-                # Look for base64 image data
-                if "base64," in content:
-                    # Extract base64 data after comma
-                    base64_data = content.split("base64,", 1)[1].split('"')[0]
-                    return base64.b64decode(base64_data)
-
-                # Look for image URL
-                if content.startswith("http"):
-                    logger.info("Downloading image from URL...")
-                    return self._download_image_sync(content)
-
-            # Strategy 2: Check for image data in response metadata
-            if hasattr(response, "data") and response.data:
-                for item in response.data:
-                    if hasattr(item, "b64_json"):
-                        return base64.b64decode(item.b64_json)
-                    if hasattr(item, "url"):
-                        logger.info("Downloading from data URL...")
-                        return self._download_image_sync(item.url)
-
-        except Exception as e:
-            logger.error(f"Failed to extract image: {str(e)}")
-
-        # If all strategies fail
-        raise DomainError(
-            code=ErrorCode.PROVIDER_TIMEOUT,
-            message=f"Failed to extract image from {self.model} response",
-            actionable_hint="Model might not support image generation or response format changed",
-            context={
-                "provider": "openrouter",
-                "model": self.model,
-                "response_type": type(response).__name__,
-            },
-        )
+        return self.extractor.extract_image_from_response(response)
 
     async def generate_back_cover(
         self,

@@ -268,4 +268,42 @@ main {
     main {
         margin-left: 0 !important;
     }
+}
+
+/* ========================================
+   Ebook Form Components (enhanced_ebook_form.html)
+   ======================================== */
+
+/* Button loading states - HTMX integration */
+/* Default: spinner hidden, icon visible */
+.preview-spinner,
+.create-spinner {
+    display: none;
+}
+
+.preview-icon,
+.create-icon {
+    display: inline-block;
+}
+
+/* During HTMX request: show spinner, hide icon */
+button.htmx-request .preview-spinner,
+button.htmx-request .create-spinner {
+    display: inline-block;
+}
+
+button.htmx-request .preview-icon,
+button.htmx-request .create-icon {
+    display: none;
+}
+
+/* Disable visually the button that is not loading */
+#ebookForm.htmx-request button:not(.htmx-request) {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Wait cursor on active button */
+button.htmx-request {
+    cursor: wait;
 } 
