@@ -16,7 +16,9 @@ class ModelMapping(BaseModel):
     Note: This replaces the dataclass version in model_registry.py
     """
 
-    provider: Literal["openrouter", "gemini", "local"] = Field(..., description="Image generation provider")
+    provider: Literal["openrouter", "gemini", "comfy"] = Field(
+        ..., description="Image generation provider"
+    )
     model: str = Field(
         ...,
         min_length=1,
