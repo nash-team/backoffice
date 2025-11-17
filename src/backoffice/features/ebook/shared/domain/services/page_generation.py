@@ -51,6 +51,7 @@ class ContentPageGenerationService:
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
+        workflow_params: dict[str, str] | None = None,
     ) -> bytes:
         """Generate a single content page.
 
@@ -58,6 +59,7 @@ class ContentPageGenerationService:
             prompt: Text description for the page
             spec: Image specifications (dimensions, format, color mode)
             seed: Random seed for reproducibility (auto-generated if None)
+            workflow_params: Optional workflow-specific parameters (for ComfyUI, etc.)
 
         Returns:
             Page image as bytes
@@ -81,7 +83,7 @@ class ContentPageGenerationService:
             raise RuntimeError("Content page provider is not available")
 
         # Generate page
-        page_data = await self.page_port.generate_page(prompt, spec, seed)
+        page_data = await self.page_port.generate_page(prompt, spec, seed, workflow_params)
 
         # Post-validation
         QualityValidator.validate_image(
@@ -97,6 +99,7 @@ class ContentPageGenerationService:
         prompts: list[str],
         spec: ImageSpec,
         seed: int | None = None,
+        workflow_params: dict[str, str] | None = None,
     ) -> list[bytes]:
         """Generate multiple content pages in batch.
 
@@ -105,6 +108,7 @@ class ContentPageGenerationService:
             prompts: Text descriptions for each page
             spec: Image specifications (dimensions, format, color mode)
             seed: Random seed base for reproducibility (auto-generated if None)
+            workflow_params: Optional workflow-specific parameters (for ComfyUI, etc.)
 
         Returns:
             List of page images as bytes
@@ -138,6 +142,7 @@ class ContentPageGenerationService:
                 spec=spec,
                 seed=seed + i,  # Now seed is never None
                 page_number=i + 1,
+                workflow_params=workflow_params,
             )
             for i, prompt in enumerate(prompts)
         ]
@@ -154,6 +159,7 @@ class ContentPageGenerationService:
         spec: ImageSpec,
         seed: int | None,
         page_number: int,
+        workflow_params: dict[str, str] | None = None,
     ) -> bytes:
         """Generate a single content page with concurrency control.
 
@@ -164,6 +170,7 @@ class ContentPageGenerationService:
             spec: Image specifications
             seed: Random seed
             page_number: Page number (for logging)
+            workflow_params: Optional workflow-specific parameters
 
         Returns:
             Page image as bytes
@@ -188,6 +195,7 @@ class ContentPageGenerationService:
                 prompt=prompt,
                 spec=spec,
                 seed=seed,
+                workflow_params=workflow_params,
             )
 
             # Log successful generation

@@ -3,6 +3,8 @@
 import logging
 from pathlib import Path
 
+import yaml
+
 from backoffice.features.ebook.shared.domain.entities.generation_request import (
     ColorMode,
     GenerationRequest,
@@ -63,6 +65,35 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         self.assembly_service = assembly_service
         self.theme_repository = theme_repository or ThemeRepository()
 
+    def _load_workflow_params(self, theme_id: str, template_key: str = "comfy", is_cover: bool = True) -> dict[str, str]:
+        """Load workflow_params from theme YAML.
+
+        Args:
+            theme_id: Theme identifier
+            template_key: Template key (default: "comfy")
+            is_cover: True for cover templates, False for coloring page templates
+
+        Returns:
+            Dictionary of workflow parameters
+        """
+        theme_file = self.theme_repository.themes_directory / f"{theme_id}.yml"
+        if not theme_file.exists():
+            logger.warning(f"Theme file not found: {theme_file}, returning empty workflow_params")
+            return {}
+
+        with theme_file.open("r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+
+        # Extract workflow_params from appropriate template
+        params: dict[str, str]
+        if is_cover:
+            params = data.get("cover_templates", {}).get(template_key, {}).get("workflow_params", {})
+        else:
+            params = data.get("coloring_page_templates", {}).get(template_key, {}).get("workflow_params", {})
+
+        # Ensure we return dict[str, str] not Any
+        return params if isinstance(params, dict) else {}
+
     async def generate(self, request: GenerationRequest) -> GenerationResult:
         """Generate a coloring book.
 
@@ -85,6 +116,10 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         # Log execution plan
         self._log_execution_plan(request)
 
+        # Load workflow params from theme (for ComfyUI)
+        workflow_params = self._load_workflow_params(request.theme)
+        logger.info(f"📝 Loaded workflow_params: {workflow_params}")
+
         # Step 1: Generate cover (colorful) FIRST
         logger.info("\n📋 Step 1/4: Generating cover...")
         # Cost tracking now handled via events in provider
@@ -102,6 +137,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
             prompt=cover_prompt,
             spec=cover_spec,
             seed=request.seed,
+            workflow_params=workflow_params,
         )
 
         # Step 2: Generate content pages (B&W) SECOND
@@ -116,10 +152,15 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
             color_mode=ColorMode.BLACK_WHITE,
         )
 
+        # Load coloring page workflow params
+        page_workflow_params = self._load_workflow_params(request.theme, template_key="comfy", is_cover=False)
+        logger.info(f"📝 Loaded page workflow_params: {page_workflow_params}")
+
         pages_data = await self.pages_service.generate_pages(
             prompts=page_prompts,
             spec=page_spec,
             seed=request.seed,
+            workflow_params=page_workflow_params,
         )
 
         # Step 3: Remove text from cover to create back cover with Gemini Vision
