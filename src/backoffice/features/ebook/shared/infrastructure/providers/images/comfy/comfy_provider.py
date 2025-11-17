@@ -1,17 +1,16 @@
 """Local Stable Diffusion provider (100% FREE, runs locally, no API token needed)."""
 
-import logging
-import os
-import uuid
 import json
-import urllib.request
+import logging
 import urllib.parse
+import urllib.request
+import uuid
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
 from urllib.error import URLError
-import websocket
 
+import websocket
 from PIL import Image, ImageDraw
 
 from backoffice.features.ebook.shared.domain.ports.content_page_generation_port import (
@@ -19,7 +18,7 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
 from backoffice.features.ebook.shared.domain.value_objects.usage_metrics import UsageMetrics
-from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
+from backoffice.features.shared.domain.entities.generation_request import ImageSpec
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
 logger = logging.getLogger(__name__)
@@ -36,18 +35,13 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
     # Cost: FREE (runs locally)
     COST_PER_IMAGE = Decimal("0")  # Gratuit!
 
-    def __init__(
-        self,
-        model: str | None = None,
-        comfy_url: str | None = "127.0.0.1:8188"
-    ):
+    def __init__(self, model: str | None = None, comfy_url: str | None = "127.0.0.1:8188"):
         """Initialize Local Comfy provider."""
 
         self.client_id = str(uuid.uuid4())
         self.use_cpu = False
         self.hf_token = None
         self.pipeline = None
-        self.controlnet = None
         self._model_loaded = False
         self.comfy_url = comfy_url
         self.model = model
@@ -55,43 +49,43 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
 
     def queue_prompt(self, prompt):
         p = {"prompt": prompt, "client_id": self.client_id}
-        data = json.dumps(p).encode('utf-8')
-        req =  urllib.request.Request("http://{}/prompt".format(self.comfy_url), data=data)
+        data = json.dumps(p).encode("utf-8")
+        req = urllib.request.Request(f"http://{self.comfy_url}/prompt", data=data)
         return json.loads(urllib.request.urlopen(req).read())
 
     def get_image(self, filename, subfolder, folder_type):
         data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
         url_values = urllib.parse.urlencode(data)
-        with urllib.request.urlopen("http://{}/view?{}".format(self.comfy_url, url_values)) as response:
+        with urllib.request.urlopen(f"http://{self.comfy_url}/view?{url_values}") as response:
             return response.read()
 
     def get_history(self, prompt_id):
-        with urllib.request.urlopen("http://{}/history/{}".format(self.comfy_url, prompt_id)) as response:
+        with urllib.request.urlopen(f"http://{self.comfy_url}/history/{prompt_id}") as response:
             return json.loads(response.read())
 
     def get_images(self, ws, prompt):
-        prompt_id = self.queue_prompt(prompt)['prompt_id']
+        prompt_id = self.queue_prompt(prompt)["prompt_id"]
         output_images = {}
         while True:
             out = ws.recv()
             if isinstance(out, str):
                 message = json.loads(out)
-                if message['type'] == 'executing':
-                    data = message['data']
-                    if data['node'] is None and data['prompt_id'] == prompt_id:
-                        break #Execution is done
+                if message["type"] == "executing":
+                    data = message["data"]
+                    if data["node"] is None and data["prompt_id"] == prompt_id:
+                        break  # Execution is done
             else:
-                continue #previews are binary data
+                continue  # previews are binary data
 
         history = self.get_history(prompt_id)[prompt_id]
-        for _ in history['outputs']:
-            for node_id in history['outputs']:
-                node_output = history['outputs'][node_id]
+        for _ in history["outputs"]:
+            for node_id in history["outputs"]:
+                node_output = history["outputs"][node_id]
                 images_output = []
 
-                if 'images' in node_output:
-                    for image in node_output['images']:
-                        image_data = self.get_image(image['filename'], image['subfolder'], image['type'])
+                if "images" in node_output:
+                    for image in node_output["images"]:
+                        image_data = self.get_image(image["filename"], image["subfolder"], image["type"])
                         images_output.append(image_data)
                 output_images[node_id] = images_output
 
@@ -99,12 +93,12 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
 
     def is_available(self) -> bool:
         """Check if provider is available."""
-        req =  urllib.request.Request("http://{}".format(self.comfy_url), method="GET")
+        req = urllib.request.Request(f"http://{self.comfy_url}", method="GET")
         ping: bool = False
         try:
             urllib.request.urlopen(req).read()
             ping = True
-        except URLError as e:
+        except URLError:
             pass
 
         return ping
@@ -126,27 +120,17 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
             if config_dir.exists() and (config_dir / "generation").exists():
                 config_path = config_dir / "generation" / "comfy" / f"{self.model}"
 
-                with open(config_path, "r", encoding="utf-8") as f:
+                with open(config_path, encoding="utf-8") as f:
                     workflow_data = f.read()
 
                 self.workflow = json.loads(workflow_data)
                 break
             current = current.parent
         else:
-            raise FileNotFoundError(
-                f"Could not find config/generation/{self.model}.json in project tree"
-            )
+            raise FileNotFoundError(f"Could not find config/generation/{self.model}.json in project tree")
 
     def _load_workflow(self, spec: ImageSpec, cover: bool):
-        color = spec.color_mode
-
         self._retrieve_workflow(cover)
-
-        if cover:
-            workflow_file = self.model
-            pass
-        else:
-            pass
 
     async def generate_cover(
         self,
@@ -178,51 +162,19 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
         self._load_workflow(spec, True)
         self.workflow["31"]["inputs"]["seed"] = seed
 
-        # Build prompt based on color mode
-        # if spec.color_mode == ColorMode.BLACK_WHITE:
-        #     # B&W coloring page style
-        #     # Add ColoringBook LoRA trigger tags if using ColoringBook.Redmond
-        #     lora_prefix = ""
-        #     if self.lora_id and "ColoringBook" in self.lora_id:
-        #         lora_prefix = "ColoringBookAF, Coloring Book, "
-        #         logger.info("🎨 Using ColoringBook LoRA trigger tags")
-        #
-        #     # Clean prompt: remove redundant text from PromptTemplateEngine to save tokens
-        #     clean_prompt = prompt.replace("Line art coloring page of a ", "")
-        #     clean_prompt = clean_prompt.split("Bold clean outlines")[
-        #         0
-        #     ].strip()  # Remove quality_settings
-        #
-        #     full_prompt = (
-        #         f"{lora_prefix}"
-        #         f"cute simple cartoon style for young kids, "
-        #         f"{clean_prompt}, "
-        #         f"thick outlines, simple shapes"
-        #     )
-        # else:
-        #     # Colorful cover style
-        #     full_prompt = (
-        #         f"Create a vibrant, colorful cover illustration perfect for a children's book. "
-        #         f"IMPORTANT: The illustration must fill the ENTIRE frame edge-to-edge "
-        #         f"with NO white margins or borders. "
-        #         f"Full-bleed design - the main subject should extend to all edges of the image. "
-        #         f"Rich colors, engaging composition. "
-        #         f"Content: {prompt}"
-        #     )
-
-        # logger.info(f"Generating cover via Comfy UI workflow: {full_prompt[:100]}...")
-
         try:
             ws = websocket.WebSocket()
-            ws.connect("ws://{}/ws?clientId={}".format(self.comfy_url, self.client_id))
+            ws.connect(f"ws://{self.comfy_url}/ws?clientId={self.client_id}")
             images = self.get_images(ws, self.workflow)
 
             result_bytes = None
 
             for node_id in images:
                 for image_data in images[node_id]:
-                    from PIL import Image
                     import io
+
+                    from PIL import Image
+
                     # buffer = BytesIO()
                     result_bytes = image_data
                     # save image
@@ -282,51 +234,19 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
         self._load_workflow(spec, False)
         self.workflow["31"]["inputs"]["seed"] = seed
 
-        # Build prompt based on color mode
-        # if spec.color_mode == ColorMode.BLACK_WHITE:
-        #     # B&W coloring page style
-        #     # Add ColoringBook LoRA trigger tags if using ColoringBook.Redmond
-        #     lora_prefix = ""
-        #     if self.lora_id and "ColoringBook" in self.lora_id:
-        #         lora_prefix = "ColoringBookAF, Coloring Book, "
-        #         logger.info("🎨 Using ColoringBook LoRA trigger tags")
-        #
-        #     # Clean prompt: remove redundant text from PromptTemplateEngine to save tokens
-        #     clean_prompt = prompt.replace("Line art coloring page of a ", "")
-        #     clean_prompt = clean_prompt.split("Bold clean outlines")[
-        #         0
-        #     ].strip()  # Remove quality_settings
-        #
-        #     full_prompt = (
-        #         f"{lora_prefix}"
-        #         f"cute simple cartoon style for young kids, "
-        #         f"{clean_prompt}, "
-        #         f"thick outlines, simple shapes"
-        #     )
-        # else:
-        #     # Colorful cover style
-        #     full_prompt = (
-        #         f"Create a vibrant, colorful cover illustration perfect for a children's book. "
-        #         f"IMPORTANT: The illustration must fill the ENTIRE frame edge-to-edge "
-        #         f"with NO white margins or borders. "
-        #         f"Full-bleed design - the main subject should extend to all edges of the image. "
-        #         f"Rich colors, engaging composition. "
-        #         f"Content: {prompt}"
-        #     )
-
-        # logger.info(f"Generating cover via Comfy UI workflow: {full_prompt[:100]}...")
-
         try:
             ws = websocket.WebSocket()
-            ws.connect("ws://{}/ws?clientId={}".format(self.comfy_url, self.client_id))
+            ws.connect(f"ws://{self.comfy_url}/ws?clientId={self.client_id}")
             images = self.get_images(ws, self.workflow)
 
             result_bytes = None
 
             for node_id in images:
                 for image_data in images[node_id]:
-                    from PIL import Image
                     import io
+
+                    from PIL import Image
+
                     # buffer = BytesIO()
                     result_bytes = image_data
                     # save image
@@ -357,11 +277,11 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
             ) from e
 
     async def remove_text_from_cover(
-            self,
-            cover_bytes: bytes,
-            barcode_width_inches: float = 2.0,
-            barcode_height_inches: float = 1.5,
-            barcode_margin_inches: float = 0.25,
+        self,
+        cover_bytes: bytes,
+        barcode_width_inches: float = 2.0,
+        barcode_height_inches: float = 1.5,
+        barcode_margin_inches: float = 0.25,
     ) -> bytes:
         """Remove text from cover to create back cover.
 
@@ -450,46 +370,6 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
         bordered_img.save(buffer, format="PNG")
         return buffer.getvalue()
 
-    def _preprocess_for_controlnet(self, spec: ImageSpec) -> Image.Image | None:
-        """Preprocess image for ControlNet Canny edge detection.
-
-        Creates a white canvas with edge map that ControlNet will use
-        as guidance for generating clean line art.
-
-        Args:
-            spec: Image specifications (dimensions)
-
-        Returns:
-            PIL Image for ControlNet control_image, or None if no ControlNet
-        """
-        if not self.controlnet_id:
-            return None
-
-        logger.info("🎨 Preprocessing for ControlNet Canny...")
-
-        try:
-            from controlnet_aux import CannyDetector
-
-            # Create simple white canvas (ControlNet will guide the generation)
-            # For text2img with ControlNet, we create a blank canvas
-            # The model will use this as structure guidance
-            control_image = Image.new("RGB", (spec.width_px, spec.height_px), (255, 255, 255))
-
-            # Initialize Canny edge detector
-            processor = CannyDetector()
-
-            # Process image to extract edge structure
-            # For blank canvas, this creates a minimal edge map
-            processed_image = processor(control_image, low_threshold=50, high_threshold=100)
-
-            logger.info("✅ ControlNet preprocessing complete")
-            # processor returns PIL Image, just ensure type safety
-            return processed_image if isinstance(processed_image, Image.Image) else None
-
-        except Exception as e:
-            logger.warning(f"⚠️  ControlNet preprocessing failed: {str(e)}, continuing without it")
-            return None
-
     def _create_usage_metrics(self, model: str, num_images: int = 1) -> UsageMetrics:
         """Create usage metrics for Local SD response.
 
@@ -504,11 +384,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
         """
         total_cost = self.COST_PER_IMAGE * num_images
 
-        logger.info(
-            f"📊 Local SD usage (FREE) - {model} | "
-            f"Images: {num_images} | "
-            f"Cost: ${total_cost:.6f} 🎉"
-        )
+        logger.info(f"📊 Local SD usage (FREE) - {model} | " f"Images: {num_images} | " f"Cost: ${total_cost:.6f} 🎉")
 
         return UsageMetrics(
             model=model,

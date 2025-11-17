@@ -24,24 +24,18 @@ class ProviderFactory:
     V1 simplification:
     - Direct provider instantiation (no complex routing)
     - Uses ModelRegistry to determine which provider to use
-    - Caches provider instances to avoid reloading heavy models (Local SD)
-    - Cache key includes LoRA ID to support multiple configurations
+    - Caches provider instances for performance
     """
 
-    # Cache for provider instances (dict with composite key: provider+model+lora)
+    # Cache for provider instances (dict with key: provider+model)
     _cover_provider_cache: dict[str, CoverGenerationPort] = {}
     _page_provider_cache: dict[str, ContentPageGenerationPort] = {}
     _assembly_provider_cache: AssemblyPort | None = None
 
     @staticmethod
-    def _make_cache_key(provider: str, model: str, lora: str | None = None, controlnet: str | None = None) -> str:
-        """Create cache key from provider, model, and optional LoRA/ControlNet."""
-        parts = [provider, model]
-        if lora:
-            parts.append(f"lora:{lora}")
-        if controlnet:
-            parts.append(f"cn:{controlnet}")
-        return ":".join(parts)
+    def _make_cache_key(provider: str, model: str) -> str:
+        """Create cache key from provider and model."""
+        return f"{provider}:{model}"
 
     @staticmethod
     def clear_cache():
@@ -55,8 +49,7 @@ class ProviderFactory:
     def create_cover_provider() -> CoverGenerationPort:
         """Create cover generation provider (real or fake).
 
-        Uses caching to avoid reloading heavy models (e.g., Local SD).
-        Cache key includes LoRA to support multiple model configurations.
+        Uses caching for performance.
 
         Returns:
             CoverGenerationPort implementation (cached instance)
@@ -68,12 +61,10 @@ class ProviderFactory:
         registry = ModelRegistry.get_instance()
         model_mapping = registry.get_cover_model()
 
-        # Create cache key (includes LoRA and ControlNet if present)
+        # Create cache key
         cache_key = ProviderFactory._make_cache_key(
             model_mapping.provider,
             model_mapping.model,
-            lora=model_mapping.lora,
-            controlnet=model_mapping.controlnet,
         )
 
         # Return cached instance if available
@@ -82,12 +73,7 @@ class ProviderFactory:
             return ProviderFactory._cover_provider_cache[cache_key]
 
         # Create new instance
-        extras = []
-        if model_mapping.lora:
-            extras.append(f"LoRA: {model_mapping.lora}")
-        if model_mapping.controlnet:
-            extras.append(f"ControlNet: {model_mapping.controlnet}")
-        logger.info(f"Creating cover provider: {model_mapping.provider} / {model_mapping.model}" + (f" + {', '.join(extras)}" if extras else ""))
+        logger.info(f"Creating cover provider: {model_mapping.provider} / {model_mapping.model}")
 
         provider: CoverGenerationPort
         if model_mapping.provider == "openrouter":
@@ -102,9 +88,7 @@ class ProviderFactory:
 
             ComfyProvider = comfy_provider.ComfyProvider
 
-            provider = ComfyProvider(
-                model=model_mapping.model
-            )
+            provider = ComfyProvider(model=model_mapping.model)
 
         elif model_mapping.provider == "gemini":
             from backoffice.features.ebook.shared.infrastructure.providers.images.gemini import (
@@ -118,7 +102,7 @@ class ProviderFactory:
         else:
             raise ValueError(f"Unknown cover provider: {model_mapping.provider}. " f"Supported: openrouter, gemini")
 
-        # Cache and return (use composite key with LoRA)
+        # Cache and return
         ProviderFactory._cover_provider_cache[cache_key] = provider
         return provider
 
@@ -126,8 +110,7 @@ class ProviderFactory:
     def create_content_page_provider() -> ContentPageGenerationPort:
         """Create content page generation provider (real or fake).
 
-        Uses caching to avoid reloading heavy models (e.g., Local SD).
-        Cache key includes LoRA to support multiple model configurations.
+        Uses caching for performance.
 
         Returns:
             ContentPageGenerationPort implementation (cached instance)
@@ -139,12 +122,10 @@ class ProviderFactory:
         registry = ModelRegistry.get_instance()
         model_mapping = registry.get_page_model()
 
-        # Create cache key (includes LoRA and ControlNet if present)
+        # Create cache key
         cache_key = ProviderFactory._make_cache_key(
             model_mapping.provider,
             model_mapping.model,
-            lora=model_mapping.lora,
-            controlnet=model_mapping.controlnet,
         )
 
         # Return cached instance if available
@@ -153,12 +134,7 @@ class ProviderFactory:
             return ProviderFactory._page_provider_cache[cache_key]
 
         # Create new instance
-        extras = []
-        if model_mapping.lora:
-            extras.append(f"LoRA: {model_mapping.lora}")
-        if model_mapping.controlnet:
-            extras.append(f"ControlNet: {model_mapping.controlnet}")
-        logger.info(f"Creating content page provider: {model_mapping.provider} / {model_mapping.model}" + (f" + {', '.join(extras)}" if extras else ""))
+        logger.info(f"Creating content page provider: {model_mapping.provider} / {model_mapping.model}")
 
         provider: ContentPageGenerationPort
         if model_mapping.provider == "openrouter":
@@ -173,9 +149,7 @@ class ProviderFactory:
 
             ComfyProvider = comfy_provider.ComfyProvider
 
-            provider = ComfyProvider(
-                model=model_mapping.model  # Pass ControlNet if specified
-            )
+            provider = ComfyProvider(model=model_mapping.model)
 
         elif model_mapping.provider == "gemini":
             from backoffice.features.ebook.shared.infrastructure.providers.images.gemini import (
@@ -189,7 +163,7 @@ class ProviderFactory:
         else:
             raise ValueError(f"Unknown content page provider: {model_mapping.provider}. " f"Supported: openrouter, gemini")
 
-        # Cache and return (use composite key with LoRA)
+        # Cache and return
         ProviderFactory._page_provider_cache[cache_key] = provider
         return provider
 

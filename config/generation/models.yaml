@@ -18,8 +18,8 @@ models:
   # Current: Gemini 2.5 Flash via OpenRouter ($0.04/image)
 
   cover:
-    #provider: openrouter
-    #model: google/gemini-2.5-flash-image-preview
+    provider: openrouter
+    model: google/gemini-2.5-flash-image-preview
 
     # Alternative Options:
     # ---------------------
@@ -33,8 +33,8 @@ models:
     #model: black-forest-labs/flux-schnell
 
     # Option 3: Comfy (FREE, best quality, 17GB disk, 32GB RAM)
-    provider: comfy
-    model: cover-page-workflow.json
+    #provider: comfy
+    #model: cover-page-workflow.json
 
   # ========================================
   # CONTENT PAGE GENERATION (Coloring Pages)
@@ -44,8 +44,8 @@ models:
   # Current: Gemini Direct (professional line art quality)
 
   coloring_page:
-    #provider: gemini
-    #model: gemini-2.5-flash-image
+    provider: gemini
+    model: gemini-2.5-flash-image
 
     # Alternative Options:
     # ---------------------
@@ -55,8 +55,8 @@ models:
     #model: google/gemini-2.5-flash-image-preview
     
     # Option 2: Comfy (FREE, best quality, 17GB disk, 32GB RAM)
-    provider: comfy
-    model: coloring-page-workflow.json
+    #provider: comfy
+    #model: coloring-page-workflow.json
 
 
 # ========================================
