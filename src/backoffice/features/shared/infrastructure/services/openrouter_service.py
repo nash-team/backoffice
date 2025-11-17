@@ -34,6 +34,42 @@ class OpenRouterService:
             )
             logger.info(f"OpenRouterService initialized with model: {self.model}")
 
+    def _handle_openrouter_error(self, error: Exception, operation: str) -> None:
+        """Handle OpenRouter API errors with specific error codes.
+
+        Args:
+            error: The exception that occurred
+            operation: Description of the operation that failed (for error messages)
+
+        Raises:
+            ValueError: With user-friendly error message based on error type
+        """
+        logger.error(f"Error during {operation} with OpenRouter: {str(error)}")
+        error_msg = str(error)
+
+        # Check for specific OpenRouter error codes
+        if (
+            "402" in error_msg
+            or "insufficient" in error_msg.lower()
+            or "credits" in error_msg.lower()
+        ):
+            raise ValueError(
+                "Crédits insuffisants sur votre compte OpenRouter. "
+                "Veuillez ajouter des crédits sur https://openrouter.ai/settings/credits"
+            ) from error
+        elif "401" in error_msg or "unauthorized" in error_msg.lower():
+            raise ValueError(
+                "Clé API invalide. Veuillez vérifier votre LLM_API_KEY dans le fichier .env"
+            ) from error
+        elif "429" in error_msg or "rate limit" in error_msg.lower():
+            raise ValueError(
+                "Limite de requêtes atteinte. Veuillez réessayer dans quelques instants."
+            ) from error
+        else:
+            raise ValueError(
+                f"Erreur lors de la génération du contenu avec {self.model}: {error_msg}"
+            ) from error
+
     async def generate_ebook_json(
         self, prompt: str, config: EbookConfig | None = None, theme_name: str | None = None
     ) -> dict[str, str]:
@@ -179,30 +215,8 @@ Réponds UNIQUEMENT avec le JSON structuré."""
             # Re-raise validation errors as-is
             raise
         except Exception as e:
-            logger.error(f"Error generating JSON with OpenRouter: {str(e)}")
-            # Check for specific OpenRouter errors
-            error_msg = str(e)
-            if (
-                "402" in error_msg
-                or "insufficient" in error_msg.lower()
-                or "credits" in error_msg.lower()
-            ):
-                raise ValueError(
-                    "Crédits insuffisants sur votre compte OpenRouter. "
-                    "Veuillez ajouter des crédits sur https://openrouter.ai/settings/credits"
-                ) from e
-            elif "401" in error_msg or "unauthorized" in error_msg.lower():
-                raise ValueError(
-                    "Clé API invalide. Veuillez vérifier votre LLM_API_KEY dans le fichier .env"
-                ) from e
-            elif "429" in error_msg or "rate limit" in error_msg.lower():
-                raise ValueError(
-                    "Limite de requêtes atteinte. Veuillez réessayer dans quelques instants."
-                ) from e
-            else:
-                raise ValueError(
-                    f"Erreur lors de la génération du contenu avec {self.model}: {error_msg}"
-                ) from e
+            self._handle_openrouter_error(e, "JSON generation")
+            raise  # For type checker (error handler always raises)
 
     async def generate_ebook_content(self, prompt: str) -> dict[str, str]:
         """Generate ebook content from prompt using OpenRouter"""
@@ -275,27 +289,5 @@ Assure-toi que le contenu soit substantiel (au moins 2000 mots) et éducatif."""
             # Re-raise validation errors as-is
             raise
         except Exception as e:
-            logger.error(f"Error generating content with OpenRouter: {str(e)}")
-            # Check for specific OpenRouter errors
-            error_msg = str(e)
-            if (
-                "402" in error_msg
-                or "insufficient" in error_msg.lower()
-                or "credits" in error_msg.lower()
-            ):
-                raise ValueError(
-                    "Crédits insuffisants sur votre compte OpenRouter. "
-                    "Veuillez ajouter des crédits sur https://openrouter.ai/settings/credits"
-                ) from e
-            elif "401" in error_msg or "unauthorized" in error_msg.lower():
-                raise ValueError(
-                    "Clé API invalide. Veuillez vérifier votre LLM_API_KEY dans le fichier .env"
-                ) from e
-            elif "429" in error_msg or "rate limit" in error_msg.lower():
-                raise ValueError(
-                    "Limite de requêtes atteinte. Veuillez réessayer dans quelques instants."
-                ) from e
-            else:
-                raise ValueError(
-                    f"Erreur lors de la génération du contenu avec {self.model}: {error_msg}"
-                ) from e
+            self._handle_openrouter_error(e, "content generation")
+            raise  # For type checker (error handler always raises)

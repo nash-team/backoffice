@@ -106,19 +106,6 @@ class ProviderFactory:
                 model=model_mapping.model,
             )
 
-        elif model_mapping.provider == "local":
-            from backoffice.features.ebook.shared.infrastructure.providers.images.local_sd import (
-                local_sd_provider,
-            )
-
-            LocalStableDiffusionProvider = local_sd_provider.LocalStableDiffusionProvider
-
-            provider = LocalStableDiffusionProvider(
-                model=model_mapping.model,
-                lora_id=model_mapping.lora,  # Pass LoRA if specified
-                controlnet_id=model_mapping.controlnet,  # Pass ControlNet if specified
-            )
-
         elif model_mapping.provider == "gemini":
             from backoffice.features.ebook.shared.infrastructure.providers.images.gemini import (
                 gemini_image_provider,
@@ -131,7 +118,7 @@ class ProviderFactory:
         else:
             raise ValueError(
                 f"Unknown cover provider: {model_mapping.provider}. "
-                f"Supported: openrouter, local, gemini"
+                f"Supported: openrouter, gemini"
             )
 
         # Cache and return (use composite key with LoRA)
@@ -191,19 +178,6 @@ class ProviderFactory:
                 model=model_mapping.model,
             )
 
-        elif model_mapping.provider == "local":
-            from backoffice.features.ebook.shared.infrastructure.providers.images.local_sd import (
-                local_sd_provider,
-            )
-
-            LocalStableDiffusionProvider = local_sd_provider.LocalStableDiffusionProvider
-
-            provider = LocalStableDiffusionProvider(
-                model=model_mapping.model,
-                lora_id=model_mapping.lora,  # Pass LoRA if specified
-                controlnet_id=model_mapping.controlnet,  # Pass ControlNet if specified
-            )
-
         elif model_mapping.provider == "gemini":
             from backoffice.features.ebook.shared.infrastructure.providers.images.gemini import (
                 gemini_image_provider,
@@ -216,7 +190,7 @@ class ProviderFactory:
         else:
             raise ValueError(
                 f"Unknown content page provider: {model_mapping.provider}. "
-                f"Supported: openrouter, local, gemini"
+                f"Supported: openrouter, gemini"
             )
 
         # Cache and return (use composite key with LoRA)

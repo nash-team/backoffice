@@ -2,19 +2,19 @@
 
 import base64
 import logging
-from pathlib import Path
 
 from backoffice.features.ebook.regeneration.domain.events.content_page_regenerated_event import (
     ContentPageRegeneratedEvent,
 )
+from backoffice.features.ebook.regeneration.domain.services.regeneration_service import (
+    RegenerationService,
+)
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
-from backoffice.features.ebook.shared.domain.ports.file_storage_port import FileStoragePort
 from backoffice.features.ebook.shared.domain.services.page_generation import (
     ContentPageGenerationService,
 )
-from backoffice.features.ebook.shared.domain.services.pdf_assembly import PDFAssemblyService
 from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
@@ -35,8 +35,7 @@ class RegenerateContentPageUseCase:
         self,
         ebook_repository: EbookPort,
         page_service: ContentPageGenerationService,
-        assembly_service: PDFAssemblyService,
-        file_storage: FileStoragePort,
+        regeneration_service: RegenerationService,
         event_bus: EventBus,
     ):
         """Initialize regenerate content page use case.
@@ -44,14 +43,12 @@ class RegenerateContentPageUseCase:
         Args:
             ebook_repository: Repository for ebook persistence
             page_service: Service for page generation
-            assembly_service: Service for PDF assembly
-            file_storage: Service for file storage (Google Drive)
+            regeneration_service: Service for regeneration operations
             event_bus: Event bus for domain events
         """
         self.ebook_repository = ebook_repository
         self.page_service = page_service
-        self.assembly_service = assembly_service
-        self.file_storage = file_storage
+        self.regeneration_service = regeneration_service
         self.event_bus = event_bus
 
     async def execute(
@@ -125,10 +122,9 @@ class RegenerateContentPageUseCase:
 
         logger.info(f"✅ Page regenerated: {len(new_page_data)} bytes")
 
-        # Step 2: Rebuild PDF with new page
+        # Step 2: Rebuild PDF with new page using RegenerationService
+        # Build list of all pages with the new page replacing the old one
         assembled_pages = []
-
-        # Add all pages, replacing the target page
         for i, page_meta in enumerate(pages_meta):
             if i == page_index:
                 # Use new generated page
@@ -147,59 +143,18 @@ class RegenerateContentPageUseCase:
                 )
             )
 
-        # Generate PDF
-        import tempfile
-
-        pdf_path = (
-            Path(tempfile.gettempdir()) / f"ebook_{ebook_id}_page{page_index}_regenerated.pdf"
+        # Use RegenerationService to assemble PDF, save to DB, and upload to storage
+        pdf_path, preview_url = await self.regeneration_service.rebuild_and_upload_pdf(
+            ebook=ebook,
+            assembled_pages=assembled_pages,
+            ebook_repository=self.ebook_repository,
+            filename_suffix=f"page{page_index}_regenerated",
         )
 
-        # Split into cover and content pages for assembly
-        cover_page = assembled_pages[0]
-        content_pages = assembled_pages[1:]
+        # Update ebook with new preview URL
+        ebook.preview_url = preview_url
 
-        await self.assembly_service.assemble_ebook(
-            cover=cover_page,
-            pages=content_pages,
-            output_path=str(pdf_path),
-        )
-
-        logger.info(f"📄 PDF regenerated with new page {page_index}: {pdf_path}")
-
-        # Step 3: Upload to Google Drive
-        if self.file_storage.is_available():
-            try:
-                with open(pdf_path, "rb") as f:
-                    pdf_bytes = f.read()
-
-                filename = f"{ebook.title or 'coloring_book'}_page{page_index}_regenerated.pdf"
-                upload_result = await self.file_storage.upload_ebook(
-                    file_bytes=pdf_bytes,
-                    filename=filename,
-                    metadata={
-                        "title": ebook.title or "Untitled",
-                        "author": ebook.author or "Unknown",
-                        "ebook_id": str(ebook_id),
-                        "page_regenerated": str(page_index),
-                    },
-                )
-
-                # Update ebook with new Drive info
-                ebook.drive_id = upload_result.get("storage_id")
-                ebook.preview_url = upload_result.get("storage_url")
-
-                logger.info(f"✅ Uploaded to Drive: {ebook.drive_id}")
-
-            except Exception as e:
-                logger.warning(f"⚠️ Failed to upload to Drive: {e}")
-                # Continue anyway, update with local file path
-                ebook.preview_url = f"file://{pdf_path}"
-
-        else:
-            logger.warning("⚠️ Google Drive not available, using local file")
-            ebook.preview_url = f"file://{pdf_path}"
-
-        # Step 4: Update structure_json with new page
+        # Step 3: Update structure_json with new page
         updated_pages_meta = pages_meta.copy()
         updated_pages_meta[page_index] = {
             "page_number": page_index,
@@ -210,11 +165,11 @@ class RegenerateContentPageUseCase:
 
         ebook.structure_json = {"pages_meta": updated_pages_meta}
 
-        # Step 5: Save updated ebook
+        # Step 4: Save updated ebook
         updated_ebook = await self.ebook_repository.save(ebook)
         logger.info(f"✅ Ebook {ebook_id} updated with regenerated page {page_index}")
 
-        # Step 6: Emit domain event
+        # Step 5: Emit domain event
         await self.event_bus.publish(
             ContentPageRegeneratedEvent(
                 ebook_id=ebook_id,

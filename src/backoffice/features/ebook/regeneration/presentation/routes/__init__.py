@@ -6,6 +6,9 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 
 from backoffice.features.ebook.regeneration.domain.entities.page_type import PageType
+from backoffice.features.ebook.regeneration.domain.services.regeneration_service import (
+    RegenerationService,
+)
 from backoffice.features.ebook.regeneration.domain.usecases.complete_ebook_pages import (
     CompleteEbookPagesUseCase,
 )
@@ -89,9 +92,13 @@ async def regenerate_ebook_page(
         file_storage = factory.get_file_storage()
         event_bus = EventBus()
 
-        # Create services
+        # Create shared services
         assembly_provider = WeasyPrintAssemblyProvider()
         assembly_service = PDFAssemblyService(assembly_port=assembly_provider)
+        regeneration_service = RegenerationService(
+            assembly_service=assembly_service,
+            file_storage=file_storage,
+        )
 
         # Choose the appropriate use case based on page_type
         regenerate_usecase: (
@@ -106,8 +113,7 @@ async def regenerate_ebook_page(
             regenerate_usecase = RegenerateCoverUseCase(
                 ebook_repository=ebook_repo,
                 cover_service=cover_service,
-                assembly_service=assembly_service,
-                file_storage=file_storage,
+                regeneration_service=regeneration_service,
                 event_bus=event_bus,
             )
             updated_ebook = await regenerate_usecase.execute(
@@ -123,8 +129,7 @@ async def regenerate_ebook_page(
             regenerate_usecase = RegenerateBackCoverUseCase(
                 ebook_repository=ebook_repo,
                 cover_service=cover_service,
-                assembly_service=assembly_service,
-                file_storage=file_storage,
+                regeneration_service=regeneration_service,
                 event_bus=event_bus,
             )
             updated_ebook = await regenerate_usecase.execute(
@@ -139,8 +144,7 @@ async def regenerate_ebook_page(
             regenerate_usecase = RegenerateContentPageUseCase(
                 ebook_repository=ebook_repo,
                 page_service=page_service,
-                assembly_service=assembly_service,
-                file_storage=file_storage,
+                regeneration_service=regeneration_service,
                 event_bus=event_bus,
             )
 

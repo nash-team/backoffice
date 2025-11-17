@@ -56,12 +56,13 @@ def load_font_safe(font_path: str, size: int, fallback: str = "DejaVuSans.ttf") 
     """
     try:
         return ImageFont.truetype(font_path, size)
-    except Exception as e:
+    except (OSError, IOError) as e:
         logger.warning(f"⚠️ Police {font_path} non trouvée, fallback {fallback}: {e}")
         try:
             return ImageFont.truetype(fallback, size)
-        except Exception:
+        except (OSError, IOError) as e2:
             # Ultimate fallback: default PIL font
+            logger.warning(f"⚠️ Fallback {fallback} also failed: {e2}, using default PIL font")
             default_font: FreeTypeFont = ImageFont.load_default()  # type: ignore[assignment]
             return default_font
 

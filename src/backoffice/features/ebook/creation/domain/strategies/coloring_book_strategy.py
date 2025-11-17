@@ -299,40 +299,17 @@ Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
 
         return base_prompt
 
-    def _build_back_cover_prompt(self, request: GenerationRequest, front_cover_bytes: bytes) -> str:
-        """Build prompt for back cover generation (line art style) using theme YAML configuration.
+    def _build_style_guidelines_section(self, style_guide: dict, bg_hex: str) -> list[str]:
+        """Build style guidelines section for back cover prompt.
 
         Args:
-            request: Generation request
-            front_cover_bytes: Front cover for color extraction
+            style_guide: Brand identity style guidelines
+            bg_hex: Background color in hex format
 
         Returns:
-            Back cover prompt for line art generation based on theme
-            configuration and brand identity
+            List of prompt lines for style guidelines
         """
-
-        from backoffice.config import ConfigLoader
-        from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (  # noqa: E501
-            extract_dominant_color_exact,
-        )
-
-        # Load theme from YAML
-        theme_profile = self.theme_repository.get_theme_by_id(request.theme)
-
-        # Load brand identity for style guidelines
-        config = ConfigLoader()
-        identity = config.load_brand_identity()
-        style_guide = identity["style_guidelines"]
-
-        # Extract background color from front cover
-        bg_color = extract_dominant_color_exact(front_cover_bytes)
-        bg_hex = "#{:02x}{:02x}{:02x}".format(*bg_color)
-
-        # Build prompt using theme configuration + brand identity
-        theme_label = theme_profile.label
-        prompt_parts = [
-            f"Create a simple LINE ART illustration for a {theme_label} coloring book back cover.",
-            "",
+        return [
             "BRAND STYLE (line art version):",
             f"- Illustration: {style_guide['illustration']['style']} (simplified for back cover)",
             f"- Line weight: {style_guide['illustration']['line_weight']}",
@@ -355,11 +332,21 @@ Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
             "- NO bright neon",
             "- NO text, numbers, or age labels",
             "- NO filled colors inside the line art",
+        ]
+
+    def _build_theme_content_section(self, theme_profile) -> list[str]:
+        """Build theme content section for back cover prompt.
+
+        Args:
+            theme_profile: Theme profile with subject, environment, etc.
+
+        Returns:
+            List of prompt lines for theme content
+        """
+        prompt_parts = [
             "",
-            # Subject from theme (simplified for back cover)
             f"SUBJECT: Simplified version of - {theme_profile.blocks.subject}",
             "",
-            # Environment from theme
             f"ENVIRONMENT: {theme_profile.blocks.environment}",
             "",
             "MUST INCLUDE (from theme):",
@@ -369,16 +356,48 @@ Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
         for positive in theme_profile.blocks.positives[:3]:
             prompt_parts.append(f"- {positive}")
 
-        prompt_parts.extend(
-            [
-                "",
-                "MUST AVOID (from theme):",
-            ]
-        )
+        prompt_parts.extend(["", "MUST AVOID (from theme):"])
 
         # Add negatives from theme
         for negative in theme_profile.blocks.negatives:
             prompt_parts.append(f"- {negative}")
+
+        return prompt_parts
+
+    def _build_back_cover_prompt(self, request: GenerationRequest, front_cover_bytes: bytes) -> str:
+        """Build prompt for back cover generation (line art style) using theme YAML configuration.
+
+        Args:
+            request: Generation request
+            front_cover_bytes: Front cover for color extraction
+
+        Returns:
+            Back cover prompt for line art generation based on theme
+            configuration and brand identity
+        """
+        from backoffice.config import ConfigLoader
+        from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (  # noqa: E501
+            extract_dominant_color_exact,
+        )
+
+        # Load theme and style guide
+        theme_profile = self.theme_repository.get_theme_by_id(request.theme)
+        config = ConfigLoader()
+        identity = config.load_brand_identity()
+        style_guide = identity["style_guidelines"]
+
+        # Extract background color from front cover
+        bg_color = extract_dominant_color_exact(front_cover_bytes)
+        bg_hex = "#{:02x}{:02x}{:02x}".format(*bg_color)
+
+        # Build prompt sections
+        prompt_parts = [
+            f"Create a simple LINE ART illustration for a {theme_profile.label} coloring book back cover.",
+            "",
+        ]
+
+        prompt_parts.extend(self._build_style_guidelines_section(style_guide, bg_hex))
+        prompt_parts.extend(self._build_theme_content_section(theme_profile))
 
         prompt_parts.extend(
             [

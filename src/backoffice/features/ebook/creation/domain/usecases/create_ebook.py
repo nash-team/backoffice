@@ -75,7 +75,7 @@ class CreateEbookUseCase:
         ebook = Ebook(
             id=None,
             title=request.title,
-            author="Generated",  # TODO: Get from user context
+            author="AI Generated",  # Fixed author for all generated coloring books
             created_at=datetime.now(),
             status=EbookStatus.DRAFT,
             theme_id=request.theme,

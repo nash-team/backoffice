@@ -30,13 +30,6 @@ dependencies = [
   "google-auth>=2.27.0",
   "google-api-python-client>=2.118.0",
 
-  # Local image generation (Stable Diffusion)
-  "diffusers>=0.30.0",
-  "torch>=2.0.0",
-  "transformers>=4.30.0",
-  "accelerate>=0.20.0",
-  "sentencepiece>=0.2.0",  # Required for FLUX tokenizer
-  "controlnet-aux>=0.0.7",  # ControlNet preprocessors (lineart, canny, etc.)
 
   # PDF Generation & Image Processing
   "weasyprint>=61.0",
@@ -112,8 +105,6 @@ combine-as-imports = true
 "tests/**" = ["S101", "S603", "S607", "S104", "E501", "E402"]  # Allow subprocess usage, binding, long lines, late imports in root tests
 "**/tests/**" = ["S101", "E501"]  # Allow asserts and long lines in ALL test directories
 "src/backoffice/main.py" = ["S104"]  # Allow 0.0.0.0 binding when explicitly configured
-"src/backoffice/features/shared/infrastructure/adapters/potrace_vectorizer.py" = ["S603", "S607", "S314"]  # Allow subprocess calls for external tool integration and XML parsing
-"src/backoffice/features/ebook/shared/infrastructure/adapters/potrace_vectorizer.py" = ["S603", "S607", "S314"]  # Allow subprocess calls for external tool integration and XML parsing
 "src/backoffice/features/shared/infrastructure/providers/*.py" = ["S101", "F821", "E501"]  # Allow asserts, undefined names from dynamic imports, long lines in docstrings
 "src/backoffice/features/ebook/shared/infrastructure/providers/*.py" = ["S101", "F821", "E501"]  # Allow asserts for type narrowing, undefined names from dynamic imports, long lines
 "src/backoffice/migrations/**" = ["E501"]  # Allow long lines in alembic migrations (auto-generated code)

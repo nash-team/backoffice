@@ -64,14 +64,6 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         """Check if provider is available."""
         return self.client is not None
 
-    def supports_vectorization(self) -> bool:
-        """Check if provider supports SVG vectorization.
-
-        Returns:
-            False - OpenRouter generates raster images (PNG)
-        """
-        return False
-
     async def generate_cover(
         self,
         prompt: str,

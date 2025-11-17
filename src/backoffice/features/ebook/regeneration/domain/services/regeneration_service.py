@@ -65,18 +65,21 @@ class RegenerationService:
         self,
         ebook: Ebook,
         assembled_pages: list[AssembledPage],
+        ebook_repository,
         filename_suffix: str = "regenerated",
-    ) -> tuple[Path, str]:
+    ) -> tuple[Path, str | None]:
         """Rebuild PDF from assembled pages and upload to storage.
 
         This method:
         1. Assembles pages into PDF
-        2. Uploads to Google Drive (if available)
-        3. Returns PDF path and preview URL
+        2. Saves PDF bytes to database (for preview endpoint)
+        3. Uploads to file storage if available (Google Drive or local)
+        4. Returns PDF path and preview URL
 
         Args:
             ebook: Ebook being regenerated
             assembled_pages: List of assembled pages (cover first, then content)
+            ebook_repository: Repository for saving PDF bytes to database
             filename_suffix: Suffix for PDF filename (e.g., "regenerated", "page1_regenerated")
 
         Returns:
@@ -101,10 +104,18 @@ class RegenerationService:
 
         logger.info(f"✅ PDF assembled: {pdf_path}")
 
-        # Upload to storage
+        # Save PDF bytes to database (ALWAYS - for /api/ebooks/{id}/pdf endpoint)
+        with open(pdf_path, "rb") as f:
+            pdf_bytes = f.read()
+
+        await ebook_repository.save_ebook_bytes(ebook.id, pdf_bytes)
+        logger.info(f"💾 PDF bytes saved to database ({len(pdf_bytes)} bytes)")
+
+        # Upload to file storage (optional - only if available)
         preview_url = await self._upload_pdf_to_storage(
             ebook=ebook,
             pdf_path=pdf_path,
+            pdf_bytes=pdf_bytes,
             filename_suffix=filename_suffix,
         )
 
@@ -114,26 +125,25 @@ class RegenerationService:
         self,
         ebook: Ebook,
         pdf_path: Path,
+        pdf_bytes: bytes,
         filename_suffix: str,
-    ) -> str:
+    ) -> str | None:
         """Upload PDF to storage (Google Drive or local).
 
         Args:
             ebook: Ebook being uploaded
-            pdf_path: Path to PDF file
+            pdf_path: Path to PDF file (for fallback URL)
+            pdf_bytes: PDF bytes to upload
             filename_suffix: Suffix for filename
 
         Returns:
-            Preview URL (Drive URL or local file:// URL)
+            Preview URL (Drive URL or local file:// URL), or None if storage unavailable
         """
         if not self.file_storage.is_available():
-            logger.warning("⚠️ Google Drive not available, using local file")
-            return f"file://{pdf_path}"
+            logger.info("ℹ️ File storage not available, PDF stored in database only")
+            return None
 
         try:
-            with open(pdf_path, "rb") as f:
-                pdf_bytes = f.read()
-
             filename = f"{ebook.title or 'coloring_book'}_{filename_suffix}.pdf"
             upload_result = await self.file_storage.upload_ebook(
                 file_bytes=pdf_bytes,
@@ -148,15 +158,15 @@ class RegenerationService:
 
             # Update ebook with new Drive info
             ebook.drive_id = upload_result.get("storage_id")
-            preview_url = upload_result.get("storage_url", f"file://{pdf_path}")
+            preview_url = upload_result.get("storage_url")
 
-            logger.info(f"✅ Uploaded to Drive: {ebook.drive_id}")
+            logger.info(f"☁️ Uploaded to file storage: {ebook.drive_id}")
             return preview_url
 
         except Exception as e:
-            logger.warning(f"⚠️ Failed to upload to Drive: {e}")
-            # Fallback to local file
-            return f"file://{pdf_path}"
+            logger.warning(f"⚠️ Failed to upload to file storage: {e}")
+            # No fallback needed - PDF is already in database
+            return None
 
     def assemble_pages_from_structure(
         self,

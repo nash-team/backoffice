@@ -22,36 +22,6 @@ from backoffice.features.ebook.shared.domain.entities.ebook import inches_to_px
 logger = logging.getLogger(__name__)
 
 
-def remove_barcode_space_for_preview(
-    image_bytes: bytes,
-    barcode_width_inches: float = 2.0,
-    barcode_height_inches: float = 1.2,
-    barcode_margin_inches: float = 0.25,
-) -> bytes:
-    """Remove white barcode rectangle from back cover for visual preview.
-
-    This function is used to restore the original design under the barcode space
-    for KDP cover previews where we want to see the full design with the template overlay.
-
-    Note: This doesn't restore the original content - it just fills the white rectangle
-    with a neutral color or makes it transparent. The KDP template overlay will show
-    where the barcode will be positioned.
-
-    Args:
-        image_bytes: Back cover image bytes with barcode space (PNG format)
-        barcode_width_inches: Barcode width in inches (default: 2.0)
-        barcode_height_inches: Barcode height in inches (default: 1.2)
-        barcode_margin_inches: Margin from edges in inches (default: 0.25)
-
-    Returns:
-        Image bytes with barcode space removed (transparent or filled with design color)
-    """
-    # For now, just return the original image
-    # The white rectangle will stay, but the KDP template overlay will show where it should be
-    # TODO: Could implement content-aware fill or transparency if needed
-    return image_bytes
-
-
 def add_barcode_space(
     image_bytes: bytes,
     barcode_width_inches: float = 2.0,

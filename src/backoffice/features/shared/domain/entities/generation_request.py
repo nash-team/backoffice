@@ -5,10 +5,12 @@ from enum import Enum
 
 
 class EbookType(str, Enum):
-    """Type of ebook to generate."""
+    """Type of ebook to generate.
+
+    Currently only coloring books are supported.
+    """
 
     COLORING = "coloring"
-    # TODO: STORY type to be implemented in future
 
 
 class Audience(str, Enum):

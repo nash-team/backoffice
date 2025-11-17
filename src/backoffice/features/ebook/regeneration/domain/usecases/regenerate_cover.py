@@ -1,17 +1,17 @@
 """Use case for regenerating ebook cover (V1 slim)."""
 
 import logging
-from pathlib import Path
 
 from backoffice.features.ebook.regeneration.domain.events.cover_regenerated_event import (
     CoverRegeneratedEvent,
 )
+from backoffice.features.ebook.regeneration.domain.services.regeneration_service import (
+    RegenerationService,
+)
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
-from backoffice.features.ebook.shared.domain.ports.file_storage_port import FileStoragePort
 from backoffice.features.ebook.shared.domain.services.cover_generation import CoverGenerationService
-from backoffice.features.ebook.shared.domain.services.pdf_assembly import PDFAssemblyService
 from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
@@ -32,8 +32,7 @@ class RegenerateCoverUseCase:
         self,
         ebook_repository: EbookPort,
         cover_service: CoverGenerationService,
-        assembly_service: PDFAssemblyService,
-        file_storage: FileStoragePort,
+        regeneration_service: RegenerationService,
         event_bus: EventBus,
     ):
         """Initialize regenerate cover use case.
@@ -41,14 +40,12 @@ class RegenerateCoverUseCase:
         Args:
             ebook_repository: Repository for ebook persistence
             cover_service: Service for cover generation
-            assembly_service: Service for PDF assembly
-            file_storage: Service for file storage (Google Drive)
+            regeneration_service: Service for regeneration operations
             event_bus: Event bus for domain events
         """
         self.ebook_repository = ebook_repository
         self.cover_service = cover_service
-        self.assembly_service = assembly_service
-        self.file_storage = file_storage
+        self.regeneration_service = regeneration_service
         self.event_bus = event_bus
 
     async def execute(
@@ -115,30 +112,29 @@ class RegenerateCoverUseCase:
 
         logger.info(f"✅ Cover regenerated: {len(cover_data)} bytes")
 
-        # Step 3: Rebuild PDF with new cover
+        # Step 3: Rebuild PDF with new cover using RegenerationService
         # Extract pages metadata from structure_json
+        import base64
+
         pages_meta = ebook.structure_json["pages_meta"]
 
-        # Build assembled pages
-        cover_page = AssembledPage(
-            page_number=0,
-            title=ebook.title or "Cover",
-            image_data=cover_data,
-            image_format="PNG",
-        )
+        # Build assembled pages list with new cover
+        assembled_pages = [
+            AssembledPage(
+                page_number=0,
+                title=ebook.title or "Cover",
+                image_data=cover_data,
+                image_format="PNG",
+            )
+        ]
 
-        # Only include content pages (skip old cover at page_number=0)
-        content_pages = []
+        # Add content pages (skip old cover at page_number=0)
         for page_meta in pages_meta:
-            # Skip the old cover (page_number=0)
             if page_meta["page_number"] == 0:
-                continue
-
-            # Pages are stored as base64 in structure_json
-            import base64
+                continue  # Skip the old cover
 
             page_data = base64.b64decode(page_meta["image_data_base64"])
-            content_pages.append(
+            assembled_pages.append(
                 AssembledPage(
                     page_number=page_meta["page_number"],
                     title=page_meta.get("title", f"Page {page_meta['page_number']}"),
@@ -147,53 +143,18 @@ class RegenerateCoverUseCase:
                 )
             )
 
-        # Generate PDF
-        import tempfile
-
-        pdf_path = Path(tempfile.gettempdir()) / f"ebook_{ebook_id}_regenerated.pdf"
-        await self.assembly_service.assemble_ebook(
-            cover=cover_page,
-            pages=content_pages,
-            output_path=str(pdf_path),
+        # Use RegenerationService to assemble PDF, save to DB, and upload to storage
+        pdf_path, preview_url = await self.regeneration_service.rebuild_and_upload_pdf(
+            ebook=ebook,
+            assembled_pages=assembled_pages,
+            ebook_repository=self.ebook_repository,
+            filename_suffix="cover_regenerated",
         )
 
-        logger.info(f"📄 PDF regenerated: {pdf_path}")
+        # Update ebook with new preview URL
+        ebook.preview_url = preview_url
 
-        # Step 4: Upload to Google Drive
-        if self.file_storage.is_available():
-            try:
-                with open(pdf_path, "rb") as f:
-                    pdf_bytes = f.read()
-
-                filename = f"{ebook.title or 'coloring_book'}_regenerated.pdf"
-                upload_result = await self.file_storage.upload_ebook(
-                    file_bytes=pdf_bytes,
-                    filename=filename,
-                    metadata={
-                        "title": ebook.title or "Untitled",
-                        "author": ebook.author or "Unknown",
-                        "ebook_id": str(ebook_id),
-                        "regenerated": "true",
-                    },
-                )
-
-                # Update ebook with new Drive info
-                ebook.drive_id = upload_result.get("storage_id")
-                ebook.preview_url = upload_result.get("storage_url")
-
-                logger.info(f"✅ Uploaded to Drive: {ebook.drive_id}")
-
-            except Exception as e:
-                logger.warning(f"⚠️ Failed to upload to Drive: {e}")
-                # Continue anyway, update with local file path
-                ebook.preview_url = f"file://{pdf_path}"
-
-        else:
-            logger.warning("⚠️ Google Drive not available, using local file")
-            ebook.preview_url = f"file://{pdf_path}"
-
-        # Step 5: Update structure_json with new cover
-        import base64
+        # Step 4: Update structure_json with new cover
 
         # Replace old cover (page_number=0) with new cover in structure_json
         updated_pages_meta = [
@@ -211,11 +172,11 @@ class RegenerateCoverUseCase:
 
         ebook.structure_json = {"pages_meta": updated_pages_meta}
 
-        # Step 6: Save updated ebook
+        # Step 5: Save updated ebook
         updated_ebook = await self.ebook_repository.save(ebook)
         logger.info(f"✅ Ebook {ebook_id} updated with new cover")
 
-        # Step 7: Emit domain event
+        # Step 6: Emit domain event
         await self.event_bus.publish(
             CoverRegeneratedEvent(
                 ebook_id=ebook_id,

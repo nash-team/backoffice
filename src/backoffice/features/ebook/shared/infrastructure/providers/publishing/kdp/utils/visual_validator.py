@@ -223,7 +223,8 @@ def _add_measurement_annotations(img: Image.Image) -> Image.Image:
     try:
         font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 40)
         font_small = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 30)
-    except Exception:
+    except (OSError, IOError) as e:
+        logger.warning(f"Font not found, using default: {e}")
         font = ImageFont.load_default()  # type: ignore[assignment]
         font_small = font
 

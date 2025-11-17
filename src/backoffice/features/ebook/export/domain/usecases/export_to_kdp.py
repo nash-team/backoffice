@@ -1,10 +1,14 @@
 """Use case for exporting ebook to Amazon KDP format."""
 
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from backoffice.features.ebook.export.domain.events.kdp_export_generated_event import (
     KDPExportGeneratedEvent,
+)
+from backoffice.features.ebook.export.domain.protocols import (
+    ImageProviderProtocol,
+    KDPAssemblyProviderProtocol,
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import (
     Ebook,
@@ -14,14 +18,6 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
-
-if TYPE_CHECKING:
-    from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (  # noqa: E501
-        openrouter_image_provider,
-    )
-    from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (  # noqa: E501
-        cover_assembly_provider,
-    )
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +29,17 @@ class ExportToKDPUseCase:
         self,
         ebook_repository: EbookPort,
         event_bus: EventBus,
-        image_provider: "openrouter_image_provider.OpenRouterImageProvider | None" = None,
-        kdp_assembly_provider: "cover_assembly_provider.KDPAssemblyProvider | None" = None,
+        image_provider: ImageProviderProtocol | None = None,
+        kdp_assembly_provider: KDPAssemblyProviderProtocol | None = None,
     ):
+        """Initialize export to KDP use case.
+
+        Args:
+            ebook_repository: Repository for ebook persistence
+            event_bus: Event bus for publishing domain events
+            image_provider: Optional image provider (uses OpenRouter if None)
+            kdp_assembly_provider: Optional KDP assembly provider (uses default if None)
+        """
         self.ebook_repository = ebook_repository
         self.event_bus = event_bus
         self.image_provider = image_provider

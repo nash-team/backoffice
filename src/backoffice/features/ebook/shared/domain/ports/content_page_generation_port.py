@@ -34,8 +34,3 @@ class ContentPageGenerationPort(ABC):
     def is_available(self) -> bool:
         """Check if the provider is available."""
         pass
-
-    @abstractmethod
-    def supports_vectorization(self) -> bool:
-        """Check if provider supports SVG vectorization."""
-        pass

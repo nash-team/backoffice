@@ -66,9 +66,13 @@ async def test_regenerate_back_cover_success():
     # Mock the cover_port.remove_text_from_cover method
     mock_cover_service.cover_port.remove_text_from_cover.return_value = new_back_cover_bytes
 
-    mock_assembly_service = AsyncMock()
-    mock_file_storage = MagicMock()
-    mock_file_storage.is_available.return_value = False  # Skip Drive upload for test
+    # Mock RegenerationService
+    mock_regeneration_service = AsyncMock()
+    mock_regeneration_service.rebuild_and_upload_pdf.return_value = (
+        MagicMock(),  # pdf_path
+        "http://preview.url",  # preview_url
+    )
+    mock_repo.save_ebook_bytes = AsyncMock()  # Mock save_ebook_bytes method
 
     # Act
     event_bus = EventBus()
@@ -76,8 +80,7 @@ async def test_regenerate_back_cover_success():
     use_case = RegenerateBackCoverUseCase(
         ebook_repository=mock_repo,
         cover_service=mock_cover_service,
-        assembly_service=mock_assembly_service,
-        file_storage=mock_file_storage,
+        regeneration_service=mock_regeneration_service,
         event_bus=event_bus,
     )
 
@@ -125,12 +128,12 @@ async def test_regenerate_back_cover_not_pending():
     mock_repo.get_by_id.return_value = fake_ebook
 
     event_bus = EventBus()
+    mock_regeneration_service = AsyncMock()
 
     use_case = RegenerateBackCoverUseCase(
         ebook_repository=mock_repo,
         cover_service=AsyncMock(),
-        assembly_service=AsyncMock(),
-        file_storage=MagicMock(),
+        regeneration_service=mock_regeneration_service,
         event_bus=event_bus,
     )
 
@@ -157,12 +160,12 @@ async def test_regenerate_back_cover_missing_structure():
     mock_repo.get_by_id.return_value = fake_ebook
 
     event_bus = EventBus()
+    mock_regeneration_service = AsyncMock()
 
     use_case = RegenerateBackCoverUseCase(
         ebook_repository=mock_repo,
         cover_service=AsyncMock(),
-        assembly_service=AsyncMock(),
-        file_storage=MagicMock(),
+        regeneration_service=mock_regeneration_service,
         event_bus=event_bus,
     )
 

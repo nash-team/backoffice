@@ -2,17 +2,17 @@
 
 import base64
 import logging
-from pathlib import Path
 
 from backoffice.features.ebook.regeneration.domain.events.back_cover_regenerated_event import (
     BackCoverRegeneratedEvent,
 )
+from backoffice.features.ebook.regeneration.domain.services.regeneration_service import (
+    RegenerationService,
+)
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
-from backoffice.features.ebook.shared.domain.ports.file_storage_port import FileStoragePort
 from backoffice.features.ebook.shared.domain.services.cover_generation import CoverGenerationService
-from backoffice.features.ebook.shared.domain.services.pdf_assembly import PDFAssemblyService
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -31,8 +31,7 @@ class RegenerateBackCoverUseCase:
         self,
         ebook_repository: EbookPort,
         cover_service: CoverGenerationService,
-        assembly_service: PDFAssemblyService,
-        file_storage: FileStoragePort,
+        regeneration_service: RegenerationService,
         event_bus: EventBus,
     ):
         """Initialize regenerate back cover use case.
@@ -40,14 +39,12 @@ class RegenerateBackCoverUseCase:
         Args:
             ebook_repository: Repository for ebook persistence
             cover_service: Service for cover generation
-            assembly_service: Service for PDF assembly
-            file_storage: Service for file storage (Google Drive)
+            regeneration_service: Service for regeneration operations
             event_bus: Event bus for domain events
         """
         self.ebook_repository = ebook_repository
         self.cover_service = cover_service
-        self.assembly_service = assembly_service
-        self.file_storage = file_storage
+        self.regeneration_service = regeneration_service
         self.event_bus = event_bus
 
     async def execute(
@@ -115,7 +112,7 @@ class RegenerateBackCoverUseCase:
 
         logger.info(f"✅ Back cover regenerated: {len(back_cover_data)} bytes")
 
-        # Step 4: Rebuild PDF with new back cover
+        # Step 4: Rebuild PDF with new back cover using RegenerationService
         assembled_pages = []
 
         # Add all pages EXCEPT the last one (old back cover)
@@ -131,65 +128,27 @@ class RegenerateBackCoverUseCase:
             )
 
         # Add new back cover as last page
-        back_cover_page = AssembledPage(
-            page_number=len(pages_meta),
-            title="Back Cover",
-            image_data=back_cover_data,
-            image_format="PNG",
-        )
-        assembled_pages.append(back_cover_page)
-
-        # Generate PDF
-        import tempfile
-
-        pdf_path = Path(tempfile.gettempdir()) / f"ebook_{ebook_id}_back_regenerated.pdf"
-
-        # Split into cover and content pages for assembly
-        cover_page = assembled_pages[0]
-        content_pages = assembled_pages[1:]
-
-        await self.assembly_service.assemble_ebook(
-            cover=cover_page,
-            pages=content_pages,
-            output_path=str(pdf_path),
+        assembled_pages.append(
+            AssembledPage(
+                page_number=len(pages_meta),
+                title="Back Cover",
+                image_data=back_cover_data,
+                image_format="PNG",
+            )
         )
 
-        logger.info(f"📄 PDF regenerated with new back cover: {pdf_path}")
+        # Use RegenerationService to assemble PDF, save to DB, and upload to storage
+        pdf_path, preview_url = await self.regeneration_service.rebuild_and_upload_pdf(
+            ebook=ebook,
+            assembled_pages=assembled_pages,
+            ebook_repository=self.ebook_repository,
+            filename_suffix="back_cover_regenerated",
+        )
 
-        # Step 5: Upload to Google Drive
-        if self.file_storage.is_available():
-            try:
-                with open(pdf_path, "rb") as f:
-                    pdf_bytes = f.read()
+        # Update ebook with new preview URL
+        ebook.preview_url = preview_url
 
-                filename = f"{ebook.title or 'coloring_book'}_back_regenerated.pdf"
-                upload_result = await self.file_storage.upload_ebook(
-                    file_bytes=pdf_bytes,
-                    filename=filename,
-                    metadata={
-                        "title": ebook.title or "Untitled",
-                        "author": ebook.author or "Unknown",
-                        "ebook_id": str(ebook_id),
-                        "back_cover_regenerated": "true",
-                    },
-                )
-
-                # Update ebook with new Drive info
-                ebook.drive_id = upload_result.get("storage_id")
-                ebook.preview_url = upload_result.get("storage_url")
-
-                logger.info(f"✅ Uploaded to Drive: {ebook.drive_id}")
-
-            except Exception as e:
-                logger.warning(f"⚠️ Failed to upload to Drive: {e}")
-                # Continue anyway, update with local file path
-                ebook.preview_url = f"file://{pdf_path}"
-
-        else:
-            logger.warning("⚠️ Google Drive not available, using local file")
-            ebook.preview_url = f"file://{pdf_path}"
-
-        # Step 6: Update structure_json with new back cover
+        # Step 5: Update structure_json with new back cover
         # Replace last page (old back cover) with new back cover
         updated_pages_meta = pages_meta[:-1]  # Keep all except last
         updated_pages_meta.append(
@@ -203,11 +162,11 @@ class RegenerateBackCoverUseCase:
 
         ebook.structure_json = {"pages_meta": updated_pages_meta}
 
-        # Step 7: Save updated ebook
+        # Step 6: Save updated ebook
         updated_ebook = await self.ebook_repository.save(ebook)
         logger.info(f"✅ Ebook {ebook_id} updated with new back cover")
 
-        # Step 8: Emit domain event
+        # Step 7: Emit domain event
         await self.event_bus.publish(
             BackCoverRegeneratedEvent(
                 ebook_id=ebook_id,
