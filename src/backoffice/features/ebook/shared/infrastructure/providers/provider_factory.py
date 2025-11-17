@@ -97,6 +97,15 @@ class ProviderFactory:
 
             provider = orp.OpenRouterImageProvider(model=model_mapping.model)
 
+        elif model_mapping.provider == "comfy":
+            from backoffice.features.ebook.shared.infrastructure.providers.images.comfy import comfy_provider
+
+            ComfyProvider = comfy_provider.ComfyProvider
+
+            provider = ComfyProvider(
+                model=model_mapping.model
+            )
+
         elif model_mapping.provider == "gemini":
             from backoffice.features.ebook.shared.infrastructure.providers.images.gemini import (
                 gemini_image_provider,
@@ -158,6 +167,15 @@ class ProviderFactory:
             )
 
             provider = orp.OpenRouterImageProvider(model=model_mapping.model)
+
+        elif model_mapping.provider == "comfy":
+            from backoffice.features.ebook.shared.infrastructure.providers.images.comfy import comfy_provider
+
+            ComfyProvider = comfy_provider.ComfyProvider
+
+            provider = ComfyProvider(
+                model=model_mapping.model  # Pass ControlNet if specified
+            )
 
         elif model_mapping.provider == "gemini":
             from backoffice.features.ebook.shared.infrastructure.providers.images.gemini import (

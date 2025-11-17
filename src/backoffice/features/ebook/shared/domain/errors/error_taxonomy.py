@@ -13,6 +13,7 @@ class ErrorCode(Enum):
     WRONG_COLOR_MODE = "quality.wrong_color_mode"
 
     # Provider errors
+    COMFY_UNAVAILABLE = "provider.comfy_unavailable"
     MODEL_UNAVAILABLE = "provider.model_unavailable"
     PROVIDER_TIMEOUT = "provider.timeout"
     PROVIDER_RATE_LIMIT = "provider.rate_limit"

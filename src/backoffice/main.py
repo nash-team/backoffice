@@ -107,9 +107,10 @@ async def test_reset_database() -> tuple[dict[str, str], int] | dict[str, str]:
 
 
 # Register all feature routes
+# app.include_router(auth_router)  # Auth not used
+app.include_router(ebook_form_router)
 app.include_router(ebook_listing_router)
 app.include_router(ebook_creation_router)
-app.include_router(ebook_form_router)
 app.include_router(ebook_lifecycle_router)
 app.include_router(ebook_export_router)
 app.include_router(ebook_regeneration_router)

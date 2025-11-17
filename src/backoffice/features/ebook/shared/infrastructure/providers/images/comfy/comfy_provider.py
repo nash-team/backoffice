@@ -9,6 +9,8 @@ import urllib.parse
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
+from urllib.error import URLError
+import websocket
 
 from PIL import Image, ImageDraw
 
@@ -31,10 +33,6 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
     - B&W coloring pages (ColorMode.BLACK_WHITE)
     """
 
-    # Model configurations
-    FLUX_SCHNELL = "black-forest-labs/FLUX.1-schnell"
-    SDXL_TURBO = "stabilityai/sdxl-turbo"  # Faster alternative (2.5GB)
-
     # Cost: FREE (runs locally)
     COST_PER_IMAGE = Decimal("0")  # Gratuit!
 
@@ -53,20 +51,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
         self._model_loaded = False
         self.comfy_url = comfy_url
         self.model = model
-
-    def retrieve_workflow(self):
-        # Find project root by looking for config/ directory
-        current = Path(__file__).resolve()
-        while current.parent != current:
-            config_dir = current / "config"
-            if config_dir.exists() and (config_dir / "generation").exists():
-                config_path = config_dir / "generation" / f"{self.model}.json"
-                break
-            current = current.parent
-        else:
-            raise FileNotFoundError(
-                f"Could not find config/generation/{self.model}.json in project tree"
-            )
+        self.workflow = None
 
     def queue_prompt(self, prompt):
         p = {"prompt": prompt, "client_id": self.client_id}
@@ -114,8 +99,15 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
 
     def is_available(self) -> bool:
         """Check if provider is available."""
-        # TODO ping comfy url
-        return True
+        req =  urllib.request.Request("http://{}".format(self.comfy_url), method="GET")
+        ping: bool = False
+        try:
+            urllib.request.urlopen(req).read()
+            ping = True
+        except URLError as e:
+            pass
+
+        return ping
 
     def supports_vectorization(self) -> bool:
         """Check if provider supports SVG vectorization.
@@ -125,8 +117,36 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
         """
         return False
 
-    def _load_model(self):
-        pass
+    def _retrieve_workflow(self, cover: bool):
+        # Find project root by looking for config/ directory
+
+        current = Path(__file__).resolve()
+        while current.parent != current:
+            config_dir = current / "config"
+            if config_dir.exists() and (config_dir / "generation").exists():
+                config_path = config_dir / "generation" / "comfy" / f"{self.model}"
+
+                with open(config_path, "r", encoding="utf-8") as f:
+                    workflow_data = f.read()
+
+                self.workflow = json.loads(workflow_data)
+                break
+            current = current.parent
+        else:
+            raise FileNotFoundError(
+                f"Could not find config/generation/{self.model}.json in project tree"
+            )
+
+    def _load_workflow(self, spec: ImageSpec, cover: bool):
+        color = spec.color_mode
+
+        self._retrieve_workflow(cover)
+
+        if cover:
+            workflow_file = self.model
+            pass
+        else:
+            pass
 
     async def generate_cover(
         self,
@@ -151,53 +171,66 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
             raise DomainError(
                 code=ErrorCode.COMFY_UNAVAILABLE,
                 message="Comfy provider not available",
-                actionable_hint="Run comfy locally",
+                actionable_hint="Run comfy",
                 context={"provider": "comfy", "model": self.model},
             )
 
-        # Load model if not already loaded
-        self._load_model()
+        self._load_workflow(spec, True)
 
         # Build prompt based on color mode
-        if spec.color_mode == ColorMode.BLACK_WHITE:
-            # B&W coloring page style
-            # Add ColoringBook LoRA trigger tags if using ColoringBook.Redmond
-            lora_prefix = ""
-            if self.lora_id and "ColoringBook" in self.lora_id:
-                lora_prefix = "ColoringBookAF, Coloring Book, "
-                logger.info("🎨 Using ColoringBook LoRA trigger tags")
+        # if spec.color_mode == ColorMode.BLACK_WHITE:
+        #     # B&W coloring page style
+        #     # Add ColoringBook LoRA trigger tags if using ColoringBook.Redmond
+        #     lora_prefix = ""
+        #     if self.lora_id and "ColoringBook" in self.lora_id:
+        #         lora_prefix = "ColoringBookAF, Coloring Book, "
+        #         logger.info("🎨 Using ColoringBook LoRA trigger tags")
+        #
+        #     # Clean prompt: remove redundant text from PromptTemplateEngine to save tokens
+        #     clean_prompt = prompt.replace("Line art coloring page of a ", "")
+        #     clean_prompt = clean_prompt.split("Bold clean outlines")[
+        #         0
+        #     ].strip()  # Remove quality_settings
+        #
+        #     full_prompt = (
+        #         f"{lora_prefix}"
+        #         f"cute simple cartoon style for young kids, "
+        #         f"{clean_prompt}, "
+        #         f"thick outlines, simple shapes"
+        #     )
+        # else:
+        #     # Colorful cover style
+        #     full_prompt = (
+        #         f"Create a vibrant, colorful cover illustration perfect for a children's book. "
+        #         f"IMPORTANT: The illustration must fill the ENTIRE frame edge-to-edge "
+        #         f"with NO white margins or borders. "
+        #         f"Full-bleed design - the main subject should extend to all edges of the image. "
+        #         f"Rich colors, engaging composition. "
+        #         f"Content: {prompt}"
+        #     )
 
-            # Clean prompt: remove redundant text from PromptTemplateEngine to save tokens
-            clean_prompt = prompt.replace("Line art coloring page of a ", "")
-            clean_prompt = clean_prompt.split("Bold clean outlines")[
-                0
-            ].strip()  # Remove quality_settings
-
-            full_prompt = (
-                f"{lora_prefix}"
-                f"cute simple cartoon style for young kids, "
-                f"{clean_prompt}, "
-                f"thick outlines, simple shapes"
-            )
-        else:
-            # Colorful cover style
-            full_prompt = (
-                f"Create a vibrant, colorful cover illustration perfect for a children's book. "
-                f"IMPORTANT: The illustration must fill the ENTIRE frame edge-to-edge "
-                f"with NO white margins or borders. "
-                f"Full-bleed design - the main subject should extend to all edges of the image. "
-                f"Rich colors, engaging composition. "
-                f"Content: {prompt}"
-            )
-
-        logger.info(f"Generating cover via Local SD: {full_prompt[:100]}...")
+        # logger.info(f"Generating cover via Comfy UI workflow: {full_prompt[:100]}...")
 
         try:
-            pass
+            ws = websocket.WebSocket()
+            ws.connect("ws://{}/ws?clientId={}".format(self.comfy_url, self.client_id))
+            images = self.get_images(ws, self.workflow)
+
+            result_bytes = None
+
+            for node_id in images:
+                for image_data in images[node_id]:
+                    from PIL import Image
+                    import io
+                    # buffer = BytesIO()
+                    result_bytes = image_data
+                    # save image
+                    image = Image.open(io.BytesIO(image_data))
+                    image.save(f"/tmp/test-{node_id}-{seed}.png")
+
             # pil_image = result.images[0]
 
             # Convert to bytes
-            # buffer = BytesIO()
             # pil_image.save(buffer, format="PNG")
             # result_bytes = buffer.getvalue()
             #
@@ -207,7 +240,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
             #     result_bytes = self._add_rounded_border_to_image(result_bytes)
             #
             # logger.info(f"✅ Generated cover (LOCAL): {len(result_bytes)} bytes")
-            # return result_bytes
+            return result_bytes
 
         except Exception as e:
             logger.error(f"❌ Local SD generation failed: {str(e)}")
@@ -237,66 +270,120 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
         Raises:
             DomainError: If generation fails
         """
-        return await self.generate_cover(prompt, spec, seed)
+        if not self.is_available():
+            raise DomainError(
+                code=ErrorCode.COMFY_UNAVAILABLE,
+                message="Comfy provider not available",
+                actionable_hint="Run comfy",
+                context={"provider": "comfy", "model": self.model},
+            )
+
+        self._load_workflow(spec, False)
+
+        # Build prompt based on color mode
+        # if spec.color_mode == ColorMode.BLACK_WHITE:
+        #     # B&W coloring page style
+        #     # Add ColoringBook LoRA trigger tags if using ColoringBook.Redmond
+        #     lora_prefix = ""
+        #     if self.lora_id and "ColoringBook" in self.lora_id:
+        #         lora_prefix = "ColoringBookAF, Coloring Book, "
+        #         logger.info("🎨 Using ColoringBook LoRA trigger tags")
+        #
+        #     # Clean prompt: remove redundant text from PromptTemplateEngine to save tokens
+        #     clean_prompt = prompt.replace("Line art coloring page of a ", "")
+        #     clean_prompt = clean_prompt.split("Bold clean outlines")[
+        #         0
+        #     ].strip()  # Remove quality_settings
+        #
+        #     full_prompt = (
+        #         f"{lora_prefix}"
+        #         f"cute simple cartoon style for young kids, "
+        #         f"{clean_prompt}, "
+        #         f"thick outlines, simple shapes"
+        #     )
+        # else:
+        #     # Colorful cover style
+        #     full_prompt = (
+        #         f"Create a vibrant, colorful cover illustration perfect for a children's book. "
+        #         f"IMPORTANT: The illustration must fill the ENTIRE frame edge-to-edge "
+        #         f"with NO white margins or borders. "
+        #         f"Full-bleed design - the main subject should extend to all edges of the image. "
+        #         f"Rich colors, engaging composition. "
+        #         f"Content: {prompt}"
+        #     )
+
+        # logger.info(f"Generating cover via Comfy UI workflow: {full_prompt[:100]}...")
+
+        try:
+            ws = websocket.WebSocket()
+            ws.connect("ws://{}/ws?clientId={}".format(self.comfy_url, self.client_id))
+            images = self.get_images(ws, self.workflow)
+
+            result_bytes = None
+
+            for node_id in images:
+                for image_data in images[node_id]:
+                    from PIL import Image
+                    import io
+                    # buffer = BytesIO()
+                    result_bytes = image_data
+                    # save image
+                    image = Image.open(io.BytesIO(image_data))
+                    image.save(f"/tmp/test-{node_id}-{seed}.png")
+
+            # pil_image = result.images[0]
+
+            # Convert to bytes
+            # pil_image.save(buffer, format="PNG")
+            # result_bytes = buffer.getvalue()
+            #
+            # # Add rounded border for B&W coloring pages
+            # if spec.color_mode == ColorMode.BLACK_WHITE:
+            #     logger.info("Adding rounded black border to coloring page...")
+            #     result_bytes = self._add_rounded_border_to_image(result_bytes)
+            #
+            # logger.info(f"✅ Generated cover (LOCAL): {len(result_bytes)} bytes")
+            return result_bytes
+
+        except Exception as e:
+            logger.error(f"❌ Local SD generation failed: {str(e)}")
+            raise DomainError(
+                code=ErrorCode.PROVIDER_TIMEOUT,
+                message=f"Local SD generation failed: {str(e)}",
+                actionable_hint="Check system resources (RAM/GPU memory) and model availability",
+                context={"provider": "local_sd", "model": self.model, "error": str(e)},
+            ) from e
 
     async def remove_text_from_cover(
-        self,
-        cover_bytes: bytes,
+            self,
+            cover_bytes: bytes,
+            barcode_width_inches: float = 2.0,
+            barcode_height_inches: float = 1.5,
+            barcode_margin_inches: float = 0.25,
     ) -> bytes:
         """Remove text from cover to create back cover.
 
-        Note: Local SD doesn't have a text removal model yet.
-        We'll use a simple PIL-based solution (add barcode space).
+        For Gemini, we just return the cover without text.
+        The barcode space will be added later during KDP export assembly, not here.
 
         Args:
             cover_bytes: Original cover image (with text)
+            barcode_width_inches: Unused (kept for interface compatibility)
+            barcode_height_inches: Unused (kept for interface compatibility)
+            barcode_margin_inches: Unused (kept for interface compatibility)
 
         Returns:
-            Same image with barcode space (for back cover)
+            Same image without text (barcode space will be added during KDP export)
 
         Raises:
             DomainError: If transformation fails
         """
-        logger.info("🗑️  Removing text from cover (Local SD: PIL-based fallback)...")
+        logger.info("🗑️  Removing text from cover (Gemini: returning cover as-is)...")
 
-        try:
-            # Add barcode space programmatically with PIL
-            logger.info("📦 Adding barcode space with PIL...")
-            img = Image.open(BytesIO(cover_bytes))
-            from PIL import ImageDraw
-
-            draw = ImageDraw.Draw(img)
-
-            w, h = img.size
-            rect_w = int(w * 0.15)  # 15% width
-            rect_h = int(w * 0.08)  # 8% height
-            margin = int(w * 0.02)  # 2% margin
-
-            # Bottom-right white rectangle
-            x1 = w - rect_w - margin
-            y1 = h - rect_h - margin
-            x2 = w - margin
-            y2 = h - margin
-
-            draw.rectangle((x1, y1, x2, y2), fill=(255, 255, 255))
-
-            # Convert back to bytes
-            output_buffer = BytesIO()
-            img.save(output_buffer, format="PNG")
-            final_bytes = output_buffer.getvalue()
-            # (this is a simple PIL operation, not an AI generation)
-
-            logger.info(f"✅ Barcode space added (LOCAL): {len(final_bytes)} bytes")
-            return final_bytes
-
-        except Exception as e:
-            logger.error(f"❌ Local SD text removal failed: {str(e)}")
-            raise DomainError(
-                code=ErrorCode.PROVIDER_TIMEOUT,
-                message=f"Local SD text removal failed: {str(e)}",
-                actionable_hint="Check image format",
-                context={"provider": "local_sd", "error": str(e)},
-            ) from e
+        # Just return the cover - barcode space will be added during KDP export
+        # not during back cover generation
+        logger.info(f"✅ Back cover ready (no barcode space): {len(cover_bytes)} bytes")
+        return cover_bytes
 
     def _add_rounded_border_to_image(
         self,

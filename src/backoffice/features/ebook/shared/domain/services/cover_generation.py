@@ -76,8 +76,8 @@ class CoverGenerationService:
 
         # Check provider availability
         if not self.cover_port.is_available():
-            logger.error("❌ Cover provider not available")
-            raise RuntimeError("Cover provider is not available")
+            logger.error("❌ Comfy Cover provider not available")
+            raise RuntimeError("Comfy Cover provider is not available")
 
         # Generate cover
         logger.info(f"Calling cover provider with seed={seed}, prompt: {prompt[:100]}...")
