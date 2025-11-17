@@ -300,9 +300,12 @@
                                                         class="btn btn-warning btn-sm w-100"
                                                         hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
                                                         hx-ext="json-enc"
-                                                        hx-include="[name='pages']:checked"
                                                         hx-indicator="#regenerateSelectedSpinner"
                                                         hx-disabled-elt="this"
+                                                        hx-vals='js:{
+                                                            page_type: "content_page",
+                                                            page_indices: Array.from(document.querySelectorAll(".page-checkbox:checked")).map(c => parseInt(c.value))
+                                                        }'
                                                         hx-on::before-request="
                                                             const selectedPages = Array.from(document.querySelectorAll('.page-checkbox:checked')).map(c => parseInt(c.value));
                                                             if (selectedPages.length === 0) {
@@ -310,10 +313,6 @@
                                                                 event.preventDefault();
                                                                 return false;
                                                             }
-                                                            event.detail.parameters = {
-                                                                page_type: 'content_page',
-                                                                page_indices: selectedPages
-                                                            };
                                                         "
                                                         hx-on::after-request="
                                                             if(event.detail.successful) {
