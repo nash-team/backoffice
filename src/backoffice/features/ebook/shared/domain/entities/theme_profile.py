@@ -37,13 +37,31 @@ class PromptBlocksModel(BaseModel):
         return v.strip()
 
 
+class CoverTemplateModel(BaseModel):
+    """Cover template configuration"""
+
+    prompt_blocks: PromptBlocksModel | None = None
+    prompt: str | None = None
+    workflow_params: dict[str, str] = Field(default_factory=dict)
+
+
+class ColoringPageTemplateModel(BaseModel):
+    """Coloring page template configuration"""
+
+    base_structure: str | None = None
+    variables: dict[str, list[str]] = Field(default_factory=dict)
+    quality_settings: str | None = None
+    workflow_params: dict[str, str] = Field(default_factory=dict)
+
+
 class ThemeProfileModel(BaseModel):
     """Complete theme profile configuration"""
 
     id: str = Field(..., min_length=1, pattern=r"^[a-z0-9_-]+$", description="Theme identifier")
     label: str = Field(..., min_length=1, description="Human-readable theme name")
     palette: PaletteModel
-    prompt_blocks: PromptBlocksModel
+    cover_templates: dict[str, CoverTemplateModel] = Field(..., min_length=1)
+    coloring_page_templates: dict[str, ColoringPageTemplateModel] = Field(default_factory=dict)
 
     @field_validator("id")
     @classmethod
@@ -51,6 +69,15 @@ class ThemeProfileModel(BaseModel):
         if not v.strip():
             raise ValueError("Theme ID cannot be empty")
         return v.strip().lower()
+
+    @field_validator("cover_templates")
+    @classmethod
+    def validate_cover_templates(cls, v: dict[str, CoverTemplateModel]) -> dict[str, CoverTemplateModel]:
+        if "default" not in v:
+            raise ValueError("cover_templates must contain a 'default' template")
+        if v["default"].prompt_blocks is None:
+            raise ValueError("cover_templates.default must have prompt_blocks")
+        return v
 
 
 @dataclass
@@ -84,7 +111,15 @@ class ThemeProfile:
 
     @classmethod
     def from_model(cls, model: ThemeProfileModel) -> "ThemeProfile":
-        """Create ThemeProfile from Pydantic model"""
+        """Create ThemeProfile from Pydantic model
+
+        Extracts prompt_blocks from the default cover template.
+        """
+        # Extract prompt_blocks from default cover template
+        default_cover = model.cover_templates["default"]
+        if not default_cover.prompt_blocks:
+            raise ValueError(f"Theme {model.id}: default cover template must have prompt_blocks")
+
         return cls(
             id=model.id,
             label=model.label,
@@ -94,17 +129,20 @@ class ThemeProfile:
                 forbidden_keywords=model.palette.forbidden_keywords,
             ),
             blocks=PromptBlocks(
-                subject=model.prompt_blocks.subject,
-                environment=model.prompt_blocks.environment,
-                tone=model.prompt_blocks.tone,
-                positives=model.prompt_blocks.positives,
-                negatives=model.prompt_blocks.negatives,
+                subject=default_cover.prompt_blocks.subject,
+                environment=default_cover.prompt_blocks.environment,
+                tone=default_cover.prompt_blocks.tone,
+                positives=default_cover.prompt_blocks.positives,
+                negatives=default_cover.prompt_blocks.negatives,
             ),
         )
 
 
 def load_theme_from_yaml(file_path: Path) -> ThemeProfile:
-    """Load and validate theme from YAML file"""
+    """Load and validate theme from YAML file
+
+    Expects theme structure with cover_templates.default.prompt_blocks.
+    """
     try:
         with file_path.open("r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
@@ -112,7 +150,7 @@ def load_theme_from_yaml(file_path: Path) -> ThemeProfile:
         if not data:
             raise ValueError(f"Empty YAML file: {file_path}")
 
-        # Validate using Pydantic model
+        # Validate using Pydantic model (includes validation of required structure)
         model = ThemeProfileModel(**data)
 
         # Convert to domain entity

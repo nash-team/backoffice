@@ -18,42 +18,26 @@ class TestModelMapping:
         )
         assert mapping.provider == "openrouter"
         assert mapping.model == "google/gemini-2.5-flash-image-preview"
-        assert mapping.lora is None
-        assert mapping.controlnet is None
 
-    def test_valid_local_config_with_lora(self):
-        """Valid local config with LoRA should pass validation."""
+    def test_valid_gemini_config(self):
+        """Valid Gemini config should pass validation."""
         mapping = ModelMapping(
-            provider="local",
-            model="stabilityai/sdxl-turbo",
-            lora="artificialguybr/ColoringBookRedmond-V2",
+            provider="gemini",
+            model="gemini-2.5-flash-image",
             supports_vectorization=False,
         )
-        assert mapping.provider == "local"
-        assert mapping.lora == "artificialguybr/ColoringBookRedmond-V2"
+        assert mapping.provider == "gemini"
+        assert mapping.model == "gemini-2.5-flash-image"
 
-    def test_valid_local_config_with_controlnet(self):
-        """Valid local config with ControlNet should pass validation."""
+    def test_valid_comfy_config(self):
+        """Valid Comfy config should pass validation."""
         mapping = ModelMapping(
-            provider="local",
-            model="stabilityai/sdxl-turbo",
-            controlnet="diffusers/controlnet-canny-sdxl-1.0",
+            provider="comfy",
+            model="flux-dev",
             supports_vectorization=False,
         )
-        assert mapping.provider == "local"
-        assert mapping.controlnet == "diffusers/controlnet-canny-sdxl-1.0"
-
-    def test_valid_local_config_with_lora_and_controlnet(self):
-        """Valid local config with both LoRA and ControlNet should pass."""
-        mapping = ModelMapping(
-            provider="local",
-            model="stabilityai/sdxl-turbo",
-            lora="artificialguybr/ColoringBookRedmond-V2",
-            controlnet="diffusers/controlnet-canny-sdxl-1.0",
-            supports_vectorization=False,
-        )
-        assert mapping.lora == "artificialguybr/ColoringBookRedmond-V2"
-        assert mapping.controlnet == "diffusers/controlnet-canny-sdxl-1.0"
+        assert mapping.provider == "comfy"
+        assert mapping.model == "flux-dev"
 
     def test_invalid_provider(self):
         """Invalid provider should raise ValidationError."""
@@ -65,32 +49,6 @@ class TestModelMapping:
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert "provider" in errors[0]["loc"]
-
-    def test_lora_with_non_local_provider_fails(self):
-        """LoRA with non-local provider should raise ValidationError."""
-        with pytest.raises(ValidationError) as exc_info:
-            ModelMapping(
-                provider="openrouter",
-                model="google/gemini-2.5-flash-image-preview",
-                lora="some-lora",  # Not allowed with openrouter
-            )
-        errors = exc_info.value.errors()
-        assert len(errors) == 1
-        assert "lora" in errors[0]["loc"]
-        assert "local" in str(errors[0]["msg"]).lower()
-
-    def test_controlnet_with_non_local_provider_fails(self):
-        """ControlNet with non-local provider should raise ValidationError."""
-        with pytest.raises(ValidationError) as exc_info:
-            ModelMapping(
-                provider="gemini",
-                model="gemini-2.5-flash-image",
-                controlnet="some-controlnet",  # Not allowed with gemini
-            )
-        errors = exc_info.value.errors()
-        assert len(errors) == 1
-        assert "controlnet" in errors[0]["loc"]
-        assert "local" in str(errors[0]["msg"]).lower()
 
     def test_empty_model_name_fails(self):
         """Empty model name should raise ValidationError."""
@@ -136,9 +94,8 @@ class TestModelsConfig:
                     model="google/gemini-2.5-flash-image-preview",
                 ),
                 "coloring_page": ModelMapping(
-                    provider="local",
-                    model="stabilityai/sdxl-turbo",
-                    lora="artificialguybr/ColoringBookRedmond-V2",
+                    provider="comfy",
+                    model="flux-dev",
                 ),
             }
         )
@@ -152,8 +109,8 @@ class TestModelsConfig:
             ModelsConfig(
                 models={
                     "coloring_page": ModelMapping(
-                        provider="local",
-                        model="stabilityai/sdxl-turbo",
+                        provider="comfy",
+                        model="flux-dev",
                     ),
                 }
             )
@@ -194,12 +151,12 @@ class TestModelsConfig:
                     model="google/gemini-2.5-flash-image-preview",
                 ),
                 "coloring_page": ModelMapping(
-                    provider="local",
-                    model="stabilityai/sdxl-turbo",
+                    provider="comfy",
+                    model="flux-dev",
                 ),
                 "custom_type": ModelMapping(  # Extra type
-                    provider="local",
-                    model="black-forest-labs/FLUX.1-schnell",
+                    provider="gemini",
+                    model="gemini-2.5-flash-image",
                 ),
             }
         )
