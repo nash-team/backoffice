@@ -236,8 +236,23 @@ async def complete_ebook_pages(
     try:
         logger.info(f"Completing ebook {ebook_id} to {target_pages} pages")
 
+        # Get dependencies
         ebook_repo = factory.get_ebook_repository()
-        use_case = CompleteEbookPagesUseCase(ebook_repository=ebook_repo)
+        file_storage = factory.get_file_storage()
+
+        # Create shared services for PDF reassembly
+        assembly_provider = WeasyPrintAssemblyProvider()
+        assembly_service = PDFAssemblyService(assembly_port=assembly_provider)
+        regeneration_service = RegenerationService(
+            assembly_service=assembly_service,
+            file_storage=file_storage,
+        )
+
+        # Create use case with regeneration service
+        use_case = CompleteEbookPagesUseCase(
+            ebook_repository=ebook_repo,
+            regeneration_service=regeneration_service,
+        )
 
         updated_ebook = await use_case.execute(ebook_id=ebook_id, target_pages=target_pages)
 

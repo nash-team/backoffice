@@ -6,7 +6,11 @@ from io import BytesIO
 
 from PIL import Image
 
+from backoffice.features.ebook.regeneration.domain.services.regeneration_service import (
+    RegenerationService,
+)
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook
+from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
@@ -22,13 +26,15 @@ class CompleteEbookPagesUseCase:
     It adds white blank pages between the last content page and the back cover.
     """
 
-    def __init__(self, ebook_repository: EbookPort):
+    def __init__(self, ebook_repository: EbookPort, regeneration_service: RegenerationService):
         """Initialize the use case.
 
         Args:
             ebook_repository: Repository for ebook persistence
+            regeneration_service: Service for PDF reassembly after adding pages
         """
         self.ebook_repository = ebook_repository
+        self.regeneration_service = regeneration_service
 
     async def execute(self, ebook_id: int, target_pages: int = KDP_MIN_PAGES) -> Ebook:
         """Complete ebook with blank pages to reach target INTERIOR page count.
@@ -121,9 +127,45 @@ class CompleteEbookPagesUseCase:
         # 10. Save updated ebook
         updated_ebook = await self.ebook_repository.save(ebook)
 
+        # 11. Reassemble PDF with all pages (including new blank pages)
+        logger.info(f"🔄 Reassembling PDF with {len(pages_meta)} pages...")
+        assembled_pages = self._convert_pages_meta_to_assembled_pages(pages_meta)
+
+        await self.regeneration_service.rebuild_and_upload_pdf(
+            ebook=updated_ebook,
+            assembled_pages=assembled_pages,
+            ebook_repository=self.ebook_repository,
+            filename_suffix="completed",
+        )
+
         logger.info(
             f"✅ Ebook {ebook_id} completed: added {pages_to_add} blank pages "
-            f"(new total: {updated_ebook.page_count})"
+            f"(new total: {updated_ebook.page_count}), PDF reassembled"
         )
 
         return updated_ebook
+
+    def _convert_pages_meta_to_assembled_pages(self, pages_meta: list[dict]) -> list[AssembledPage]:
+        """Convert pages_meta from structure_json to AssembledPage objects.
+
+        Args:
+            pages_meta: List of page metadata from structure_json
+
+        Returns:
+            List of AssembledPage objects ready for PDF assembly
+        """
+        assembled_pages = []
+        for page_data in pages_meta:
+            # Decode base64 image data
+            image_bytes = base64.b64decode(page_data["image_data_base64"])
+
+            # Create AssembledPage
+            assembled_page = AssembledPage(
+                page_number=page_data["page_number"],
+                title=page_data["title"],
+                image_data=image_bytes,
+                image_format=page_data["format"],
+            )
+            assembled_pages.append(assembled_page)
+
+        return assembled_pages
