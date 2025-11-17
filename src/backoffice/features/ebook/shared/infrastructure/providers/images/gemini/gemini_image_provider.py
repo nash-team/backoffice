@@ -62,6 +62,7 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
+        workflow_params: dict[str, str] | None = None,
     ) -> bytes:
         """Generate a colorful cover image.
 
@@ -186,6 +187,7 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
+        workflow_params: dict[str, str] | None = None,
     ) -> bytes:
         """Generate a content page (delegates to generate_cover with same logic).
 

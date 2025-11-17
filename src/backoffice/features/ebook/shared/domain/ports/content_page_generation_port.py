@@ -14,6 +14,7 @@ class ContentPageGenerationPort(ABC):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
+        workflow_params: dict[str, str] | None = None,
     ) -> bytes:
         """Generate a single content page.
 
@@ -21,6 +22,7 @@ class ContentPageGenerationPort(ABC):
             prompt: Text prompt describing the page
             spec: Image specifications (dimensions, format, etc.)
             seed: Random seed for reproducibility
+            workflow_params: Optional workflow-specific parameters (for ComfyUI, etc.)
 
         Returns:
             Image data as bytes

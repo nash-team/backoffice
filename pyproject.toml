@@ -39,6 +39,9 @@ dependencies = [
   # HTTP client for external API calls
   "httpx>=0.25.1",
 
+  # WebSocket client for ComfyUI
+  "websocket-client>=1.6.0",
+
   # YAML parsing for theme configuration
   "pyyaml>=6.0",
 
