@@ -10,16 +10,15 @@ from io import BytesIO
 from pathlib import Path
 from urllib.error import URLError
 
-import websocket
+import websocket  # type: ignore[import-not-found]
 from PIL import Image, ImageDraw
 
+from backoffice.features.ebook.shared.domain.entities.generation_request import ImageSpec
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.content_page_generation_port import (
     ContentPageGenerationPort,
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
-from backoffice.features.ebook.shared.domain.value_objects.usage_metrics import UsageMetrics
-from backoffice.features.shared.domain.entities.generation_request import ImageSpec
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -137,6 +136,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
+        workflow_params: dict[str, str] | None = None,
     ) -> bytes:
         """Generate a colorful cover image.
 
@@ -144,6 +144,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
             prompt: Text description of the cover
             spec: Image specifications (dimensions, format, color mode)
             seed: Random seed for reproducibility
+            workflow_params: Optional workflow params from theme config
 
         Returns:
             Cover image as bytes
@@ -160,7 +161,21 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
             )
 
         self._load_workflow(spec, True)
+
+        if self.workflow is None:
+            raise DomainError(
+                code=ErrorCode.COMFY_UNAVAILABLE,
+                message="Failed to load workflow",
+                actionable_hint="Check workflow JSON file",
+                context={"provider": "comfy", "model": self.model},
+            )
+
         self.workflow["31"]["inputs"]["seed"] = seed
+        self.workflow["54"]["inputs"]["text"] = prompt
+
+        # Inject workflow params (e.g., negative prompt in node 47)
+        if workflow_params and "47" in workflow_params:
+            self.workflow["47"]["inputs"]["text"] = workflow_params["47"]
 
         try:
             ws = websocket.WebSocket()
@@ -209,13 +224,15 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
         prompt: str,
         spec: ImageSpec,
         seed: int | None = None,
+        workflow_params: dict[str, str] | None = None,
     ) -> bytes:
-        """Generate a content page (delegates to generate_cover with same logic).
+        """Generate a content page (coloring page).
 
         Args:
             prompt: Text description of the page
             spec: ImageSpec specifications (dimensions, format, color mode)
             seed: Random seed for reproducibility
+            workflow_params: Optional workflow params from theme config
 
         Returns:
             Page image as bytes
@@ -232,7 +249,25 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
             )
 
         self._load_workflow(spec, False)
+
+        if self.workflow is None:
+            raise DomainError(
+                code=ErrorCode.COMFY_UNAVAILABLE,
+                message="Failed to load workflow",
+                actionable_hint="Check workflow JSON file",
+                context={"provider": "comfy", "model": self.model},
+            )
+
         self.workflow["31"]["inputs"]["seed"] = seed
+
+        # Coloring page workflow uses node "41" with clip_l and t5xxl
+        if "41" in self.workflow:
+            self.workflow["41"]["inputs"]["clip_l"] = prompt
+            self.workflow["41"]["inputs"]["t5xxl"] = prompt
+
+        # Inject workflow params (e.g., negative prompt in node 47)
+        if workflow_params and "47" in workflow_params:
+            self.workflow["47"]["inputs"]["text"] = workflow_params["47"]
 
         try:
             ws = websocket.WebSocket()
@@ -369,26 +404,3 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
         buffer = BytesIO()
         bordered_img.save(buffer, format="PNG")
         return buffer.getvalue()
-
-    def _create_usage_metrics(self, model: str, num_images: int = 1) -> UsageMetrics:
-        """Create usage metrics for Local SD response.
-
-        Local SD is FREE (runs on your machine).
-
-        Args:
-            model: Model ID used
-            num_images: Number of images generated
-
-        Returns:
-            UsageMetrics with cost = $0
-        """
-        total_cost = self.COST_PER_IMAGE * num_images
-
-        logger.info(f"📊 Local SD usage (FREE) - {model} | " f"Images: {num_images} | " f"Cost: ${total_cost:.6f} 🎉")
-
-        return UsageMetrics(
-            model=model,
-            prompt_tokens=0,  # Local SD doesn't expose token usage
-            completion_tokens=0,
-            cost=total_cost,
-        )
