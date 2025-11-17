@@ -129,7 +129,16 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         # The strategy (e.g., ColoringBookStrategy) already builds the complete prompt
         full_prompt = prompt
 
-        logger.info(f"Generating cover via OpenRouter: {full_prompt[:100]}...")
+        logger.info(
+            "🎨 Generating cover via OpenRouter",
+            extra={
+                "model": self.model,
+                "prompt_length": len(full_prompt),
+                "spec": f"{spec.width_px}x{spec.height_px}",
+                "color_mode": spec.color_mode.value if spec.color_mode else "default",
+            },
+        )
+        logger.debug(f"Full prompt: {full_prompt}")
 
         try:
             # Generate via chat endpoint (Gemini-specific approach)
@@ -160,22 +169,32 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             )
 
             # Extract image from response
+            logger.debug("Extracting image from API response...")
             image_bytes = self._extract_image_from_response(response)
+            logger.debug(f"Extracted image: {len(image_bytes)} bytes (raw)")
 
             # Resize to spec if needed
             if spec.width_px != 1024 or spec.height_px != 1024:
+                logger.debug(
+                    f"Resizing image from 1024x1024 to {spec.width_px}x{spec.height_px}..."
+                )
                 image = Image.open(BytesIO(image_bytes))
                 image = image.resize((spec.width_px, spec.height_px), Image.Resampling.LANCZOS)
                 buffer = BytesIO()
                 image.save(buffer, format="PNG")
                 image_bytes = buffer.getvalue()
+                logger.debug(f"Resized image: {len(image_bytes)} bytes")
 
             # Add rounded border for B&W coloring pages (programmatically, not via prompt)
             if spec.color_mode == ColorMode.BLACK_WHITE:
-                logger.info("Adding rounded black border to coloring page...")
+                logger.debug("Adding rounded black border to coloring page...")
                 image_bytes = self._add_rounded_border_to_image(image_bytes)
+                logger.debug(f"With border: {len(image_bytes)} bytes")
 
-            logger.info(f"✅ Generated cover: {len(image_bytes)} bytes")
+            logger.info(
+                "✅ Cover generated successfully",
+                extra={"size_bytes": len(image_bytes), "model": self.model},
+            )
             return image_bytes
 
         except Exception as e:
