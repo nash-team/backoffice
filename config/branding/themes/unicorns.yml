@@ -17,6 +17,13 @@ cover_templates:
       positives: ["bright saturated colors", "glossy", "professional children's book cover"]
       negatives: ["no text", "no mockup", "no borders", "no open book", "no realistic gore"]
 
+  "comfy":
+    prompt: "Vibrant children's book cover: cute magical unicorn with rainbow mane in enchanted landscape. Colorful, whimsical, joyful, professional."
+
+    workflow_params:
+      "47": "text, mockup, borders, low-res, realistic gore"
+      "clip_g_suffix": "bright saturated colors, glossy, professional quality"
+
 # ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
 # ==========================================
@@ -79,3 +86,34 @@ coloring_page_templates:
       Illustration extends naturally to image boundaries.
       Printable 300 DPI, simple to medium detail for kids age 4-8.
       No text, no logo, no watermark.
+
+  "comfy":
+    base_structure: "{UNICORN} {ACTION}. {STYLE}."
+
+    variables:
+      UNICORN:
+        - "cute magical unicorn"
+        - "unicorn with rainbow mane"
+        - "baby unicorn"
+        - "elegant unicorn"
+        - "playful unicorn"
+
+      ACTION:
+        - "prancing"
+        - "flying"
+        - "playing"
+        - "dancing"
+        - "jumping"
+        - "spreading sparkles"
+
+      STYLE:
+        - "line art"
+        - "coloring page style"
+        - "simple outlines"
+
+    quality_settings: "B&W lineart. Bold lines."
+
+    workflow_params:
+      "47": "color, shading, text, watermark"
+      "clip_g_suffix": "professional line art, clean outlines"
+      "qwen_prompt": "Clean black and white lineart with bold outlines"

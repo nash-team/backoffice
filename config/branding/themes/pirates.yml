@@ -17,6 +17,13 @@ cover_templates:
       positives: ["vibrant colors", "detailed", "professional children's book cover", "engaging"]
       negatives: ["no text", "no mockup", "no borders", "no open book", "no scary elements", "no violence"]
 
+  "comfy":
+    prompt: "Vibrant children's book cover: friendly cartoon pirate with treasure on ship deck. Colorful, adventurous, fun, professional."
+
+    workflow_params:
+      "47": "text, mockup, borders, scary elements, violence"
+      "clip_g_suffix": "vibrant colors, detailed, professional quality"
+
 # ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
 # ==========================================
@@ -79,3 +86,32 @@ coloring_page_templates:
       Illustration extends naturally to image boundaries.
       Printable 300 DPI, simple to medium detail for kids age 4-8.
       No text, no logo, no watermark, no scary elements, no violence.
+
+  "comfy":
+    base_structure: "{CHARACTER} {ACTION}. {STYLE}."
+
+    variables:
+      CHARACTER:
+        - "friendly cartoon pirate"
+        - "pirate captain"
+        - "young pirate kid"
+        - "pirate with parrot"
+
+      ACTION:
+        - "searching treasure"
+        - "sailing"
+        - "digging"
+        - "celebrating"
+        - "steering ship"
+
+      STYLE:
+        - "line art"
+        - "coloring page style"
+        - "simple outlines"
+
+    quality_settings: "B&W lineart. Bold lines."
+
+    workflow_params:
+      "47": "color, shading, text, watermark, scary, violence"
+      "clip_g_suffix": "professional line art, clean outlines"
+      "qwen_prompt": "Clean black and white lineart with bold outlines"

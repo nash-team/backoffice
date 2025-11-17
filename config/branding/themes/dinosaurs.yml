@@ -18,15 +18,18 @@ cover_templates:
       positives: ["highly detailed", "glossy", "professional children's book cover", "Amazon bestseller style"]
       negatives: ["no text", "no mockup", "no borders", "no open book", "no low-res", "no distorted anatomy"]
 
-  # FLUX.1-schnell - Concise prompts for faster generation
-  "black-forest-labs/FLUX.1-schnell":
+  # ComfyUI workflow - Concise prompts for FLUX via ComfyUI
+  "comfy":
+    # Main prompt (will be injected into workflow_params["54"])
     prompt: "Vibrant children's book cover: cute T-Rex dinosaur in lush jungle. Colorful, professional, kid-friendly, adventurous."
 
-    # Free-form workflow parameters for ComfyUI
+    # ComfyUI workflow node parameters (mapped to node IDs in workflow JSON)
+    # The provider will inject: workflow["54"]["inputs"]["text"] = prompt (from above)
+    #                           workflow["47"]["inputs"]["text"] = workflow_params["47"]
     workflow_params:
-      negative: "text, mockup, borders, low-res, distorted anatomy"
-      clip_g_suffix: "professional quality, vibrant colors, Amazon bestseller style"
-      # Add any custom ComfyUI workflow params here
+      "47": "text, mockup, borders, low-res, distorted anatomy"   # Negative CLIPTextEncode node
+      "clip_g_suffix": "professional quality, vibrant colors, Amazon bestseller style"
+      # Add any custom ComfyUI node IDs or params here
 
 # ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
@@ -95,8 +98,8 @@ coloring_page_templates:
       Printable 300 DPI, simple to medium detail for kids age 4-8.
       No text, no logo, no watermark.
 
-  # FLUX.1-schnell - Ultra concise prompts optimized for FLUX
-  "black-forest-labs/FLUX.1-schnell":
+  # ComfyUI workflow - Ultra concise prompts optimized for FLUX via ComfyUI
+  "comfy":
     base_structure: "{SPECIES} {ACTION}. {STYLE}."
 
     variables:
@@ -127,9 +130,13 @@ coloring_page_templates:
 
     quality_settings: "B&W lineart. Bold lines."
 
-    # Free-form workflow parameters for ComfyUI
+    # ComfyUI workflow node parameters (mapped to node IDs in workflow JSON)
+    # The provider will inject the generated prompt into node "54" automatically
+    # Then inject these additional params into their respective nodes:
+    #   workflow["47"]["inputs"]["text"] = workflow_params["47"]
+    #   workflow["X"]["inputs"]["key"] = workflow_params["custom_key"]
     workflow_params:
-      negative: "color, shading, text, watermark"
-      clip_g_suffix: "professional line art, clean outlines"
-      qwen_prompt: "Clean black and white lineart with bold outlines"
-      # Add any custom ComfyUI workflow params here (controlnet_scale, etc.)
+      "47": "color, shading, text, watermark"  # Negative prompt node
+      "clip_g_suffix": "professional line art, clean outlines"
+      "qwen_prompt": "Clean black and white lineart with bold outlines"
+      # Add any custom ComfyUI node IDs or params here (controlnet_scale, etc.)

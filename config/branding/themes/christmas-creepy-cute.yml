@@ -36,6 +36,13 @@ cover_templates:
         - "no frightening horror"
         - "no sharp teeth"
 
+  "comfy":
+    prompt: "Vibrant children's book cover: cute creepy Christmas creature in cozy haunted village. Tim Burton style, gothic festive, warm candlelight, professional."
+
+    workflow_params:
+      "47": "text, mockup, borders, gore, blood, frightening horror, sharp teeth"
+      "clip_g_suffix": "cute but creepy, festive gothic, warm shadows, glossy, professional quality"
+
 # ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
 # ==========================================
@@ -107,3 +114,35 @@ coloring_page_templates:
       Illustration touches or nearly touches edges naturally.
       Printable 300 DPI, simple-to-medium detail (kids 4-8).
       No text, no logo, no watermark.
+
+  "comfy":
+    base_structure: "{CHARACTER} {ACTION}. {STYLE}."
+
+    variables:
+      CHARACTER:
+        - "friendly skeleton Santa"
+        - "adorable zombie reindeer"
+        - "cute vampire elf"
+        - "smiling ghost snowman"
+        - "gothic Christmas angel"
+
+      ACTION:
+        - "carrying gifts"
+        - "decorating tree"
+        - "dancing"
+        - "flying"
+        - "baking cookies"
+        - "singing carols"
+        - "wrapping presents"
+
+      STYLE:
+        - "line art"
+        - "coloring page style"
+        - "simple outlines"
+
+    quality_settings: "B&W lineart. Bold lines. Cute creepy style."
+
+    workflow_params:
+      "47": "color, shading, text, watermark, gore, blood, frightening"
+      "clip_g_suffix": "professional line art, clean outlines, cute but creepy"
+      "qwen_prompt": "Clean black and white lineart with bold outlines"
