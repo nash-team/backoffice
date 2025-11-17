@@ -4,11 +4,11 @@ from unittest.mock import Mock
 import pytest
 
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 from backoffice.features.ebook.shared.infrastructure.models.ebook_model import EbookModel
 from backoffice.features.ebook.shared.infrastructure.repositories.ebook_repository import (
     SqlAlchemyEbookRepository,
 )
-from backoffice.features.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 
 
 class TestSqlAlchemyEbookRepositoryPagination:

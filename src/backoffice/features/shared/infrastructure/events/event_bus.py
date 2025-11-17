@@ -50,10 +50,7 @@ class EventBus:
             logger.debug(f"📭 No handlers registered for {event_type.__name__}")
             return
 
-        logger.info(
-            f"📤 Publishing {event.event_name()} (id: {event.event_id}) "
-            f"to {len(handlers)} handler(s)"
-        )
+        logger.info(f"📤 Publishing {event.event_name()} (id: {event.event_id}) " f"to {len(handlers)} handler(s)")
 
         # Execute handlers concurrently
         async with self._lock:
@@ -72,8 +69,7 @@ class EventBus:
             logger.info(f"✅ {handler.__class__.__name__} handled {event.event_name()}")
         except Exception as e:
             logger.error(
-                f"❌ {handler.__class__.__name__} failed to handle "
-                f"{event.event_name()}: {str(e)}",
+                f"❌ {handler.__class__.__name__} failed to handle " f"{event.event_name()}: {str(e)}",
                 exc_info=True,
             )
 

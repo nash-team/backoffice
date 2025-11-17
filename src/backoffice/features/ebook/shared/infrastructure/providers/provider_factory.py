@@ -34,9 +34,7 @@ class ProviderFactory:
     _assembly_provider_cache: AssemblyPort | None = None
 
     @staticmethod
-    def _make_cache_key(
-        provider: str, model: str, lora: str | None = None, controlnet: str | None = None
-    ) -> str:
+    def _make_cache_key(provider: str, model: str, lora: str | None = None, controlnet: str | None = None) -> str:
         """Create cache key from provider, model, and optional LoRA/ControlNet."""
         parts = [provider, model]
         if lora:
@@ -89,22 +87,15 @@ class ProviderFactory:
             extras.append(f"LoRA: {model_mapping.lora}")
         if model_mapping.controlnet:
             extras.append(f"ControlNet: {model_mapping.controlnet}")
-        logger.info(
-            f"Creating cover provider: {model_mapping.provider} / {model_mapping.model}"
-            + (f" + {', '.join(extras)}" if extras else "")
-        )
+        logger.info(f"Creating cover provider: {model_mapping.provider} / {model_mapping.model}" + (f" + {', '.join(extras)}" if extras else ""))
 
         provider: CoverGenerationPort
         if model_mapping.provider == "openrouter":
             from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (
-                openrouter_image_provider,
+                openrouter_image_provider as orp,
             )
 
-            OpenRouterImageProvider = openrouter_image_provider.OpenRouterImageProvider
-
-            provider = OpenRouterImageProvider(
-                model=model_mapping.model,
-            )
+            provider = orp.OpenRouterImageProvider(model=model_mapping.model)
 
         elif model_mapping.provider == "gemini":
             from backoffice.features.ebook.shared.infrastructure.providers.images.gemini import (
@@ -116,10 +107,7 @@ class ProviderFactory:
             provider = GeminiImageProvider(model=model_mapping.model)
 
         else:
-            raise ValueError(
-                f"Unknown cover provider: {model_mapping.provider}. "
-                f"Supported: openrouter, gemini"
-            )
+            raise ValueError(f"Unknown cover provider: {model_mapping.provider}. " f"Supported: openrouter, gemini")
 
         # Cache and return (use composite key with LoRA)
         ProviderFactory._cover_provider_cache[cache_key] = provider
@@ -161,22 +149,15 @@ class ProviderFactory:
             extras.append(f"LoRA: {model_mapping.lora}")
         if model_mapping.controlnet:
             extras.append(f"ControlNet: {model_mapping.controlnet}")
-        logger.info(
-            f"Creating content page provider: {model_mapping.provider} / {model_mapping.model}"
-            + (f" + {', '.join(extras)}" if extras else "")
-        )
+        logger.info(f"Creating content page provider: {model_mapping.provider} / {model_mapping.model}" + (f" + {', '.join(extras)}" if extras else ""))
 
         provider: ContentPageGenerationPort
         if model_mapping.provider == "openrouter":
             from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (
-                openrouter_image_provider,
+                openrouter_image_provider as orp,
             )
 
-            OpenRouterImageProvider = openrouter_image_provider.OpenRouterImageProvider
-
-            provider = OpenRouterImageProvider(
-                model=model_mapping.model,
-            )
+            provider = orp.OpenRouterImageProvider(model=model_mapping.model)
 
         elif model_mapping.provider == "gemini":
             from backoffice.features.ebook.shared.infrastructure.providers.images.gemini import (
@@ -188,10 +169,7 @@ class ProviderFactory:
             provider = GeminiImageProvider(model=model_mapping.model)
 
         else:
-            raise ValueError(
-                f"Unknown content page provider: {model_mapping.provider}. "
-                f"Supported: openrouter, gemini"
-            )
+            raise ValueError(f"Unknown content page provider: {model_mapping.provider}. " f"Supported: openrouter, gemini")
 
         # Cache and return (use composite key with LoRA)
         ProviderFactory._page_provider_cache[cache_key] = provider

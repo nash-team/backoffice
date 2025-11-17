@@ -10,9 +10,7 @@ class PaletteModel(BaseModel):
 
     base: list[str] = Field(..., min_length=1, description="Base colors for the theme")
     accents_allowed: list[str] = Field(default_factory=list, description="Allowed accent colors")
-    forbidden_keywords: list[str] = Field(
-        default_factory=list, description="Forbidden color keywords"
-    )
+    forbidden_keywords: list[str] = Field(default_factory=list, description="Forbidden color keywords")
 
     @field_validator("base")
     @classmethod

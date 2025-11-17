@@ -49,17 +49,11 @@ class RegenerationService:
         """
         # Business rule: only DRAFT ebooks can be modified
         if ebook.status != EbookStatus.DRAFT:
-            raise ValueError(
-                f"Cannot regenerate for ebook with status {ebook.status.value}. "
-                f"Only DRAFT ebooks can be modified."
-            )
+            raise ValueError(f"Cannot regenerate for ebook with status {ebook.status.value}. " f"Only DRAFT ebooks can be modified.")
 
         # Business rule: ebook must have structure_json with pages metadata
         if not ebook.structure_json or "pages_meta" not in ebook.structure_json:
-            raise ValueError(
-                "Cannot regenerate: ebook structure is missing. "
-                "Please regenerate the entire ebook instead."
-            )
+            raise ValueError("Cannot regenerate: ebook structure is missing. " "Please regenerate the entire ebook instead.")
 
     async def rebuild_and_upload_pdf(
         self,

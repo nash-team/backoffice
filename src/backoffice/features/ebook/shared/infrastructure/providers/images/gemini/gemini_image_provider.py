@@ -9,6 +9,8 @@ from io import BytesIO
 import httpx
 from PIL import Image
 
+from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.content_page_generation_port import (
     ContentPageGenerationPort,
 )
@@ -16,8 +18,6 @@ from backoffice.features.ebook.shared.domain.ports.cover_generation_port import 
 from backoffice.features.ebook.shared.infrastructure.utils.image_borders import (
     add_rounded_border_to_image,
 )
-from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
 logger = logging.getLogger(__name__)
 

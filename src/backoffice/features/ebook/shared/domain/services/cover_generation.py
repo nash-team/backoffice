@@ -5,9 +5,9 @@ import logging
 import random
 from typing import ClassVar
 
+from backoffice.features.ebook.shared.domain.entities.generation_request import ImageSpec
 from backoffice.features.ebook.shared.domain.policies.quality_validator import QualityValidator
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
-from backoffice.features.shared.domain.entities.generation_request import ImageSpec
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +90,6 @@ class CoverGenerationService:
         # Post-validation
         QualityValidator.validate_image(
             image_data=image_data,
-            expected_spec=spec,
             page_type="cover",
         )
 

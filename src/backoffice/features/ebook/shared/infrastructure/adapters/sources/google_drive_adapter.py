@@ -5,7 +5,7 @@ from io import BytesIO
 from googleapiclient.http import MediaIoBaseUpload
 
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
-from backoffice.features.shared.infrastructure.adapters.auth.google_auth import GoogleAuthService
+from backoffice.features.ebook.shared.infrastructure.adapters.auth.google_auth import GoogleAuthService
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +28,7 @@ class GoogleDriveAdapter:
         """Récupère un ebook spécifique depuis Google Drive"""
         try:
             logger.info(f"Tentative de récupération du fichier {source_id} depuis Google Drive")
-            file = (
-                self.drive_service.files()
-                .get(fileId=source_id, fields="id, name, createdTime")
-                .execute()
-            )
+            file = self.drive_service.files().get(fileId=source_id, fields="id, name, createdTime").execute()
 
             logger.info(f"Fichier {source_id} récupéré avec succès")
 
@@ -69,9 +65,7 @@ class GoogleDriveAdapter:
 """
 
             # Créer le média upload
-            media = MediaIoBaseUpload(
-                BytesIO(file_content.encode("utf-8")), mimetype="text/plain", resumable=True
-            )
+            media = MediaIoBaseUpload(BytesIO(file_content.encode("utf-8")), mimetype="text/plain", resumable=True)
 
             # Métadonnées du fichier
             file_metadata = {
@@ -80,11 +74,7 @@ class GoogleDriveAdapter:
             }
 
             # Upload vers Google Drive
-            file = (
-                self.drive_service.files()
-                .create(body=file_metadata, media_body=media, fields="id")
-                .execute()
-            )
+            file = self.drive_service.files().create(body=file_metadata, media_body=media, fields="id").execute()
 
             drive_id = file.get("id")
 
@@ -107,17 +97,13 @@ class GoogleDriveAdapter:
             logger.error(f"Erreur lors de l'upload de l'ebook '{title}': {str(e)}")
             raise GoogleDriveError(f"Erreur lors de l'upload de l'ebook: {str(e)}") from e
 
-    async def upload_pdf_ebook(
-        self, title: str, pdf_bytes: bytes, author: str = "Assistant IA"
-    ) -> dict:
+    async def upload_pdf_ebook(self, title: str, pdf_bytes: bytes, author: str = "Assistant IA") -> dict:
         """Upload un ebook PDF vers Google Drive"""
         try:
             logger.info(f"Upload du PDF '{title}' vers Google Drive")
 
             # Créer le média upload pour PDF
-            media = MediaIoBaseUpload(
-                BytesIO(pdf_bytes), mimetype="application/pdf", resumable=True
-            )
+            media = MediaIoBaseUpload(BytesIO(pdf_bytes), mimetype="application/pdf", resumable=True)
 
             # Métadonnées du fichier
             file_metadata = {
@@ -127,11 +113,7 @@ class GoogleDriveAdapter:
             }
 
             # Upload vers Google Drive
-            file = (
-                self.drive_service.files()
-                .create(body=file_metadata, media_body=media, fields="id")
-                .execute()
-            )
+            file = self.drive_service.files().create(body=file_metadata, media_body=media, fields="id").execute()
 
             drive_id = file.get("id")
 
@@ -160,16 +142,10 @@ class GoogleDriveAdapter:
             logger.info(f"Updating PDF in Google Drive: {file_id}")
 
             # Create media upload for PDF
-            media = MediaIoBaseUpload(
-                BytesIO(pdf_bytes), mimetype="application/pdf", resumable=True
-            )
+            media = MediaIoBaseUpload(BytesIO(pdf_bytes), mimetype="application/pdf", resumable=True)
 
             # Update the file content
-            updated_file = (
-                self.drive_service.files()
-                .update(fileId=file_id, media_body=media, fields="id,name")
-                .execute()
-            )
+            updated_file = self.drive_service.files().update(fileId=file_id, media_body=media, fields="id,name").execute()
 
             drive_id = updated_file.get("id")
             preview_url = f"https://drive.google.com/file/d/{drive_id}/preview"

@@ -1,6 +1,6 @@
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
-from backoffice.features.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 
 
 class GetEbooksUseCase:
@@ -12,9 +12,7 @@ class GetEbooksUseCase:
             return await self.ebook_repository.get_by_status(status)
         return await self.ebook_repository.get_all()
 
-    async def execute_paginated(
-        self, params: PaginationParams, status: EbookStatus | None = None
-    ) -> PaginatedResult[Ebook]:
+    async def execute_paginated(self, params: PaginationParams, status: EbookStatus | None = None) -> PaginatedResult[Ebook]:
         """Execute with pagination support"""
         if status:
             return await self.ebook_repository.get_paginated_by_status(status, params)

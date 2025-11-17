@@ -81,10 +81,7 @@ async def regenerate_ebook_page(
         except ValueError as e:
             raise HTTPException(
                 status_code=400,
-                detail=(
-                    f"Invalid page_type. Must be one of: cover, back_cover, content_page. "
-                    f"Got: {page_type_str}"
-                ),
+                detail=(f"Invalid page_type. Must be one of: cover, back_cover, content_page. " f"Got: {page_type_str}"),
             ) from e
 
         # Get dependencies from factory
@@ -101,9 +98,7 @@ async def regenerate_ebook_page(
         )
 
         # Choose the appropriate use case based on page_type
-        regenerate_usecase: (
-            RegenerateCoverUseCase | RegenerateBackCoverUseCase | RegenerateContentPageUseCase
-        )
+        regenerate_usecase: RegenerateCoverUseCase | RegenerateBackCoverUseCase | RegenerateContentPageUseCase
 
         if page_type == PageType.COVER:
             logger.info(f"Regenerating cover for ebook {ebook_id}")
@@ -151,9 +146,7 @@ async def regenerate_ebook_page(
             # Handle multiple pages or single page
             if page_indices and isinstance(page_indices, list) and len(page_indices) > 0:
                 # Multiple pages regeneration
-                logger.info(
-                    f"Regenerating {len(page_indices)} pages for ebook {ebook_id}: {page_indices}"
-                )
+                logger.info(f"Regenerating {len(page_indices)} pages for ebook {ebook_id}: {page_indices}")
 
                 # Regenerate each page sequentially
                 for idx in page_indices:
@@ -170,9 +163,7 @@ async def regenerate_ebook_page(
                 if page_index is None:
                     raise HTTPException(
                         status_code=400,
-                        detail=(
-                            "Either page_index or page_indices must be provided " "for content_page"
-                        ),
+                        detail=("Either page_index or page_indices must be provided " "for content_page"),
                     )
 
                 logger.info(f"Regenerating page {page_index} for ebook {ebook_id}")

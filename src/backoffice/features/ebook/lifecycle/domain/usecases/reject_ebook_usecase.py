@@ -6,8 +6,8 @@ from backoffice.features.ebook.lifecycle.domain.events.ebook_rejected_event impo
     EbookRejectedEvent,
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -63,10 +63,7 @@ class RejectEbookUseCase:
                 actionable_hint="Only DRAFT or APPROVED ebooks can be rejected",
             )
 
-        logger.info(
-            f"Rejecting ebook {ebook_id}: '{ebook.title}' "
-            f"(reason: {reason or 'No reason provided'})"
-        )
+        logger.info(f"Rejecting ebook {ebook_id}: '{ebook.title}' " f"(reason: {reason or 'No reason provided'})")
 
         # 3. Update status to REJECTED
         ebook.status = EbookStatus.REJECTED

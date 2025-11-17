@@ -22,10 +22,7 @@ def _get_engine() -> Engine:
     database_url = os.getenv("DATABASE_URL")
 
     if not database_url:
-        raise ValueError(
-            "DATABASE_URL environment variable is required. "
-            "Please set it to your PostgreSQL connection string."
-        )
+        raise ValueError("DATABASE_URL environment variable is required. " "Please set it to your PostgreSQL connection string.")
 
     logger.info(f"Creating database engine for URL: {database_url[:50]}...")
 

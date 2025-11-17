@@ -10,11 +10,11 @@ import pytest
 from sqlalchemy.orm import Session
 
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.entities.pagination import PaginationParams
 from backoffice.features.ebook.shared.infrastructure.models.ebook_model import EbookModel
 from backoffice.features.ebook.shared.infrastructure.queries.sqlalchemy_ebook_query import (
     SqlAlchemyEbookQuery,
 )
-from backoffice.features.shared.domain.entities.pagination import PaginationParams
 
 
 class TestSqlAlchemyEbookQuery:
@@ -35,9 +35,7 @@ class TestSqlAlchemyEbookQuery:
             (100, 5, 20, 20),  # Middle page
         ],
     )
-    async def test_list_paginated_returns_correct_structure(
-        self, total_count: int, page: int, size: int, expected_items: int
-    ):
+    async def test_list_paginated_returns_correct_structure(self, total_count: int, page: int, size: int, expected_items: int):
         """Test pagination returns correct structure for various scenarios"""
         # Given
         params = PaginationParams(page=page, size=size)
@@ -63,9 +61,7 @@ class TestSqlAlchemyEbookQuery:
             (10, 15, 135),
         ],
     )
-    async def test_list_paginated_applies_correct_offset_and_limit(
-        self, page: int, size: int, expected_offset: int
-    ):
+    async def test_list_paginated_applies_correct_offset_and_limit(self, page: int, size: int, expected_offset: int):
         """Test that correct SQL offset and limit are applied"""
         # Given
         params = PaginationParams(page=page, size=size)
@@ -160,10 +156,7 @@ class TestSqlAlchemyEbookQuery:
         self.mock_db.query.return_value.count.return_value = total_count
 
         # Mock data query chain
-        mock_models = [
-            self._create_mock_ebook_model(i, f"Title {i}", "DRAFT")
-            for i in range(1, item_count + 1)
-        ]
+        mock_models = [self._create_mock_ebook_model(i, f"Title {i}", "DRAFT") for i in range(1, item_count + 1)]
         query_chain = self.mock_db.query.return_value
         query_chain.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_models
 
@@ -180,10 +173,7 @@ class TestSqlAlchemyEbookQuery:
         filtered_query.count.return_value = total_count
 
         # Mock filtered data query
-        mock_models = [
-            self._create_mock_ebook_model(i, f"Title {i}", status.value)
-            for i in range(1, item_count + 1)
-        ]
+        mock_models = [self._create_mock_ebook_model(i, f"Title {i}", status.value) for i in range(1, item_count + 1)]
         filtered_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_models
 
     def _create_mock_ebook_model(self, id_: int, title: str, status: str):

@@ -13,16 +13,12 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     calculate_spine_width,
     inches_to_px,
 )
-from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.barcode_utils import (
-    add_barcode_space,
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils import (
+    barcode_utils,
+    color_utils,
+    spine_generator,
 )
-from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
-    ensure_rgb,
-)
-from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.spine_generator import (
-    generate_spine,
-)
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -79,13 +75,10 @@ class KDPAssemblyProvider:
         # ✅ Spine height includes bleed top/bottom
         spine_height_px = trim_height_px + 2 * bleed_px
 
-        logger.info(
-            f"KDP dimensions: trim={trim_width_px}x{trim_height_px}px, "
-            f"bleed={bleed_px}px, spine={spine_width_px}px"
-        )
+        logger.info(f"KDP dimensions: trim={trim_width_px}x{trim_height_px}px, " f"bleed={bleed_px}px, spine={spine_width_px}px")
 
         # 2. Generate spine (RGB format - KDP requirement)
-        spine_bytes = generate_spine(
+        spine_bytes = spine_generator.generate_spine(
             front_cover_bytes=front_cover_bytes,
             spine_width_px=spine_width_px,
             spine_height_px=spine_height_px,
@@ -96,9 +89,9 @@ class KDPAssemblyProvider:
         )
 
         # 3. Load and normalize all to RGB (KDP requirement)
-        back_img = ensure_rgb(Image.open(BytesIO(back_cover_bytes)))
-        spine_img = ensure_rgb(Image.open(BytesIO(spine_bytes)))
-        front_img = ensure_rgb(Image.open(BytesIO(front_cover_bytes)))
+        back_img = color_utils.ensure_rgb(Image.open(BytesIO(back_cover_bytes)))
+        spine_img = color_utils.ensure_rgb(Image.open(BytesIO(spine_bytes)))
+        front_img = color_utils.ensure_rgb(Image.open(BytesIO(front_cover_bytes)))
 
         # 4. ✅ Validate dimensions
         expected_back = (trim_width_px + bleed_px, trim_height_px + 2 * bleed_px)
@@ -107,9 +100,7 @@ class KDPAssemblyProvider:
 
         if back_img.size != expected_back:
             # Back may need resizing (same as front cover)
-            logger.warning(
-                f"Back cover size mismatch: {back_img.size} != {expected_back}, resizing..."
-            )
+            logger.warning(f"Back cover size mismatch: {back_img.size} != {expected_back}, resizing...")
             back_img = back_img.resize(expected_back, Image.Resampling.LANCZOS)
 
         if spine_img.size != expected_spine:
@@ -122,9 +113,7 @@ class KDPAssemblyProvider:
 
         if front_img.size != expected_front:
             # Front may need resizing
-            logger.warning(
-                f"Front cover size mismatch: {front_img.size} != {expected_front}, resizing..."
-            )
+            logger.warning(f"Front cover size mismatch: {front_img.size} != {expected_front}, resizing...")
             front_img = front_img.resize(expected_front, Image.Resampling.LANCZOS)
 
         # 5. Assemble horizontally
@@ -142,7 +131,7 @@ class KDPAssemblyProvider:
         back_buffer = BytesIO()
         # Use PNG format (RGB mode for KDP)
         back_img.save(back_buffer, format="PNG")
-        back_with_barcode = add_barcode_space(
+        back_with_barcode = barcode_utils.add_barcode_space(
             back_buffer.getvalue(),
             barcode_width_inches=kdp_config.barcode_width,
             barcode_height_inches=kdp_config.barcode_height,
@@ -151,7 +140,7 @@ class KDPAssemblyProvider:
             bleed_size_inches=kdp_config.bleed_size,
             has_right_bleed=False,  # NO right bleed - spine comes right after
         )
-        back_img = ensure_rgb(Image.open(BytesIO(back_with_barcode)))
+        back_img = color_utils.ensure_rgb(Image.open(BytesIO(back_with_barcode)))
 
         # Paste back (position 0)
         full_cover.paste(back_img, (0, 0))
@@ -197,10 +186,7 @@ class KDPAssemblyProvider:
         if page_count < min_required or page_count > max_required:
             raise DomainError(
                 code=ErrorCode.VALIDATION_ERROR,
-                message=(
-                    f"KDP {config.paper_type} requires {min_required}-{max_required} pages, "
-                    f"got {page_count}"
-                ),
+                message=(f"KDP {config.paper_type} requires {min_required}-{max_required} pages, " f"got {page_count}"),
                 actionable_hint="Adjust page count or use different paper type",
             )
 

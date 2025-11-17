@@ -20,9 +20,7 @@ class FakeFileStoragePort(FileStoragePort):
             mode: Behavior mode (succeed, fail_upload, fail_update, unavailable)
         """
         self.mode = mode
-        self.uploads: dict[
-            str, dict[str, bytes | str]
-        ] = {}  # storage_id -> {file_bytes, filename, metadata}
+        self.uploads: dict[str, dict[str, bytes | str]] = {}  # storage_id -> {file_bytes, filename, metadata}
         self.upload_count = 0
         self.update_count = 0
 
@@ -30,9 +28,7 @@ class FakeFileStoragePort(FileStoragePort):
         """Check if storage service is available."""
         return self.mode != "unavailable"
 
-    async def upload_ebook(
-        self, file_bytes: bytes, filename: str, metadata: dict[str, str] | None = None
-    ) -> dict[str, str]:
+    async def upload_ebook(self, file_bytes: bytes, filename: str, metadata: dict[str, str] | None = None) -> dict[str, str]:
         """Upload ebook file to fake storage."""
         self.upload_count += 1
 

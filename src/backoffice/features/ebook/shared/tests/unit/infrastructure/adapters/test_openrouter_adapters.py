@@ -4,10 +4,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter.openrouter_image_provider import (
     OpenRouterImageProvider,
 )
-from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 
 
 class TestOpenRouterImageProvider:
@@ -23,13 +23,7 @@ class TestOpenRouterImageProvider:
         # Gemini 2.5 returns images in message.images array
         mock_message = MagicMock()
         mock_message.content = ""  # Text content is usually empty when image is returned
-        mock_message.images = [
-            {
-                "image_url": {
-                    "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-                }
-            }
-        ]
+        mock_message.images = [{"image_url": {"url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="}}]
 
         mock_choice = MagicMock()
         mock_choice.message = mock_message
@@ -50,9 +44,7 @@ class TestOpenRouterImageProvider:
         provider.client = mock_openai_client
 
         # Act
-        result = await provider.generate_cover(
-            prompt="A colorful dinosaur cover", spec=spec, seed=42
-        )
+        result = await provider.generate_cover(prompt="A colorful dinosaur cover", spec=spec, seed=42)
 
         # Assert
         assert result is not None
@@ -99,9 +91,7 @@ class TestOpenRouterImageProvider:
         # Arrange
         provider = OpenRouterImageProvider()
         provider.client = mock_openai_client
-        spec = ImageSpec(
-            width_px=1024, height_px=1024, format="png", color_mode=ColorMode.BLACK_WHITE
-        )
+        spec = ImageSpec(width_px=1024, height_px=1024, format="png", color_mode=ColorMode.BLACK_WHITE)
 
         # Act - Use prompt that includes B&W instructions
         prompt = "Black and white line art dinosaur coloring page"
@@ -138,7 +128,7 @@ class TestOpenRouterImageProvider:
         provider.client = mock_client
 
         # Act & Assert
-        from backoffice.features.shared.domain.errors.error_taxonomy import DomainError
+        from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError
 
         with pytest.raises(DomainError) as exc_info:
             await provider.generate_cover(prompt="Test", spec=spec)

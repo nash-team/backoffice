@@ -8,11 +8,11 @@ from fastapi.responses import HTMLResponse
 
 from backoffice.features.ebook.listing.domain.usecases.get_ebooks import GetEbooksUseCase
 from backoffice.features.ebook.shared.domain.entities.ebook import EbookStatus
+from backoffice.features.ebook.shared.domain.entities.pagination import PaginationParams
 from backoffice.features.ebook.shared.infrastructure.factories.repository_factory import (
     RepositoryFactory,
     get_repository_factory,
 )
-from backoffice.features.shared.domain.entities.pagination import PaginationParams
 from backoffice.features.shared.presentation.routes.templates import templates
 
 # Type alias for dependency injection
@@ -146,9 +146,7 @@ async def get_ebooks_json(
 
 
 @router.get("/ebooks/{ebook_id}/preview")
-async def get_ebook_preview_modal(
-    ebook_id: int, request: Request, factory: RepositoryFactoryDep
-) -> Response:
+async def get_ebook_preview_modal(ebook_id: int, request: Request, factory: RepositoryFactoryDep) -> Response:
     """Load ebook preview modal content."""
     try:
         ebook_repo = factory.get_ebook_repository()
@@ -157,9 +155,7 @@ async def get_ebook_preview_modal(
         if not ebook:
             raise HTTPException(status_code=404, detail=f"Ebook with id {ebook_id} not found")
 
-        return templates.TemplateResponse(
-            "partials/ebook_preview_modal.html", {"request": request, "ebook": ebook}
-        )
+        return templates.TemplateResponse("partials/ebook_preview_modal.html", {"request": request, "ebook": ebook})
     except HTTPException:
         raise
     except Exception as e:
@@ -168,9 +164,7 @@ async def get_ebook_preview_modal(
 
 
 @router.get("/ebooks/{ebook_id}", response_class=HTMLResponse)
-async def get_ebook_detail_page(
-    ebook_id: int, request: Request, factory: RepositoryFactoryDep
-) -> Response:
+async def get_ebook_detail_page(ebook_id: int, request: Request, factory: RepositoryFactoryDep) -> Response:
     """Display dedicated ebook detail page with PDF viewer and actions."""
     try:
         ebook_repo = factory.get_ebook_repository()

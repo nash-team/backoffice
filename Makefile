@@ -55,10 +55,10 @@ dev: ## Migrate then run
 
 # -------- Tests --------
 test: ## Run all working tests (unit only, E2E and integration disabled)
-	$(PY) -m pytest src/backoffice/features/*/tests/unit tests/fixtures -v
+	$(PY) -m pytest src/backoffice/features/ebook/*/tests/unit src/backoffice/features/ebook/shared/tests/unit tests/fixtures -v
 
 test-unit: ## Run unit tests only (from all features)
-	$(PY) -m pytest src/backoffice/features/*/tests/unit -v
+	$(PY) -m pytest src/backoffice/features/ebook/*/tests/unit src/backoffice/features/ebook/shared/tests/unit -v
 
 test-integration: ## Run integration tests only (REQUIRES DOCKER + testcontainers)
 	@echo "⚠️  Integration tests require Docker running + testcontainers setup"

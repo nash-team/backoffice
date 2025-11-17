@@ -3,8 +3,8 @@
 import logging
 
 from backoffice.features.ebook.export.domain.events.ebook_exported_event import EbookExportedEvent
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -58,9 +58,7 @@ class ExportEbookPdfUseCase:
             raise DomainError(
                 code=ErrorCode.VALIDATION_ERROR,
                 message="PDF not found - may have been deleted after approval",
-                actionable_hint=(
-                    "Try regenerating the ebook or check if it was approved and removed"
-                ),
+                actionable_hint=("Try regenerating the ebook or check if it was approved and removed"),
             )
 
         logger.info(f"✅ PDF retrieved: {len(pdf_bytes)} bytes")

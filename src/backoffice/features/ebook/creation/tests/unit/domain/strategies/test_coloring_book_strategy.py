@@ -7,19 +7,19 @@ import pytest
 from backoffice.features.ebook.creation.domain.strategies.coloring_book_strategy import (
     ColoringBookStrategy,
 )
+from backoffice.features.ebook.shared.domain.entities.generation_request import (
+    Audience,
+    EbookType,
+    GenerationRequest,
+)
 from backoffice.features.ebook.shared.domain.services.cover_generation import CoverGenerationService
 from backoffice.features.ebook.shared.domain.services.page_generation import (
     ContentPageGenerationService,
 )
 from backoffice.features.ebook.shared.domain.services.pdf_assembly import PDFAssemblyService
-from backoffice.features.shared.domain.entities.generation_request import (
-    Audience,
-    EbookType,
-    GenerationRequest,
-)
-from backoffice.features.shared.tests.unit.fakes.fake_assembly_port import FakeAssemblyPort
-from backoffice.features.shared.tests.unit.fakes.fake_cover_port import FakeCoverPort
-from backoffice.features.shared.tests.unit.fakes.fake_page_port import FakePagePort
+from backoffice.features.ebook.shared.tests.unit.fakes.fake_assembly_port import FakeAssemblyPort
+from backoffice.features.ebook.shared.tests.unit.fakes.fake_cover_port import FakeCoverPort
+from backoffice.features.ebook.shared.tests.unit.fakes.fake_page_port import FakePagePort
 
 
 class TestColoringBookStrategy:

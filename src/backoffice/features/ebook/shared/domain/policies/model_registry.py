@@ -55,9 +55,7 @@ class ModelRegistry:
                         break
                     current = current.parent
                 else:
-                    raise FileNotFoundError(
-                        "Could not find config/generation/models.yaml in project tree"
-                    )
+                    raise FileNotFoundError("Could not find config/generation/models.yaml in project tree")
             cls._instance = cls(config_path)
         return cls._instance
 
@@ -84,10 +82,7 @@ class ModelRegistry:
             # Extract validated mappings
             self._mappings = validated_config.models
 
-            logger.info(
-                f"✅ Loaded and validated {len(self._mappings)} model mappings "
-                f"from {self._config_path}"
-            )
+            logger.info(f"✅ Loaded and validated {len(self._mappings)} model mappings " f"from {self._config_path}")
 
         except ValidationError:
             logger.error(f"❌ Invalid model configuration in {self._config_path}")

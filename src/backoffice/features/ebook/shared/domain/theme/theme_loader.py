@@ -36,9 +36,7 @@ class ThemeLoader:
 
             # Validate theme ID matches filename
             if theme.id != theme_id:
-                logger.warning(
-                    f"Theme ID mismatch: file '{theme_id}.yml' contains theme '{theme.id}'"
-                )
+                logger.warning(f"Theme ID mismatch: file '{theme_id}.yml' contains theme '{theme.id}'")
                 return self._get_fallback_theme()
 
             # Cache successful load

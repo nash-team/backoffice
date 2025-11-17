@@ -44,9 +44,7 @@ class RepositoryFactory:
             FileStoragePort: Storage adapter (Drive or local)
         """
         # Check if Google Drive credentials exist
-        credentials_path = os.getenv(
-            "GOOGLE_CREDENTIALS_PATH", "credentials/google_credentials.json"
-        )
+        credentials_path = os.getenv("GOOGLE_CREDENTIALS_PATH", "credentials/google_credentials.json")
         use_drive = os.path.exists(credentials_path)
 
         if use_drive:
@@ -56,14 +54,9 @@ class RepositoryFactory:
                     logger.info("✅ Using Google Drive storage (credentials found)")
                     return drive_adapter
                 else:
-                    logger.warning(
-                        "⚠️ Google Drive credentials found but Drive unavailable, "
-                        "falling back to local storage"
-                    )
+                    logger.warning("⚠️ Google Drive credentials found but Drive unavailable, " "falling back to local storage")
             except Exception as e:
-                logger.warning(
-                    f"⚠️ Failed to initialize Google Drive: {e}, falling back to local storage"
-                )
+                logger.warning(f"⚠️ Failed to initialize Google Drive: {e}, falling back to local storage")
 
         # Fall back to local storage
         storage_path = os.getenv("LOCAL_STORAGE_PATH", "./storage")

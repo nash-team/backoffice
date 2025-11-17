@@ -1,6 +1,6 @@
 import pytest
 
-from backoffice.features.shared.domain.entities.pagination import PaginatedResult, PaginationParams
+from backoffice.features.ebook.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 
 
 class TestPaginationParams:

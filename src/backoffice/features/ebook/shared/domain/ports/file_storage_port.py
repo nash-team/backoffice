@@ -5,9 +5,7 @@ class FileStoragePort(ABC):
     """Port for file storage operations (Google Drive, S3, etc.)"""
 
     @abstractmethod
-    async def upload_ebook(
-        self, file_bytes: bytes, filename: str, metadata: dict[str, str] | None = None
-    ) -> dict[str, str]:
+    async def upload_ebook(self, file_bytes: bytes, filename: str, metadata: dict[str, str] | None = None) -> dict[str, str]:
         """Upload ebook file to storage
 
         Args:

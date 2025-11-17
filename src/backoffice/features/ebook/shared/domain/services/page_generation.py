@@ -6,11 +6,11 @@ import logging
 import random
 from typing import ClassVar
 
+from backoffice.features.ebook.shared.domain.entities.generation_request import ImageSpec
 from backoffice.features.ebook.shared.domain.policies.quality_validator import QualityValidator
 from backoffice.features.ebook.shared.domain.ports.content_page_generation_port import (
     ContentPageGenerationPort,
 )
-from backoffice.features.shared.domain.entities.generation_request import ImageSpec
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,6 @@ class ContentPageGenerationService:
         # Post-validation
         QualityValidator.validate_image(
             image_data=page_data,
-            expected_spec=spec,
             page_type="content_page",
         )
 
@@ -114,9 +113,7 @@ class ContentPageGenerationService:
             DomainError: If generation or validation fails
         """
         page_count = len(prompts)
-        logger.info(
-            f"🎨 Generating {page_count} content pages (max concurrent: {self.max_concurrent})"
-        )
+        logger.info(f"🎨 Generating {page_count} content pages (max concurrent: {self.max_concurrent})")
 
         # Auto-generate base seed if not provided
         # Each page will get seed+i to ensure uniqueness while maintaining reproducibility
@@ -183,10 +180,7 @@ class ContentPageGenerationService:
 
             # Double-check cache after acquiring semaphore
             if self.enable_cache and cache_key in self._cache:
-                logger.info(
-                    f"✅ Cache hit for page {page_number} (after semaphore) - "
-                    f"NO COST TRACKED (cache return)"
-                )
+                logger.info(f"✅ Cache hit for page {page_number} (after semaphore) - " f"NO COST TRACKED (cache return)")
                 return self._cache[cache_key]
 
             # Generate page
@@ -197,15 +191,11 @@ class ContentPageGenerationService:
             )
 
             # Log successful generation
-            logger.info(
-                f"✅ Page {page_number} generated successfully "
-                f"({len(image_data):,} bytes, {spec.width_px}x{spec.height_px}px)"
-            )
+            logger.info(f"✅ Page {page_number} generated successfully " f"({len(image_data):,} bytes, {spec.width_px}x{spec.height_px}px)")
 
             # Post-validation
             QualityValidator.validate_image(
                 image_data=image_data,
-                expected_spec=spec,
                 page_type=f"page_{page_number}",
             )
 

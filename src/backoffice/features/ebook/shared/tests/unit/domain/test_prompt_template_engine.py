@@ -67,9 +67,7 @@ class TestPromptTemplateEngine:
             assert "no shading" in prompt or "NO gray shading" in prompt  # Wording variation
             assert "NO gray" in prompt or "no gray" in prompt
             assert "NO color" in prompt or "no color" in prompt
-            assert (
-                "full page" in prompt or "Illustration extends naturally" in prompt
-            )  # Wording variation
+            assert "full page" in prompt or "Illustration extends naturally" in prompt  # Wording variation
             assert "300 DPI" in prompt
             assert "No text" in prompt
             assert "no logo" in prompt

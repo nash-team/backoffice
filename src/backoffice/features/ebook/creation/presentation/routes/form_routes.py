@@ -22,12 +22,7 @@ async def get_new_ebook_form(request: Request) -> Response:
 
     # Load themes from config/branding/themes/ directory
     # From form_routes.py, go up 8 levels to reach project root, then into config/branding/themes
-    themes_dir = (
-        Path(__file__).parent.parent.parent.parent.parent.parent.parent.parent
-        / "config"
-        / "branding"
-        / "themes"
-    )
+    themes_dir = Path(__file__).parent.parent.parent.parent.parent.parent.parent.parent / "config" / "branding" / "themes"
     logger.info(f"Loading themes from: {themes_dir}")
     logger.info(f"Themes directory exists: {themes_dir.exists()}")
 
@@ -58,11 +53,7 @@ async def get_new_ebook_form(request: Request) -> Response:
     audiences = []
 
     for audience_id, audience_data in audiences_config["audiences"].items():
-        complexity_label = (
-            "Dessins simples et clairs"
-            if audience_data["style"]["complexity"] == "simple"
-            else "Dessins détaillés et complexes"
-        )
+        complexity_label = "Dessins simples et clairs" if audience_data["style"]["complexity"] == "simple" else "Dessins détaillés et complexes"
         audiences.append(
             {
                 "id": audience_id,

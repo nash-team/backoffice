@@ -2,12 +2,12 @@
 
 import pytest
 
+from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.services.page_generation import (
     ContentPageGenerationService,
 )
-from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
-from backoffice.features.shared.tests.unit.fakes.fake_page_port import FakePagePort
+from backoffice.features.ebook.shared.tests.unit.fakes.fake_page_port import FakePagePort
 
 
 class TestContentPageGenerationService:

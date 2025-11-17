@@ -64,10 +64,7 @@ def add_barcode_space(
     Raises:
         ValueError: If image format is invalid
     """
-    logger.warning(
-        f'📦 DEBUG: Adding KDP barcode space: {barcode_width_inches}" × {barcode_height_inches}" '
-        f'with {barcode_margin_inches}" margin from trim edges'
-    )
+    logger.warning(f'📦 DEBUG: Adding KDP barcode space: {barcode_width_inches}" × {barcode_height_inches}" ' f'with {barcode_margin_inches}" margin from trim edges')
 
     try:
         img = Image.open(BytesIO(image_bytes))
@@ -76,10 +73,7 @@ def add_barcode_space(
         w, h = img.size
 
         logger.warning(f"   Image size: {w}×{h}px")
-        logger.warning(
-            f"   Image includes bleeds: {image_includes_bleeds} "
-            f'(bleed: {bleed_size_inches}", right bleed: {has_right_bleed})'
-        )
+        logger.warning(f"   Image includes bleeds: {image_includes_bleeds} " f'(bleed: {bleed_size_inches}", right bleed: {has_right_bleed})')
 
         # Convert inches to pixels @ 300 DPI (exact KDP dimensions)
         rect_w = inches_to_px(barcode_width_inches)  # 2.0" = 600px
@@ -107,10 +101,7 @@ def add_barcode_space(
             y1 = h - bleed_px - margin_from_trim - rect_h
             y2 = h - bleed_px - margin_from_trim
 
-            logger.warning(
-                f"   Barcode positioned at {margin_from_trim}px from right trim edge "
-                f"(right bleed: {'Yes' if has_right_bleed else 'No - spine follows'})"
-            )
+            logger.warning(f"   Barcode positioned at {margin_from_trim}px from right trim edge " f"(right bleed: {'Yes' if has_right_bleed else 'No - spine follows'})")
         else:
             # No bleeds: image edge = trim edge
             x1 = w - rect_w - margin_from_trim
@@ -120,10 +111,7 @@ def add_barcode_space(
 
         # Validate dimensions fit within image
         if x1 < 0 or y1 < 0:
-            logger.warning(
-                f"⚠️ Barcode space ({rect_w}×{rect_h}px + {margin_from_trim}px margin) "
-                f"too large for image ({w}×{h}px), adjusting..."
-            )
+            logger.warning(f"⚠️ Barcode space ({rect_w}×{rect_h}px + {margin_from_trim}px margin) " f"too large for image ({w}×{h}px), adjusting...")
             # Fallback to percentage-based if dimensions don't fit
             rect_w = min(rect_w, int(w * 0.3))
             rect_h = min(rect_h, int(h * 0.2))

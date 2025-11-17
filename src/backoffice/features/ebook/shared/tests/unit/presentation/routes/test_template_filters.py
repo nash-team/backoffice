@@ -108,16 +108,10 @@ class TestEbookStatusFilters:
 
         # Then
         missing_mappings = all_enum_values - mapped_values
-        assert missing_mappings == set(), (
-            f"Missing mappings for EbookStatus values: {missing_mappings}. "
-            "Add them to EBOOK_STATUS_CONFIG in templates.py"
-        )
+        assert missing_mappings == set(), f"Missing mappings for EbookStatus values: {missing_mappings}. " "Add them to EBOOK_STATUS_CONFIG in templates.py"
 
         extra_mappings = mapped_values - all_enum_values
-        assert extra_mappings == set(), (
-            f"Extra mappings found: {extra_mappings}. "
-            "Remove unused entries from EBOOK_STATUS_CONFIG"
-        )
+        assert extra_mappings == set(), f"Extra mappings found: {extra_mappings}. " "Remove unused entries from EBOOK_STATUS_CONFIG"
 
     @pytest.mark.parametrize("status", list(EbookStatus))
     def test_all_enum_values_have_valid_label(self, status):
@@ -140,6 +134,4 @@ class TestEbookStatusFilters:
         assert result is not None
         assert len(result) > 0
         assert result != "bg-secondary"  # Should not fallback to default
-        assert result.startswith("badge-") or result.startswith(
-            "bg-"
-        )  # Should be a valid CSS class
+        assert result.startswith("badge-") or result.startswith("bg-")  # Should be a valid CSS class

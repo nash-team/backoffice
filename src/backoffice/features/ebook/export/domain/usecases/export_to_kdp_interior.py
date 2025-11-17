@@ -10,12 +10,12 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     EbookStatus,
     KDPExportConfig,
 )
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 if TYPE_CHECKING:
-    from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (  # noqa: E501
+    from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (
         interior_assembly_provider,
     )
 
@@ -29,9 +29,7 @@ class ExportToKDPInteriorUseCase:
         self,
         ebook_repository: EbookPort,
         event_bus: EventBus,
-        kdp_interior_assembly_provider: (
-            "interior_assembly_provider.KDPInteriorAssemblyProvider | None"
-        ) = None,
+        kdp_interior_assembly_provider: ("interior_assembly_provider.KDPInteriorAssemblyProvider | None") = None,
     ):
         self.ebook_repository = ebook_repository
         self.event_bus = event_bus
@@ -70,10 +68,7 @@ class ExportToKDPInteriorUseCase:
         if not preview_mode and ebook.status != EbookStatus.APPROVED:
             raise DomainError(
                 code=ErrorCode.VALIDATION_ERROR,
-                message=(
-                    f"Ebook must be APPROVED to download KDP interior "
-                    f"(current: {ebook.status.value})"
-                ),
+                message=(f"Ebook must be APPROVED to download KDP interior " f"(current: {ebook.status.value})"),
                 actionable_hint="Only APPROVED ebooks can be downloaded as KDP interior",
             )
 
@@ -81,10 +76,7 @@ class ExportToKDPInteriorUseCase:
         if preview_mode and ebook.status not in [EbookStatus.DRAFT, EbookStatus.APPROVED]:
             raise DomainError(
                 code=ErrorCode.VALIDATION_ERROR,
-                message=(
-                    f"Ebook must be DRAFT or APPROVED to preview KDP interior "
-                    f"(current: {ebook.status.value})"
-                ),
+                message=(f"Ebook must be DRAFT or APPROVED to preview KDP interior " f"(current: {ebook.status.value})"),
                 actionable_hint="Only DRAFT or APPROVED ebooks can be previewed",
             )
 
@@ -96,10 +88,7 @@ class ExportToKDPInteriorUseCase:
                 actionable_hint="Regenerate the ebook to populate page_count",
             )
 
-        logger.info(
-            f"Exporting ebook {ebook_id} interior to KDP format: "
-            f"'{ebook.title}' ({ebook.page_count} pages)"
-        )
+        logger.info(f"Exporting ebook {ebook_id} interior to KDP format: " f"'{ebook.title}' ({ebook.page_count} pages)")
 
         # 4. Use default KDP config if none provided
         if kdp_config is None:
@@ -107,10 +96,7 @@ class ExportToKDPInteriorUseCase:
 
         # 4b. Adjust paper type for short books (premium_color requires 24-828 pages)
         if ebook.page_count < 24 and kdp_config.paper_type == "premium_color":
-            logger.warning(
-                f"Ebook has {ebook.page_count} pages (< 24), "
-                f"switching from premium_color to standard_color"
-            )
+            logger.warning(f"Ebook has {ebook.page_count} pages (< 24), " f"switching from premium_color to standard_color")
             kdp_config = KDPExportConfig(
                 trim_size=kdp_config.trim_size,
                 bleed_size=kdp_config.bleed_size,
@@ -122,7 +108,7 @@ class ExportToKDPInteriorUseCase:
 
         # 5. Initialize provider if not injected
         if not self.kdp_interior_assembly_provider:
-            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (  # noqa: E501
+            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (
                 interior_assembly_provider as kdp_provider,
             )
 

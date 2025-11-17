@@ -44,9 +44,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Restore legacy cost tracking columns (for rollback only)."""
     # Recreate columns
-    op.add_column(
-        "ebooks", sa.Column("generation_cost", sa.NUMERIC(precision=12, scale=4), nullable=True)
-    )
+    op.add_column("ebooks", sa.Column("generation_cost", sa.NUMERIC(precision=12, scale=4), nullable=True))
     op.add_column("ebooks", sa.Column("prompt_tokens", sa.Integer(), nullable=True))
     op.add_column("ebooks", sa.Column("completion_tokens", sa.Integer(), nullable=True))
     op.add_column("ebooks", sa.Column("generation_provider", sa.String(length=50), nullable=True))

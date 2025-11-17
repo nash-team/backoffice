@@ -32,9 +32,7 @@ def upgrade() -> None:
         sa.Column("ebook_id", sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        op.f("ix_token_usages_request_id"), "token_usages", ["request_id"], unique=False
-    )
+    op.create_index(op.f("ix_token_usages_request_id"), "token_usages", ["request_id"], unique=False)
     op.create_index(op.f("ix_token_usages_ebook_id"), "token_usages", ["ebook_id"], unique=False)
 
     # Create image_usages table
@@ -50,9 +48,7 @@ def upgrade() -> None:
         sa.Column("ebook_id", sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        op.f("ix_image_usages_request_id"), "image_usages", ["request_id"], unique=False
-    )
+    op.create_index(op.f("ix_image_usages_request_id"), "image_usages", ["request_id"], unique=False)
     op.create_index(op.f("ix_image_usages_ebook_id"), "image_usages", ["ebook_id"], unique=False)
 
 

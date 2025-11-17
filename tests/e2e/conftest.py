@@ -47,9 +47,7 @@ def server_url(server_port: int) -> str:
 
 
 @pytest.fixture(scope="session")
-def test_server(
-    project_root: Path, server_port: int, server_url: str
-) -> Iterator[subprocess.Popen]:
+def test_server(project_root: Path, server_port: int, server_url: str) -> Iterator[subprocess.Popen]:
     """Start minimal FastAPI test server for smoke tests."""
     # Create ephemeral SQLite database
     cache_dir = project_root / ".pytest_cache"

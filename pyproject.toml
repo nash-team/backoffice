@@ -86,7 +86,7 @@ build-backend = "hatchling.build"
 # --- Ruff (≥0.4) ---
 [tool.ruff]
 target-version = "py311"
-line-length = 100
+line-length = 200
 src = ["src"]
 exclude = [".vulture_whitelist.py", "test_local_sd.py"]
 
@@ -102,12 +102,10 @@ known-first-party = ["backoffice"]
 combine-as-imports = true
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "S603", "S607", "S104", "E501", "E402"]  # Allow subprocess usage, binding, long lines, late imports in root tests
-"**/tests/**" = ["S101", "E501"]  # Allow asserts and long lines in ALL test directories
-"src/backoffice/main.py" = ["S104"]  # Allow 0.0.0.0 binding when explicitly configured
-"src/backoffice/features/shared/infrastructure/providers/*.py" = ["S101", "F821", "E501"]  # Allow asserts, undefined names from dynamic imports, long lines in docstrings
-"src/backoffice/features/ebook/shared/infrastructure/providers/*.py" = ["S101", "F821", "E501"]  # Allow asserts for type narrowing, undefined names from dynamic imports, long lines
-"src/backoffice/migrations/**" = ["E501"]  # Allow long lines in alembic migrations (auto-generated code)
+"tests/**" = ["S101", "S603", "S607", "S104", "E501", "E402"]  # Tests: allow assert (S101), subprocess (S603/S607), 0.0.0.0 binding (S104), long lines (E501), late imports (E402)
+"**/tests/**" = ["S101", "E501"]  # All test directories: allow assert statements and long test descriptions
+"src/backoffice/main.py" = ["S104"]  # Production server: allow 0.0.0.0 binding (required for Docker/Uvicorn)
+"src/backoffice/migrations/**" = ["E501"]  # Alembic auto-generated migrations: allow long SQL lines
 
 # --- Mypy ---
 [tool.mypy]
@@ -127,43 +125,27 @@ pretty = true
 
 [[tool.mypy.overrides]]
 module = ["googleapiclient.*", "google.oauth2", "google.oauth2.*"]
-ignore_missing_imports = true
+ignore_missing_imports = true  # Google API client has no type stubs
 
 [[tool.mypy.overrides]]
 module = ["weasyprint"]
-ignore_missing_imports = true
+ignore_missing_imports = true  # WeasyPrint PDF library has no type stubs
 
 [[tool.mypy.overrides]]
 module = ["backoffice.infrastructure.adapters.repositories.*"]
-disable_error_code = ["assignment"]
+disable_error_code = ["assignment"]  # Legacy path: SQLAlchemy session assignments (TODO: remove after full migration)
 
 [[tool.mypy.overrides]]
 module = ["replicate", "torch", "diffusers", "controlnet_aux", "huggingface_hub", "tenacity"]
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = ["backoffice.features.shared.infrastructure.providers.*"]
-disable_error_code = ["import-not-found", "override", "arg-type", "assignment", "union-attr", "no-any-return", "return-value", "attr-defined", "redundant-cast"]
-
-[[tool.mypy.overrides]]
-module = ["backoffice.features.shared.infrastructure.services.*"]
-disable_error_code = ["arg-type", "union-attr", "dict-item"]
-
-[[tool.mypy.overrides]]
-module = ["backoffice.features.shared.infrastructure.adapters.*"]
-disable_error_code = ["arg-type", "assignment", "union-attr", "return-value", "attr-defined"]
-
-[[tool.mypy.overrides]]
-module = ["backoffice.features.ebook.export.*"]
-disable_error_code = ["redundant-cast"]
+ignore_missing_imports = true  # Optional AI/ML dependencies (not always installed)
 
 [[tool.mypy.overrides]]
 module = ["img2pdf"]
-ignore_missing_imports = true
+ignore_missing_imports = true  # img2pdf library has no type stubs
 
 [[tool.mypy.overrides]]
 module = ["tests.*", "pytest", "testcontainers.*"]
-ignore_missing_imports = true
+ignore_missing_imports = true  # Test dependencies: type stubs not required for test infrastructure
 
 
 

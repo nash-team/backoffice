@@ -101,7 +101,5 @@ def test_client(postgres_container, test_db_session):
 def pytest_collection_modifyitems(config, items):
     """Automatically add asyncio marker to async test functions"""
     for item in items:
-        if (
-            hasattr(item.function, "__code__") and item.function.__code__.co_flags & 0x80
-        ):  # CO_COROUTINE
+        if hasattr(item.function, "__code__") and item.function.__code__.co_flags & 0x80:  # CO_COROUTINE
             item.add_marker(pytest.mark.asyncio)

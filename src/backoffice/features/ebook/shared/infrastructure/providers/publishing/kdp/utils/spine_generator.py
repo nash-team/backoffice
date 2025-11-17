@@ -13,9 +13,8 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     can_have_spine_text,
     inches_to_px,
 )
-from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
-    ensure_rgb,
-    extract_dominant_color_faded,
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils import (
+    color_utils,
 )
 
 logger = logging.getLogger(__name__)
@@ -32,14 +31,7 @@ def get_font_path(font_name: str) -> str:
     """
     # Navigate to features/shared/presentation/static/fonts
     current_file = Path(__file__)
-    fonts_dir = (
-        current_file.parent.parent.parent
-        / "features"
-        / "shared"
-        / "presentation"
-        / "static"
-        / "fonts"
-    )
+    fonts_dir = current_file.parent.parent.parent / "features" / "shared" / "presentation" / "static" / "fonts"
     return str(fonts_dir / font_name)
 
 
@@ -56,11 +48,11 @@ def load_font_safe(font_path: str, size: int, fallback: str = "DejaVuSans.ttf") 
     """
     try:
         return ImageFont.truetype(font_path, size)
-    except (OSError, IOError) as e:
+    except OSError as e:
         logger.warning(f"⚠️ Police {font_path} non trouvée, fallback {fallback}: {e}")
         try:
             return ImageFont.truetype(fallback, size)
-        except (OSError, IOError) as e2:
+        except OSError as e2:
             # Ultimate fallback: default PIL font
             logger.warning(f"⚠️ Fallback {fallback} also failed: {e2}, using default PIL font")
             default_font: FreeTypeFont = ImageFont.load_default()  # type: ignore[assignment]
@@ -102,11 +94,11 @@ def generate_spine(
     else:
         logger.info(f"Tranche sans texte: {reason}")
         # Gradient from front cover dominant color
-        dominant = extract_dominant_color_faded(front_cover_bytes)
+        dominant = color_utils.extract_dominant_color_faded(front_cover_bytes)
         spine_img = create_gradient(dominant, spine_width_px, spine_height_px)
 
     # Normalize to RGB (KDP requirement)
-    spine_rgb = ensure_rgb(spine_img)
+    spine_rgb = color_utils.ensure_rgb(spine_img)
 
     buffer = BytesIO()
     spine_rgb.save(buffer, format="PNG", dpi=(300, 300))
@@ -147,10 +139,7 @@ def create_spine_with_text(width: int, height: int, title: str, author: str) -> 
 
     if (width - (y + text_height)) < min_margin_px:
         bottom_margin = width - (y + text_height)
-        logger.error(
-            f"Texte spine trop proche du bord bas: "
-            f"bottom_margin={bottom_margin}, min={min_margin_px}"
-        )
+        logger.error(f"Texte spine trop proche du bord bas: " f"bottom_margin={bottom_margin}, min={min_margin_px}")
         raise ValueError("Texte spine trop proche du bord bas")
 
     temp_draw.text((x, y), temp_text, fill=(0, 0, 0), font=font)

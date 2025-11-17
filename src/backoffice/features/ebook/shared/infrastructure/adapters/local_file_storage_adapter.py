@@ -55,9 +55,7 @@ class LocalFileStorageAdapter(FileStoragePort):
         """
         return self.ebooks_path.exists() and self.ebooks_path.is_dir()
 
-    async def upload_ebook(
-        self, file_bytes: bytes, filename: str, metadata: dict[str, str] | None = None
-    ) -> dict[str, str]:
+    async def upload_ebook(self, file_bytes: bytes, filename: str, metadata: dict[str, str] | None = None) -> dict[str, str]:
         """Upload (save) ebook file to local storage.
 
         Args:

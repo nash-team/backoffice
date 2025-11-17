@@ -9,10 +9,10 @@ from backoffice.features.ebook.regeneration.domain.services.regeneration_service
     RegenerationService,
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.ebook.shared.domain.services.cover_generation import CoverGenerationService
-from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -72,17 +72,11 @@ class RegenerateCoverUseCase:
 
         # Business rule: only DRAFT ebooks can have their cover regenerated
         if ebook.status != EbookStatus.DRAFT:
-            raise ValueError(
-                f"Cannot regenerate cover for ebook with status {ebook.status.value}. "
-                f"Only DRAFT ebooks can be modified."
-            )
+            raise ValueError(f"Cannot regenerate cover for ebook with status {ebook.status.value}. " f"Only DRAFT ebooks can be modified.")
 
         # Business rule: ebook must have structure_json with pages metadata
         if not ebook.structure_json or "pages_meta" not in ebook.structure_json:
-            raise ValueError(
-                "Cannot regenerate cover: ebook structure is missing. "
-                "Please regenerate the entire ebook instead."
-            )
+            raise ValueError("Cannot regenerate cover: ebook structure is missing. " "Please regenerate the entire ebook instead.")
 
         logger.info(f"🔄 Regenerating cover for ebook {ebook_id}: {ebook.title}")
 

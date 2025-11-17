@@ -8,7 +8,7 @@ from backoffice.features.ebook.lifecycle.domain.usecases.reject_ebook_usecase im
     RejectEbookUseCase,
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 
@@ -64,9 +64,7 @@ class TestRejectEbookUseCase:
         )
 
     @pytest.mark.asyncio
-    async def test_reject_draft_ebook_success(
-        self, reject_ebook_usecase, ebook_repository, draft_ebook
-    ):
+    async def test_reject_draft_ebook_success(self, reject_ebook_usecase, ebook_repository, draft_ebook):
         """Should successfully reject a draft ebook."""
         # Arrange
         ebook_repository.add_ebook(draft_ebook)
@@ -84,9 +82,7 @@ class TestRejectEbookUseCase:
         assert persisted_ebook.status == EbookStatus.REJECTED
 
     @pytest.mark.asyncio
-    async def test_reject_emits_rejected_event(
-        self, reject_ebook_usecase, ebook_repository, draft_ebook, event_bus
-    ):
+    async def test_reject_emits_rejected_event(self, reject_ebook_usecase, ebook_repository, draft_ebook, event_bus):
         """Should emit EbookRejectedEvent when rejection succeeds."""
         # Arrange
         ebook_repository.add_ebook(draft_ebook)
@@ -121,9 +117,7 @@ class TestRejectEbookUseCase:
             await reject_ebook_usecase.execute(999)
 
     @pytest.mark.asyncio
-    async def test_reject_already_rejected_ebook_raises_error(
-        self, reject_ebook_usecase, ebook_repository
-    ):
+    async def test_reject_already_rejected_ebook_raises_error(self, reject_ebook_usecase, ebook_repository):
         """Should raise DomainError when trying to reject already rejected ebook."""
         # Arrange
         rejected_ebook = Ebook(

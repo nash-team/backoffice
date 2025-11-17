@@ -67,9 +67,7 @@ class PromptTemplateEngine:
         self.themes_directory = themes_directory
         logger.info(f"PromptTemplateEngine initialized with themes from: {themes_directory}")
 
-    def load_template_from_yaml(
-        self, theme_id: str, model_id: str | None = None, template_type: str = "coloring_page"
-    ) -> PromptTemplate:
+    def load_template_from_yaml(self, theme_id: str, model_id: str | None = None, template_type: str = "coloring_page") -> PromptTemplate:
         """Load prompt template from theme YAML file.
 
         Args:
@@ -93,9 +91,7 @@ class PromptTemplateEngine:
             theme_data = yaml.safe_load(f)
 
         # Determine section name based on template type
-        section_name = (
-            "coloring_page_templates" if template_type == "coloring_page" else "cover_templates"
-        )
+        section_name = "coloring_page_templates" if template_type == "coloring_page" else "cover_templates"
 
         # Check if section exists
         if section_name not in theme_data:
@@ -105,30 +101,19 @@ class PromptTemplateEngine:
 
         # Try to load model-specific template first, then fallback to default
         if model_id and model_id in templates:
-            logger.info(
-                f"Using {template_type} template for model '{model_id}' in theme '{theme_id}'"
-            )
+            logger.info(f"Using {template_type} template for model '{model_id}' in theme '{theme_id}'")
             template_data = templates[model_id]
         elif "default" in templates:
-            logger.info(
-                f"Model '{model_id}' not found, "
-                f"using default {template_type} template for theme '{theme_id}'"
-            )
+            logger.info(f"Model '{model_id}' not found, " f"using default {template_type} template for theme '{theme_id}'")
             template_data = templates["default"]
         else:
-            raise ValueError(
-                f"Theme '{theme_id}' has no model-specific template for '{model_id}' "
-                f"and no default template in {section_name}"
-            )
+            raise ValueError(f"Theme '{theme_id}' has no model-specific template for '{model_id}' " f"and no default template in {section_name}")
 
         # Handle old format (prompt_blocks for cover) vs new format
         if template_type == "cover" and "prompt_blocks" in template_data:
             # Old format: assemble from blocks
             blocks = template_data["prompt_blocks"]
-            prompt = (
-                f"{blocks['subject']}, {blocks['environment']}, {blocks['tone']}. "
-                f"{', '.join(blocks['positives'])}"
-            )
+            prompt = f"{blocks['subject']}, {blocks['environment']}, {blocks['tone']}. " f"{', '.join(blocks['positives'])}"
             return PromptTemplate(
                 base_structure=prompt,
                 variables={},
@@ -173,10 +158,7 @@ class PromptTemplateEngine:
         # Load template from YAML
         template = self._find_template(theme, model_id)
 
-        logger.info(
-            f"Generating {count} prompts for theme '{theme}' "
-            f"(model={model_id}, audience={audience}, seed={self.seed})"
-        )
+        logger.info(f"Generating {count} prompts for theme '{theme}' " f"(model={model_id}, audience={audience}, seed={self.seed})")
 
         prompts = []
         for i in range(count):
@@ -211,10 +193,7 @@ class PromptTemplateEngine:
         # Load template from YAML
         template = self._find_template(theme, model_id)
 
-        logger.info(
-            f"Generating {count} prompts with params for theme '{theme}' "
-            f"(model={model_id}, audience={audience}, seed={self.seed})"
-        )
+        logger.info(f"Generating {count} prompts with params for theme '{theme}' " f"(model={model_id}, audience={audience}, seed={self.seed})")
 
         prompts = []
         for i in range(count):
@@ -231,9 +210,7 @@ class PromptTemplateEngine:
             "workflow_params": template.workflow_params or {},
         }
 
-    def generate_cover_prompt(
-        self, theme: str, model_id: str | None = None
-    ) -> dict[str, str | dict[str, str | float | int]]:
+    def generate_cover_prompt(self, theme: str, model_id: str | None = None) -> dict[str, str | dict[str, str | float | int]]:
         """Generate cover prompt with workflow params.
 
         Args:
@@ -258,9 +235,7 @@ class PromptTemplateEngine:
             "workflow_params": template.workflow_params or {},
         }
 
-    def _find_template(
-        self, theme: str, model_id: str | None = None, template_type: str = "coloring_page"
-    ) -> PromptTemplate:
+    def _find_template(self, theme: str, model_id: str | None = None, template_type: str = "coloring_page") -> PromptTemplate:
         """Find template matching the theme and model.
 
         Loads from YAML file. Supports:
@@ -297,14 +272,9 @@ class PromptTemplateEngine:
             logger.debug(f"Error during theme template search: {e}. Continuing to fallback.")
 
         # No match found - raise error instead of silent fallback
-        raise FileNotFoundError(
-            f"No template found for theme '{theme}'. Available themes: "
-            f"{', '.join([f.stem for f in self.themes_directory.glob('*.yml')])}"
-        )
+        raise FileNotFoundError(f"No template found for theme '{theme}'. Available themes: " f"{', '.join([f.stem for f in self.themes_directory.glob('*.yml')])}")
 
-    def _generate_single_prompt(
-        self, template: PromptTemplate, index: int, audience: str | None
-    ) -> str:
+    def _generate_single_prompt(self, template: PromptTemplate, index: int, audience: str | None) -> str:
         """Generate a single prompt from template.
 
         Args:

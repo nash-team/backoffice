@@ -1,7 +1,6 @@
 """Use case for exporting ebook to Amazon KDP format."""
 
 import logging
-from typing import cast
 
 from backoffice.features.ebook.export.domain.events.kdp_export_generated_event import (
     KDPExportGeneratedEvent,
@@ -15,8 +14,8 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     EbookStatus,
     KDPExportConfig,
 )
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -78,10 +77,7 @@ class ExportToKDPUseCase:
         if not preview_mode and ebook.status != EbookStatus.APPROVED:
             raise DomainError(
                 code=ErrorCode.VALIDATION_ERROR,
-                message=(
-                    f"Ebook must be APPROVED to download KDP export "
-                    f"(current: {ebook.status.value})"
-                ),
+                message=(f"Ebook must be APPROVED to download KDP export " f"(current: {ebook.status.value})"),
                 actionable_hint="Only APPROVED ebooks can be downloaded as KDP",
             )
 
@@ -89,10 +85,7 @@ class ExportToKDPUseCase:
         if preview_mode and ebook.status not in [EbookStatus.DRAFT, EbookStatus.APPROVED]:
             raise DomainError(
                 code=ErrorCode.VALIDATION_ERROR,
-                message=(
-                    f"Ebook must be DRAFT or APPROVED to preview KDP "
-                    f"(current: {ebook.status.value})"
-                ),
+                message=(f"Ebook must be DRAFT or APPROVED to preview KDP " f"(current: {ebook.status.value})"),
                 actionable_hint="Only DRAFT or APPROVED ebooks can be previewed",
             )
 
@@ -104,9 +97,7 @@ class ExportToKDPUseCase:
                 actionable_hint="Regenerate the ebook to populate page_count",
             )
 
-        logger.info(
-            f"Exporting ebook {ebook_id} to KDP format: '{ebook.title}' ({ebook.page_count} pages)"
-        )
+        logger.info(f"Exporting ebook {ebook_id} to KDP format: '{ebook.title}' ({ebook.page_count} pages)")
 
         # 4. Use default KDP config if none provided
         if kdp_config is None:
@@ -114,10 +105,7 @@ class ExportToKDPUseCase:
 
         # 4b. Adjust paper type for short books (premium_color requires 24-828 pages)
         if ebook.page_count < 24 and kdp_config.paper_type == "premium_color":
-            logger.warning(
-                f"Ebook has {ebook.page_count} pages (< 24), "
-                f"switching from premium_color to standard_color"
-            )
+            logger.warning(f"Ebook has {ebook.page_count} pages (< 24), " f"switching from premium_color to standard_color")
             kdp_config = KDPExportConfig(
                 trim_size=kdp_config.trim_size,
                 bleed_size=kdp_config.bleed_size,
@@ -129,14 +117,14 @@ class ExportToKDPUseCase:
 
         # 5. Initialize providers if not injected
         if not self.image_provider:
-            from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (  # noqa: E501
+            from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (
                 openrouter_image_provider as or_provider,
             )
 
             self.image_provider = or_provider.OpenRouterImageProvider()
 
         if not self.kdp_assembly_provider:
-            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (  # noqa: E501
+            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.assembly import (
                 cover_assembly_provider as kdp_provider,
             )
 
@@ -151,14 +139,11 @@ class ExportToKDPUseCase:
 
         # 8. Assemble KDP PDF (back + spine + front)
         logger.info("Assembling KDP paperback PDF...")
-        kdp_pdf_bytes = cast(
-            bytes,
-            await self.kdp_assembly_provider.assemble_kdp_paperback(
-                ebook=ebook,
-                back_cover_bytes=back_cover_bytes,
-                front_cover_bytes=front_cover_bytes,
-                kdp_config=kdp_config,
-            ),
+        kdp_pdf_bytes = await self.kdp_assembly_provider.assemble_kdp_paperback(
+            ebook=ebook,
+            back_cover_bytes=back_cover_bytes,
+            front_cover_bytes=front_cover_bytes,
+            kdp_config=kdp_config,
         )
 
         logger.info(f"✅ KDP export completed: {len(kdp_pdf_bytes)} bytes")
@@ -253,7 +238,7 @@ class ExportToKDPUseCase:
             page_count: Number of pages for spine calculation
         """
         try:
-            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.visual_validator import (  # noqa: E501
+            from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.visual_validator import (
                 assemble_full_kdp_cover,
                 validate_full_cover_against_template,
             )
@@ -274,10 +259,7 @@ class ExportToKDPUseCase:
                 logger.info(f"✅ {validation_result['message']}")
             else:
                 logger.warning(f"⚠️ {validation_result['message']}")
-                logger.warning(
-                    f"   Cover size: {validation_result.get('cover_size')} vs "
-                    f"expected: {validation_result.get('expected_size')}"
-                )
+                logger.warning(f"   Cover size: {validation_result.get('cover_size')} vs " f"expected: {validation_result.get('expected_size')}")
 
         except Exception as e:
             # Don't fail export if validation fails - just log warning

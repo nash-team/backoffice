@@ -71,23 +71,15 @@ class RegenerateBackCoverUseCase:
 
         # Business rule: only DRAFT ebooks can be modified
         if ebook.status != EbookStatus.DRAFT:
-            raise ValueError(
-                f"Cannot regenerate back cover for ebook with status {ebook.status.value}. "
-                f"Only DRAFT ebooks can be modified."
-            )
+            raise ValueError(f"Cannot regenerate back cover for ebook with status {ebook.status.value}. " f"Only DRAFT ebooks can be modified.")
 
         # Business rule: ebook must have structure_json with pages metadata
         if not ebook.structure_json or "pages_meta" not in ebook.structure_json:
-            raise ValueError(
-                "Cannot regenerate back cover: ebook structure is missing. "
-                "Please regenerate the entire ebook instead."
-            )
+            raise ValueError("Cannot regenerate back cover: ebook structure is missing. " "Please regenerate the entire ebook instead.")
 
         pages_meta = ebook.structure_json["pages_meta"]
         if len(pages_meta) < 2:
-            raise ValueError(
-                "Cannot regenerate back cover: ebook must have at least 2 pages (cover + back)"
-            )
+            raise ValueError("Cannot regenerate back cover: ebook must have at least 2 pages (cover + back)")
 
         logger.info(f"🔄 Regenerating BACK COVER for ebook {ebook_id}: {ebook.title}")
 

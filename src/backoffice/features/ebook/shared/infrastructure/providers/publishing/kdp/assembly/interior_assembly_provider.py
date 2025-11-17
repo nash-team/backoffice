@@ -12,7 +12,7 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     KDPExportConfig,
     inches_to_px,
 )
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -70,10 +70,7 @@ class KDPInteriorAssemblyProvider:
         page_width_px = trim_width_px + 2 * bleed_px
         page_height_px = trim_height_px + 2 * bleed_px
 
-        logger.info(
-            f"KDP interior dimensions: trim={trim_width_px}x{trim_height_px}px, "
-            f"with bleed={page_width_px}x{page_height_px}px"
-        )
+        logger.info(f"KDP interior dimensions: trim={trim_width_px}x{trim_height_px}px, " f"with bleed={page_width_px}x{page_height_px}px")
 
         # 3. Extract interior pages (exclude first and last - cover and back cover)
         interior_pages = pages_meta[1:-1]
@@ -90,10 +87,7 @@ class KDPInteriorAssemblyProvider:
         min_pages_required = 24  # KDP minimum for standard_color
         if len(interior_pages) < min_pages_required:
             pages_to_add = min_pages_required - len(interior_pages)
-            logger.info(
-                f"⚠️ Interior has {len(interior_pages)} pages (< {min_pages_required}), "
-                f"adding {pages_to_add} blank page(s) for KDP compliance"
-            )
+            logger.info(f"⚠️ Interior has {len(interior_pages)} pages (< {min_pages_required}), " f"adding {pages_to_add} blank page(s) for KDP compliance")
 
             # Generate blank white page (2626x2626 for 8.5" + bleed @ 300 DPI)
             blank_img = Image.new("RGB", (2626, 2626), (255, 255, 255))
@@ -113,17 +107,14 @@ class KDPInteriorAssemblyProvider:
                     }
                 )
 
-            logger.info(
-                f"✅ Added {pages_to_add} blank page(s), new total: {len(interior_pages)} interior pages"
-            )
+            new_total = len(interior_pages)
+            logger.info(f"✅ Added {pages_to_add} blank page(s), new total: {new_total} interior pages")
 
         # 4. Process each interior page
         processed_images = []
         for idx, page_meta in enumerate(interior_pages, start=1):
             page_number = page_meta.get("page_number", idx)
-            logger.info(
-                f"Processing interior page {idx}/{len(interior_pages)} (page_number={page_number})"
-            )
+            logger.info(f"Processing interior page {idx}/{len(interior_pages)} (page_number={page_number})")
 
             # Decode base64 image
             image_data = base64.b64decode(page_meta["image_data_base64"])
@@ -131,9 +122,8 @@ class KDPInteriorAssemblyProvider:
 
             # Resize to exact dimensions with bleed
             if img.size != (page_width_px, page_height_px):
-                logger.warning(
-                    f"Page {page_number} size mismatch: {img.size} != {page_width_px}x{page_height_px}, resizing..."
-                )
+                expected_size = f"{page_width_px}x{page_height_px}"
+                logger.warning(f"Page {page_number} size mismatch: {img.size} != {expected_size}, resizing...")
                 img = img.resize((page_width_px, page_height_px), Image.Resampling.LANCZOS)
 
             # Ensure RGB mode (KDP interior can be RGB or CMYK, but RGB is simpler)
@@ -154,9 +144,7 @@ class KDPInteriorAssemblyProvider:
         # 6. Validate KDP requirements
         self._validate_kdp_interior_requirements(len(interior_pages), kdp_config)
 
-        logger.info(
-            f"✅ KDP interior PDF assembled: {len(pdf_bytes)} bytes ({len(interior_pages)} pages)"
-        )
+        logger.info(f"✅ KDP interior PDF assembled: {len(pdf_bytes)} bytes ({len(interior_pages)} pages)")
         return pdf_bytes
 
     def _validate_kdp_interior_requirements(self, page_count: int, config: KDPExportConfig):
@@ -177,12 +165,11 @@ class KDPInteriorAssemblyProvider:
         max_required = max_pages.get(config.paper_type, 828)
 
         if page_count < min_required or page_count > max_required:
+            paper_type = config.paper_type
+            msg = f"KDP {paper_type} interior requires {min_required}-{max_required} pages, " f"got {page_count}"
             raise DomainError(
                 code=ErrorCode.VALIDATION_ERROR,
-                message=(
-                    f"KDP {config.paper_type} interior requires {min_required}-{max_required} pages, "
-                    f"got {page_count}"
-                ),
+                message=msg,
                 actionable_hint="Adjust page count or use different paper type",
             )
 

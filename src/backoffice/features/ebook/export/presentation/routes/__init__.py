@@ -12,6 +12,7 @@ from backoffice.features.ebook.export.domain.usecases.export_to_kdp import Expor
 from backoffice.features.ebook.export.domain.usecases.export_to_kdp_interior import (
     ExportToKDPInteriorUseCase,
 )
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError
 from backoffice.features.ebook.shared.infrastructure.factories.repository_factory import (
     RepositoryFactory,
     get_repository_factory,
@@ -19,7 +20,6 @@ from backoffice.features.ebook.shared.infrastructure.factories.repository_factor
 from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils import (
     visual_validator,
 )
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 # Type alias for dependency injection
@@ -84,9 +84,7 @@ async def export_ebook_pdf(ebook_id: int, factory: RepositoryFactoryDep) -> Fast
 
 
 @router.get("/{ebook_id}/export-kdp")
-async def export_ebook_to_kdp(
-    ebook_id: int, factory: RepositoryFactoryDep, preview: bool = False
-) -> FastAPIResponse:
+async def export_ebook_to_kdp(ebook_id: int, factory: RepositoryFactoryDep, preview: bool = False) -> FastAPIResponse:
     """Export ebook to Amazon KDP paperback format.
 
     This endpoint:
@@ -119,9 +117,7 @@ async def export_ebook_to_kdp(
 
         # Get ebook for filename
         ebook = await ebook_repo.get_by_id(ebook_id)
-        filename = (
-            f"{ebook.title}_KDP.pdf" if ebook and ebook.title else f"ebook_{ebook_id}_KDP.pdf"
-        )
+        filename = f"{ebook.title}_KDP.pdf" if ebook and ebook.title else f"ebook_{ebook_id}_KDP.pdf"
 
         # Return PDF (inline for preview, attachment for download)
         disposition = "inline" if preview else "attachment"
@@ -146,9 +142,7 @@ async def export_ebook_to_kdp(
 
 
 @router.get("/{ebook_id}/export-kdp/interior")
-async def export_ebook_to_kdp_interior(
-    ebook_id: int, factory: RepositoryFactoryDep, preview: bool = False
-) -> FastAPIResponse:
+async def export_ebook_to_kdp_interior(ebook_id: int, factory: RepositoryFactoryDep, preview: bool = False) -> FastAPIResponse:
     """Export ebook interior/manuscript to Amazon KDP format.
 
     This endpoint:
@@ -182,11 +176,7 @@ async def export_ebook_to_kdp_interior(
 
         # Get ebook for filename
         ebook = await ebook_repo.get_by_id(ebook_id)
-        filename = (
-            f"{ebook.title}_KDP_Interior.pdf"
-            if ebook and ebook.title
-            else f"ebook_{ebook_id}_KDP_Interior.pdf"
-        )
+        filename = f"{ebook.title}_KDP_Interior.pdf" if ebook and ebook.title else f"ebook_{ebook_id}_KDP_Interior.pdf"
 
         # Return PDF (inline for preview, attachment for download)
         disposition = "inline" if preview else "attachment"
@@ -243,9 +233,7 @@ async def get_kdp_cover_preview(ebook_id: int, factory: RepositoryFactoryDep) ->
 
         # Validate structure exists
         if not ebook.structure_json or "pages_meta" not in ebook.structure_json:
-            raise HTTPException(
-                status_code=400, detail="Ebook structure not available - no pages found"
-            )
+            raise HTTPException(status_code=400, detail="Ebook structure not available - no pages found")
 
         # Extract cover and back cover from structure
         pages_meta = ebook.structure_json["pages_meta"]
@@ -255,9 +243,7 @@ async def get_kdp_cover_preview(ebook_id: int, factory: RepositoryFactoryDep) ->
         # Get cover (first page) and back cover (last page) by index, not by page_number
         # Note: page_number can be inconsistent after regeneration
         if len(pages_meta) < 2:
-            raise HTTPException(
-                status_code=400, detail="Ebook must have at least cover and back cover"
-            )
+            raise HTTPException(status_code=400, detail="Ebook must have at least cover and back cover")
 
         cover_page = pages_meta[0]  # First page
         back_cover_page = pages_meta[-1]  # Last page
@@ -296,12 +282,8 @@ async def get_kdp_cover_preview(ebook_id: int, factory: RepositoryFactoryDep) ->
             back_cover_bytes = buffer.getvalue()
 
         # Assemble full KDP cover (back + spine + front)
-        page_count = (
-            ebook.config.number_of_pages if ebook.config and ebook.config.number_of_pages else 24
-        )
-        logger.warning(
-            f"🔍 DEBUG: About to call assemble_full_kdp_cover() with page_count={page_count}"
-        )
+        page_count = ebook.config.number_of_pages if ebook.config and ebook.config.number_of_pages else 24
+        logger.warning(f"🔍 DEBUG: About to call assemble_full_kdp_cover() with page_count={page_count}")
         logger.warning(f"   Back cover size: {len(back_cover_bytes)} bytes")
         logger.warning(f"   Front cover size: {len(cover_bytes)} bytes")
 
@@ -311,18 +293,14 @@ async def get_kdp_cover_preview(ebook_id: int, factory: RepositoryFactoryDep) ->
                 front_cover_bytes=cover_bytes,
                 page_count=page_count,
             )
-            logger.warning(
-                f"✅ DEBUG: assemble_full_kdp_cover() returned {len(full_cover_bytes)} bytes"
-            )
+            logger.warning(f"✅ DEBUG: assemble_full_kdp_cover() returned {len(full_cover_bytes)} bytes")
         except Exception as e:
             logger.error(f"❌ EXCEPTION in assemble_full_kdp_cover(): {e}", exc_info=True)
             # Re-raise to see full traceback
             raise
 
         # Overlay KDP template for visual validation
-        preview_bytes = visual_validator.overlay_kdp_template(
-            full_cover_bytes, template_opacity=0.3, show_measurements=True
-        )
+        preview_bytes = visual_validator.overlay_kdp_template(full_cover_bytes, template_opacity=0.3, show_measurements=True)
 
         logger.info(f"✅ KDP cover preview generated for ebook {ebook_id}")
 
@@ -340,6 +318,4 @@ async def get_kdp_cover_preview(ebook_id: int, factory: RepositoryFactoryDep) ->
         raise
     except Exception as e:
         logger.error(f"Error generating KDP cover preview for ebook {ebook_id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Error generating KDP cover preview: {str(e)}"
-        ) from e
+        raise HTTPException(status_code=500, detail=f"Error generating KDP cover preview: {str(e)}") from e

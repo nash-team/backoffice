@@ -8,7 +8,7 @@ from backoffice.features.ebook.lifecycle.domain.usecases.approve_ebook_usecase i
     ApproveEbookUseCase,
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 
@@ -49,9 +49,7 @@ class FakeFileStorage:
     def is_available(self) -> bool:
         return self._available
 
-    async def upload_ebook(
-        self, file_bytes: bytes, filename: str, metadata: dict
-    ) -> dict[str, str]:
+    async def upload_ebook(self, file_bytes: bytes, filename: str, metadata: dict) -> dict[str, str]:
         storage_id = f"drive_id_{len(self._uploaded_files) + 1}"
         storage_url = f"https://drive.google.com/file/d/{storage_id}/view"
         self._uploaded_files[storage_id] = {
@@ -143,9 +141,7 @@ class TestApproveEbookUseCase:
         )
 
     @pytest.mark.asyncio
-    async def test_approve_draft_ebook_success(
-        self, approve_ebook_usecase, ebook_repository, draft_ebook
-    ):
+    async def test_approve_draft_ebook_success(self, approve_ebook_usecase, ebook_repository, draft_ebook):
         """Should successfully approve a draft ebook and upload to Drive."""
         # Arrange
         ebook_repository.add_ebook(draft_ebook)
@@ -169,9 +165,7 @@ class TestApproveEbookUseCase:
         assert persisted_ebook.drive_id_interior is not None
 
     @pytest.mark.asyncio
-    async def test_approve_emits_approved_event(
-        self, approve_ebook_usecase, ebook_repository, draft_ebook, event_bus
-    ):
+    async def test_approve_emits_approved_event(self, approve_ebook_usecase, ebook_repository, draft_ebook, event_bus):
         """Should emit EbookApprovedEvent when approval succeeds."""
         # Arrange
         ebook_repository.add_ebook(draft_ebook)
@@ -206,9 +200,7 @@ class TestApproveEbookUseCase:
             await approve_ebook_usecase.execute(999)
 
     @pytest.mark.asyncio
-    async def test_approve_rejected_ebook_raises_error(
-        self, approve_ebook_usecase, ebook_repository
-    ):
+    async def test_approve_rejected_ebook_raises_error(self, approve_ebook_usecase, ebook_repository):
         """Should raise DomainError when trying to approve rejected ebook."""
         # Arrange
         rejected_ebook = Ebook(
@@ -227,9 +219,7 @@ class TestApproveEbookUseCase:
             await approve_ebook_usecase.execute(3)
 
     @pytest.mark.asyncio
-    async def test_approve_already_approved_ebook_raises_error(
-        self, approve_ebook_usecase, ebook_repository
-    ):
+    async def test_approve_already_approved_ebook_raises_error(self, approve_ebook_usecase, ebook_repository):
         """Should raise DomainError when trying to approve already approved ebook."""
         # Arrange
         approved_ebook = Ebook(

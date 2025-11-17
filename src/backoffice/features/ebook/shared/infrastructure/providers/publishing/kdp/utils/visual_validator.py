@@ -15,22 +15,18 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     calculate_spine_width,
     inches_to_px,
 )
-from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.barcode_utils import (
-    add_barcode_space,
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils import (
+    barcode_utils,
 )
 
 logger = logging.getLogger(__name__)
 
 # Path to KDP template (relative to project root)
-# __file__ = .../backoffice/src/backoffice/features/ebook/shared/infrastructure/providers/publishing/kdp/utils/visual_validator.py
+# __file__ = .../features/ebook/shared/.../publishing/kdp/utils/visual_validator.py
 # Need to go up to project root: 11 levels up from utils/
 _CURRENT_FILE = Path(__file__)
-_PROJECT_ROOT = (
-    _CURRENT_FILE.parent.parent.parent.parent.parent.parent.parent.parent.parent.parent.parent
-)
-KDP_TEMPLATE_PATH = (
-    _PROJECT_ROOT / "config" / "kdp" / "PAPERBACK_8.500x8.500_24_STANDARD_WHITE_fr_FR.png"
-)
+_PROJECT_ROOT = _CURRENT_FILE.parent.parent.parent.parent.parent.parent.parent.parent.parent.parent.parent
+KDP_TEMPLATE_PATH = _PROJECT_ROOT / "config" / "kdp" / "PAPERBACK_8.500x8.500_24_STANDARD_WHITE_fr_FR.png"
 
 
 def assemble_full_kdp_cover(
@@ -80,11 +76,7 @@ def assemble_full_kdp_cover(
     full_width = bleed_px + back.width + spine_width_px + front.width + bleed_px
     full_height = bleed_px + back.height + bleed_px
 
-    logger.info(
-        f"Assembling full KDP cover: {full_width}×{full_height}px "
-        f'({full_width / 300:.3f}" × {full_height / 300:.3f}" @ 300 DPI) '
-        f"with {spine_width_px}px spine for {page_count} pages"
-    )
+    logger.info(f"Assembling full KDP cover: {full_width}×{full_height}px " f'({full_width / 300:.3f}" × {full_height / 300:.3f}" @ 300 DPI) ' f"with {spine_width_px}px spine for {page_count} pages")
 
     # Create blank canvas with bleeds
     canvas = Image.new("RGB", (full_width, full_height), color=(255, 255, 255))
@@ -95,7 +87,7 @@ def assemble_full_kdp_cover(
     logger.info("Adding KDP barcode space to back cover for validation preview...")
     back_buffer = BytesIO()
     back.save(back_buffer, format="PNG")
-    back_with_barcode = add_barcode_space(
+    back_with_barcode = barcode_utils.add_barcode_space(
         back_buffer.getvalue(),
         barcode_width_inches=config.barcode_width,
         barcode_height_inches=config.barcode_height,
@@ -163,22 +155,17 @@ def overlay_kdp_template(
         template_w, template_h = template_full.size
 
         # Resize template from 600 DPI to 300 DPI (÷2)
-        template_300 = template_full.resize(
-            (template_w // 2, template_h // 2), Image.Resampling.LANCZOS
-        )
+        template_300 = template_full.resize((template_w // 2, template_h // 2), Image.Resampling.LANCZOS)
 
         # Verify dimensions match after resize
         if cover_img.size != template_300.size:
-            logger.warning(
-                f"⚠️ Size mismatch after resize: Cover={cover_img.size}, Template={template_300.size}"
-            )
+            cover_size = cover_img.size
+            template_size = template_300.size
+            logger.warning(f"⚠️ Size mismatch after resize: Cover={cover_size}, Template={template_size}")
             # Resize template to exactly match cover
             template_300 = template_300.resize(cover_img.size, Image.Resampling.LANCZOS)
 
-        logger.info(
-            f"✂️ Template resized: {template_w}×{template_h}px @ 600 DPI → "
-            f"{template_300.size[0]}×{template_300.size[1]}px @ 300 DPI"
-        )
+        logger.info(f"✂️ Template resized: {template_w}×{template_h}px @ 600 DPI → " f"{template_300.size[0]}×{template_300.size[1]}px @ 300 DPI")
 
         # Adjust template opacity
         alpha = template_300.split()[3]
@@ -223,7 +210,7 @@ def _add_measurement_annotations(img: Image.Image) -> Image.Image:
     try:
         font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 40)
         font_small = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 30)
-    except (OSError, IOError) as e:
+    except OSError as e:
         logger.warning(f"Font not found, using default: {e}")
         font = ImageFont.load_default()  # type: ignore[assignment]
         font_small = font
@@ -246,9 +233,7 @@ def _add_measurement_annotations(img: Image.Image) -> Image.Image:
         for offset_x in [-2, 0, 2]:
             for offset_y in [-2, 0, 2]:
                 if offset_x != 0 or offset_y != 0:
-                    draw.text(
-                        (x + offset_x, y + offset_y), text, font=text_font, fill=outline_color
-                    )
+                    draw.text((x + offset_x, y + offset_y), text, font=text_font, fill=outline_color)
         # Draw text
         draw.text((x, y), text, font=text_font, fill=text_color)
 
@@ -284,15 +269,17 @@ def validate_full_cover_against_template(
         expected_size = (template_size[0] // 2, template_size[1] // 2)
         size_correct = cover_size == expected_size
 
+        expected_w, expected_h = expected_size
+        success_msg = f"✅ Full cover matches KDP template dimensions ({expected_w}×{expected_h}px @ 300 DPI)"
+        error_msg = f"❌ Size mismatch: {cover_size} vs expected {expected_size}"
+
         result: dict[str, bool | str | tuple[int, int]] = {
             "valid": size_correct,
             "cover_size": cover_size,
             "template_size": template_size,
             "expected_size": expected_size,
             "size_correct": size_correct,
-            "message": f"✅ Full cover matches KDP template dimensions ({expected_size[0]}×{expected_size[1]}px @ 300 DPI)"
-            if size_correct
-            else f"❌ Size mismatch: {cover_size} vs expected {expected_size}",
+            "message": success_msg if size_correct else error_msg,
         }
 
         logger.info(f"Validation result: {result['message']}")

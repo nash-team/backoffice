@@ -10,9 +10,9 @@ from backoffice.features.ebook.lifecycle.domain.events.ebook_approved_event impo
     EbookApprovedEvent,
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.ebook.shared.domain.ports.file_storage_port import FileStoragePort
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -90,9 +90,7 @@ class ApproveEbookUseCase:
         # 4. Generate KDP Cover PDF (back + spine + front)
         try:
             logger.info("Generating KDP Cover PDF...")
-            export_kdp_use_case = ExportToKDPUseCase(
-                ebook_repository=self.ebook_repository, event_bus=self.event_bus
-            )
+            export_kdp_use_case = ExportToKDPUseCase(ebook_repository=self.ebook_repository, event_bus=self.event_bus)
             cover_pdf_bytes = await export_kdp_use_case.execute(
                 ebook_id=ebook_id,
                 preview_mode=True,  # Allow DRAFT during approval
@@ -109,9 +107,7 @@ class ApproveEbookUseCase:
         # 5. Generate KDP Interior PDF (content pages only)
         try:
             logger.info("Generating KDP Interior PDF...")
-            export_interior_use_case = ExportToKDPInteriorUseCase(
-                ebook_repository=self.ebook_repository, event_bus=self.event_bus
-            )
+            export_interior_use_case = ExportToKDPInteriorUseCase(ebook_repository=self.ebook_repository, event_bus=self.event_bus)
             interior_pdf_bytes = await export_interior_use_case.execute(
                 ebook_id=ebook_id,
                 preview_mode=True,  # Allow DRAFT during approval
@@ -140,10 +136,7 @@ class ApproveEbookUseCase:
                 metadata=cover_metadata,
             )
 
-            logger.info(
-                f"✅ KDP Cover uploaded to Drive: {cover_result.get('storage_id')} "
-                f"(URL: {cover_result.get('storage_url')})"
-            )
+            logger.info(f"✅ KDP Cover uploaded to Drive: {cover_result.get('storage_id')} " f"(URL: {cover_result.get('storage_url')})")
         except Exception as e:
             logger.error(f"❌ Failed to upload KDP Cover to storage: {e}")
             raise DomainError(
@@ -167,10 +160,7 @@ class ApproveEbookUseCase:
                 metadata=interior_metadata,
             )
 
-            logger.info(
-                f"✅ KDP Interior uploaded to Drive: {interior_result.get('storage_id')} "
-                f"(URL: {interior_result.get('storage_url')})"
-            )
+            logger.info(f"✅ KDP Interior uploaded to Drive: {interior_result.get('storage_id')} " f"(URL: {interior_result.get('storage_url')})")
         except Exception as e:
             logger.error(f"❌ Failed to upload KDP Interior to storage: {e}")
             raise DomainError(
@@ -197,8 +187,5 @@ class ApproveEbookUseCase:
             )
         )
 
-        logger.info(
-            f"✅ Ebook {ebook_id} approved: 2 KDP files uploaded to Drive "
-            f"(Cover: {ebook.drive_id_cover}, Interior: {ebook.drive_id_interior})"
-        )
+        logger.info(f"✅ Ebook {ebook_id} approved: 2 KDP files uploaded to Drive " f"(Cover: {ebook.drive_id_cover}, Interior: {ebook.drive_id_interior})")
         return updated_ebook

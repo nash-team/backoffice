@@ -10,9 +10,7 @@ class GoogleAuthService:
     def get_credentials(self) -> service_account.Credentials:
         """Récupère les credentials Google à partir du fichier JSON"""
         if self._credentials is None:
-            self._credentials = service_account.Credentials.from_service_account_file(
-                self.credentials_path, scopes=["https://www.googleapis.com/auth/drive"]
-            )
+            self._credentials = service_account.Credentials.from_service_account_file(self.credentials_path, scopes=["https://www.googleapis.com/auth/drive"])
         return self._credentials
 
     def get_drive_service(self):

@@ -37,9 +37,7 @@ class EbookConfig:
                 type_name = type(self.number_of_chapters).__name__
                 raise ValueError(f"Number of chapters must be an integer, got {type_name}")
             if not (MIN_CHAPTERS <= self.number_of_chapters <= MAX_CHAPTERS):
-                raise ValueError(
-                    f"Number of chapters must be between {MIN_CHAPTERS} and {MAX_CHAPTERS}"
-                )
+                raise ValueError(f"Number of chapters must be between {MIN_CHAPTERS} and {MAX_CHAPTERS}")
 
         if self.number_of_pages is not None:
             if not isinstance(self.number_of_pages, int):
@@ -57,9 +55,7 @@ class Ebook:
     created_at: datetime | None
     status: EbookStatus = EbookStatus.DRAFT
     preview_url: str | None = None
-    drive_id: str | None = (
-        None  # ID du fichier dans Google Drive (legacy, kept for backward compatibility)
-    )
+    drive_id: str | None = None  # ID du fichier dans Google Drive (legacy, kept for backward compatibility)
     drive_id_cover: str | None = None  # KDP Cover PDF Drive ID
     drive_id_interior: str | None = None  # KDP Interior PDF Drive ID
     config: EbookConfig | None = None
@@ -110,20 +106,12 @@ class KDPExportConfig:
         # Validate paper_type
         valid_papers = _config.get_valid_paper_types()
         if self.paper_type not in valid_papers:
-            raise ValueError(
-                f"Invalid paper_type: '{self.paper_type}'. "
-                f"Must be one of: {', '.join(valid_papers)}. "
-                f"Check config/kdp/specifications.yaml"
-            )
+            raise ValueError(f"Invalid paper_type: '{self.paper_type}'. " f"Must be one of: {', '.join(valid_papers)}. " f"Check config/kdp/specifications.yaml")
 
         # Validate cover_finish
         valid_finishes = _config.get_valid_cover_finishes()
         if self.cover_finish not in valid_finishes:
-            raise ValueError(
-                f"Invalid cover_finish: '{self.cover_finish}'. "
-                f"Must be one of: {', '.join(valid_finishes)}. "
-                f"Check config/kdp/specifications.yaml"
-            )
+            raise ValueError(f"Invalid cover_finish: '{self.cover_finish}'. " f"Must be one of: {', '.join(valid_finishes)}. " f"Check config/kdp/specifications.yaml")
 
 
 # KDP utility functions

@@ -10,12 +10,12 @@ from backoffice.features.ebook.regeneration.domain.services.regeneration_service
     RegenerationService,
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.ebook.shared.domain.services.page_generation import (
     ContentPageGenerationService,
 )
-from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -77,30 +77,19 @@ class RegenerateContentPageUseCase:
 
         # Business rule: only DRAFT ebooks can be modified
         if ebook.status != EbookStatus.DRAFT:
-            raise ValueError(
-                f"Cannot regenerate page for ebook with status {ebook.status.value}. "
-                f"Only DRAFT ebooks can be modified."
-            )
+            raise ValueError(f"Cannot regenerate page for ebook with status {ebook.status.value}. " f"Only DRAFT ebooks can be modified.")
 
         # Business rule: ebook must have structure_json with pages metadata
         if not ebook.structure_json or "pages_meta" not in ebook.structure_json:
-            raise ValueError(
-                "Cannot regenerate page: ebook structure is missing. "
-                "Please regenerate the entire ebook instead."
-            )
+            raise ValueError("Cannot regenerate page: ebook structure is missing. " "Please regenerate the entire ebook instead.")
 
         pages_meta = ebook.structure_json["pages_meta"]
 
         # Validate page index (must be between cover and back cover)
         if page_index < 1 or page_index >= len(pages_meta) - 1:
-            raise ValueError(
-                f"Invalid page index {page_index}. "
-                f"Must be between 1 and {len(pages_meta) - 2} (content pages only)."
-            )
+            raise ValueError(f"Invalid page index {page_index}. " f"Must be between 1 and {len(pages_meta) - 2} (content pages only).")
 
-        logger.info(
-            f"🔄 Regenerating CONTENT PAGE {page_index} for ebook {ebook_id}: {ebook.title}"
-        )
+        logger.info(f"🔄 Regenerating CONTENT PAGE {page_index} for ebook {ebook_id}: {ebook.title}")
 
         # Step 1: Generate new page with B&W coloring style
         page_spec = ImageSpec(

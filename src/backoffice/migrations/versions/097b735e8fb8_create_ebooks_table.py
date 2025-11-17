@@ -28,9 +28,7 @@ def upgrade() -> None:
         sa.Column("status", sa.Enum("PENDING", "VALIDATED", name="ebookstatus"), nullable=True),
         sa.Column("preview_url", sa.String(), nullable=True),
         sa.Column("drive_id", sa.String(), nullable=True),
-        sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=True
-        ),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_ebooks_id"), "ebooks", ["id"], unique=False)

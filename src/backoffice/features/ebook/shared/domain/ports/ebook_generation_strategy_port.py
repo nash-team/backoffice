@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from backoffice.features.shared.domain.entities.generation_request import (
+from backoffice.features.ebook.shared.domain.entities.generation_request import (
     GenerationRequest,
     GenerationResult,
 )

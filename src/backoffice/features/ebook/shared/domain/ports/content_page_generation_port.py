@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from backoffice.features.shared.domain.entities.generation_request import ImageSpec
+from backoffice.features.ebook.shared.domain.entities.generation_request import ImageSpec
 
 
 class ContentPageGenerationPort(ABC):

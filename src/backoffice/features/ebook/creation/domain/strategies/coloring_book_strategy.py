@@ -3,6 +3,13 @@
 import logging
 from pathlib import Path
 
+from backoffice.features.ebook.shared.domain.entities.generation_request import (
+    ColorMode,
+    GenerationRequest,
+    GenerationResult,
+    ImageSpec,
+    PageMeta,
+)
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_generation_strategy_port import (
     EbookGenerationStrategyPort,
@@ -17,13 +24,6 @@ from backoffice.features.ebook.shared.domain.services.prompt_template_engine imp
 )
 from backoffice.features.ebook.shared.infrastructure.adapters.theme_repository import (
     ThemeRepository,
-)
-from backoffice.features.shared.domain.entities.generation_request import (
-    ColorMode,
-    GenerationRequest,
-    GenerationResult,
-    ImageSpec,
-    PageMeta,
 )
 
 logger = logging.getLogger(__name__)
@@ -227,9 +227,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         logger.info(f"Type: {request.ebook_type.value}")
         logger.info(f"Theme: {request.theme}")
         logger.info(f"Audience: {request.audience.value}")
-        logger.info(
-            f"Total pages: {request.page_count + 1} (1 cover + {request.page_count} content)"
-        )
+        logger.info(f"Total pages: {request.page_count + 1} (1 cover + {request.page_count} content)")
         logger.info(f"Seed: {request.seed or 'random'}")
         logger.info("\nSteps:")
         logger.info("  1. Generate colorful cover with 'Coloring Book' text (Gemini)")
@@ -242,9 +240,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         logger.info("  - Back: Same as cover without text")
         logger.info("=" * 80 + "\n")
 
-    def _build_cover_prompt(
-        self, request: GenerationRequest, page_prompts: list[str] | None = None
-    ) -> str:
+    def _build_cover_prompt(self, request: GenerationRequest, page_prompts: list[str] | None = None) -> str:
         """Build prompt for cover generation WITH text using theme YAML configuration.
 
         Args:
@@ -266,11 +262,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
 
         # Build simplified, direct prompt (less verbose = better AI compliance)
         colors_str = ", ".join(theme_profile.palette.base[:3])
-        accents_str = (
-            ", ".join(theme_profile.palette.accents_allowed)
-            if theme_profile.palette.accents_allowed
-            else "white"
-        )
+        accents_str = ", ".join(theme_profile.palette.accents_allowed) if theme_profile.palette.accents_allowed else "white"
         forbidden_str = ", ".join(theme_profile.palette.forbidden_keywords)
 
         # Extract style guide values
@@ -290,11 +282,7 @@ Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
         if page_prompts and len(page_prompts) > 0:
             # Extract common visual elements from first few pages (max 3 for brevity)
             sample_pages = page_prompts[: min(3, len(page_prompts))]
-            context = (
-                "\n\nCONTEXT: The book includes pages featuring: "
-                + ", ".join(prompt.split(".")[0].lower() for prompt in sample_pages)
-                + "."
-            )
+            context = "\n\nCONTEXT: The book includes pages featuring: " + ", ".join(prompt.split(".")[0].lower() for prompt in sample_pages) + "."
             return base_prompt + context
 
         return base_prompt
@@ -376,7 +364,7 @@ Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
             configuration and brand identity
         """
         from backoffice.config import ConfigLoader
-        from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (  # noqa: E501
+        from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.color_utils import (
             extract_dominant_color_exact,
         )
 
@@ -391,8 +379,9 @@ Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
         bg_hex = "#{:02x}{:02x}{:02x}".format(*bg_color)
 
         # Build prompt sections
+        theme_label = theme_profile.label
         prompt_parts = [
-            f"Create a simple LINE ART illustration for a {theme_profile.label} coloring book back cover.",
+            f"Create a simple LINE ART illustration for a {theme_label} coloring book back cover.",
             "",
         ]
 
@@ -429,9 +418,7 @@ Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
         engine = PromptTemplateEngine(seed=request.seed)
 
         # Generate varied prompts based on theme
-        prompts = engine.generate_prompts(
-            theme=request.theme, count=request.page_count, audience=request.audience.value
-        )
+        prompts = engine.generate_prompts(theme=request.theme, count=request.page_count, audience=request.audience.value)
 
         logger.info(f"Generated {len(prompts)} varied prompts using template engine")
         return prompts

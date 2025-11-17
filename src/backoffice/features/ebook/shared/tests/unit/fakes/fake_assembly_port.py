@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage, AssemblyPort
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
 
 class FakeAssemblyPort(AssemblyPort):

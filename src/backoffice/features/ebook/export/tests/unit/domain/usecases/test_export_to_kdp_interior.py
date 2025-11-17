@@ -14,7 +14,7 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     EbookStatus,
     KDPExportConfig,
 )
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 
@@ -167,9 +167,7 @@ class TestExportToKDPInteriorUseCase:
         assert pdf_bytes == b"%PDF-1.7 fake kdp interior content"
         assert fake_assembly_provider.call_count == 1
 
-    async def test_export_draft_without_preview_fails(
-        self, use_case, ebook_repository, sample_ebook_with_structure
-    ):
+    async def test_export_draft_without_preview_fails(self, use_case, ebook_repository, sample_ebook_with_structure):
         """Test exporting DRAFT ebook for download fails (not allowed)."""
         # Arrange
         sample_ebook_with_structure.status = EbookStatus.DRAFT
@@ -190,9 +188,7 @@ class TestExportToKDPInteriorUseCase:
 
         assert exc_info.value.code == ErrorCode.EBOOK_NOT_FOUND
 
-    async def test_export_ebook_without_page_count_fails(
-        self, use_case, ebook_repository, sample_ebook_with_structure
-    ):
+    async def test_export_ebook_without_page_count_fails(self, use_case, ebook_repository, sample_ebook_with_structure):
         """Test exporting ebook without page_count fails."""
         # Arrange
         sample_ebook_with_structure.page_count = None

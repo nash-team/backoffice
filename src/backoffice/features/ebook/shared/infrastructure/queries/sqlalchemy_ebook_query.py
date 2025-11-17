@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 from backoffice.features.ebook.shared.domain.ports.ebook_query_port import EbookQueryPort
 from backoffice.features.ebook.shared.infrastructure.models.ebook_model import EbookModel
-from backoffice.features.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 
 
 class SqlAlchemyEbookQuery(EbookQueryPort):
@@ -18,13 +18,7 @@ class SqlAlchemyEbookQuery(EbookQueryPort):
         total_count = self.db.query(EbookModel).count()
 
         # Get paginated results
-        db_ebooks = (
-            self.db.query(EbookModel)
-            .order_by(EbookModel.created_at.desc())
-            .offset(params.offset)
-            .limit(params.size)
-            .all()
-        )
+        db_ebooks = self.db.query(EbookModel).order_by(EbookModel.created_at.desc()).offset(params.offset).limit(params.size).all()
 
         ebooks = [self._to_domain(ebook) for ebook in db_ebooks]
 
@@ -35,22 +29,13 @@ class SqlAlchemyEbookQuery(EbookQueryPort):
             size=params.size,
         )
 
-    async def list_paginated_by_status(
-        self, status: EbookStatus, params: PaginationParams
-    ) -> PaginatedResult[Ebook]:
+    async def list_paginated_by_status(self, status: EbookStatus, params: PaginationParams) -> PaginatedResult[Ebook]:
         """List ebooks filtered by status with pagination"""
         # Get total count for the specific status
         total_count = self.db.query(EbookModel).filter(EbookModel.status == status.value).count()
 
         # Get paginated results for the specific status
-        db_ebooks = (
-            self.db.query(EbookModel)
-            .filter(EbookModel.status == status.value)
-            .order_by(EbookModel.created_at.desc())
-            .offset(params.offset)
-            .limit(params.size)
-            .all()
-        )
+        db_ebooks = self.db.query(EbookModel).filter(EbookModel.status == status.value).order_by(EbookModel.created_at.desc()).offset(params.offset).limit(params.size).all()
 
         ebooks = [self._to_domain(ebook) for ebook in db_ebooks]
 

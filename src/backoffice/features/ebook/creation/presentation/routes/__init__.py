@@ -10,6 +10,12 @@ from fastapi.responses import Response
 from backoffice.features.ebook.creation.domain.entities.creation_request import CreationRequest
 from backoffice.features.ebook.creation.domain.usecases.create_ebook import CreateEbookUseCase
 from backoffice.features.ebook.listing.domain.usecases.get_ebooks import GetEbooksUseCase
+from backoffice.features.ebook.shared.domain.entities.generation_request import (
+    Audience,
+    EbookType,
+    GenerationRequest,
+)
+from backoffice.features.ebook.shared.domain.entities.pagination import PaginationParams
 from backoffice.features.ebook.shared.infrastructure.adapters.theme_repository import (
     ThemeRepository,
 )
@@ -17,12 +23,6 @@ from backoffice.features.ebook.shared.infrastructure.factories.repository_factor
     RepositoryFactory,
     get_repository_factory,
 )
-from backoffice.features.shared.domain.entities.generation_request import (
-    Audience,
-    EbookType,
-    GenerationRequest,
-)
-from backoffice.features.shared.domain.entities.pagination import PaginationParams
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 from backoffice.features.shared.presentation.routes.templates import templates
 
@@ -59,12 +59,7 @@ async def get_form_config() -> dict:
     config = ConfigLoader()
 
     # Load themes from config/branding/themes/ directory
-    themes_dir = (
-        Path(__file__).parent.parent.parent.parent.parent.parent.parent
-        / "config"
-        / "branding"
-        / "themes"
-    )
+    themes_dir = Path(__file__).parent.parent.parent.parent.parent.parent.parent / "config" / "branding" / "themes"
     themes = []
 
     for theme_file in sorted(themes_dir.glob("*.yml")):
@@ -161,10 +156,7 @@ async def create_ebook(
     try:
         audience_enum = Audience(audience)
     except ValueError as err:
-        raise ValueError(
-            f"Invalid audience: '{audience}'. Must be 'children' or 'adults'. "
-            f"Check config/branding/audiences.yaml"
-        ) from err
+        raise ValueError(f"Invalid audience: '{audience}'. Must be 'children' or 'adults'. " f"Check config/branding/audiences.yaml") from err
 
     # Step 4: Determine page count based on mode
     # Preview mode: 1 page (+ cover + back cover = 3 images)

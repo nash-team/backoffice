@@ -16,9 +16,7 @@ class ModelMapping(BaseModel):
     Note: This replaces the dataclass version in model_registry.py
     """
 
-    provider: Literal["openrouter", "gemini", "local"] = Field(
-        ..., description="Image generation provider"
-    )
+    provider: Literal["openrouter", "gemini", "local"] = Field(..., description="Image generation provider")
     model: str = Field(
         ...,
         min_length=1,
@@ -26,9 +24,7 @@ class ModelMapping(BaseModel):
     )
     lora: str | None = Field(None, description="LoRA adapter ID (local provider only)")
     controlnet: str | None = Field(None, description="ControlNet model ID (local provider only)")
-    supports_vectorization: bool = Field(
-        False, description="Whether model supports SVG/vector output"
-    )
+    supports_vectorization: bool = Field(False, description="Whether model supports SVG/vector output")
 
     class Config:
         """Pydantic config."""
@@ -42,10 +38,7 @@ class ModelMapping(BaseModel):
         if v is not None:
             provider = info.data.get("provider")
             if provider != "local":
-                raise ValueError(
-                    f"LoRA adapters are only supported with 'local' provider, got '{provider}'. "
-                    f"Remove 'lora' field or change provider to 'local'."
-                )
+                raise ValueError(f"LoRA adapters are only supported with 'local' provider, got '{provider}'. " f"Remove 'lora' field or change provider to 'local'.")
         return v
 
     @field_validator("controlnet")
@@ -55,10 +48,7 @@ class ModelMapping(BaseModel):
         if v is not None:
             provider = info.data.get("provider")
             if provider != "local":
-                raise ValueError(
-                    f"ControlNet is only supported with 'local' provider, got '{provider}'. "
-                    f"Remove 'controlnet' field or change provider to 'local'."
-                )
+                raise ValueError(f"ControlNet is only supported with 'local' provider, got '{provider}'. " f"Remove 'controlnet' field or change provider to 'local'.")
         return v
 
 
@@ -81,9 +71,6 @@ class ModelsConfig(BaseModel):
         missing_types = required_types - configured_types
 
         if missing_types:
-            raise ValueError(
-                f"Missing required model types in configuration: {sorted(missing_types)}. "
-                f"Please configure all required types: {sorted(required_types)}"
-            )
+            raise ValueError(f"Missing required model types in configuration: {sorted(missing_types)}. " f"Please configure all required types: {sorted(required_types)}")
 
         return v

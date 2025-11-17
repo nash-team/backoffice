@@ -5,20 +5,23 @@ import logging
 import os
 from io import BytesIO
 
+from openai import AsyncOpenAI
 from PIL import Image
 
+from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.content_page_generation_port import (
     ContentPageGenerationPort,
 )
-from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
-from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter.response_extractor import (
-    OpenRouterResponseExtractor,
+from backoffice.features.ebook.shared.domain.ports.cover_generation_port import (
+    CoverGenerationPort,
+)
+from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (
+    response_extractor,
 )
 from backoffice.features.ebook.shared.infrastructure.utils.image_borders import (
     add_rounded_border_to_image,
 )
-from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -35,29 +38,30 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
     - B&W coloring pages (ColorMode.BLACK_WHITE)
     """
 
+    client: AsyncOpenAI | None
+    model: str
+
     def __init__(self, model: str | None = None):
         """Initialize OpenRouter provider.
 
         Args:
             model: Specific model to use (defaults to Gemini 2.5 Flash Image Preview)
         """
-        from openai import AsyncOpenAI
 
         self.api_key = os.getenv("LLM_API_KEY")
-        self.model = model or os.getenv("LLM_IMAGE_MODEL", "google/gemini-2.5-flash-image-preview")
+        self.model = model or os.getenv("LLM_IMAGE_MODEL", "google/gemini-2.5-flash-image-preview") or "google/gemini-2.5-flash-image-preview"
         self.base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-        self.client: AsyncOpenAI | None
 
         if self.api_key:
             self.client = AsyncOpenAI(
                 api_key=self.api_key,
                 base_url=self.base_url,
             )
-            self.extractor = OpenRouterResponseExtractor(model=self.model or "unknown")
+            self.extractor = response_extractor.OpenRouterResponseExtractor(model=self.model)
             logger.info(f"OpenRouterImageProvider initialized: {self.model}")
         else:
             self.client = None
-            self.extractor = OpenRouterResponseExtractor(model=self.model or "unknown")
+            self.extractor = response_extractor.OpenRouterResponseExtractor(model=self.model)
             logger.warning("LLM_API_KEY not found")
 
     def is_available(self) -> bool:
@@ -92,11 +96,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             )
 
         # Validate model supports image generation
-        if (
-            not self.model
-            or "gemini" not in self.model.lower()
-            or "image" not in self.model.lower()
-        ):
+        if not self.model or "gemini" not in self.model.lower() or "image" not in self.model.lower():
             raise DomainError(
                 code=ErrorCode.MODEL_UNAVAILABLE,
                 message=f"Model {self.model} doesn't support image generation via OpenRouter",
@@ -119,11 +119,16 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         )
         logger.debug(f"Full prompt: {full_prompt}")
 
+        if not self.client:
+            raise DomainError(
+                code=ErrorCode.PROVIDER_UNAVAILABLE,
+                message="OpenRouter client not initialized (missing API key)",
+                actionable_hint="Set LLM_API_KEY environment variable",
+            )
+
         try:
             # Generate via chat endpoint (Gemini-specific approach)
             # Gemini 2.5 Flash Image Preview requires modalities: ["image", "text"]
-            assert self.model is not None  # Already validated above
-            assert self.client is not None  # Already validated above
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -134,9 +139,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                 ],
                 extra_body={
                     "modalities": ["image", "text"],  # Required for Gemini image generation
-                    "usage": {
-                        "include": True
-                    },  # Enable Usage Accounting for real cost (usage.cost)
+                    "usage": {"include": True},  # Enable Usage Accounting for real cost (usage.cost)
                 },
                 extra_headers={
                     "HTTP-Referer": "https://ebook-generator.app",
@@ -154,9 +157,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
 
             # Resize to spec if needed
             if spec.width_px != 1024 or spec.height_px != 1024:
-                logger.debug(
-                    f"Resizing image from 1024x1024 to {spec.width_px}x{spec.height_px}..."
-                )
+                logger.debug(f"Resizing image from 1024x1024 to {spec.width_px}x{spec.height_px}...")
                 image = Image.open(BytesIO(image_bytes))
                 image = image.resize((spec.width_px, spec.height_px), Image.Resampling.LANCZOS)
                 buffer = BytesIO()
@@ -237,6 +238,13 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
 
         logger.info("🍌 Removing text from cover with Gemini Vision (ultra-simple prompt)...")
 
+        if not self.client:
+            raise DomainError(
+                code=ErrorCode.PROVIDER_UNAVAILABLE,
+                message="OpenRouter client not initialized (missing API key)",
+                actionable_hint="Set LLM_API_KEY environment variable",
+            )
+
         try:
             # Encode cover to base64
             cover_b64 = base64.b64encode(cover_bytes).decode()
@@ -245,8 +253,6 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             prompt_text = "Remove all text and typography from this image."
 
             # Call Gemini with image input + ultra-simple prompt
-            assert self.model is not None  # Already validated above
-            assert self.client is not None  # Already validated above
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -266,9 +272,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
                 ],
                 extra_body={
                     "modalities": ["image", "text"],
-                    "usage": {
-                        "include": True
-                    },  # Enable Usage Accounting for real cost (usage.cost)
+                    "usage": {"include": True},  # Enable Usage Accounting for real cost (usage.cost)
                 },
                 extra_headers={
                     "HTTP-Referer": "https://ebook-generator.app",

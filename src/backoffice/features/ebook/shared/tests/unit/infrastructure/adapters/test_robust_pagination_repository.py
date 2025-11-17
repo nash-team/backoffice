@@ -9,11 +9,11 @@ from unittest.mock import create_autospec
 import pytest
 
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 from backoffice.features.ebook.shared.domain.ports.ebook_query_port import EbookQueryPort
 from backoffice.features.ebook.shared.infrastructure.repositories.ebook_repository import (
     SqlAlchemyEbookRepository,
 )
-from backoffice.features.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 
 
 class TestSqlAlchemyEbookRepositoryPagination:
@@ -37,9 +37,7 @@ class TestSqlAlchemyEbookRepositoryPagination:
             (4, 25, 75),
         ],
     )
-    async def test_get_paginated_delegates_to_query_port_with_correct_params(
-        self, page: int, size: int, expected_offset: int
-    ):
+    async def test_get_paginated_delegates_to_query_port_with_correct_params(self, page: int, size: int, expected_offset: int):
         """Test that pagination parameters are correctly passed to query port"""
         # Given
         params = PaginationParams(page=page, size=size)
@@ -174,9 +172,7 @@ class TestSqlAlchemyEbookRepositoryPagination:
         """Test that query port is called exactly once per repository method call"""
         # Given
         params = PaginationParams(page=1, size=10)
-        self.mock_query_port.list_paginated.return_value = PaginatedResult(
-            items=[], total_count=0, page=1, size=10
-        )
+        self.mock_query_port.list_paginated.return_value = PaginatedResult(items=[], total_count=0, page=1, size=10)
 
         # When
         await self.repository.get_paginated(params)

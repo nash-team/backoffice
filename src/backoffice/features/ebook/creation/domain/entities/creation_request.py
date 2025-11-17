@@ -32,10 +32,7 @@ class CreationRequest:
         """Validate business rules."""
         # Business rule: Only coloring type supported
         if self.ebook_type != "coloring":
-            raise ValueError(
-                f"Invalid ebook_type '{self.ebook_type}'. "
-                f"Only 'coloring' type is currently supported."
-            )
+            raise ValueError(f"Invalid ebook_type '{self.ebook_type}'. " f"Only 'coloring' type is currently supported.")
 
         # Business rule: theme_id required and non-empty
         if not self.theme_id or not self.theme_id.strip():

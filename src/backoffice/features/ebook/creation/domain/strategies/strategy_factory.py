@@ -5,6 +5,7 @@ import logging
 from backoffice.features.ebook.creation.domain.strategies.coloring_book_strategy import (
     ColoringBookStrategy,
 )
+from backoffice.features.ebook.shared.domain.entities.generation_request import EbookType
 from backoffice.features.ebook.shared.domain.ports.ebook_generation_strategy_port import (
     EbookGenerationStrategyPort,
 )
@@ -16,7 +17,6 @@ from backoffice.features.ebook.shared.domain.services.pdf_assembly import PDFAss
 from backoffice.features.ebook.shared.infrastructure.providers.provider_factory import (
     ProviderFactory,
 )
-from backoffice.features.shared.domain.entities.generation_request import EbookType
 
 logger = logging.getLogger(__name__)
 

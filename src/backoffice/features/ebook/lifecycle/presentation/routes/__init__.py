@@ -71,9 +71,7 @@ async def approve_ebook(ebook_id: int, request: Request, factory: RepositoryFact
             "drive_id": updated_ebook.drive_id,
         }
 
-        return templates.TemplateResponse(
-            "partials/ebooks_table_row.html", {"request": request, "ebook": ebook_data}
-        )
+        return templates.TemplateResponse("partials/ebooks_table_row.html", {"request": request, "ebook": ebook_data})
     except ValueError as e:
         logger.warning(f"Validation error approving ebook {ebook_id}: {str(e)}")
         error_html = f"""<div class="alert alert-danger" role="alert">
@@ -117,9 +115,7 @@ async def reject_ebook(ebook_id: int, request: Request, factory: RepositoryFacto
             "drive_id": updated_ebook.drive_id,
         }
 
-        return templates.TemplateResponse(
-            "partials/ebooks_table_row.html", {"request": request, "ebook": ebook_data}
-        )
+        return templates.TemplateResponse("partials/ebooks_table_row.html", {"request": request, "ebook": ebook_data})
     except ValueError as e:
         logger.warning(f"Validation error rejecting ebook {ebook_id}: {str(e)}")
         error_html = f"""<div class="alert alert-danger" role="alert">

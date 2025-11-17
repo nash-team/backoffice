@@ -29,6 +29,4 @@ class RegenerationRequest:
 
         # Business rule: cover and back_cover should not have page_index
         if self.page_type in (PageType.COVER, PageType.BACK_COVER) and self.page_index is not None:
-            raise ValueError(
-                f"page_index should not be provided for {self.page_type.value} regeneration"
-            )
+            raise ValueError(f"page_index should not be provided for {self.page_type.value} regeneration")

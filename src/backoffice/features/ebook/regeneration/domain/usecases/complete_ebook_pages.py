@@ -10,9 +10,9 @@ from backoffice.features.ebook.regeneration.domain.services.regeneration_service
     RegenerationService,
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -77,10 +77,7 @@ class CompleteEbookPagesUseCase:
 
         # 3. Check if already complete
         if interior_pages >= target_pages:
-            logger.info(
-                f"Ebook {ebook_id} already has {interior_pages} interior pages "
-                f"(target: {target_pages}, total: {total_pages})"
-            )
+            logger.info(f"Ebook {ebook_id} already has {interior_pages} interior pages " f"(target: {target_pages}, total: {total_pages})")
             return ebook
 
         # 4. Calculate pages to add (to interior)
@@ -138,10 +135,7 @@ class CompleteEbookPagesUseCase:
             filename_suffix="completed",
         )
 
-        logger.info(
-            f"✅ Ebook {ebook_id} completed: added {pages_to_add} blank pages "
-            f"(new total: {updated_ebook.page_count}), PDF reassembled"
-        )
+        logger.info(f"✅ Ebook {ebook_id} completed: added {pages_to_add} blank pages " f"(new total: {updated_ebook.page_count}), PDF reassembled")
 
         return updated_ebook
 

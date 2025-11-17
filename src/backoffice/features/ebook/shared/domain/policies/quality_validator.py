@@ -2,8 +2,8 @@
 
 import logging
 
-from backoffice.features.shared.domain.entities.generation_request import ColorMode, ImageSpec
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
+from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -44,10 +44,7 @@ class QualityValidator:
         if spec.width_px > MAX_RESOLUTION_PX or spec.height_px > MAX_RESOLUTION_PX:
             raise DomainError(
                 code=ErrorCode.RESOLUTION_TOO_HIGH,
-                message=(
-                    f"Resolution {spec.width_px}x{spec.height_px} "
-                    f"exceeds max {MAX_RESOLUTION_PX}"
-                ),
+                message=(f"Resolution {spec.width_px}x{spec.height_px} " f"exceeds max {MAX_RESOLUTION_PX}"),
                 actionable_hint=f"Use resolution <= {MAX_RESOLUTION_PX}x{MAX_RESOLUTION_PX}",
                 context={
                     "requested": f"{spec.width_px}x{spec.height_px}",
@@ -60,14 +57,12 @@ class QualityValidator:
     @staticmethod
     def validate_image(
         image_data: bytes,
-        expected_spec: ImageSpec,  # noqa: ARG004
         page_type: str = "content",
     ) -> None:
         """Post-generation validation.
 
         Args:
             image_data: Generated image data
-            expected_spec: Expected specifications
             page_type: Type of page (for logging)
 
         Raises:

@@ -7,7 +7,7 @@ loose coupling between the export use case and infrastructure providers.
 from typing import Protocol
 
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, KDPExportConfig
-from backoffice.features.shared.domain.entities.generation_request import ImageSpec
+from backoffice.features.ebook.shared.domain.entities.generation_request import ImageSpec
 
 
 class ImageProviderProtocol(Protocol):

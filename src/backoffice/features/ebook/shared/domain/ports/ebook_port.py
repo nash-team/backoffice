@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
-from backoffice.features.shared.domain.entities.pagination import PaginatedResult, PaginationParams
+from backoffice.features.ebook.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 
 
 class EbookPort(ABC):
@@ -73,9 +73,7 @@ class EbookPort(ABC):
         pass
 
     @abstractmethod
-    async def get_paginated_by_status(
-        self, status: EbookStatus, params: PaginationParams
-    ) -> PaginatedResult[Ebook]:
+    async def get_paginated_by_status(self, status: EbookStatus, params: PaginationParams) -> PaginatedResult[Ebook]:
         """
         Récupère une page d'ebooks filtrés par statut avec pagination.
 

@@ -1,10 +1,10 @@
 import logging
 
 from backoffice.features.ebook.shared.domain.ports.file_storage_port import FileStoragePort
+from backoffice.features.ebook.shared.infrastructure.adapters.auth.google_auth import GoogleAuthService
 from backoffice.features.ebook.shared.infrastructure.adapters.sources.google_drive_adapter import (
     GoogleDriveAdapter,
 )
-from backoffice.features.shared.infrastructure.adapters.auth.google_auth import GoogleAuthService
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +36,7 @@ class GoogleDriveStorageAdapter(FileStoragePort):
         """Check if Google Drive storage is available"""
         return self.drive_adapter is not None
 
-    async def upload_ebook(
-        self, file_bytes: bytes, filename: str, metadata: dict[str, str] | None = None
-    ) -> dict[str, str]:
+    async def upload_ebook(self, file_bytes: bytes, filename: str, metadata: dict[str, str] | None = None) -> dict[str, str]:
         """Upload ebook to Google Drive"""
         if not self.is_available():
             raise FileStorageError("Google Drive storage is not available")
@@ -53,9 +51,7 @@ class GoogleDriveStorageAdapter(FileStoragePort):
             # Use the existing upload_pdf_ebook method
             if self.drive_adapter is None:
                 raise FileStorageError("Google Drive adapter not initialized")
-            upload_result = await self.drive_adapter.upload_pdf_ebook(
-                title=title, pdf_bytes=file_bytes, author=author
-            )
+            upload_result = await self.drive_adapter.upload_pdf_ebook(title=title, pdf_bytes=file_bytes, author=author)
 
             # Type safe result construction
             result: dict[str, str] = {
@@ -95,9 +91,7 @@ class GoogleDriveStorageAdapter(FileStoragePort):
 
             # For now, we'll use the update_pdf_ebook method (to be implemented)
             # or re-upload with same ID
-            update_result = await self.drive_adapter.update_pdf_ebook(
-                file_id=file_id, pdf_bytes=file_bytes
-            )
+            update_result = await self.drive_adapter.update_pdf_ebook(file_id=file_id, pdf_bytes=file_bytes)
 
             result: dict[str, str] = {
                 "storage_id": str(file_id),

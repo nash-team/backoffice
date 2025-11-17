@@ -3,10 +3,10 @@ from datetime import UTC, datetime
 from sqlalchemy.orm import Session
 
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.ebook.shared.domain.ports.ebook_query_port import EbookQueryPort
 from backoffice.features.ebook.shared.infrastructure.models.ebook_model import EbookModel
-from backoffice.features.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 
 
 class SqlAlchemyEbookRepository(EbookPort):
@@ -15,7 +15,7 @@ class SqlAlchemyEbookRepository(EbookPort):
         # Use dependency injection with fallback for backward compatibility
         if query_port is None:
             # fmt: off
-            from backoffice.features.ebook.shared.infrastructure.queries.sqlalchemy_ebook_query import (  # noqa: E501
+            from backoffice.features.ebook.shared.infrastructure.queries.sqlalchemy_ebook_query import (
                 SqlAlchemyEbookQuery,
             )
             # fmt: on
@@ -39,9 +39,7 @@ class SqlAlchemyEbookRepository(EbookPort):
         """Récupère une page d'ebooks avec pagination."""
         return await self.query_port.list_paginated(params)
 
-    async def get_paginated_by_status(
-        self, status: EbookStatus, params: PaginationParams
-    ) -> PaginatedResult[Ebook]:
+    async def get_paginated_by_status(self, status: EbookStatus, params: PaginationParams) -> PaginatedResult[Ebook]:
         """Récupère une page d'ebooks filtrés par statut avec pagination."""
         return await self.query_port.list_paginated_by_status(status, params)
 

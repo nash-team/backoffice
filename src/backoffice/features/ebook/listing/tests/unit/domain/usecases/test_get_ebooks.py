@@ -4,8 +4,8 @@ import pytest
 
 from backoffice.features.ebook.listing.domain.usecases.get_ebooks import GetEbooksUseCase
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
-from backoffice.features.shared.domain.entities.pagination import PaginatedResult, PaginationParams
 
 
 class FakeEbookRepository(EbookPort):
@@ -55,9 +55,7 @@ class FakeEbookRepository(EbookPort):
         items = self._ebooks[offset : offset + limit]
         return PaginatedResult(items=items, total_count=total, page=params.page, size=params.size)
 
-    async def get_paginated_by_status(
-        self, status: EbookStatus, params: PaginationParams
-    ) -> PaginatedResult[Ebook]:
+    async def get_paginated_by_status(self, status: EbookStatus, params: PaginationParams) -> PaginatedResult[Ebook]:
         filtered = [e for e in self._ebooks if e.status == status]
         offset = params.offset
         limit = params.size

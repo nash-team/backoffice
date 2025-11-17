@@ -5,8 +5,8 @@ from pathlib import Path
 
 from weasyprint import HTML
 
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage, AssemblyPort
-from backoffice.features.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +85,7 @@ class WeasyPrintAssemblyProvider(AssemblyPort):
         """
         # Convert images to base64 for embedding
         cover_data_uri = self._image_to_data_uri(cover.image_data, cover.image_format)
-        page_data_uris = [
-            self._image_to_data_uri(page.image_data, page.image_format) for page in pages
-        ]
+        page_data_uris = [self._image_to_data_uri(page.image_data, page.image_format) for page in pages]
 
         # Build HTML - Square format for coloring books
         html = """
