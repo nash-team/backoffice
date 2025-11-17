@@ -6,14 +6,6 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-# Configure logging level based on environment
-log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(
-    level=getattr(logging, log_level),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-
 from backoffice.features.ebook.creation.presentation.routes import (
     router as ebook_creation_router,
 )
@@ -29,6 +21,14 @@ from backoffice.features.ebook.regeneration.presentation.routes import (
     router as ebook_regeneration_router,
 )
 from backoffice.features.shared.presentation.routes.templates import templates
+
+# Configure logging level based on environment
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=getattr(logging, log_level),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 app = FastAPI(title="Backoffice")
 
