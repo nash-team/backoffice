@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from backoffice.features.ebook.shared.domain.entities.theme_profile import ThemeProfile, ThemeProfileModel
+from backoffice.features.ebook.shared.domain.entities.theme_profile import ThemeProfile
 from backoffice.features.ebook.shared.domain.theme.theme_loader import ThemeLoader
 
 logger = logging.getLogger(__name__)

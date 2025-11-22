@@ -14,11 +14,9 @@ class ContentPageRegeneratedEvent(DomainEvent):
         title: Title of the ebook
         page_index: Index of the regenerated page
         prompt_used: Prompt used for regeneration
-        custom_prompt: Whether a custom prompt was used
     """
 
     ebook_id: int
     title: str
     page_index: int
     prompt_used: str
-    custom_prompt: bool

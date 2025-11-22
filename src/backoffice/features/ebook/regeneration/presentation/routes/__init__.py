@@ -58,8 +58,7 @@ async def regenerate_ebook_page(
     {
         "page_type": "cover" | "back_cover" | "content_page",
         "page_index": 0,  # Single page (for backward compatibility)
-        "page_indices": [1, 2, 3],  # Multiple pages (content_page only)
-        "prompt_override": "optional custom prompt"
+        "page_indices": [1, 2, 3]  # Multiple pages (content_page only)
     }
 
     Returns:
@@ -70,7 +69,6 @@ async def regenerate_ebook_page(
         page_type_str = regeneration_request.get("page_type")
         page_index = regeneration_request.get("page_index")
         page_indices = regeneration_request.get("page_indices")
-        prompt_override = regeneration_request.get("prompt_override")
 
         if not page_type_str:
             raise HTTPException(status_code=400, detail="page_type is required")
@@ -113,7 +111,6 @@ async def regenerate_ebook_page(
             )
             updated_ebook = await regenerate_usecase.execute(
                 ebook_id=ebook_id,
-                prompt_override=prompt_override,
             )
 
         elif page_type == PageType.BACK_COVER:
@@ -129,7 +126,6 @@ async def regenerate_ebook_page(
             )
             updated_ebook = await regenerate_usecase.execute(
                 ebook_id=ebook_id,
-                prompt_override=prompt_override,
             )
 
         else:  # PageType.CONTENT_PAGE
@@ -154,7 +150,6 @@ async def regenerate_ebook_page(
                     updated_ebook = await regenerate_usecase.execute(
                         ebook_id=ebook_id,
                         page_index=idx,
-                        prompt_override=prompt_override,
                     )
 
                 message = f"{len(page_indices)} pages regenerated successfully"
@@ -170,7 +165,6 @@ async def regenerate_ebook_page(
                 updated_ebook = await regenerate_usecase.execute(
                     ebook_id=ebook_id,
                     page_index=page_index,
-                    prompt_override=prompt_override,
                 )
                 message = f"Page {page_index} regenerated successfully"
 

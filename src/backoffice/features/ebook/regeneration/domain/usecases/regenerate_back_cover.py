@@ -50,13 +50,11 @@ class RegenerateBackCoverUseCase:
     async def execute(
         self,
         ebook_id: int,
-        prompt_override: str | None = None,
     ) -> Ebook:
         """Regenerate the back cover of an ebook.
 
         Args:
             ebook_id: ID of the ebook
-            prompt_override: Optional custom prompt for back cover generation
 
         Returns:
             Updated ebook with new back cover

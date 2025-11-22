@@ -16,9 +16,6 @@ from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.ebook.shared.domain.services.page_generation import (
     ContentPageGenerationService,
 )
-from backoffice.features.ebook.shared.domain.services.prompt_template_engine import (
-    PromptTemplateEngine,
-)
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -58,14 +55,12 @@ class RegenerateContentPageUseCase:
         self,
         ebook_id: int,
         page_index: int,
-        prompt_override: str | None = None,
     ) -> Ebook:
         """Regenerate a specific content page of an ebook.
 
         Args:
             ebook_id: ID of the ebook
             page_index: Index of the page to regenerate (1-based, excluding cover)
-            prompt_override: Optional custom prompt for page generation
 
         Returns:
             Updated ebook with regenerated page
@@ -94,7 +89,37 @@ class RegenerateContentPageUseCase:
 
         logger.info(f"🔄 Regenerating CONTENT PAGE {page_index} for ebook {ebook_id}: {ebook.title}")
 
-        # Step 1: Generate new page with B&W coloring style
+        # Step 1: Build page prompt from YAML theme
+        from backoffice.features.ebook.shared.domain.services.workflow_helper import (
+            build_page_prompt_from_yaml,
+            load_workflow_params,
+        )
+        from backoffice.features.ebook.shared.infrastructure.adapters.theme_repository import (
+            ThemeRepository,
+        )
+
+        theme_repo = ThemeRepository()
+
+        # Calculate total pages excluding cover and back cover
+        total_content_pages = len(pages_meta) - 2
+
+        prompt = build_page_prompt_from_yaml(
+            theme_id=ebook.theme_id or "dinosaurs",
+            page_index=page_index - 1,  # Convert to 0-based index
+            total_pages=total_content_pages,
+            themes_directory=theme_repo.themes_directory,
+            seed=42,  # Default seed for reproducibility
+        )
+        logger.info(f"Using YAML-based prompt: {prompt[:100]}...")
+
+        # Step 2: Load workflow params from YAML theme
+        workflow_params = load_workflow_params(
+            theme_id=ebook.theme_id or "dinosaurs",
+            image_type="coloring_page",
+            themes_directory=theme_repo.themes_directory,
+        )
+
+        # Step 3: Generate new page with B&W coloring style
         page_spec = ImageSpec(
             width_px=2626,
             height_px=2626,
@@ -103,13 +128,11 @@ class RegenerateContentPageUseCase:
             color_mode=ColorMode.BLACK_WHITE,
         )
 
-        # Use theme from ebook if available
-        prompt = prompt_override or f"{ebook.theme_id} themed coloring page"
-
         new_page_data = await self.page_service.generate_single_page(
             prompt=prompt,
             spec=page_spec,
             seed=None,  # Random seed for variety
+            workflow_params=workflow_params,
         )
 
         logger.info(f"✅ Page regenerated: {len(new_page_data)} bytes")
@@ -168,7 +191,6 @@ class RegenerateContentPageUseCase:
                 title=updated_ebook.title or "Untitled",
                 page_index=page_index,
                 prompt_used=prompt,
-                custom_prompt=prompt_override is not None,
             )
         )
 
