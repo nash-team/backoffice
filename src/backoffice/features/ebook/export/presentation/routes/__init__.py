@@ -65,12 +65,15 @@ async def export_ebook_pdf(ebook_id: int, factory: RepositoryFactoryDep) -> Fast
         filename = f"{ebook.title}.pdf" if ebook and ebook.title else f"ebook_{ebook_id}.pdf"
 
         # Return PDF with proper headers
+        # Note: Cache disabled to ensure fresh PDF after regeneration (especially with LocalFileStorage)
         return FastAPIResponse(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
                 "Content-Disposition": f'inline; filename="{filename}"',
-                "Cache-Control": "public, max-age=3600",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
             },
         )
 

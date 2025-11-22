@@ -344,6 +344,41 @@ class ConfigLoader:
             audiences["audiences"].get(audience_id, audiences["audiences"]["children"]),
         )
 
+    # Model generation configuration
+    def load_model_config(self) -> dict[str, Any]:
+        """Load model configuration (providers, models for cover/pages)."""
+        return self._load_yaml("generation/models.yaml")
+
+    def get_model_config_for_type(self, image_type: str) -> dict[str, str]:
+        """Get provider and model for a specific image type.
+
+        Args:
+            image_type: Type of image ("cover" or "coloring_page")
+
+        Returns:
+            {
+                "provider": str,  # e.g., "comfy", "gemini", "openrouter"
+                "model": str      # e.g., "cover-page-workflow.json", "gemini-2.5-flash-image"
+            }
+        """
+        config = self.load_model_config()
+        return cast(dict[str, str], config["models"][image_type])
+
+    def get_template_key_for_type(self, image_type: str) -> str:
+        """Get template key based on provider for a specific image type.
+
+        For ComfyUI provider, returns "comfy", otherwise "default".
+
+        Args:
+            image_type: Type of image ("cover" or "coloring_page")
+
+        Returns:
+            Template key ("comfy" or "default")
+        """
+        model_config = self.get_model_config_for_type(image_type)
+        provider = model_config["provider"]
+        return "comfy" if provider == "comfy" else "default"
+
 
 # Singleton instance for easy import
 _config_loader: ConfigLoader | None = None
