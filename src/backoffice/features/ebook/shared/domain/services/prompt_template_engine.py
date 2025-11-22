@@ -67,16 +67,16 @@ class PromptTemplateEngine:
         self.themes_directory = themes_directory
         logger.info(f"PromptTemplateEngine initialized with themes from: {themes_directory}")
 
-    def load_template_from_yaml(self, theme_id: str, model_id: str | None = None, template_type: str = "coloring_page") -> PromptTemplate:
+    def load_template_from_yaml(self, theme_id: str, template_key: str | None = None, template_type: str = "coloring_page") -> PromptTemplate:
         """Load prompt template from theme YAML file.
 
         Args:
             theme_id: Theme ID (e.g., "dinosaurs", "unicorns")
-            model_id: Model ID (e.g., "black-forest-labs/FLUX.1-schnell") - optional
+            template_key: Template key (e.g., "comfy", "default", "gemini") - optional
             template_type: Type of template ("coloring_page" or "cover")
 
         Returns:
-            PromptTemplate loaded from YAML (model-specific or default)
+            PromptTemplate loaded from YAML (template-specific or default)
 
         Raises:
             FileNotFoundError: If theme file doesn't exist
@@ -99,15 +99,15 @@ class PromptTemplateEngine:
 
         templates = theme_data[section_name]
 
-        # Try to load model-specific template first, then fallback to default
-        if model_id and model_id in templates:
-            logger.info(f"Using {template_type} template for model '{model_id}' in theme '{theme_id}'")
-            template_data = templates[model_id]
+        # Try to load template by key first, then fallback to default
+        if template_key and template_key in templates:
+            logger.info(f"Using {template_type} template '{template_key}' in theme '{theme_id}'")
+            template_data = templates[template_key]
         elif "default" in templates:
-            logger.info(f"Model '{model_id}' not found, " f"using default {template_type} template for theme '{theme_id}'")
+            logger.info(f"Template '{template_key}' not found, " f"using default {template_type} template for theme '{theme_id}'")
             template_data = templates["default"]
         else:
-            raise ValueError(f"Theme '{theme_id}' has no model-specific template for '{model_id}' " f"and no default template in {section_name}")
+            raise ValueError(f"Theme '{theme_id}' has no template for '{template_key}' " f"and no default template in {section_name}")
 
         # Handle old format (prompt_blocks for cover) vs new format
         if template_type == "cover" and "prompt_blocks" in template_data:
@@ -142,7 +142,7 @@ class PromptTemplateEngine:
         theme: str,
         count: int,
         audience: str | None = None,
-        model_id: str | None = None,
+        template_key: str | None = None,
     ) -> list[str]:
         """Generate varied prompts for coloring pages.
 
@@ -150,15 +150,15 @@ class PromptTemplateEngine:
             theme: Theme name (e.g., "dinosaurs", "unicorns")
             count: Number of prompts to generate
             audience: Target audience ("children" or "adults") - optional
-            model_id: Model ID for model-specific templates - optional
+            template_key: Template key (e.g., "comfy", "default") - optional
 
         Returns:
             List of complete prompts ready for image generation
         """
         # Load template from YAML
-        template = self._find_template(theme, model_id)
+        template = self._find_template(theme, template_key=template_key)
 
-        logger.info(f"Generating {count} prompts for theme '{theme}' " f"(model={model_id}, audience={audience}, seed={self.seed})")
+        logger.info(f"Generating {count} prompts for theme '{theme}' " f"(template_key={template_key}, audience={audience}, seed={self.seed})")
 
         prompts = []
         for i in range(count):
@@ -177,7 +177,7 @@ class PromptTemplateEngine:
         theme: str,
         count: int,
         audience: str | None = None,
-        model_id: str | None = None,
+        template_key: str | None = None,
     ) -> dict[str, list[str] | dict[str, str | float | int]]:
         """Generate varied prompts with workflow params.
 
@@ -185,15 +185,15 @@ class PromptTemplateEngine:
             theme: Theme name (e.g., "dinosaurs", "unicorns")
             count: Number of prompts to generate
             audience: Target audience ("children" or "adults") - optional
-            model_id: Model ID for model-specific templates - optional
+            template_key: Template key (e.g., "comfy", "default") - optional
 
         Returns:
             Dict with "prompts" (list of strings) and "workflow_params" (dict)
         """
         # Load template from YAML
-        template = self._find_template(theme, model_id)
+        template = self._find_template(theme, template_key=template_key)
 
-        logger.info(f"Generating {count} prompts with params for theme '{theme}' " f"(model={model_id}, audience={audience}, seed={self.seed})")
+        logger.info(f"Generating {count} prompts with params for theme '{theme}' " f"(template_key={template_key}, audience={audience}, seed={self.seed})")
 
         prompts = []
         for i in range(count):
@@ -210,20 +210,20 @@ class PromptTemplateEngine:
             "workflow_params": template.workflow_params or {},
         }
 
-    def generate_cover_prompt(self, theme: str, model_id: str | None = None) -> dict[str, str | dict[str, str | float | int]]:
+    def generate_cover_prompt(self, theme: str, template_key: str | None = None) -> dict[str, str | dict[str, str | float | int]]:
         """Generate cover prompt with workflow params.
 
         Args:
             theme: Theme name (e.g., "dinosaurs", "unicorns")
-            model_id: Model ID for model-specific templates - optional
+            template_key: Template key (e.g., "comfy", "default") - optional
 
         Returns:
             Dict with "prompt" (string) and "workflow_params" (dict)
         """
         # Load cover template from YAML
-        template = self._find_template(theme, model_id, template_type="cover")
+        template = self._find_template(theme, template_key=template_key, template_type="cover")
 
-        logger.info(f"Generating cover prompt for theme '{theme}' (model={model_id})")
+        logger.info(f"Generating cover prompt for theme '{theme}' (template_key={template_key})")
 
         # Cover prompts don't have variables (or have empty variables)
         prompt = template.base_structure
@@ -235,18 +235,18 @@ class PromptTemplateEngine:
             "workflow_params": template.workflow_params or {},
         }
 
-    def _find_template(self, theme: str, model_id: str | None = None, template_type: str = "coloring_page") -> PromptTemplate:
-        """Find template matching the theme and model.
+    def _find_template(self, theme: str, template_key: str | None = None, template_type: str = "coloring_page") -> PromptTemplate:
+        """Find template matching the theme and template key.
 
         Loads from YAML file. Supports:
         - Exact match: "dinosaurs" -> dinosaurs.yml
         - Partial match: "dino" -> dinosaurs.yml
-        - Model-specific templates with fallback to default
+        - Template-specific templates with fallback to default
         - Falls back to neutral-default if theme not found
 
         Args:
             theme: Theme to search for (ID or partial match)
-            model_id: Model ID for model-specific templates (optional)
+            template_key: Template key (e.g., "comfy", "default") - optional
             template_type: Type of template ("coloring_page" or "cover")
 
         Returns:
@@ -257,7 +257,7 @@ class PromptTemplateEngine:
 
         # Try exact match first
         try:
-            return self.load_template_from_yaml(theme_normalized, model_id, template_type)
+            return self.load_template_from_yaml(theme_normalized, template_key, template_type)
         except (FileNotFoundError, ValueError):
             pass  # Try partial match
 
@@ -267,7 +267,7 @@ class PromptTemplateEngine:
                 theme_id = theme_file.stem
                 if theme_normalized in theme_id or theme_id in theme_normalized:
                     logger.info(f"Theme '{theme}' matched to '{theme_id}' (partial match)")
-                    return self.load_template_from_yaml(theme_id, model_id, template_type)
+                    return self.load_template_from_yaml(theme_id, template_key, template_type)
         except Exception as e:
             logger.debug(f"Error during theme template search: {e}. Continuing to fallback.")
 

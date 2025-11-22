@@ -173,9 +173,17 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
         self.workflow["31"]["inputs"]["seed"] = seed
         self.workflow["54"]["inputs"]["text"] = prompt
 
-        # Inject workflow params (e.g., negative prompt in node 47)
-        if workflow_params and "47" in workflow_params:
-            self.workflow["47"]["inputs"]["text"] = workflow_params["47"]
+        # Inject workflow params from theme config
+        if workflow_params:
+            for node_id, value in workflow_params.items():
+                # Only inject if node exists in workflow
+                if node_id in self.workflow:
+                    # For text nodes, inject into "text" input
+                    if "inputs" in self.workflow[node_id] and "text" in self.workflow[node_id]["inputs"]:
+                        self.workflow[node_id]["inputs"]["text"] = value
+                        logger.debug(f"Injected workflow_param into node {node_id}: {value[:50]}...")
+                else:
+                    logger.debug(f"Skipping workflow_param '{node_id}': node not found in workflow")
 
         try:
             ws = websocket.WebSocket()
@@ -265,9 +273,17 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
             self.workflow["41"]["inputs"]["clip_l"] = prompt
             self.workflow["41"]["inputs"]["t5xxl"] = prompt
 
-        # Inject workflow params (e.g., negative prompt in node 47)
-        if workflow_params and "47" in workflow_params:
-            self.workflow["47"]["inputs"]["text"] = workflow_params["47"]
+        # Inject workflow params from theme config
+        if workflow_params:
+            for node_id, value in workflow_params.items():
+                # Only inject if node exists in workflow
+                if node_id in self.workflow:
+                    # For text nodes, inject into "text" input
+                    if "inputs" in self.workflow[node_id] and "text" in self.workflow[node_id]["inputs"]:
+                        self.workflow[node_id]["inputs"]["text"] = value
+                        logger.debug(f"Injected workflow_param into node {node_id}: {value[:50]}...")
+                else:
+                    logger.debug(f"Skipping workflow_param '{node_id}': node not found in workflow")
 
         try:
             ws = websocket.WebSocket()

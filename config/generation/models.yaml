@@ -53,7 +53,7 @@ models:
     # Option 1: Gemini via OpenRouter (same model, unified billing)
     #provider: openrouter
     #model: google/gemini-2.5-flash-image-preview
-    
+
     # Option 2: Comfy (FREE, best quality, 17GB disk, 32GB RAM)
     #provider: comfy
     #model: coloring-page-workflow.json

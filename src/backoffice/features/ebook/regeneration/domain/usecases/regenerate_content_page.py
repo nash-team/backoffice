@@ -16,6 +16,9 @@ from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.ebook.shared.domain.services.page_generation import (
     ContentPageGenerationService,
 )
+from backoffice.features.ebook.shared.domain.services.prompt_template_engine import (
+    PromptTemplateEngine,
+)
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)

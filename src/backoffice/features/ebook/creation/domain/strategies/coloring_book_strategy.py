@@ -65,17 +65,24 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         self.assembly_service = assembly_service
         self.theme_repository = theme_repository or ThemeRepository()
 
-    def _load_workflow_params(self, theme_id: str, template_key: str = "comfy", is_cover: bool = True) -> dict[str, str]:
-        """Load workflow_params from theme YAML.
+    def _load_workflow_params(self, theme_id: str, image_type: str = "cover") -> dict[str, str]:
+        """Load workflow_params from theme YAML based on configured provider.
 
         Args:
             theme_id: Theme identifier
-            template_key: Template key (default: "comfy")
-            is_cover: True for cover templates, False for coloring page templates
+            image_type: Type of image ("cover" or "coloring_page")
 
         Returns:
             Dictionary of workflow parameters
         """
+        from backoffice.config import ConfigLoader
+
+        # Get template key based on provider configuration
+        config = ConfigLoader()
+        template_key = config.get_template_key_for_type(image_type)
+
+        logger.info(f"Loading workflow_params for {image_type} using template: {template_key}")
+
         theme_file = self.theme_repository.themes_directory / f"{theme_id}.yml"
         if not theme_file.exists():
             logger.warning(f"Theme file not found: {theme_file}, returning empty workflow_params")
@@ -86,6 +93,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
 
         # Extract workflow_params from appropriate template
         params: dict[str, str]
+        is_cover = image_type == "cover"
         if is_cover:
             params = data.get("cover_templates", {}).get(template_key, {}).get("workflow_params", {})
         else:
@@ -116,9 +124,9 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         # Log execution plan
         self._log_execution_plan(request)
 
-        # Load workflow params from theme (for ComfyUI)
-        workflow_params = self._load_workflow_params(request.theme)
-        logger.info(f"📝 Loaded workflow_params: {workflow_params}")
+        # Load workflow params from theme (dynamically based on provider)
+        workflow_params = self._load_workflow_params(request.theme, image_type="cover")
+        logger.info(f"📝 Loaded cover workflow_params: {workflow_params}")
 
         # Step 1: Generate cover (colorful) FIRST
         logger.info("\n📋 Step 1/4: Generating cover...")
@@ -152,8 +160,8 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
             color_mode=ColorMode.BLACK_WHITE,
         )
 
-        # Load coloring page workflow params
-        page_workflow_params = self._load_workflow_params(request.theme, template_key="comfy", is_cover=False)
+        # Load coloring page workflow params (dynamically based on provider)
+        page_workflow_params = self._load_workflow_params(request.theme, image_type="coloring_page")
         logger.info(f"📝 Loaded page workflow_params: {page_workflow_params}")
 
         pages_data = await self.pages_service.generate_pages(
@@ -282,42 +290,65 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         logger.info("=" * 80 + "\n")
 
     def _build_cover_prompt(self, request: GenerationRequest, page_prompts: list[str] | None = None) -> str:
-        """Build prompt for cover generation WITH text using theme YAML configuration.
+        """Build prompt for cover generation using theme YAML template.
 
         Args:
             request: Generation request
             page_prompts: Optional list of page prompts to inspire cover (if pages generated first)
 
         Returns:
-            Cover prompt based on theme configuration and brand identity
+            Cover prompt from template (comfy or default) based on configured provider
         """
         from backoffice.config import ConfigLoader
 
-        # Load theme from YAML
-        theme_profile = self.theme_repository.get_theme_by_id(request.theme)
-
-        # Load brand identity for style guidelines
         config = ConfigLoader()
-        identity = config.load_brand_identity()
-        style_guide = identity["style_guidelines"]
 
-        # Build simplified, direct prompt (less verbose = better AI compliance)
-        colors_str = ", ".join(theme_profile.palette.base[:3])
-        accents_str = ", ".join(theme_profile.palette.accents_allowed) if theme_profile.palette.accents_allowed else "white"
-        forbidden_str = ", ".join(theme_profile.palette.forbidden_keywords)
+        # Get the template key based on provider (comfy or default)
+        template_key = config.get_template_key_for_type("cover")
 
-        # Extract style guide values
-        illustration_style = style_guide["illustration"]["style"]
-        mood = style_guide["mood"]["overall"]
+        logger.info(f"Building cover prompt using template: {template_key}")
 
-        base_prompt = f"""Coloring book cover. {illustration_style}, {mood}.
+        # Load theme YAML to get the prompt template
+        theme_file = self.theme_repository.themes_directory / f"{request.theme}.yml"
+        with theme_file.open("r", encoding="utf-8") as f:
+            theme_data = yaml.safe_load(f)
 
-Scene: {theme_profile.blocks.subject}, {theme_profile.blocks.environment}
+        cover_template = theme_data.get("cover_templates", {}).get(template_key, {})
+
+        # Check if we have a direct prompt (comfy style) or prompt_blocks (default style)
+        base_prompt: str
+        if "prompt" in cover_template:
+            # ComfyUI style: direct prompt
+            base_prompt = str(cover_template["prompt"])
+        elif "prompt_blocks" in cover_template:
+            # Default style: build from blocks
+            blocks = cover_template["prompt_blocks"]
+            identity = config.load_brand_identity()
+            style_guide = identity["style_guidelines"]
+
+            # Load theme profile for palette
+            theme_profile = self.theme_repository.get_theme_by_id(request.theme)
+            colors_str = ", ".join(theme_profile.palette.base[:3])
+            accents_str = ", ".join(theme_profile.palette.accents_allowed) if theme_profile.palette.accents_allowed else "white"
+            forbidden_str = ", ".join(theme_profile.palette.forbidden_keywords)
+
+            illustration_style = style_guide["illustration"]["style"]
+            mood = style_guide["mood"]["overall"]
+
+            base_prompt = f"""Coloring book cover. {illustration_style}, {mood}.
+
+Scene: {blocks['subject']}, {blocks['environment']}
 
 Colors to use: {colors_str}, {accents_str}
 Do NOT use: {forbidden_str}, turquoise, cyan
 
 Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
+        else:
+            # Fallback: use old hardcoded style
+            logger.warning(f"No prompt or prompt_blocks found in template {template_key}, using fallback")
+            theme_profile = self.theme_repository.get_theme_by_id(request.theme)
+            base_prompt = f"""Coloring book cover featuring {theme_profile.blocks.subject}.
+Text: Only "{request.title}" - NO age numbers"""
 
         # If pages were generated first, add context from page themes
         if page_prompts and len(page_prompts) > 0:
@@ -455,11 +486,29 @@ Text: Only "{request.title}" - NO age numbers, NO "Ages 2-4" or similar"""
         Returns:
             List of page prompts with varied compositions
         """
+        from backoffice.config import ConfigLoader
+
         # Initialize template engine with request seed for reproducibility
         engine = PromptTemplateEngine(seed=request.seed)
 
-        # Generate varied prompts based on theme
-        prompts = engine.generate_prompts(theme=request.theme, count=request.page_count, audience=request.audience.value)
+        # Get provider from config to use the correct template
+        config = ConfigLoader()
+        model_config = config.get_model_config_for_type("coloring_page")
+        provider = model_config["provider"]
+
+        # Convert provider to template key ("comfy" stays "comfy", others use provider name)
+        template_key = provider  # For ComfyUI it's "comfy", for others it's their name
+
+        logger.info(f"Building page prompts for provider: {provider} (template_key: {template_key})")
+
+        # Generate varied prompts based on theme with template_key
+        # The PromptTemplateEngine will look for templates[template_key] in YAML
+        prompts = engine.generate_prompts(
+            theme=request.theme,
+            count=request.page_count,
+            audience=request.audience.value,
+            template_key=template_key,  # Use provider as template selector
+        )
 
         logger.info(f"Generated {len(prompts)} varied prompts using template engine")
         return prompts
