@@ -51,13 +51,11 @@ class RegenerateCoverUseCase:
     async def execute(
         self,
         ebook_id: int,
-        prompt_override: str | None = None,
     ) -> Ebook:
         """Regenerate the cover of an ebook.
 
         Args:
             ebook_id: ID of the ebook
-            prompt_override: Optional custom prompt for cover generation
 
         Returns:
             Updated ebook with new cover
@@ -80,16 +78,27 @@ class RegenerateCoverUseCase:
 
         logger.info(f"🔄 Regenerating cover for ebook {ebook_id}: {ebook.title}")
 
-        # Step 1: Build cover prompt
-        if prompt_override:
-            cover_prompt = prompt_override
-            logger.info(f"Using custom prompt: {cover_prompt}")
-        else:
-            # Build prompt from ebook metadata
-            cover_prompt = self._build_cover_prompt(ebook)
-            logger.info("Using auto-generated prompt")
+        # Step 1: Build cover prompt from YAML theme
+        from backoffice.features.ebook.shared.domain.services.workflow_helper import (
+            build_cover_prompt_from_yaml,
+            load_workflow_params,
+        )
+        from backoffice.features.ebook.shared.infrastructure.adapters.theme_repository import (
+            ThemeRepository,
+        )
 
-        # Step 2: Generate new cover
+        theme_repo = ThemeRepository()
+        cover_prompt = build_cover_prompt_from_yaml(theme_id=ebook.theme_id or "dinosaurs", themes_directory=theme_repo.themes_directory)
+        logger.info(f"Using YAML-based prompt: {cover_prompt[:100]}...")
+
+        # Step 2: Load workflow params from YAML theme
+        workflow_params = load_workflow_params(
+            theme_id=ebook.theme_id or "dinosaurs",
+            image_type="cover",
+            themes_directory=theme_repo.themes_directory,
+        )
+
+        # Step 3: Generate new cover
         cover_spec = ImageSpec(
             width_px=2626,
             height_px=2626,
@@ -102,6 +111,7 @@ class RegenerateCoverUseCase:
             prompt=cover_prompt,
             spec=cover_spec,
             seed=None,  # Random cover each time
+            workflow_params=workflow_params,
         )
 
         logger.info(f"✅ Cover regenerated: {len(cover_data)} bytes")
@@ -176,29 +186,7 @@ class RegenerateCoverUseCase:
                 ebook_id=ebook_id,
                 title=updated_ebook.title or "Untitled",
                 prompt_used=cover_prompt,
-                custom_prompt=prompt_override is not None,
             )
         )
 
         return updated_ebook
-
-    def _build_cover_prompt(self, ebook: Ebook) -> str:
-        """Build cover prompt from ebook metadata.
-
-        Args:
-            ebook: Ebook entity
-
-        Returns:
-            Cover prompt
-        """
-        theme = ebook.theme_id or "coloring book"
-        audience = ebook.audience or "children"
-
-        return (
-            f"Create a vibrant, colorful cover for a children's coloring book. "
-            f"Title: '{ebook.title}'. "
-            f"Theme: {theme}. "
-            f"Target age: {audience}. "
-            f"Style: Engaging, playful, child-friendly. "
-            f"Full-bleed illustration with rich colors."
-        )

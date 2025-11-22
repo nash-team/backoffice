@@ -13,10 +13,8 @@ class CoverRegeneratedEvent(DomainEvent):
         ebook_id: ID of the ebook
         title: Title of the ebook
         prompt_used: Prompt used for regeneration (for tracking)
-        custom_prompt: Whether a custom prompt was used
     """
 
     ebook_id: int
     title: str
     prompt_used: str
-    custom_prompt: bool
