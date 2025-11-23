@@ -144,8 +144,7 @@ coloring_page_templates:
     #   workflow["47"]["inputs"]["text"] = workflow_params["47"]
     #   workflow["X"]["inputs"]["key"] = workflow_params["custom_key"]
     workflow_params:
-      "negative": "color, ugly dinosaurs, shading, text, watermark"  # Negative prompt node
-      "prompt_1": "A coloring book page for kids in black and white on with dinosaurs. For a coloring book page for kids. The kid will be able to color his favorites dinosaurs.\nThe background should be a prehistoric background. the coloring area should take all the page and with a lot of details. Cute for kids. 
-                   It should display either only one dinosaurs or many dinosaurs. Kawai."
-      "prompt_2": "On the background we should see a prehistoric landscape with plants, trees or a volcanic landscape in a coloring book style with dinosaurs in their prehistoric ecosystem. A lot of details for the plants or the dinosaurs. Cute dinosaurs. Kawai."
+      "negative": "color, shading, text, watermark"  # Negative prompt node
+      "prompt_1": "a coloring book page for kids in black and white on with {only one dinosaur|4 dinosaurs}.{eating|fighting|sleeping|playing}. For a coloring book page for kids. The kid will be able to color his favorites dinosaurs. Cute for kids. A lot of details and professional coloring book page style. Kawai."
+      "prompt_2": "On the background we should see a {prehistoric|modern} ecosystem. Background landscape with {plants|trees|volcano|cascade|lake|desert|sea} and {plants|trees|volcano|cascade|lake|desert|sea} in a coloring book style. The sky must be illustrated too. Cute dinosaurs. Kawai. Full page."
       # Add any custom ComfyUI node IDs or params here (controlnet_scale, etc.)

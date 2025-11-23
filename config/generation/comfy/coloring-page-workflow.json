@@ -28,14 +28,14 @@
   },
   "31": {
     "inputs": {
-      "seed": 897562030833594,
+      "seed": 99687570927844,
       "steps": 20,
       "cfg": 1,
       "sampler_name": "euler",
       "scheduler": "simple",
       "denoise": 1,
       "model": [
-        "48",
+        "38",
         0
       ],
       "positive": [
@@ -89,8 +89,14 @@
   },
   "41": {
     "inputs": {
-      "clip_l": "a coloring book page for kids in black and white on with majestic and cute dinosaurs. For a coloring book page for kids. The kid will be able to color his favorites dinosaurs.\nThe background should be a prehistoric background. the coloring area should take all the page and with a lot of details. Cute for kids. Kawai\n",
-      "t5xxl": "On the background we should see a prehistoric landscape with plants, trees or a volcanic landscape in a coloring book style with dinosaurs in their prehistoric ecosystem. A lot of details for the plants or the dinosaurs. Cute dinosaurs. Kawai",
+      "clip_l": [
+        "52",
+        0
+      ],
+      "t5xxl": [
+        "53",
+        0
+      ],
       "guidance": 3.5,
       "clip": [
         "40",
@@ -116,10 +122,10 @@
   },
   "47": {
     "inputs": {
-      "text": "Colors, ugly dinosaurs",
+      "text": "Colors, grey, gray",
       "clip": [
-        "48",
-        1
+        "40",
+        0
       ]
     },
     "class_type": "CLIPTextEncode",
@@ -127,23 +133,68 @@
       "title": "No Colors"
     }
   },
-  "48": {
+  "49": {
     "inputs": {
-      "lora_name": "Coloring_for_children.safetensors",
-      "strength_model": 1,
-      "strength_clip": 1,
-      "model": [
-        "38",
-        0
-      ],
-      "clip": [
-        "40",
+      "lora_01": "Coloring_for_children.safetensors",
+      "strength_01": 1,
+      "lora_02": "None",
+      "strength_02": 1,
+      "lora_03": "None",
+      "strength_03": 1,
+      "lora_04": "None",
+      "strength_04": 1
+    },
+    "class_type": "Lora Loader Stack (rgthree)",
+    "_meta": {
+      "title": "Lora Loader Stack (rgthree)"
+    }
+  },
+  "50": {
+    "inputs": {
+      "text": "a coloring book page for kids in black and white on with {only one dinosaur|4 dinosaurs}. \n{eating|fighting|sleeping|playing}.\nFor a coloring book page for kids. The kid will be able to color his favorites dinosaurs. Cute for kids. A lot of details and professional coloring book page style. Kawai.",
+      "seed": 702,
+      "autorefresh": "No"
+    },
+    "class_type": "DPRandomGenerator",
+    "_meta": {
+      "title": "Random Prompts"
+    }
+  },
+  "51": {
+    "inputs": {
+      "text": "On the background we should see a {prehistoric|modern} ecosystem. Background landscape with {plants|trees|volcano|cascade|lake|desert|sea} and {plants|trees|volcano|cascade|lake|desert|sea} in a coloring book style. The sky must be illustrated too.\nCute dinosaurs. Kawai. Full page.",
+      "seed": 378,
+      "autorefresh": "No"
+    },
+    "class_type": "DPRandomGenerator",
+    "_meta": {
+      "title": "Random Env"
+    }
+  },
+  "52": {
+    "inputs": {
+      "text_0": "a coloring book page for kids in black and white on with 4 dinosaurs. \neating.\nFor a coloring book page for kids. The kid will be able to color his favorites dinosaurs. Cute for kids. A lot of details and professional coloring book page style. Kawai.",
+      "text": [
+        "50",
         0
       ]
     },
-    "class_type": "LoraLoader",
+    "class_type": "ShowText|pysssss",
     "_meta": {
-      "title": "Load LoRA"
+      "title": "Show Text 🐍"
+    }
+  },
+  "53": {
+    "inputs": {
+      "text_0": "On the background we should see a prehistoric ecosystem. Background landscape with lake and lake in a coloring book style. The sky must be illustrated too.\nCute dinosaurs. Kawai. Full page.",
+      "text": [
+        "51",
+        0
+      ]
+    },
+    "class_type": "ShowText|pysssss",
+    "_meta": {
+      "title": "Show Text 🐍"
     }
   }
 }

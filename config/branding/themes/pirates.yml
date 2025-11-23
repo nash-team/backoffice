@@ -18,11 +18,11 @@ cover_templates:
       negatives: ["no text", "no mockup", "no borders", "no open book", "no scary elements", "no violence"]
 
   "comfy":
-    prompt: "Vibrant children's book cover: friendly cartoon pirate with treasure on ship deck. Colorful, adventurous, fun, professional."
+    prompt: "Vibrant, joyful, inviting, fun with children's book cover: friendly cartoon pirate with treasure on ship deck. Colorful, adventurous, fun, professional. full page. A title box on the top with \"Pirates\" written inside. The title box MUST be present."
 
     workflow_params:
-      "47": "text, mockup, borders, scary elements, violence"
-      "clip_g_suffix": "vibrant colors, detailed, professional quality"
+      "prompt": "Vibrant, joyful, inviting, fun with children's book cover: friendly cartoon pirate with treasure on ship deck. Colorful, adventurous, fun, professional. full page. A title box on the top with \"Pirates\" written inside. The title box MUST be present."
+      "negative": "black and white, mockup, borders, low-res, distorted anatomy, missing title"
 
 # ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
