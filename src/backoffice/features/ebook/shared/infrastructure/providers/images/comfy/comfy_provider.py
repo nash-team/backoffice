@@ -254,10 +254,10 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
 
         self.workflow["31"]["inputs"]["seed"] = seed
 
-        # Coloring page workflow uses node "41" with clip_l and t5xxl
-        if "41" in self.workflow:
-            self.workflow["41"]["inputs"]["clip_l"] = workflow_params["prompt_1"]
-            self.workflow["41"]["inputs"]["t5xxl"] = workflow_params["prompt_2"]
+        # Coloring page workflow dual clip random prompts (clip_l and t5xxl)
+
+        self.workflow["50"]["inputs"]["text"] = workflow_params["prompt_1"]
+        self.workflow["51"]["inputs"]["text"] = workflow_params["prompt_2"]
 
         # Inject workflow params (e.g., negative prompt in node 47)
         if workflow_params and "47" in workflow_params:
