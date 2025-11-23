@@ -21,15 +21,23 @@ cover_templates:
   # ComfyUI workflow - Concise prompts for FLUX via ComfyUI
   "comfy":
     # Main prompt (will be injected into workflow_params["54"])
-    prompt: "Vibrant children's book cover: cute T-Rex dinosaur in lush jungle. Colorful, professional, kid-friendly, adventurous."
+    prompt: "A book cover for kids, joyful, inviting, fun with a cute majestic T-Rex dinosaur in the center 
+             lush jungle, tropical plants, distant volcano, other dinosaurs in background. 
+             A title box on the top with \"Coloring Book Dinosaurs\" written inside and wood borders.
+             professional quality, vibrant colors."
 
     # ComfyUI workflow node parameters (mapped to node IDs in workflow JSON)
     # The provider will inject: workflow["54"]["inputs"]["text"] = prompt (from above)
     #                           workflow["47"]["inputs"]["text"] = workflow_params["47"]
     workflow_params:
-      "47": "text, mockup, borders, low-res, distorted anatomy"   # Negative CLIPTextEncode node
-      "clip_g_suffix": "professional quality, vibrant colors, Amazon bestseller style"
       # Add any custom ComfyUI node IDs or params here
+      prompt: "A book cover for kids, joyful, inviting, fun with a cute majestic T-Rex dinosaur in the center 
+               lush jungle, tropical plants, distant volcano, other dinosaurs in background. 
+               A title box nice wood borders on the top with \"Coloring Book Dinosaurs\" written inside.
+               professional quality, vibrant colors.
+               The title MUST be present."
+
+      "negative": "black and white, mockup, borders, low-res, distorted anatomy, missing title"   # Negative CLIPTextEncode node
 
 # ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
@@ -136,7 +144,8 @@ coloring_page_templates:
     #   workflow["47"]["inputs"]["text"] = workflow_params["47"]
     #   workflow["X"]["inputs"]["key"] = workflow_params["custom_key"]
     workflow_params:
-      "47": "color, shading, text, watermark"  # Negative prompt node
-      "clip_g_suffix": "professional line art, clean outlines"
-      "qwen_prompt": "Clean black and white lineart with bold outlines"
+      "negative": "color, ugly dinosaurs, shading, text, watermark"  # Negative prompt node
+      "prompt_1": "A coloring book page for kids in black and white on with dinosaurs. For a coloring book page for kids. The kid will be able to color his favorites dinosaurs.\nThe background should be a prehistoric background. the coloring area should take all the page and with a lot of details. Cute for kids. 
+                   It should display either only one dinosaurs or many dinosaurs. Kawai."
+      "prompt_2": "On the background we should see a prehistoric landscape with plants, trees or a volcanic landscape in a coloring book style with dinosaurs in their prehistoric ecosystem. A lot of details for the plants or the dinosaurs. Cute dinosaurs. Kawai."
       # Add any custom ComfyUI node IDs or params here (controlnet_scale, etc.)

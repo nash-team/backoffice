@@ -1,7 +1,9 @@
 """Local Stable Diffusion provider (100% FREE, runs locally, no API token needed)."""
 
+import base64
 import json
 import logging
+import random
 import urllib.parse
 import urllib.request
 import uuid
@@ -110,14 +112,17 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
         """
         return False
 
-    def _retrieve_workflow(self, cover: bool):
+    def _retrieve_workflow(self, cover: bool, back_cover: bool = False):
         # Find project root by looking for config/ directory
 
         current = Path(__file__).resolve()
         while current.parent != current:
             config_dir = current / "config"
             if config_dir.exists() and (config_dir / "generation").exists():
-                config_path = config_dir / "generation" / "comfy" / f"{self.model}"
+                if not back_cover:
+                    config_path = config_dir / "generation" / "comfy" / f"{self.model}"
+                else:
+                    config_path = config_dir / "generation" / "comfy" / "remove_text_from_cover_qwen.json"
 
                 with open(config_path, encoding="utf-8") as f:
                     workflow_data = f.read()
@@ -171,19 +176,11 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
             )
 
         self.workflow["31"]["inputs"]["seed"] = seed
-        self.workflow["54"]["inputs"]["text"] = prompt
+        self.workflow["54"]["inputs"]["text"] = workflow_params["prompt"]
 
-        # Inject workflow params from theme config
-        if workflow_params:
-            for node_id, value in workflow_params.items():
-                # Only inject if node exists in workflow
-                if node_id in self.workflow:
-                    # For text nodes, inject into "text" input
-                    if "inputs" in self.workflow[node_id] and "text" in self.workflow[node_id]["inputs"]:
-                        self.workflow[node_id]["inputs"]["text"] = value
-                        logger.debug(f"Injected workflow_param into node {node_id}: {value[:50]}...")
-                else:
-                    logger.debug(f"Skipping workflow_param '{node_id}': node not found in workflow")
+        # Inject workflow params (e.g., negative prompt in node 47)
+        if workflow_params and "47" in workflow_params:
+            self.workflow["47"]["inputs"]["text"] = workflow_params["negative"]
 
         try:
             ws = websocket.WebSocket()
@@ -204,18 +201,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
                     image = Image.open(io.BytesIO(image_data))
                     image.save(f"/tmp/test-{node_id}-{seed}.png")
 
-            # pil_image = result.images[0]
-
-            # Convert to bytes
-            # pil_image.save(buffer, format="PNG")
-            # result_bytes = buffer.getvalue()
-            #
-            # # Add rounded border for B&W coloring pages
-            # if spec.color_mode == ColorMode.BLACK_WHITE:
-            #     logger.info("Adding rounded black border to coloring page...")
-            #     result_bytes = self._add_rounded_border_to_image(result_bytes)
-            #
-            # logger.info(f"✅ Generated cover (LOCAL): {len(result_bytes)} bytes")
+            logger.info(f"✅ Generated cover (COMFY): {len(result_bytes)} bytes")
             return result_bytes
 
         except Exception as e:
@@ -270,20 +256,96 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
 
         # Coloring page workflow uses node "41" with clip_l and t5xxl
         if "41" in self.workflow:
-            self.workflow["41"]["inputs"]["clip_l"] = prompt
-            self.workflow["41"]["inputs"]["t5xxl"] = prompt
+            self.workflow["41"]["inputs"]["clip_l"] = workflow_params["prompt_1"]
+            self.workflow["41"]["inputs"]["t5xxl"] = workflow_params["prompt_2"]
 
-        # Inject workflow params from theme config
-        if workflow_params:
-            for node_id, value in workflow_params.items():
-                # Only inject if node exists in workflow
-                if node_id in self.workflow:
-                    # For text nodes, inject into "text" input
-                    if "inputs" in self.workflow[node_id] and "text" in self.workflow[node_id]["inputs"]:
-                        self.workflow[node_id]["inputs"]["text"] = value
-                        logger.debug(f"Injected workflow_param into node {node_id}: {value[:50]}...")
-                else:
-                    logger.debug(f"Skipping workflow_param '{node_id}': node not found in workflow")
+        # Inject workflow params (e.g., negative prompt in node 47)
+        if workflow_params and "47" in workflow_params:
+            self.workflow["47"]["inputs"]["text"] = workflow_params["negative"]
+
+        try:
+            ws = websocket.WebSocket()
+            ws.connect(f"ws://{self.comfy_url}/ws?clientId={self.client_id}")
+            images = self.get_images(ws, self.workflow)
+
+            result_bytes = None
+
+            for node_id in images:
+                for image_data in images[node_id]:
+                    import io
+                    from PIL import Image
+
+                    result_bytes = image_data
+                    # save image
+                    image = Image.open(io.BytesIO(image_data))
+                    image.save(f"/tmp/test-{node_id}-{seed}.png")
+
+            logger.info(f"✅ Generated page (COMFY): {len(result_bytes)} bytes")
+            return result_bytes
+
+        except Exception as e:
+            logger.error(f"❌ Comfy generation failed: {str(e)}")
+            raise DomainError(
+                code=ErrorCode.PROVIDER_TIMEOUT,
+                message=f"Comfy generation failed: {str(e)}",
+                actionable_hint="Check system resources (RAM/GPU memory) and model availability",
+                context={"provider": "comfy", "model": self.model, "error": str(e)},
+            ) from e
+
+    async def remove_text_from_cover(
+        self,
+        cover_bytes: bytes,
+        barcode_width_inches: float = 2.0,
+        barcode_height_inches: float = 1.5,
+        barcode_margin_inches: float = 0.25,
+    ) -> bytes:
+        """Remove text from cover to create back cover.
+
+        For Comfy, we just return the cover without text.
+        The barcode space will be added later during KDP export assembly, not here.
+
+        Args:
+            cover_bytes: Original cover image (with text)
+            barcode_width_inches: Unused (kept for interface compatibility)
+            barcode_height_inches: Unused (kept for interface compatibility)
+            barcode_margin_inches: Unused (kept for interface compatibility)
+
+        Returns:
+            Same image without text (barcode space will be added during KDP export)
+
+        Raises:
+            DomainError: If transformation fails
+        """
+        logger.info("🗑️  Removing text from cover (COMFY): returning cover as-is)...")
+
+        if not self.is_available():
+            raise DomainError(
+                code=ErrorCode.COMFY_UNAVAILABLE,
+                message="Comfy provider not available",
+                actionable_hint="Run comfy",
+                context={"provider": "comfy", "model": self.model},
+            )
+
+        self._retrieve_workflow(True, back_cover=True)
+
+        if self.workflow is None:
+            raise DomainError(
+                code=ErrorCode.COMFY_UNAVAILABLE,
+                message="Failed to load workflow",
+                actionable_hint="Check workflow JSON file",
+                context={"provider": "comfy", "model": self.model},
+            )
+
+
+
+        # 1. Convert cover bytes to base64
+        cover_b64 = base64.b64encode(cover_bytes).decode()
+
+        self.workflow["103"]["inputs"]["image"] = cover_b64
+
+        # 2. Generate seed
+        seed = random.randint(1, 2**31 - 1)
+        self.workflow["3"]["inputs"]["seed"] = seed
 
         try:
             ws = websocket.WebSocket()
@@ -301,57 +363,20 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
                     # buffer = BytesIO()
                     result_bytes = image_data
                     # save image
-                    image = Image.open(io.BytesIO(image_data))
-                    image.save(f"/tmp/test-{node_id}-{seed}.png")
+                    # image = Image.open(io.BytesIO(image_data))
+                    # image.save(f"/tmp/test-{back}-{seed}.png")
 
-            # pil_image = result.images[0]
 
-            # Convert to bytes
-            # pil_image.save(buffer, format="PNG")
-            # result_bytes = buffer.getvalue()
-            #
-            # # Add rounded border for B&W coloring pages
-            # if spec.color_mode == ColorMode.BLACK_WHITE:
-            #     logger.info("Adding rounded black border to coloring page...")
-            #     result_bytes = self._add_rounded_border_to_image(result_bytes)
-            #
-            # logger.info(f"✅ Generated cover (LOCAL): {len(result_bytes)} bytes")
+            logger.info(f"✅ Generated back cover (COMFY): {len(result_bytes)} bytes")
             return result_bytes
-
         except Exception as e:
-            logger.error(f"❌ Local SD generation failed: {str(e)}")
+            logger.error(f"❌ Comfy generation failed: {str(e)}")
             raise DomainError(
                 code=ErrorCode.PROVIDER_TIMEOUT,
-                message=f"Local SD generation failed: {str(e)}",
+                message=f"Comfy generation failed: {str(e)}",
                 actionable_hint="Check system resources (RAM/GPU memory) and model availability",
-                context={"provider": "local_sd", "model": self.model, "error": str(e)},
+                context={"provider": "comfy", "model": self.model, "error": str(e)},
             ) from e
-
-    async def remove_text_from_cover(
-        self,
-        cover_bytes: bytes,
-        barcode_width_inches: float = 2.0,
-        barcode_height_inches: float = 1.5,
-        barcode_margin_inches: float = 0.25,
-    ) -> bytes:
-        """Remove text from cover to create back cover.
-
-        For Gemini, we just return the cover without text.
-        The barcode space will be added later during KDP export assembly, not here.
-
-        Args:
-            cover_bytes: Original cover image (with text)
-            barcode_width_inches: Unused (kept for interface compatibility)
-            barcode_height_inches: Unused (kept for interface compatibility)
-            barcode_margin_inches: Unused (kept for interface compatibility)
-
-        Returns:
-            Same image without text (barcode space will be added during KDP export)
-
-        Raises:
-            DomainError: If transformation fails
-        """
-        logger.info("🗑️  Removing text from cover (Gemini: returning cover as-is)...")
 
         # Just return the cover - barcode space will be added during KDP export
         # not during back cover generation
