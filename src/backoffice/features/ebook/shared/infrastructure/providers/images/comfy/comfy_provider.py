@@ -451,13 +451,15 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 )
 
             # Inject image and edit prompt into workflow
-            # Note: Node IDs depend on the Qwen workflow structure
-            # This is a placeholder - actual node IDs need to be adjusted based on workflow
-            if "image_input" in self.workflow:
-                self.workflow["image_input"]["inputs"]["image"] = image_name
+            # Node 1: LoadImage - set uploaded image name
+            if "1" in self.workflow:
+                self.workflow["1"]["inputs"]["image"] = image_name
+                logger.info(f"Set input image to node 1: {image_name}")
 
-            if "edit_prompt" in self.workflow:
-                self.workflow["edit_prompt"]["inputs"]["text"] = edit_prompt
+            # Node 2: CLIPTextEncode - set edit prompt
+            if "2" in self.workflow:
+                self.workflow["2"]["inputs"]["text"] = edit_prompt
+                logger.info(f"Set edit prompt to node 2: {edit_prompt[:50]}...")
 
             # Execute workflow
             ws = websocket.WebSocket()
