@@ -65,7 +65,7 @@ src/backoffice/features/
 
 **Current status:** ✅ 146 tests passing (all unit tests, integration tests disabled)
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed technical documentation.
+See [aidd-docs/memory-bank/](aidd-docs/memory-bank/) for detailed technical documentation.
 
 ---
 
@@ -499,8 +499,16 @@ generatorEbook/backoffice/
 │   ├── e2e/                   # End-to-end smoke tests
 │   ├── fixtures/              # Shared test fixtures
 │   └── conftest.py            # Pytest configuration
-├── ARCHITECTURE.md            # Detailed technical documentation
-├── CLAUDE.md                  # AI assistant context
+├── aidd-docs/
+│   └── memory-bank/           # Comprehensive documentation
+│       ├── PROJECT_BRIEF.md   # Business purpose & user goals
+│       ├── STACK.md           # Technology stack & patterns
+│       ├── CODEBASE_STRUCTURE.md # Code organization
+│       ├── DEPLOYMENT.md      # CI/CD, environment, commands
+│       ├── CODING.md          # Quality gates & standards
+│       ├── AGENTS.md          # AI assistant context
+│       └── AGENTS_COORDINATION.md # Agent workflows
+├── CLAUDE.md                  # Main AI assistant guide (symlink)
 ├── Makefile                   # Development commands
 ├── pytest.ini                 # Pytest configuration
 ├── pyproject.toml             # Ruff configuration
@@ -526,7 +534,7 @@ make test       # All unit tests (~5s)
 make test-smoke # E2E smoke test (~10s)
 ```
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for testing philosophy.
+See [aidd-docs/memory-bank/STACK.md](aidd-docs/memory-bank/STACK.md) for testing philosophy and architecture details.
 
 ---
 
@@ -602,7 +610,11 @@ make test-integration  # (currently disabled due to migration)
 
 5. **Push and create PR**
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for architecture guidelines.
+See [aidd-docs/memory-bank/](aidd-docs/memory-bank/) for architecture guidelines:
+
+- [STACK.md](aidd-docs/memory-bank/STACK.md) - Technology stack & patterns
+- [CODEBASE_STRUCTURE.md](aidd-docs/memory-bank/CODEBASE_STRUCTURE.md) - Code organization & naming
+- [CODING.md](aidd-docs/memory-bank/CODING.md) - Quality gates & standards
 
 ---
 
@@ -615,7 +627,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for architecture guidelines.
 ## Support
 
 - **Issues:** [GitHub Issues](https://github.com/your-repo/issues)
-- **Documentation:** See [ARCHITECTURE.md](ARCHITECTURE.md)
+- **Documentation:** See [aidd-docs/memory-bank/](aidd-docs/memory-bank/)
 - **Questions:** Open a discussion or issue
 
 ---

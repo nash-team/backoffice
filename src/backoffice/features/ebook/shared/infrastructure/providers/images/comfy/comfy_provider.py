@@ -21,16 +21,18 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
     ContentPageGenerationPort,
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
+from backoffice.features.ebook.shared.domain.ports.image_edit_port import ImageEditPort
 
 logger = logging.getLogger(__name__)
 
 
-class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
+class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPort):
     """Local Stable Diffusion provider using Comfy (100% FREE, no API).
 
-    Supports both:
+    Supports:
     - Colorful covers (ColorMode.COLOR)
     - B&W coloring pages (ColorMode.BLACK_WHITE)
+    - Image editing (via Qwen Image Edit 2509 workflow)
     """
 
     # Cost: FREE (runs locally)
@@ -382,6 +384,183 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort):
         # not during back cover generation
         logger.info(f"✅ Back cover ready (no barcode space): {len(cover_bytes)} bytes")
         return cover_bytes
+
+    async def edit_image(
+        self,
+        image: bytes,
+        edit_prompt: str,
+        spec: ImageSpec,
+    ) -> bytes:
+        """Edit an existing image based on text instructions using Qwen Image Edit 2509.
+
+        Uploads the image to ComfyUI, loads Qwen edit workflow, and applies corrections.
+
+        Args:
+            image: Original image data as bytes (PNG format)
+            edit_prompt: Text instructions for editing (e.g., "replace 5 toes with 3")
+            spec: Image specifications (dimensions, format, etc.)
+
+        Returns:
+            Edited image data as bytes
+
+        Raises:
+            DomainError: If editing fails
+        """
+        if not self.is_available():
+            raise DomainError(
+                code=ErrorCode.COMFY_UNAVAILABLE,
+                message="Comfy provider not available",
+                actionable_hint="Start ComfyUI server at http://127.0.0.1:8188",
+                context={"provider": "comfy", "comfy_url": self.comfy_url},
+            )
+
+        logger.info(f"Editing image via ComfyUI (Qwen): {edit_prompt[:100]}...")
+
+        try:
+            # Upload image to ComfyUI
+            image_name = self._upload_image_to_comfy(image)
+
+            # Load Qwen edit workflow (assuming model contains "edit" for edit workflows)
+            # TODO: This needs a dedicated Qwen edit workflow JSON file
+            # For now, we'll assume the workflow is named something like "qwen-edit-workflow.json"
+            edit_workflow_model = "qwen-edit-workflow.json"
+
+            # Store original model and temporarily switch to edit workflow
+            original_model = self.model
+            self.model = edit_workflow_model
+
+            try:
+                self._retrieve_workflow(cover=False)
+            except FileNotFoundError:
+                raise DomainError(
+                    code=ErrorCode.COMFY_UNAVAILABLE,
+                    message=f"Qwen edit workflow not found: {edit_workflow_model}",
+                    actionable_hint="Create config/generation/comfy/qwen-edit-workflow.json for image editing",
+                    context={"provider": "comfy", "workflow": edit_workflow_model},
+                )
+            finally:
+                # Restore original model
+                self.model = original_model
+
+            if self.workflow is None:
+                raise DomainError(
+                    code=ErrorCode.COMFY_UNAVAILABLE,
+                    message="Failed to load Qwen edit workflow",
+                    actionable_hint="Check config/generation/comfy/qwen-edit-workflow.json exists and is valid",
+                    context={"provider": "comfy", "workflow": edit_workflow_model},
+                )
+
+            # Inject image and edit prompt into workflow
+            # Note: Node IDs depend on the Qwen workflow structure
+            # This is a placeholder - actual node IDs need to be adjusted based on workflow
+            if "image_input" in self.workflow:
+                self.workflow["image_input"]["inputs"]["image"] = image_name
+
+            if "edit_prompt" in self.workflow:
+                self.workflow["edit_prompt"]["inputs"]["text"] = edit_prompt
+
+            # Execute workflow
+            ws = websocket.WebSocket()
+            ws.connect(f"ws://{self.comfy_url}/ws?clientId={self.client_id}")
+            images = self.get_images(ws, self.workflow)
+
+            # Extract edited image
+            result_bytes = None
+            for node_id in images:
+                for image_data in images[node_id]:
+                    result_bytes = image_data
+                    break
+                if result_bytes:
+                    break
+
+            if not result_bytes:
+                raise DomainError(
+                    code=ErrorCode.PROVIDER_TIMEOUT,
+                    message="No edited image returned from Qwen workflow",
+                    actionable_hint="Check workflow configuration and node IDs",
+                    context={"provider": "comfy", "workflow": edit_workflow_model},
+                )
+
+            logger.info(f"✅ Edited image (ComfyUI Qwen): {len(result_bytes)} bytes")
+            return result_bytes
+
+        except DomainError:
+            raise
+        except Exception as e:
+            logger.error(f"❌ ComfyUI image editing failed: {str(e)}")
+            raise DomainError(
+                code=ErrorCode.PROVIDER_TIMEOUT,
+                message=f"ComfyUI image editing failed: {str(e)}",
+                actionable_hint="Check ComfyUI server is running and Qwen workflow is configured",
+                context={"provider": "comfy", "error": str(e)},
+            ) from e
+
+    def _upload_image_to_comfy(self, image_bytes: bytes) -> str:
+        """Upload an image to ComfyUI and return the uploaded filename.
+
+        Args:
+            image_bytes: Image data as bytes
+
+        Returns:
+            Uploaded image filename on ComfyUI server
+
+        Raises:
+            DomainError: If upload fails
+        """
+        try:
+            import io
+
+            # Generate unique filename
+            import time
+
+            filename = f"edit_input_{int(time.time() * 1000)}.png"
+
+            # Prepare multipart form data
+            files = {"image": (filename, io.BytesIO(image_bytes), "image/png")}
+            data = {"subfolder": "edit_inputs", "type": "input", "overwrite": "true"}
+
+            # Upload via HTTP POST
+            import urllib.request
+
+            # Create multipart form data manually
+            boundary = f"----WebKitFormBoundary{uuid.uuid4().hex}"
+            body = b""
+
+            # Add regular fields
+            for key, value in data.items():
+                body += f"--{boundary}\r\n".encode()
+                body += f'Content-Disposition: form-data; name="{key}"\r\n\r\n'.encode()
+                body += f"{value}\r\n".encode()
+
+            # Add file
+            body += f"--{boundary}\r\n".encode()
+            body += f'Content-Disposition: form-data; name="image"; filename="{filename}"\r\n'.encode()
+            body += b"Content-Type: image/png\r\n\r\n"
+            body += image_bytes
+            body += b"\r\n"
+            body += f"--{boundary}--\r\n".encode()
+
+            # Send request
+            req = urllib.request.Request(
+                f"http://{self.comfy_url}/upload/image",
+                data=body,
+                headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+            )
+
+            with urllib.request.urlopen(req) as response:
+                result = json.loads(response.read())
+                uploaded_name: str = result.get("name", filename)
+                logger.info(f"Uploaded image to ComfyUI: {uploaded_name}")
+                return uploaded_name
+
+        except Exception as e:
+            logger.error(f"❌ Failed to upload image to ComfyUI: {str(e)}")
+            raise DomainError(
+                code=ErrorCode.PROVIDER_TIMEOUT,
+                message=f"Failed to upload image to ComfyUI: {str(e)}",
+                actionable_hint="Check ComfyUI server is running and accessible",
+                context={"comfy_url": self.comfy_url, "error": str(e)},
+            ) from e
 
     def _add_rounded_border_to_image(
         self,

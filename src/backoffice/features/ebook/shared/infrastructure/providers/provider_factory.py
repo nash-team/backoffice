@@ -9,13 +9,9 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
     ContentPageGenerationPort,
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
+from backoffice.features.ebook.shared.domain.ports.image_edit_port import ImageEditPort
 
 logger = logging.getLogger(__name__)
-
-
-def _should_use_fakes() -> bool:
-    """Check if we should use fake providers (E2E tests)."""
-    return os.getenv("USE_FAKE_PROVIDERS", "false").lower() == "true"
 
 
 class ProviderFactory:
@@ -30,6 +26,7 @@ class ProviderFactory:
     # Cache for provider instances (dict with key: provider+model)
     _cover_provider_cache: dict[str, CoverGenerationPort] = {}
     _page_provider_cache: dict[str, ContentPageGenerationPort] = {}
+    _edit_provider_cache: dict[str, ImageEditPort] = {}
     _assembly_provider_cache: AssemblyPort | None = None
 
     @staticmethod
@@ -42,6 +39,7 @@ class ProviderFactory:
         """Clear all cached provider instances (useful for hot-reloading config changes)."""
         ProviderFactory._cover_provider_cache = {}
         ProviderFactory._page_provider_cache = {}
+        ProviderFactory._edit_provider_cache = {}
         ProviderFactory._assembly_provider_cache = None
         logger.info("🔄 Provider cache cleared")
 
@@ -165,6 +163,70 @@ class ProviderFactory:
 
         # Cache and return
         ProviderFactory._page_provider_cache[cache_key] = provider
+        return provider
+
+    @staticmethod
+    def create_image_edit_provider() -> ImageEditPort:
+        """Create image edit provider (uses same provider as coloring_page).
+
+        Uses caching for performance.
+        Reuses the coloring_page provider config from models.yaml.
+
+        Returns:
+            ImageEditPort implementation (cached instance)
+
+        Raises:
+            ValueError: If provider not found or not configured
+        """
+        # Get model configuration (reuse coloring_page config)
+        registry = ModelRegistry.get_instance()
+        model_mapping = registry.get_page_model()
+
+        # Create cache key
+        cache_key = ProviderFactory._make_cache_key(
+            model_mapping.provider,
+            model_mapping.model,
+        )
+
+        # Return cached instance if available
+        if cache_key in ProviderFactory._edit_provider_cache:
+            logger.debug(f"♻️ Reusing cached edit provider: {cache_key}")
+            return ProviderFactory._edit_provider_cache[cache_key]
+
+        # Create new instance (reuse same logic as content_page_provider)
+        logger.info(f"Creating image edit provider: {model_mapping.provider} / {model_mapping.model}")
+
+        provider: ImageEditPort
+        if model_mapping.provider == "openrouter":
+            # OpenRouter doesn't support image editing yet
+            logger.warning("OpenRouter provider doesn't support image editing - using Gemini instead")
+            from backoffice.features.ebook.shared.infrastructure.providers.images.gemini import (
+                gemini_image_provider,
+            )
+
+            provider = gemini_image_provider.GeminiImageProvider()
+
+        elif model_mapping.provider == "comfy":
+            from backoffice.features.ebook.shared.infrastructure.providers.images.comfy import comfy_provider
+
+            ComfyProvider = comfy_provider.ComfyProvider
+
+            provider = ComfyProvider(model=model_mapping.model)
+
+        elif model_mapping.provider == "gemini":
+            from backoffice.features.ebook.shared.infrastructure.providers.images.gemini import (
+                gemini_image_provider,
+            )
+
+            GeminiImageProvider = gemini_image_provider.GeminiImageProvider
+
+            provider = GeminiImageProvider(model=model_mapping.model)
+
+        else:
+            raise ValueError(f"Unknown image edit provider: {model_mapping.provider}. " f"Supported: openrouter, gemini, comfy")
+
+        # Cache and return
+        ProviderFactory._edit_provider_cache[cache_key] = provider
         return provider
 
     @staticmethod

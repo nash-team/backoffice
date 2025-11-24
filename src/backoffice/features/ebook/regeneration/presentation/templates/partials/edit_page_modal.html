@@ -32,11 +32,26 @@
                     </div>
                 </div>
 
+                <!-- Edit Prompt Textarea -->
+                <div class="mb-3">
+                    <label for="editPromptTextarea" class="form-label fw-bold">
+                        <i class="fas fa-magic me-2"></i>Correction ciblée (optionnel)
+                    </label>
+                    <textarea
+                        id="editPromptTextarea"
+                        class="form-control"
+                        rows="3"
+                        placeholder="Ex: remplace les 5 doigts des pattes arrière du dinosaure par 3 doigts"></textarea>
+                    <small class="form-text text-muted">
+                        Décrivez les corrections à appliquer à l'image existante (laissez vide pour régénérer).
+                    </small>
+                </div>
+
                 <!-- Info about current operation -->
                 <div class="alert alert-info" role="alert">
                     <i class="fas fa-info-circle me-2"></i>
                     <strong>Note :</strong> Les changements ne seront sauvegardés que lorsque vous cliquerez sur "Appliquer".
-                    Vous pouvez régénérer autant de fois que nécessaire.
+                    Vous pouvez régénérer ou éditer autant de fois que nécessaire.
                 </div>
             </div>
             <div class="modal-footer">
@@ -48,6 +63,12 @@
                         class="btn btn-warning"
                         onclick="regeneratePagePreview()">
                     <i class="fas fa-sync-alt me-2"></i>Régénérer
+                </button>
+                <button type="button"
+                        id="editBtn"
+                        class="btn btn-info"
+                        onclick="editPageImage()">
+                    <i class="fas fa-magic me-2"></i>Éditer
                 </button>
                 <button type="button"
                         id="applyBtn"
@@ -84,7 +105,11 @@
         document.getElementById('regenerateSpinner').classList.add('d-none');
         document.getElementById('regenerateError').classList.add('d-none');
         document.getElementById('regenerateBtn').disabled = false;
+        document.getElementById('editBtn').disabled = false;
         document.getElementById('applyBtn').disabled = false;
+
+        // Clear textarea
+        document.getElementById('editPromptTextarea').value = '';
 
         // Show modal
         const modal = new bootstrap.Modal(document.getElementById('editPageModal'));
@@ -143,6 +168,75 @@
             // Hide loading state
             document.getElementById('regenerateSpinner').classList.add('d-none');
             document.getElementById('regenerateBtn').disabled = false;
+            document.getElementById('editBtn').disabled = false;
+            document.getElementById('applyBtn').disabled = false;
+        }
+    }
+
+    /**
+     * Edit the page image with targeted corrections (calls edit API)
+     */
+    async function editPageImage() {
+        if (!currentEbookId || !currentPageIndex) {
+            console.error('Missing ebook ID or page index');
+            return;
+        }
+
+        // Get edit prompt from textarea
+        const editPrompt = document.getElementById('editPromptTextarea').value.trim();
+        if (!editPrompt) {
+            createToast('Veuillez entrer un prompt de correction', 'error');
+            return;
+        }
+
+        // Show loading state
+        document.getElementById('regenerateSpinner').classList.remove('d-none');
+        document.getElementById('regenerateError').classList.add('d-none');
+        document.getElementById('regenerateBtn').disabled = true;
+        document.getElementById('editBtn').disabled = true;
+        document.getElementById('applyBtn').disabled = true;
+
+        try {
+            const response = await fetch(
+                `/api/ebooks/${currentEbookId}/pages/${currentPageIndex}/edit`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        edit_prompt: editPrompt,
+                    }),
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Erreur lors de l\'édition');
+            }
+
+            const data = await response.json();
+
+            // Update image with edited version
+            currentImageBase64 = data.image_base64;
+            document.getElementById('pagePreviewImage').src = 'data:image/png;base64,' + data.image_base64;
+
+            // Show success toast
+            createToast('Image éditée avec succès !', 'success');
+
+        } catch (error) {
+            console.error('Error editing page:', error);
+
+            // Show error message
+            document.getElementById('errorMessage').textContent = error.message;
+            document.getElementById('regenerateError').classList.remove('d-none');
+
+            createToast('Erreur lors de l\'édition', 'error');
+        } finally {
+            // Hide loading state
+            document.getElementById('regenerateSpinner').classList.add('d-none');
+            document.getElementById('regenerateBtn').disabled = false;
+            document.getElementById('editBtn').disabled = false;
             document.getElementById('applyBtn').disabled = false;
         }
     }
