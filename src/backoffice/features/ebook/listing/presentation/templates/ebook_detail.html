@@ -282,15 +282,23 @@
                                                     {% if ebook.structure_json and ebook.structure_json.pages_meta %}
                                                         {% for page in ebook.structure_json.pages_meta %}
                                                             {% if page.page_number > 0 and page.page_number < (ebook.structure_json.pages_meta|length - 1) %}
-                                                            <div class="form-check">
-                                                                <input class="form-check-input page-checkbox"
-                                                                       type="checkbox"
-                                                                       name="pages"
-                                                                       value="{{ page.page_number }}"
-                                                                       id="page-{{ page.page_number }}">
-                                                                <label class="form-check-label small" for="page-{{ page.page_number }}">
-                                                                    Page {{ page.page_number }}
-                                                                </label>
+                                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input page-checkbox"
+                                                                           type="checkbox"
+                                                                           name="pages"
+                                                                           value="{{ page.page_number }}"
+                                                                           id="page-{{ page.page_number }}">
+                                                                    <label class="form-check-label small" for="page-{{ page.page_number }}">
+                                                                        Page {{ page.page_number }}
+                                                                    </label>
+                                                                </div>
+                                                                <button type="button"
+                                                                        class="btn btn-sm btn-outline-primary"
+                                                                        onclick="openEditPageModal({{ ebook.id }}, {{ page.page_number }}, '{{ page.image_data_base64 }}')"
+                                                                        title="Éditer cette page">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
                                                             </div>
                                                             {% endif %}
                                                         {% endfor %}
@@ -430,6 +438,9 @@
                         </div>
                     </div>
                 </div>
+
+<!-- Include Edit Page Modal -->
+{% include "partials/edit_page_modal.html" %}
 {% endblock %}
 
 {% block extra_scripts %}
