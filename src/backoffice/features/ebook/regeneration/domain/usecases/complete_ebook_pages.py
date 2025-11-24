@@ -158,7 +158,7 @@ class CompleteEbookPagesUseCase:
                 page_number=page_data["page_number"],
                 title=page_data["title"],
                 image_data=image_bytes,
-                image_format=page_data["format"],
+                image_format=page_data.get("image_format", "PNG"),
             )
             assembled_pages.append(assembled_page)
 

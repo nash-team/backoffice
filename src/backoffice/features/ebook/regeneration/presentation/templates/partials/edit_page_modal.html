@@ -1,0 +1,206 @@
+<!-- Modal for editing/regenerating a single page -->
+<div class="modal fade" id="editPageModal" tabindex="-1" aria-labelledby="editPageModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary bg-opacity-10">
+                <h5 class="modal-title" id="editPageModalLabel">
+                    <i class="fas fa-edit me-2"></i>Éditer la Page <span id="modalPageNumber"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Image Preview Container -->
+                <div class="text-center mb-3">
+                    <div id="imagePreviewContainer" class="border rounded p-3 bg-light" style="min-height: 400px;">
+                        <img id="pagePreviewImage"
+                             src=""
+                             alt="Page preview"
+                             class="img-fluid"
+                             style="max-height: 500px; object-fit: contain;">
+                    </div>
+                    <!-- Loading Spinner (hidden by default) -->
+                    <div id="regenerateSpinner" class="mt-3 d-none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Génération en cours...</span>
+                        </div>
+                        <p class="text-muted mt-2">Génération en cours, veuillez patienter...</p>
+                    </div>
+                    <!-- Error Message (hidden by default) -->
+                    <div id="regenerateError" class="alert alert-danger mt-3 d-none" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="errorMessage"></span>
+                    </div>
+                </div>
+
+                <!-- Info about current operation -->
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note :</strong> Les changements ne seront sauvegardés que lorsque vous cliquerez sur "Appliquer".
+                    Vous pouvez régénérer autant de fois que nécessaire.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Annuler
+                </button>
+                <button type="button"
+                        id="regenerateBtn"
+                        class="btn btn-warning"
+                        onclick="regeneratePagePreview()">
+                    <i class="fas fa-sync-alt me-2"></i>Régénérer
+                </button>
+                <button type="button"
+                        id="applyBtn"
+                        class="btn btn-success"
+                        onclick="applyPageEdit()">
+                    <i class="fas fa-check me-2"></i>Appliquer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Modal Management -->
+<script>
+    let currentEbookId = null;
+    let currentPageIndex = null;
+    let currentImageBase64 = null;
+
+    /**
+     * Open the edit modal with the current page image
+     */
+    function openEditPageModal(ebookId, pageIndex, imageBase64) {
+        currentEbookId = ebookId;
+        currentPageIndex = pageIndex;
+        currentImageBase64 = imageBase64;
+
+        // Update modal title
+        document.getElementById('modalPageNumber').textContent = pageIndex;
+
+        // Set initial image
+        document.getElementById('pagePreviewImage').src = 'data:image/png;base64,' + imageBase64;
+
+        // Reset UI state
+        document.getElementById('regenerateSpinner').classList.add('d-none');
+        document.getElementById('regenerateError').classList.add('d-none');
+        document.getElementById('regenerateBtn').disabled = false;
+        document.getElementById('applyBtn').disabled = false;
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('editPageModal'));
+        modal.show();
+    }
+
+    /**
+     * Regenerate the page preview (calls API, updates image)
+     */
+    async function regeneratePagePreview() {
+        if (!currentEbookId || !currentPageIndex) {
+            console.error('Missing ebook ID or page index');
+            return;
+        }
+
+        // Show loading state
+        document.getElementById('regenerateSpinner').classList.remove('d-none');
+        document.getElementById('regenerateError').classList.add('d-none');
+        document.getElementById('regenerateBtn').disabled = true;
+        document.getElementById('applyBtn').disabled = true;
+
+        try {
+            const response = await fetch(
+                `/api/ebooks/${currentEbookId}/pages/${currentPageIndex}/preview-regenerate`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Erreur lors de la régénération');
+            }
+
+            const data = await response.json();
+
+            // Update image with new preview
+            currentImageBase64 = data.image_base64;
+            document.getElementById('pagePreviewImage').src = 'data:image/png;base64,' + data.image_base64;
+
+            // Show success toast
+            createToast('Page régénérée avec succès !', 'success');
+
+        } catch (error) {
+            console.error('Error regenerating page:', error);
+
+            // Show error message
+            document.getElementById('errorMessage').textContent = error.message;
+            document.getElementById('regenerateError').classList.remove('d-none');
+
+            createToast('Erreur lors de la régénération', 'error');
+        } finally {
+            // Hide loading state
+            document.getElementById('regenerateSpinner').classList.add('d-none');
+            document.getElementById('regenerateBtn').disabled = false;
+            document.getElementById('applyBtn').disabled = false;
+        }
+    }
+
+    /**
+     * Apply the edit (save the current preview image to DB)
+     */
+    async function applyPageEdit() {
+        if (!currentEbookId || !currentPageIndex || !currentImageBase64) {
+            console.error('Missing required data for apply');
+            return;
+        }
+
+        // Disable buttons during save
+        document.getElementById('regenerateBtn').disabled = true;
+        document.getElementById('applyBtn').disabled = true;
+
+        try {
+            const response = await fetch(
+                `/api/ebooks/${currentEbookId}/pages/${currentPageIndex}/apply-edit`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image_base64: currentImageBase64,
+                        page_index: currentPageIndex,
+                    }),
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Erreur lors de la sauvegarde');
+            }
+
+            const data = await response.json();
+
+            // Show success and close modal
+            createToast(data.message || 'Page mise à jour avec succès !', 'success');
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editPageModal'));
+            modal.hide();
+
+            // Reload page after short delay to show updated PDF
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+
+        } catch (error) {
+            console.error('Error applying edit:', error);
+            createToast('Erreur lors de la sauvegarde : ' + error.message, 'error');
+
+            // Re-enable buttons on error
+            document.getElementById('regenerateBtn').disabled = false;
+            document.getElementById('applyBtn').disabled = false;
+        }
+    }
+</script>
