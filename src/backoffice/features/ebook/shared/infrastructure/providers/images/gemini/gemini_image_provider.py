@@ -15,6 +15,7 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
     ContentPageGenerationPort,
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
+from backoffice.features.ebook.shared.domain.ports.image_edit_port import ImageEditPort
 from backoffice.features.ebook.shared.infrastructure.utils.image_borders import (
     add_rounded_border_to_image,
 )
@@ -22,7 +23,7 @@ from backoffice.features.ebook.shared.infrastructure.utils.image_borders import 
 logger = logging.getLogger(__name__)
 
 
-class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
+class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPort):
     """Google Gemini direct API provider using Gemini 2.5 Flash Image (Nano Banana).
 
     Uses Google AI Studio REST API directly (no SDK needed).
@@ -30,9 +31,10 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
     Features: Subject identity, prompt-based editing, visual reasoning
     Pricing: ~$0.04 per image (estimated)
 
-    Supports both:
+    Supports:
     - Colorful covers (ColorMode.COLOR)
     - B&W coloring pages (ColorMode.BLACK_WHITE)
+    - Image editing (targeted corrections via edit_image)
     """
 
     # Pricing (Google AI Studio - estimated)
@@ -234,6 +236,140 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         # not during back cover generation
         logger.info(f"✅ Back cover ready (no barcode space): {len(cover_bytes)} bytes")
         return cover_bytes
+
+    async def edit_image(
+        self,
+        image: bytes,
+        edit_prompt: str,
+        spec: ImageSpec,
+    ) -> bytes:
+        """Edit an existing image based on text instructions.
+
+        Sends the original image + edit prompt to Gemini API in a single request.
+        Gemini understands the edit instructions and modifies the image accordingly.
+
+        Args:
+            image: Original image data as bytes (PNG format)
+            edit_prompt: Text instructions for editing (e.g., "replace 5 toes with 3")
+            spec: Image specifications (dimensions, format, etc.)
+
+        Returns:
+            Edited image data as bytes
+
+        Raises:
+            DomainError: If editing fails
+        """
+        if not self.is_available():
+            raise DomainError(
+                code=ErrorCode.MODEL_UNAVAILABLE,
+                message="Gemini provider not available",
+                actionable_hint="Set GEMINI_API_KEY environment variable",
+                context={"provider": "gemini", "model": self.model},
+            )
+
+        logger.info(f"Editing image via Gemini: {edit_prompt[:100]}...")
+
+        try:
+            # Encode image to base64
+            image_base64 = base64.b64encode(image).decode("utf-8")
+
+            async with httpx.AsyncClient(timeout=90.0) as client:
+                # Gemini API endpoint
+                url = f"{self.base_url}/models/{self.model}:generateContent?key={self.api_key}"
+
+                # Send image + edit prompt in same request
+                payload = {
+                    "contents": [
+                        {
+                            "parts": [
+                                {
+                                    "inlineData": {
+                                        "mimeType": "image/png",
+                                        "data": image_base64,
+                                    }
+                                },
+                                {"text": edit_prompt},
+                            ]
+                        }
+                    ],
+                    "generationConfig": {
+                        "response_modalities": ["IMAGE"],  # Image output
+                    },
+                }
+
+                response = await client.post(url, json=payload)
+                response.raise_for_status()
+
+                result = response.json()
+
+                # Extract edited image from response
+                if "candidates" not in result or not result["candidates"]:
+                    raise DomainError(
+                        code=ErrorCode.PROVIDER_TIMEOUT,
+                        message="No candidates in Gemini edit response",
+                        actionable_hint="Check edit prompt and API quota",
+                        context={"response": result},
+                    )
+
+                candidate = result["candidates"][0]
+                if "content" not in candidate or "parts" not in candidate["content"]:
+                    raise DomainError(
+                        code=ErrorCode.PROVIDER_TIMEOUT,
+                        message="No content parts in Gemini edit response",
+                        actionable_hint="Check API response format",
+                        context={"candidate": candidate},
+                    )
+
+                # Find inline image data
+                edited_image_data = None
+                for part in candidate["content"]["parts"]:
+                    if "inlineData" in part and part["inlineData"].get("mimeType") == "image/png":
+                        edited_image_data = part["inlineData"]["data"]
+                        break
+
+                if not edited_image_data:
+                    raise DomainError(
+                        code=ErrorCode.PROVIDER_TIMEOUT,
+                        message="No edited image data in Gemini response",
+                        actionable_hint="Check API response format or try different edit prompt",
+                        context={"parts": candidate["content"]["parts"]},
+                    )
+
+                # Decode base64 image
+                edited_image_bytes = base64.b64decode(edited_image_data)
+
+            # Resize to target dimensions if needed (preserve original size)
+            if spec.width_px or spec.height_px:
+                img = Image.open(BytesIO(edited_image_bytes))
+                target_width = spec.width_px or img.width
+                target_height = spec.height_px or img.height
+
+                if (img.width, img.height) != (target_width, target_height):
+                    img = img.resize((target_width, target_height), Image.Resampling.LANCZOS)
+                    buffer = BytesIO()
+                    img.save(buffer, format="PNG")
+                    edited_image_bytes = buffer.getvalue()
+
+            logger.info(f"✅ Edited image (Gemini): {len(edited_image_bytes)} bytes")
+            return edited_image_bytes
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"❌ Gemini edit API error: {e.response.status_code} - {e.response.text}")
+            raise DomainError(
+                code=ErrorCode.PROVIDER_TIMEOUT,
+                message=f"Gemini edit API error: {e.response.status_code}",
+                actionable_hint="Check API key, quota, or try simpler edit prompt",
+                context={"status": e.response.status_code, "response": e.response.text},
+            ) from e
+
+        except Exception as e:
+            logger.error(f"❌ Gemini image editing failed: {str(e)}")
+            raise DomainError(
+                code=ErrorCode.PROVIDER_TIMEOUT,
+                message=f"Gemini image editing failed: {str(e)}",
+                actionable_hint="Check network, API key, or try different edit prompt",
+                context={"provider": "gemini", "model": self.model, "error": str(e)},
+            ) from e
 
     def _add_rounded_border_to_image(
         self,

@@ -15,6 +15,9 @@ from backoffice.features.ebook.regeneration.domain.usecases.apply_page_edit impo
 from backoffice.features.ebook.regeneration.domain.usecases.complete_ebook_pages import (
     CompleteEbookPagesUseCase,
 )
+from backoffice.features.ebook.regeneration.domain.usecases.edit_page_image import (
+    EditPageImageUseCase,
+)
 from backoffice.features.ebook.regeneration.domain.usecases.preview_regenerate_page import (
     PreviewRegeneratePageUseCase,
 )
@@ -336,6 +339,86 @@ async def preview_regenerate_page(
         raise HTTPException(
             status_code=500,
             detail="Error preview regenerating page. Please try again.",
+        ) from e
+
+
+@router.post("/{ebook_id}/pages/{page_index}/edit")
+async def edit_page_image(
+    ebook_id: int,
+    page_index: int,
+    factory: RepositoryFactoryDep,
+    edit_request: Annotated[dict, Body(...)],
+) -> dict:
+    """Edit a content page image with targeted corrections without saving to DB.
+
+    This endpoint applies specific corrections to an existing page image.
+    The edited image is returned as base64 but NOT saved to DB/storage.
+    No PDF rebuild occurs - this is preview only.
+
+    Request body:
+    {
+        "edit_prompt": "replace 5 toes with 3 toes"
+    }
+
+    Args:
+        ebook_id: ID of the ebook
+        page_index: Index of the page to edit (1-based, content pages only)
+        factory: Repository factory for dependency injection
+        edit_request: Request body with edit_prompt
+
+    Returns:
+        JSON response with base64 edited image data and metadata
+
+    Raises:
+        HTTPException: If ebook not found, invalid status, invalid page index, or edit fails
+    """
+    try:
+        # Extract edit prompt from request
+        edit_prompt = edit_request.get("edit_prompt")
+        if not edit_prompt:
+            raise HTTPException(status_code=400, detail="edit_prompt is required in request body")
+
+        logger.info(f"Editing page {page_index} for ebook {ebook_id} with prompt: {edit_prompt[:100]}...")
+
+        # Get dependencies
+        ebook_repo = factory.get_ebook_repository()
+        image_edit_port = ProviderFactory.create_image_edit_provider()
+
+        # Create use case
+        use_case = EditPageImageUseCase(
+            ebook_repository=ebook_repo,
+            image_edit_port=image_edit_port,
+        )
+
+        # Execute edit
+        result = await use_case.execute(
+            ebook_id=ebook_id,
+            page_index=page_index,
+            edit_prompt=edit_prompt,
+        )
+
+        logger.info(f"✅ Edited page {page_index} for ebook {ebook_id}")
+
+        return {
+            "success": True,
+            "image_base64": result["image_base64"],
+            "page_index": result["page_index"],
+            "edit_prompt_used": result["edit_prompt_used"],
+        }
+
+    except ValueError as e:
+        logger.warning(f"Validation error editing page {page_index} for ebook {ebook_id}: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Unexpected error editing page {page_index} for ebook {ebook_id}: {str(e)}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Error editing page. Please try again.",
         ) from e
 
 
