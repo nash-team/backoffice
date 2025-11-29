@@ -112,6 +112,7 @@ coloring_page_templates:
     quality_settings: "B&W lineart. Bold lines."
 
     workflow_params:
-      "47": "color, shading, text, watermark, scary, violence"
-      "clip_g_suffix": "professional line art, clean outlines"
-      "qwen_prompt": "Clean black and white lineart with bold outlines"
+      "prompt": "Line art coloring page for 2-4 years old kids of a {friendly cartoon pirate|pirate captain with hat|young pirate kid|pirate crew member|pirate with treasure map} {searching for treasure|sailing|digging for treasure with a shovel|looking through a telescope|celebrating|climbing rigging|steering ship} in a {pirate ship deck|treasure island|beach with palm trees|ocean waves|treasure cave|dock|tropical island}. {left-facing|right-facing|front|3/4 view|action pose}."
+#      "47": "color, shading, text, watermark, scary, violence"
+#      "clip_g_suffix": "professional line art, clean outlines"
+#      "qwen_prompt": "Clean black and white lineart with bold outlines"

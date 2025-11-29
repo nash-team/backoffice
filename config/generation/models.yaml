@@ -34,7 +34,7 @@ models:
 
     # Option 3: Comfy (FREE, best quality, 17GB disk, 32GB RAM)
     provider: comfy
-    model: cover-page-workflow.json
+    model: cover-page-workflow-flux-2.json
 
   # ========================================
   # CONTENT PAGE GENERATION (Coloring Pages)
@@ -56,7 +56,7 @@ models:
 
     # Option 2: Comfy (FREE, best quality, 17GB disk, 32GB RAM)
     provider: comfy
-    model: coloring-page-workflow.json
+    model: coloring-page-workflow-flux-2.json
 
 
 # ========================================

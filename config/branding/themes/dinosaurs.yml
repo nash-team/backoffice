@@ -32,7 +32,7 @@ cover_templates:
     workflow_params:
       # Add any custom ComfyUI node IDs or params here
       prompt: "A book cover for kids, joyful, inviting, fun with a cute majestic T-Rex dinosaur in the center 
-               lush jungle, tropical plants, distant volcano, other dinosaurs in background. 
+               lush jungle, tropical plants, distant volcano, other dinosaurs in background. Kawai. 
                A title box nice wood borders on the top with \"Coloring Book Dinosaurs\" written inside.
                professional quality, vibrant colors.
                The title MUST be present."
@@ -108,14 +108,20 @@ coloring_page_templates:
 
   # ComfyUI workflow - Ultra concise prompts optimized for FLUX via ComfyUI
   "comfy":
-    base_structure: "{SPECIES} {ACTION}. {STYLE}."
+    base_structure: "Line art coloring page of a {SPECIES} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
 
     variables:
+      SHOT:
+        - "close-up"
+        - "medium"
+        - "wide"
+        - "silhouette"
+
       SPECIES:
         - "T-Rex"
         - "Triceratops"
-        - "Stegosaurus"
         - "Diplodocus"
+        - "Stegosaurus"
         - "Pteranodon"
         - "Ankylosaurus"
         - "Velociraptor"
@@ -123,7 +129,7 @@ coloring_page_templates:
 
       ACTION:
         - "roaring"
-        - "eating"
+        - "eating leaves"
         - "running"
         - "sleeping"
         - "hatching"
@@ -131,12 +137,37 @@ coloring_page_templates:
         - "swimming"
         - "flying"
 
-      STYLE:
-        - "line art"
-        - "coloring page style"
-        - "simple outlines"
+      ENV:
+        - "lush jungle"
+        - "volcanic plain"
+        - "riverbank"
+        - "tropical forest"
+        - "desert"
+        - "prehistoric landscape"
+        - "mountains"
 
-    quality_settings: "B&W lineart. Bold lines."
+      FOCUS:
+        - "head"
+        - "full body"
+        - "group of 2-3"
+        - "parent & baby"
+        - "footprint pattern"
+
+      COMPOSITION:
+        - "left-facing"
+        - "right-facing"
+        - "front"
+        - "3/4 view"
+        - "top-down"
+
+    quality_settings: |
+      Black and white line art coloring page style.
+      IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading.
+      Bold clean outlines, closed shapes, thick black lines.
+      NO FRAME, NO BORDER around the illustration.
+      Illustration extends naturally to image boundaries.
+      Printable 300 DPI, simple to medium detail for kids age 4-8.
+      No text, no logo, no watermark.
 
     # ComfyUI workflow node parameters (mapped to node IDs in workflow JSON)
     # The provider will inject the generated prompt into node "54" automatically
@@ -144,7 +175,8 @@ coloring_page_templates:
     #   workflow["47"]["inputs"]["text"] = workflow_params["47"]
     #   workflow["X"]["inputs"]["key"] = workflow_params["custom_key"]
     workflow_params:
-      "negative": "color, shading, text, watermark"  # Negative prompt node
-      "prompt_1": "a coloring book page for kids in black and white on with {only one dinosaur|4 dinosaurs}.{eating|fighting|sleeping|playing}. For a coloring book page for kids. The kid will be able to color his favorites dinosaurs. Cute for kids. A lot of details and professional coloring book page style. Kawai."
-      "prompt_2": "On the background we should see a {prehistoric|modern} ecosystem. Background landscape with {plants|trees|volcano|cascade|lake|desert|sea} and {plants|trees|volcano|cascade|lake|desert|sea} in a coloring book style. The sky must be illustrated too. Cute dinosaurs. Kawai. Full page."
+      "prompt": "a coloring book page for kids in black and white on with {only one dinosaur|4 dinosaurs}.{eating|fighting|sleeping|playing}. For a coloring book page for kids. The kid will be able to color his favorites dinosaurs. Cute for kids. A lot of details and professional coloring book page style. Kawai."
+#      "negative": "color, shading, text, watermark"  # Negative prompt node
+#      "prompt_1": "a coloring book page for kids in black and white on with {only one dinosaur|4 dinosaurs}.{eating|fighting|sleeping|playing}. For a coloring book page for kids. The kid will be able to color his favorites dinosaurs. Cute for kids. A lot of details and professional coloring book page style. Kawai."
+#      "prompt_2": "On the background we should see a {prehistoric|modern} ecosystem. Background landscape with {plants|trees|volcano|cascade|lake|desert|sea} and {plants|trees|volcano|cascade|lake|desert|sea} in a coloring book style. The sky must be illustrated too. Cute dinosaurs. Kawai. Full page."
       # Add any custom ComfyUI node IDs or params here (controlnet_scale, etc.)
