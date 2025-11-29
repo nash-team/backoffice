@@ -124,7 +124,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 if not back_cover:
                     config_path = config_dir / "generation" / "comfy" / f"{self.model}"
                 else:
-                    config_path = config_dir / "generation" / "comfy" / "remove_text_from_cover_qwen.json"
+                    config_path = config_dir / "generation" / "comfy" / "remove-text-from-cover-flux-2.json"
 
                 with open(config_path, encoding="utf-8") as f:
                     workflow_data = f.read()
@@ -177,12 +177,12 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 context={"provider": "comfy", "model": self.model},
             )
 
-        self.workflow["31"]["inputs"]["seed"] = seed
-        self.workflow["54"]["inputs"]["text"] = workflow_params["prompt"]
+        self.workflow["25"]["inputs"]["noise_seed"] = seed
+        self.workflow["6"]["inputs"]["text"] = workflow_params["prompt"]
 
         # Inject workflow params (e.g., negative prompt in node 47)
-        if workflow_params and "47" in workflow_params:
-            self.workflow["47"]["inputs"]["text"] = workflow_params["negative"]
+        # if workflow_params and "47" in workflow_params:
+        #     self.workflow["47"]["inputs"]["text"] = workflow_params["negative"]
 
         try:
             ws = websocket.WebSocket()
@@ -254,16 +254,21 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 context={"provider": "comfy", "model": self.model},
             )
 
-        self.workflow["31"]["inputs"]["seed"] = seed
+        self.workflow["25"]["inputs"]["noise_seed"] = seed
+
+        # put the seed for random prompts
+        prompt_seed = random.randint(0, 2048)
+        self.workflow["63"]["inputs"]["seed"] = prompt_seed
 
         # Coloring page workflow dual clip random prompts (clip_l and t5xxl)
 
-        self.workflow["50"]["inputs"]["text"] = workflow_params["prompt_1"]
-        self.workflow["51"]["inputs"]["text"] = workflow_params["prompt_2"]
+        # self.workflow["63"]["inputs"]["text"] = workflow_params["prompt"]
+        self.workflow["63"]["inputs"]["text"] = prompt
+        # self.workflow["51"]["inputs"]["text"] = workflow_params["prompt_2"]
 
         # Inject workflow params (e.g., negative prompt in node 47)
-        if workflow_params and "47" in workflow_params:
-            self.workflow["47"]["inputs"]["text"] = workflow_params["negative"]
+        # if workflow_params and "47" in workflow_params:
+        #     self.workflow["47"]["inputs"]["text"] = workflow_params["negative"]
 
         try:
             ws = websocket.WebSocket()
@@ -343,11 +348,11 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         # 1. Convert cover bytes to base64
         cover_b64 = base64.b64encode(cover_bytes).decode()
 
-        self.workflow["103"]["inputs"]["image"] = cover_b64
+        self.workflow["67"]["inputs"]["image"] = cover_b64
 
         # 2. Generate seed
         seed = random.randint(1, 2**31 - 1)
-        self.workflow["3"]["inputs"]["seed"] = seed
+        self.workflow["25"]["inputs"]["noise_seed"] = seed
 
         try:
             ws = websocket.WebSocket()
