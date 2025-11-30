@@ -114,17 +114,17 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         """
         return False
 
-    def _retrieve_workflow(self, cover: bool, back_cover: bool = False):
+    def _retrieve_workflow(self, cover: bool, edit: bool = False):
         # Find project root by looking for config/ directory
 
         current = Path(__file__).resolve()
         while current.parent != current:
             config_dir = current / "config"
             if config_dir.exists() and (config_dir / "generation").exists():
-                if not back_cover:
+                if not edit:
                     config_path = config_dir / "generation" / "comfy" / f"{self.model}"
                 else:
-                    config_path = config_dir / "generation" / "comfy" / "remove-text-from-cover-flux-2.json"
+                    config_path = config_dir / "generation" / "comfy" / "edit-image-flux-2.json"
 
                 with open(config_path, encoding="utf-8") as f:
                     workflow_data = f.read()
@@ -134,9 +134,6 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
             current = current.parent
         else:
             raise FileNotFoundError(f"Could not find config/generation/{self.model}.json in project tree")
-
-    def _load_workflow(self, spec: ImageSpec, cover: bool):
-        self._retrieve_workflow(cover)
 
     async def generate_cover(
         self,
@@ -167,7 +164,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 context={"provider": "comfy", "model": self.model},
             )
 
-        self._load_workflow(spec, True)
+        self._retrieve_workflow(cover=True)
 
         if self.workflow is None:
             raise DomainError(
@@ -178,7 +175,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
             )
 
         self.workflow["25"]["inputs"]["noise_seed"] = seed
-        self.workflow["6"]["inputs"]["text"] = workflow_params["prompt"]
+        self.workflow["6"]["inputs"]["text"] = prompt
 
         # Inject workflow params (e.g., negative prompt in node 47)
         # if workflow_params and "47" in workflow_params:
@@ -244,7 +241,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 context={"provider": "comfy", "model": self.model},
             )
 
-        self._load_workflow(spec, False)
+        self._retrieve_workflow(cover=False)
 
         if self.workflow is None:
             raise DomainError(
@@ -299,31 +296,51 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 context={"provider": "comfy", "model": self.model, "error": str(e)},
             ) from e
 
-    async def remove_text_from_cover(
+    async def remove_text_from_cover(self,
+                                     image_bytes: bytes,
+                                     barcode_width_inches: float = 2.0,
+                                     barcode_height_inches: float = 1.2,
+                                     barcode_margin_inches: float = 0.25) -> bytes:
+
+        logger.info("🗑️  Removing text from cover (COMFY): returning cover without text elements ...")
+
+        return await self.edit_image(image_bytes,
+                                     barcode_width_inches=barcode_width_inches,
+                                     barcode_height_inches=barcode_height_inches,
+                                     barcode_margin_inches=barcode_margin_inches)
+
+    async def edit_image(
         self,
-        cover_bytes: bytes,
+        image_bytes: bytes,
+        edit_prompt: str = None,
+        spec: ImageSpec = None,
         barcode_width_inches: float = 2.0,
         barcode_height_inches: float = 1.5,
-        barcode_margin_inches: float = 0.25,
+        barcode_margin_inches: float = 0.25
     ) -> bytes:
-        """Remove text from cover to create back cover.
+        """Edit an image with a prompt.
 
         For Comfy, we just return the cover without text.
+        If edit_prompt is None then it will remove text from the input image.
         The barcode space will be added later during KDP export assembly, not here.
 
         Args:
-            cover_bytes: Original cover image (with text)
-            barcode_width_inches: Unused (kept for interface compatibility)
-            barcode_height_inches: Unused (kept for interface compatibility)
-            barcode_margin_inches: Unused (kept for interface compatibility)
+            image_bytes: Original cover image (with text)
+            edit_prompt: if present, use this prompt to edit input image (e.g., "replace 5 toes with 3"),
+                         otherwise, it will remove all text elements from the given image.
+            spec: Image specifications (dimensions, format, etc.).
+            barcode_width_inches: Unused (kept for interface compatibility).
+            barcode_height_inches: Unused (kept for interface compatibility).
+            barcode_margin_inches: Unused (kept for interface compatibility).
 
         Returns:
-            Same image without text (barcode space will be added during KDP export)
+            Edited image data as bytes (barcode space will be added during KDP export)
 
         Raises:
             DomainError: If transformation fails
         """
-        logger.info("🗑️  Removing text from cover (COMFY): returning cover as-is)...")
+        if edit_prompt:
+            logger.info(f"Edit the given image (COMFY) with this prompt: \n*****\n{edit_prompt}\n******")
 
         if not self.is_available():
             raise DomainError(
@@ -333,7 +350,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 context={"provider": "comfy", "model": self.model},
             )
 
-        self._retrieve_workflow(True, back_cover=True)
+        self._retrieve_workflow(True, edit=True)
 
         if self.workflow is None:
             raise DomainError(
@@ -343,16 +360,18 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 context={"provider": "comfy", "model": self.model},
             )
 
-
-
         # 1. Convert cover bytes to base64
-        cover_b64 = base64.b64encode(cover_bytes).decode()
-
+        cover_b64 = base64.b64encode(image_bytes).decode()
         self.workflow["67"]["inputs"]["image"] = cover_b64
 
         # 2. Generate seed
         seed = random.randint(1, 2**31 - 1)
         self.workflow["25"]["inputs"]["noise_seed"] = seed
+
+        # 3. Modify workflow prompt (by default "remove text") by the "editing" prompt
+        #    ONLY if editing_prompt is not None
+        if edit_prompt:
+            self.workflow["6"]["inputs"]["text"] = edit_prompt
 
         try:
             ws = websocket.WebSocket()
@@ -367,14 +386,9 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
 
                     from PIL import Image
 
-                    # buffer = BytesIO()
                     result_bytes = image_data
-                    # save image
-                    # image = Image.open(io.BytesIO(image_data))
-                    # image.save(f"/tmp/test-{back}-{seed}.png")
 
-
-            logger.info(f"✅ Generated back cover (COMFY): {len(result_bytes)} bytes")
+            logger.info(f"✅ Generated edited image (COMFY): {len(result_bytes)} bytes")
             return result_bytes
         except Exception as e:
             logger.error(f"❌ Comfy generation failed: {str(e)}")
@@ -385,189 +399,6 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 context={"provider": "comfy", "model": self.model, "error": str(e)},
             ) from e
 
-        # Just return the cover - barcode space will be added during KDP export
-        # not during back cover generation
-        logger.info(f"✅ Back cover ready (no barcode space): {len(cover_bytes)} bytes")
-        return cover_bytes
-
-    async def edit_image(
-        self,
-        image: bytes,
-        edit_prompt: str,
-        spec: ImageSpec,
-    ) -> bytes:
-        """Edit an existing image based on text instructions using Qwen Image Edit 2509.
-
-        Uploads the image to ComfyUI, loads Qwen edit workflow, and applies corrections.
-
-        Args:
-            image: Original image data as bytes (PNG format)
-            edit_prompt: Text instructions for editing (e.g., "replace 5 toes with 3")
-            spec: Image specifications (dimensions, format, etc.)
-
-        Returns:
-            Edited image data as bytes
-
-        Raises:
-            DomainError: If editing fails
-        """
-        if not self.is_available():
-            raise DomainError(
-                code=ErrorCode.COMFY_UNAVAILABLE,
-                message="Comfy provider not available",
-                actionable_hint="Start ComfyUI server at http://127.0.0.1:8188",
-                context={"provider": "comfy", "comfy_url": self.comfy_url},
-            )
-
-        logger.info(f"Editing image via ComfyUI (Qwen): {edit_prompt[:100]}...")
-
-        try:
-            # Upload image to ComfyUI
-            image_name = self._upload_image_to_comfy(image)
-
-            # Load Qwen edit workflow (assuming model contains "edit" for edit workflows)
-            # TODO: This needs a dedicated Qwen edit workflow JSON file
-            # For now, we'll assume the workflow is named something like "qwen-edit-workflow.json"
-            edit_workflow_model = "qwen-edit-workflow.json"
-
-            # Store original model and temporarily switch to edit workflow
-            original_model = self.model
-            self.model = edit_workflow_model
-
-            try:
-                self._retrieve_workflow(cover=False)
-            except FileNotFoundError:
-                raise DomainError(
-                    code=ErrorCode.COMFY_UNAVAILABLE,
-                    message=f"Qwen edit workflow not found: {edit_workflow_model}",
-                    actionable_hint="Create config/generation/comfy/qwen-edit-workflow.json for image editing",
-                    context={"provider": "comfy", "workflow": edit_workflow_model},
-                )
-            finally:
-                # Restore original model
-                self.model = original_model
-
-            if self.workflow is None:
-                raise DomainError(
-                    code=ErrorCode.COMFY_UNAVAILABLE,
-                    message="Failed to load Qwen edit workflow",
-                    actionable_hint="Check config/generation/comfy/qwen-edit-workflow.json exists and is valid",
-                    context={"provider": "comfy", "workflow": edit_workflow_model},
-                )
-
-            # Inject image and edit prompt into workflow
-            # Node 1: LoadImage - set uploaded image name
-            if "1" in self.workflow:
-                self.workflow["1"]["inputs"]["image"] = image_name
-                logger.info(f"Set input image to node 1: {image_name}")
-
-            # Node 2: CLIPTextEncode - set edit prompt
-            if "2" in self.workflow:
-                self.workflow["2"]["inputs"]["text"] = edit_prompt
-                logger.info(f"Set edit prompt to node 2: {edit_prompt[:50]}...")
-
-            # Execute workflow
-            ws = websocket.WebSocket()
-            ws.connect(f"ws://{self.comfy_url}/ws?clientId={self.client_id}")
-            images = self.get_images(ws, self.workflow)
-
-            # Extract edited image
-            result_bytes = None
-            for node_id in images:
-                for image_data in images[node_id]:
-                    result_bytes = image_data
-                    break
-                if result_bytes:
-                    break
-
-            if not result_bytes:
-                raise DomainError(
-                    code=ErrorCode.PROVIDER_TIMEOUT,
-                    message="No edited image returned from Qwen workflow",
-                    actionable_hint="Check workflow configuration and node IDs",
-                    context={"provider": "comfy", "workflow": edit_workflow_model},
-                )
-
-            logger.info(f"✅ Edited image (ComfyUI Qwen): {len(result_bytes)} bytes")
-            return result_bytes
-
-        except DomainError:
-            raise
-        except Exception as e:
-            logger.error(f"❌ ComfyUI image editing failed: {str(e)}")
-            raise DomainError(
-                code=ErrorCode.PROVIDER_TIMEOUT,
-                message=f"ComfyUI image editing failed: {str(e)}",
-                actionable_hint="Check ComfyUI server is running and Qwen workflow is configured",
-                context={"provider": "comfy", "error": str(e)},
-            ) from e
-
-    def _upload_image_to_comfy(self, image_bytes: bytes) -> str:
-        """Upload an image to ComfyUI and return the uploaded filename.
-
-        Args:
-            image_bytes: Image data as bytes
-
-        Returns:
-            Uploaded image filename on ComfyUI server
-
-        Raises:
-            DomainError: If upload fails
-        """
-        try:
-            import io
-
-            # Generate unique filename
-            import time
-
-            filename = f"edit_input_{int(time.time() * 1000)}.png"
-
-            # Prepare multipart form data
-            files = {"image": (filename, io.BytesIO(image_bytes), "image/png")}
-            data = {"subfolder": "edit_inputs", "type": "input", "overwrite": "true"}
-
-            # Upload via HTTP POST
-            import urllib.request
-
-            # Create multipart form data manually
-            boundary = f"----WebKitFormBoundary{uuid.uuid4().hex}"
-            body = b""
-
-            # Add regular fields
-            for key, value in data.items():
-                body += f"--{boundary}\r\n".encode()
-                body += f'Content-Disposition: form-data; name="{key}"\r\n\r\n'.encode()
-                body += f"{value}\r\n".encode()
-
-            # Add file
-            body += f"--{boundary}\r\n".encode()
-            body += f'Content-Disposition: form-data; name="image"; filename="{filename}"\r\n'.encode()
-            body += b"Content-Type: image/png\r\n\r\n"
-            body += image_bytes
-            body += b"\r\n"
-            body += f"--{boundary}--\r\n".encode()
-
-            # Send request
-            req = urllib.request.Request(
-                f"http://{self.comfy_url}/upload/image",
-                data=body,
-                headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
-            )
-
-            with urllib.request.urlopen(req) as response:
-                result = json.loads(response.read())
-                uploaded_name: str = result.get("name", filename)
-                logger.info(f"Uploaded image to ComfyUI: {uploaded_name}")
-                return uploaded_name
-
-        except Exception as e:
-            logger.error(f"❌ Failed to upload image to ComfyUI: {str(e)}")
-            raise DomainError(
-                code=ErrorCode.PROVIDER_TIMEOUT,
-                message=f"Failed to upload image to ComfyUI: {str(e)}",
-                actionable_hint="Check ComfyUI server is running and accessible",
-                context={"comfy_url": self.comfy_url, "error": str(e)},
-            ) from e
 
     def _add_rounded_border_to_image(
         self,

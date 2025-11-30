@@ -94,7 +94,7 @@ class RegenerateBackCoverUseCase:
         kdp_config = KDPExportConfig()
 
         back_cover_data = await self.cover_service.cover_port.remove_text_from_cover(
-            cover_bytes=front_cover_bytes,
+            image_bytes=front_cover_bytes,
             barcode_width_inches=kdp_config.barcode_width,
             barcode_height_inches=kdp_config.barcode_height,
             barcode_margin_inches=kdp_config.barcode_margin,

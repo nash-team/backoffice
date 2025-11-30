@@ -115,32 +115,73 @@ coloring_page_templates:
       Printable 300 DPI, simple-to-medium detail (kids 4-8).
       No text, no logo, no watermark.
 
-  "comfy":
-    base_structure: "{CHARACTER} {ACTION}. {STYLE}."
+  comfy:
+    base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
 
     variables:
+      SHOT:
+        - "close-up"
+        - "medium shot"
+        - "wide shot"
+        - "full atmospheric scene"
+
       CHARACTER:
         - "friendly skeleton Santa"
         - "adorable zombie reindeer"
         - "cute vampire elf"
         - "smiling ghost snowman"
+        - "haunted gingerbread character"
         - "gothic Christmas angel"
+        - "gentle Krampus with tiny horns"
+        - "skeleton toy wrapper"
+        - "cute zombie caroler"
+        - "vampire toy maker"
 
       ACTION:
-        - "carrying gifts"
-        - "decorating tree"
-        - "dancing"
-        - "flying"
-        - "baking cookies"
-        - "singing carols"
-        - "wrapping presents"
+        - "carrying spooky Christmas gifts"
+        - "decorating a creepy-cute Christmas tree"
+        - "dancing with friendly ghosts"
+        - "flying over rooftops with bats"
+        - "baking magical cookies"
+        - "singing eerie cheerful carols"
+        - "wrapping mysterious presents"
+        - "riding a misty sleigh"
+        - "hanging glowing ornaments"
+        - "playing with haunted toys"
 
-      STYLE:
-        - "line art"
-        - "coloring page style"
-        - "simple outlines"
+      ENV:
+        - "cozy haunted cottage with fireplace and Christmas lights"
+        - "warm candlelit cemetery with festive ornaments"
+        - "inviting toy workshop with hot cocoa mugs"
+        - "snowy village with glowing windows"
+        - "gothic fireplace with crackling fire and stockings"
+        - "warm attic filled with vintage Christmas decorations"
+        - "moonlit snowy rooftop with lanterns"
+        - "friendly North Pole village with warm lights"
 
-    quality_settings: "B&W lineart. Bold lines. Cute creepy style."
+      FOCUS:
+        - "head with festive hat"
+        - "full body"
+        - "holding Christmas props"
+        - "group of friendly spooky creatures"
+        - "holding an ornament or gift"
+        - "skeleton details visible but soft"
+
+      COMPOSITION:
+        - "left-facing"
+        - "right-facing"
+        - "front view"
+        - "3/4 view"
+        - "jumping or floating"
+
+    quality_settings: |
+      Black and white line art coloring page style.
+      ONLY black lines on white background. NO colors. NO gray shading.
+      Bold clean outlines, closed shapes, thick black lines.
+      NO FRAME, NO BORDER around the illustration.
+      Illustration touches or nearly touches edges naturally.
+      Printable 300 DPI, simple-to-medium detail (kids 4-8).
+      No text, no logo, no watermark.
 
     workflow_params:
       "47": "color, shading, text, watermark, gore, blood, frightening"
