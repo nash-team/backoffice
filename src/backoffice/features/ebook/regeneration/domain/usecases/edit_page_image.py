@@ -134,7 +134,7 @@ class EditPageImageUseCase:
         )
 
         edited_image_bytes = await self.image_edit_port.edit_image(
-            image=current_image_bytes,
+            image_bytes=current_image_bytes,
             edit_prompt=edit_prompt,
             spec=page_spec,
         )

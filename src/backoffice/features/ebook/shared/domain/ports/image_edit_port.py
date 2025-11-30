@@ -22,14 +22,14 @@ class ImageEditPort(ABC):
     @abstractmethod
     async def edit_image(
         self,
-        image: bytes,
+        image_bytes: bytes,
         edit_prompt: str,
         spec: ImageSpec,
     ) -> bytes:
         """Edit an existing image based on text instructions.
 
         Args:
-            image: Original image data as bytes (PNG format)
+            image_bytes: Original image data as bytes (PNG format)
             edit_prompt: Text instructions for editing (e.g., "replace 5 toes with 3")
             spec: Image specifications (dimensions, format, etc.)
 

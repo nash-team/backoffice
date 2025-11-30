@@ -40,7 +40,7 @@ class CoverGenerationPort(ABC):
     @abstractmethod
     async def remove_text_from_cover(
         self,
-        cover_bytes: bytes,
+        image_bytes: bytes,
         barcode_width_inches: float = 2.0,
         barcode_height_inches: float = 1.2,
         barcode_margin_inches: float = 0.25,
@@ -51,7 +51,7 @@ class CoverGenerationPort(ABC):
         (Gemini Vision for OpenRouter, etc.) and adds KDP-compliant barcode space.
 
         Args:
-            cover_bytes: Original cover image (with text)
+            image_bytes: Original cover image (with text)
             barcode_width_inches: KDP barcode width in inches (default: 2.0)
             barcode_height_inches: KDP barcode height in inches (default: 1.2)
             barcode_margin_inches: KDP barcode margin in inches (default: 0.25)
