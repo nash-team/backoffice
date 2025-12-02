@@ -1,0 +1,145 @@
+id: christmas-creepy
+label: "Christmas Creepy"
+
+palette:
+  base: ["#4b1c1c", "#0f2b1f", "#161616", "#f7f0e9"]
+  accents_allowed: ["#c41e3a", "#8b3f8f", "#d47b26", "#9e1b32"]
+  forbidden_keywords: ["rainbow", "pastel", "neon", "cartoony cute", "cheerful only", "bright pink", "baby blue", "sparkly unicorn"]
+
+# ==========================================
+# COVER TEMPLATES (colorful, full-bleed)
+# ==========================================
+cover_templates:
+  default:
+    prompt_blocks:
+      subject: "a spooky festive Christmas character (haunted Santa with lantern, skeletal reindeer with bells, eerie caroling ghost, shadowy snowman with glowing coal eyes), centered, dramatic lighting"
+      environment: "foggy graveyard draped in string lights, abandoned toy workshop with candles, moonlit snowy forest with crooked trees, gothic village square with wreaths"
+      tone: "dark cozy, gothic holiday, eerie but inviting, candlelit atmosphere, Tim Burton inspired Christmas"
+      positives:
+        - "high detail"
+        - "festive gothic style"
+        - "smoky depth"
+        - "warm candlelight glow"
+        - "mysterious ambience"
+        - "polished illustration"
+        - "professional children's book cover"
+        - "Amazon bestseller look"
+        - "glossy finish"
+      negatives:
+        - "no text"
+        - "no mockup"
+        - "no borders"
+        - "no open book"
+        - "no gore"
+        - "no blood"
+        - "no overt horror"
+        - "no bright pastel"
+
+  "comfy":
+    prompt: "Dark whimsical Christmas cover: spooky festive character in haunted snowy village with candles and wreaths. Gothic holiday vibe, warm glow, professional and polished."
+
+    workflow_params:
+      "47": "text, mockup, borders, gore, blood, overt horror, bright pastel, kawaii only"
+      "clip_g_suffix": "festive gothic, candlelit shadows, professional quality illustration"
+
+# ==========================================
+# COLORING PAGE TEMPLATES (B&W line art)
+# ==========================================
+coloring_page_templates:
+  default:
+    base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+
+    variables:
+      SHOT:
+        - "close-up"
+        - "medium shot"
+        - "wide shot"
+        - "full atmospheric scene"
+
+      CHARACTER:
+        - "haunted Santa with tattered coat"
+        - "skeletal reindeer with bells"
+        - "ghostly caroler holding a lantern"
+        - "shadowy snowman with crooked hat"
+        - "creepy toy maker elf"
+        - "gothic Christmas angel"
+        - "Krampus silhouette with gifts"
+        - "spectral gingerbread figure"
+        - "candle-carrying skeleton child"
+
+      ACTION:
+        - "carrying eerie wrapped presents"
+        - "decorating a twisted Christmas tree"
+        - "singing in a moonlit graveyard"
+        - "riding a rattling sleigh"
+        - "hanging flickering ornaments"
+        - "walking with bats and owls"
+        - "lighting candles along a path"
+        - "emerging from a foggy forest"
+        - "guarding a haunted workshop"
+
+      ENV:
+        - "foggy graveyard with wreaths and candles"
+        - "abandoned toy workshop with cobwebs"
+        - "moonlit snowy forest with crooked trees"
+        - "gothic village with lantern-lit windows"
+        - "snowy rooftops under a full moon"
+        - "candlelit chapel doorway"
+        - "frozen pond with eerie reflections"
+        - "shadowy alley lined with garlands"
+
+      FOCUS:
+        - "head with eerie hat"
+        - "full body"
+        - "holding lantern or ornament"
+        - "group of 2-3 spooky figures"
+        - "skeleton details visible"
+        - "flowing cloak or scarf"
+
+      COMPOSITION:
+        - "left-facing"
+        - "right-facing"
+        - "front view"
+        - "3/4 view"
+        - "walking toward viewer"
+        - "silhouette with highlights"
+
+    quality_settings: |
+      Black and white line art coloring page style.
+      ONLY black lines on white background. NO colors. NO gray shading.
+      Bold clean outlines, closed shapes, thick black lines.
+      NO FRAME, NO BORDER around the illustration.
+      Illustration touches or nearly touches edges naturally.
+      Printable 300 DPI, simple-to-medium detail (kids 7-10).
+      No text, no logo, no watermark.
+
+  "comfy":
+    base_structure: "{CHARACTER} {ACTION}. {STYLE}."
+
+    variables:
+      CHARACTER:
+        - "haunted Santa"
+        - "skeletal reindeer"
+        - "ghostly caroler"
+        - "shadowy snowman"
+        - "gothic angel"
+
+      ACTION:
+        - "carrying gifts"
+        - "decorating tree"
+        - "singing"
+        - "riding sleigh"
+        - "walking through fog"
+        - "lighting candles"
+
+      STYLE:
+        - "line art"
+        - "coloring page style"
+        - "bold outlines"
+
+    quality_settings: "B&W lineart. Bold lines. Festive gothic spooky tone."
+
+    workflow_params:
+      "47": "color, shading, text, watermark, gore, blood, bright pastel, cute-only style"
+      "clip_g_suffix": "professional line art, clean outlines, gothic Christmas mood"
+      "qwen_prompt": "Black and white lineart with bold outlines, spooky festive holiday mood"
