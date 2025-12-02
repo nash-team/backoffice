@@ -10,6 +10,7 @@ import uuid
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
+from typing import Optional
 from urllib.error import URLError
 
 import websocket  # type: ignore[import-not-found]
@@ -277,6 +278,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
             for node_id in images:
                 for image_data in images[node_id]:
                     import io
+
                     from PIL import Image
 
                     result_bytes = image_data
@@ -296,27 +298,19 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 context={"provider": "comfy", "model": self.model, "error": str(e)},
             ) from e
 
-    async def remove_text_from_cover(self,
-                                     image_bytes: bytes,
-                                     barcode_width_inches: float = 2.0,
-                                     barcode_height_inches: float = 1.2,
-                                     barcode_margin_inches: float = 0.25) -> bytes:
-
+    async def remove_text_from_cover(self, image_bytes: bytes, barcode_width_inches: float = 2.0, barcode_height_inches: float = 1.2, barcode_margin_inches: float = 0.25) -> bytes:
         logger.info("🗑️  Removing text from cover (COMFY): returning cover without text elements ...")
 
-        return await self.edit_image(image_bytes,
-                                     barcode_width_inches=barcode_width_inches,
-                                     barcode_height_inches=barcode_height_inches,
-                                     barcode_margin_inches=barcode_margin_inches)
+        return await self.edit_image(image_bytes, barcode_width_inches=barcode_width_inches, barcode_height_inches=barcode_height_inches, barcode_margin_inches=barcode_margin_inches)
 
     async def edit_image(
         self,
         image_bytes: bytes,
-        edit_prompt: str = None,
-        spec: ImageSpec = None,
+        edit_prompt: Optional[str] = None,
+        spec: Optional[ImageSpec] = None,
         barcode_width_inches: float = 2.0,
         barcode_height_inches: float = 1.5,
-        barcode_margin_inches: float = 0.25
+        barcode_margin_inches: float = 0.25,
     ) -> bytes:
         """Edit an image with a prompt.
 
@@ -398,7 +392,6 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 actionable_hint="Check system resources (RAM/GPU memory) and model availability",
                 context={"provider": "comfy", "model": self.model, "error": str(e)},
             ) from e
-
 
     def _add_rounded_border_to_image(
         self,

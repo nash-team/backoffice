@@ -40,12 +40,14 @@ class PreviewRegeneratePageUseCase:
         self,
         ebook_id: int,
         page_index: int,
+        current_image_base64: str | None = None,
     ) -> dict[str, str | int]:
         """Preview regenerate a specific content page.
 
         Args:
             ebook_id: ID of the ebook
             page_index: Index of the page to regenerate (1-based, excluding cover)
+            current_image_base64: Optional latest modal image to chain from
 
         Returns:
             Dictionary with:
@@ -122,6 +124,12 @@ class PreviewRegeneratePageUseCase:
             image_type="coloring_page",
             themes_directory=theme_repo.themes_directory,
         )
+        # Prefer chaining from the modal-provided image when available
+        if current_image_base64:
+            workflow_params = {
+                **workflow_params,
+                "initial_image_base64": current_image_base64,
+            }
 
         # Step 3: Generate new page with B&W coloring style
         page_spec = ImageSpec(

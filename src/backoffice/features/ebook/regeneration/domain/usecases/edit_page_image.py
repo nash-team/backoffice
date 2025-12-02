@@ -39,6 +39,7 @@ class EditPageImageUseCase:
         ebook_id: int,
         page_index: int,
         edit_prompt: str,
+        current_image_base64: str | None = None,
     ) -> dict[str, str | int]:
         """Edit a specific content page image with targeted corrections.
 
@@ -46,6 +47,7 @@ class EditPageImageUseCase:
             ebook_id: ID of the ebook
             page_index: Index of the page to edit (1-based, excluding cover)
             edit_prompt: Text instructions for editing (e.g., "replace 5 toes with 3")
+            current_image_base64: Optional base64 image from the modal (latest preview)
 
         Returns:
             Dictionary with:
@@ -102,17 +104,25 @@ class EditPageImageUseCase:
         logger.info(f"✏️ Editing CONTENT PAGE {page_index} for ebook {ebook_id}: {ebook.title}")
         logger.info(f"Edit prompt: {edit_prompt[:100]}...")
 
-        # Step 1: Load current page image from structure_json
-        page_meta = pages_meta[page_index]
-        if "image_data_base64" not in page_meta:
-            raise DomainError(
-                code=ErrorCode.VALIDATION_ERROR,
-                message=f"Page {page_index} does not have an image",
-                actionable_hint="Ensure the page has been generated first",
-            )
-
-        current_image_base64 = page_meta["image_data_base64"]
-        current_image_bytes = base64.b64decode(current_image_base64)
+        # Step 1: Load current page image, preferring the modal-provided preview when available
+        if current_image_base64:
+            try:
+                current_image_bytes = base64.b64decode(current_image_base64)
+            except Exception as exc:  # pragma: no cover - defensive guard
+                raise DomainError(
+                    code=ErrorCode.VALIDATION_ERROR,
+                    message="Invalid base64 image provided by the modal",
+                    actionable_hint="Retry from the latest preview image",
+                ) from exc
+        else:
+            page_meta = pages_meta[page_index]
+            if "image_data_base64" not in page_meta:
+                raise DomainError(
+                    code=ErrorCode.VALIDATION_ERROR,
+                    message=f"Page {page_index} does not have an image",
+                    actionable_hint="Ensure the page has been generated first",
+                )
+            current_image_bytes = base64.b64decode(page_meta["image_data_base64"])
 
         logger.info(f"Loaded current page image: {len(current_image_bytes)} bytes")
 
