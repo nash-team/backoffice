@@ -1,0 +1,46 @@
+---
+description: Enforce structured domain error handling using DomainError with ErrorCode enum and actionable hints. Never use generic exceptions (ValueError, Exception, RuntimeError). All domain errors must include code, message, and actionable_hint.
+globs: ["**/domain/**/*.py", "**/infrastructure/**/*.py"]
+alwaysApply: true
+---
+
+# Domain Error Standards
+
+## Required Structure
+
+- Use `DomainError` from @src/backoffice/features/ebook/shared/domain/errors/error_taxonomy.py
+- NEVER use `ValueError`, `RuntimeError`, `Exception`
+- Required fields: `code`, `message`, `actionable_hint`
+- Optional field: `context` dict for debugging
+
+## ErrorCode Categories
+
+- `quality.*` - Image quality (DPI, size, color mode)
+- `provider.*` - External failures (timeout, rate limit, unavailable)
+- `policy.*` - Business rules (page limits, resolution)
+- `validation.*` - Input validation (not found, invalid state)
+
+## Actionable Hints
+
+- Always include clear actionable hint
+- Use imperative mood: "Check X", "Increase Y"
+- Make hints user-friendly, not technical
+- Explain HOW to fix, not just WHAT failed
+
+## When to Raise
+
+- Business rule violations in domain layer
+- Validation failures in usecases
+- Invalid state transitions
+- External provider failures (converted in infrastructure)
+
+## Error Message Format
+
+- Message: Describe what happened with context
+- Use f-strings for dynamic values
+- Include relevant IDs, names, or values
+- Keep messages concise and clear
+
+---
+
+**See also**: [8-domain-error-handling.mdc](../08-domain/8-domain-error-handling.mdc) for complete taxonomy

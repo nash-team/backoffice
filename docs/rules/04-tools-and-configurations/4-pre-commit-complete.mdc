@@ -1,0 +1,80 @@
+---
+description: Enforce comprehensive pre-commit hook suite with 6 quality checks - ruff lint/format, mypy type checking, vulture dead code detection, deptry dependency analysis, and pytest unit tests. All hooks must pass (6/6) before commit.
+globs: [".pre-commit-config.yaml"]
+alwaysApply: true
+---
+
+# Pre-commit Hooks Suite (6 hooks)
+
+## Hook Execution Order
+
+1. **ruff** - Lint with auto-fix (excludes tests)
+2. **ruff-format** - Format code (all files)
+3. **mypy** - Type checking (`src/` only)
+4. **vulture** - Dead code detection (80% confidence)
+5. **deptry** - Dependency validation
+6. **pytest-unit** - Unit tests only (no integration/e2e)
+
+## Running Hooks
+
+```bash
+pre-commit run --all-files  # All hooks
+pre-commit run ruff         # Specific hook
+make precommit              # Via Makefile
+```
+
+## Expected Result
+
+All 6/6 hooks must pass:
+- ✅ ruff
+- ✅ ruff-format
+- ✅ mypy
+- ✅ vulture
+- ✅ deptry
+- ✅ pytest-unit
+
+## Ruff Configuration
+
+- Lint with `--fix` auto-correction
+- Exclude tests via regex
+- Format all Python files
+- Version: v0.7.1 (pinned)
+
+## Mypy Configuration
+
+- Scan `src/` directory only
+- `pass_filenames: false` for full project check
+- Additional deps: `types-*` stubs
+
+## Vulture Configuration
+
+- 80% minimum confidence
+- Whitelist: `.vulture_whitelist.py`
+- Prefix unused fixtures with `_`
+
+## Deptry Configuration
+
+- Validate imports match `pyproject.toml`
+- Ignore known exceptions in config
+- Detect unused dependencies
+
+## Pytest Hook
+
+- Unit tests only (marker-based filtering)
+- Fast execution (<5s)
+- No integration/e2e tests in pre-commit
+
+## Troubleshooting
+
+- **Ruff fails**: Run `make fix` to auto-correct
+- **Mypy fails**: Add type hints, check stubs
+- **Vulture fails**: Add to whitelist or prefix with `_`
+- **Deptry fails**: Update `pyproject.toml` dependencies
+- **Pytest fails**: Fix failing tests before committing
+
+## Installation
+
+```bash
+pre-commit install  # Install hooks
+pre-commit autoupdate  # Update hook versions
+```

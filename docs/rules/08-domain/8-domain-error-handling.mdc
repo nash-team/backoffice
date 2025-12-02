@@ -1,0 +1,40 @@
+---
+description: Domain error handling using DomainError with typed ErrorCode taxonomy, actionable hints, and structured context for consistent error propagation across features
+globs: ["**/domain/**/*.py", "**/infrastructure/**/*.py"]
+alwaysApply: false
+---
+
+# Domain Error Handling
+
+## DomainError Structure
+
+- Always use `DomainError` from @src/backoffice/features/ebook/shared/domain/errors/error_taxonomy.py
+- Required fields: `code`, `message`, `actionable_hint`
+- Optional field: `context` (dict for extra data)
+- Never use generic `ValueError` or `Exception`
+
+## ErrorCode Taxonomy
+
+- Use appropriate category prefix
+- **Quality**: `DPI_TOO_LOW`, `IMAGE_TOO_SMALL`, `WRONG_COLOR_MODE`
+- **Provider**: `COMFY_UNAVAILABLE`, `MODEL_UNAVAILABLE`, `PROVIDER_TIMEOUT`, `PROVIDER_RATE_LIMIT`
+- **Policy**: `PAGE_LIMIT_EXCEEDED`, `RESOLUTION_TOO_HIGH`
+- **Validation**: `VALIDATION_ERROR`, `EBOOK_NOT_FOUND`
+- Add new codes to enum when needed
+
+## Error Messages
+
+- `message`: Describe what happened with context
+- `actionable_hint`: Tell user what to do next
+- Use f-strings for dynamic values in message
+- Keep actionable_hint user-friendly and clear
+- Include relevant IDs/values in message
+
+## When to Raise DomainError
+
+- Business rule violations in domain layer
+- Validation failures in usecases
+- Technical errors converted in infrastructure layer
+- State transitions that are not allowed
+- Missing or invalid entities
+- Provider/external service failures

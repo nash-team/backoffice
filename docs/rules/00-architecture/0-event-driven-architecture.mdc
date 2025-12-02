@@ -1,0 +1,64 @@
+---
+description: Enforce event-driven architecture patterns with domain events emitted after important business actions. Events enable loose coupling between features, observability, and extensibility. EventBus is centralized in shared infrastructure. All events inherit from DomainEvent and are immutable.
+globs: ["**/events/*.py"]
+alwaysApply: true
+---
+
+# Event-Driven Architecture
+
+## Event Structure
+
+- Inherit from `DomainEvent` base class
+- Immutable: `@dataclass(frozen=True, kw_only=True)`
+- Naming: `<Entity><Action>Event` (e.g., `EbookCreatedEvent`)
+- Place in `features/<feature>/domain/events/`
+- Represent past actions, not commands
+
+## Event Fields
+
+- Include minimum data for subscribers
+- Use primitive types or domain value objects
+- Avoid full entity references
+- Keep events small and focused
+
+## EventBus (Centralized)
+
+- Located in `features/shared/infrastructure/events/event_bus.py`
+- Singleton instance shared across features
+- Type-safe subscription with generics
+- Async event handling
+
+## Publishing Events
+
+- Emit AFTER successful operation
+- Publish from use cases (domain layer)
+- One event per business action
+- Include relevant entity IDs
+
+## Subscribing to Events
+
+- Create `EventHandler[TEvent]` in feature infrastructure
+- Implement `handle()` method
+- Register handler in feature `bootstrap()`
+- Handle errors gracefully
+
+## Event Handler Pattern
+
+- One handler per event type per feature
+- Handlers in `features/<feature>/infrastructure/event_handlers/`
+- Inject dependencies via constructor
+- Keep handlers focused and simple
+
+## Feature Communication
+
+- Features NEVER import from each other
+- Use events for all inter-feature communication
+- Events are the ONLY coupling between features
+- Maintains feature independence
+
+## Benefits
+
+- Loose coupling between features
+- Easy to add new features reacting to events
+- Clear audit trail of domain actions
+- Extensible without modifying existing code

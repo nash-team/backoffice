@@ -1,0 +1,57 @@
+---
+description: Enforce pytest markers to categorize tests (unit, integration, e2e, scenarios) enabling selective test execution. Integration tests must use pytestmark module-level marker. Pre-commit hook runs only unit tests for speed. All markers must be registered in pytest.ini.
+globs: ["**/tests/**/*.py"]
+alwaysApply: true
+---
+
+# Pytest Markers & Selective Execution
+
+## Marker Categories
+
+- `unit` - Pure domain logic (default, no marker needed)
+- `integration` - Database, external services, testcontainers
+- `e2e` - End-to-end Playwright tests
+- `scenarios` - User scenario-based E2E tests
+
+## Module-Level Markers
+
+- Use `pytestmark = pytest.mark.integration` at top of test file
+- Applies marker to ALL tests in file
+- Mandatory for integration tests
+- Place after imports
+
+## Selective Execution
+
+```bash
+pytest                          # All tests
+pytest -m unit                  # Unit only
+pytest -m integration           # Integration only
+pytest -m "not integration"     # Skip integration
+make test                       # Unit only (~1s)
+make test-integration           # Integration only
+```
+
+## Pre-commit Hook
+
+- Runs ONLY unit tests (fast <5s)
+- Integration/E2E skipped in pre-commit
+- Full suite runs in CI/CD
+
+## Marker Registration
+
+- All markers registered in `pytest.ini`
+- Prevents typos and invalid markers
+- Fail on unknown markers
+
+## Test Organization
+
+- Unit tests: No marker (default fast tests)
+- Integration tests: Module-level `pytestmark`
+- E2E tests: Individual `@pytest.mark.e2e`
+- Scenarios: Individual `@pytest.mark.scenarios`
+
+## Side-Effect Fixtures
+
+- Prefix with `_` (e.g., `_sample_ebooks`)
+- Used for setup, not return value
+- Prevents vulture false positives

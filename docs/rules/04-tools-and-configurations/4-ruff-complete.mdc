@@ -1,0 +1,71 @@
+---
+description: Enforce comprehensive Ruff configuration combining linting and formatting (replaces Black). E402 import order strictly enforced even in tests. S101 asserts allowed only in tests. Per-file ignores configured for special cases. Target Python 3.11 with 100-char line length.
+globs: ["**/*.py"]
+alwaysApply: true
+---
+
+# Ruff Lint + Format
+
+## Overview
+
+- Ruff replaces Flake8 AND Black
+- `ruff check` for linting with auto-fix
+- `ruff format` for formatting
+- Both run in pre-commit hooks
+
+## Core Rules Enabled
+
+- `E` - pycodestyle errors (**E402 enforced**)
+- `W` - pycodestyle warnings
+- `F` - Pyflakes (unused imports, undefined vars)
+- `I` - isort (import sorting)
+- `B` - flake8-bugbear (likely bugs)
+- `C4` - flake8-comprehensions
+- `UP` - pyupgrade (modern Python)
+- `S` - flake8-bandit (security)
+
+## E402 Import Order (ENFORCED)
+
+- All imports MUST be at top of file
+- **No exceptions** - not even in tests
+- Move code before imports or refactor
+- Ruff will fail if imports are not at top
+
+## Per-File Ignores
+
+- Tests: `S101` (asserts allowed)
+- Migrations: `F401` (unused imports OK)
+- Providers: Case-specific ignores
+- Configure in `pyproject.toml`
+
+## Configuration
+
+```toml
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+exclude = ["migrations/versions/*"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4", "UP", "S"]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**/*.py" = ["S101"]  # Allow asserts
+"migrations/**/*.py" = ["F401"]  # Allow unused imports
+```
+
+## Commands
+
+```bash
+make lint     # Lint src/ (exclude tests)
+make format   # Format all files
+make fix      # Auto-fix + format
+```
+
+## Common Fixes
+
+- **E402**: Move imports to top
+- **F401**: Remove unused imports
+- **I001**: Sort imports correctly
+- **S101**: Only use asserts in tests

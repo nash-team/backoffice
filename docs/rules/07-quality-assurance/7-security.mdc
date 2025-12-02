@@ -1,0 +1,39 @@
+---
+description: Security best practices including input validation through Pydantic schemas, authentication enforcement, SQL injection prevention, and proper secret management
+globs: "{**/*.py,presentation/templates/**/*.html}"
+alwaysApply: true
+---
+
+## Input Validation
+
+- All inputs validated through Pydantic schemas
+- No raw form data processing
+- Sanitize HTML in templates
+- Validate file upload types
+
+```python
+# Good - Pydantic validation
+class EbookValidationRequest(BaseModel):
+    feedback: str = Field(min_length=1, max_length=1000)
+```
+
+## Authentication Security
+
+- Admin authentication required for protected routes
+- JWT token validation on every request
+- Session timeout enforcement
+- Secure cookie configuration
+
+## SQL Injection Prevention
+
+- Use SQLAlchemy parameterized queries only
+- No string concatenation in queries
+- ORM methods for data access
+- Input sanitization before database operations
+
+## Secret Management
+
+- Environment variables for sensitive data
+- No hardcoded credentials in code
+- Secure token generation methods
+- API keys stored outside repository

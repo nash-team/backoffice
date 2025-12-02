@@ -1,0 +1,64 @@
+---
+description: SQLAlchemy 2.0 modern patterns with declarative models, typed mappings, synchronous session management, and repository implementations for hexagonal architecture data persistence
+globs: ["**/infrastructure/**/*.py", "**/models/**/*.py"]
+alwaysApply: false
+---
+
+# SQLAlchemy 2.0 Patterns (Synchronous)
+
+## Modern Model Definition
+
+- Use `DeclarativeBase` as base class
+- Define models with `Mapped` type annotations
+- Use `mapped_column()` for column definitions
+- Place models in `features/shared/infrastructure/models/`
+
+## Type-Safe Columns
+
+- Use `Mapped[int]`, `Mapped[str]`, etc.
+- Handle nullable with union: `Mapped[str | None]`
+- Use appropriate SQLAlchemy types: `String(255)`, `Text`, `JSON`
+- Define defaults at column level
+
+## Session Management (Synchronous)
+
+- Configure `sessionmaker` in infrastructure layer
+- Use FastAPI `Depends(get_db)` for injection
+- Handle session lifecycle with try/finally
+- Commit transactions explicitly
+- **Note**: This project uses synchronous sessions only
+
+## Repository Pattern
+
+- Implement repository ports from domain layer
+- Map between domain entities and ORM models
+- Keep domain entities free of SQLAlchemy dependencies
+- Use `to_domain()` and `to_model()` converters
+
+## Queries (Synchronous)
+
+- Use `session.execute(select(...))` pattern
+- Chain query methods: `where()`, `order_by()`, `limit()`
+- Use `scalar_one()`, `scalar_one_or_none()`, `scalars().all()`
+- Handle errors: catch `NoResultFound`, `MultipleResultsFound`
+
+## Relationships
+
+- Use `relationship()` with `back_populates`
+- Define foreign keys with `ForeignKey()`
+- Configure `lazy="selectin"` for eager loading
+- Use `cascade="all, delete-orphan"` when appropriate
+
+## Transactions
+
+- Use `db.commit()` for successful operations
+- Use `db.rollback()` on errors
+- Group related operations in single transaction
+- Keep transactions short and focused
+
+## Alembic Migrations
+
+- Generate migrations: `alembic revision --autogenerate -m "message"`
+- Review generated migrations before applying
+- Test migrations in development first
+- Use `upgrade head` to apply, `downgrade -1` to revert

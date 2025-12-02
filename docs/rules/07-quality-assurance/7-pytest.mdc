@@ -1,0 +1,47 @@
+---
+description: Pytest testing standards for unit tests with fakes (Chicago style), async testing patterns, co-localized test structure, and domain layer isolation. Use pytest markers for test categorization. Tests live next to code in features/<feature>/tests/.
+globs: "src/backoffice/features/**/tests/**/*.py"
+alwaysApply: true
+---
+
+## Unit Test Structure (Chicago Style)
+
+- Use Fakes (real simplified implementations), not Mocks
+- Domain layer tests isolated completely
+- Use cases tested with fake repositories
+- No external dependencies in unit tests
+- Fakes in @src/backoffice/features/shared/tests/unit/fakes
+
+```python
+# features/ebook_lifecycle/tests/unit/domain/usecases/test_get_stats.py
+from backoffice.features.shared.tests.unit/fakes.fake_cover_port import FakeCoverPort
+
+@pytest.fixture
+def repository():
+    return FakeEbookRepository()  # Fake, not Mock
+
+@pytest.fixture
+def cover_port():
+    return FakeCoverPort(mode="succeed")
+```
+
+## Fixture Usage
+
+- Async fixtures for async operations
+- Repository fixtures return Fakes (not Mocks)
+- Underscore prefix for side-effect fixtures (`_sample_ebooks`)
+- Sample data fixtures for consistency
+
+## Test Organization (Co-localized)
+
+- Unit tests in `features/<feature>/tests/unit/`
+- Integration tests in `features/<feature>/tests/integration/`
+- Root `tests/` ONLY for cross-feature E2E and fixtures
+- Mirror domain structure in test directories
+
+## Test Naming
+
+- Given-When-Then comments in test body
+- Descriptive test method names (`test_<action>_<scenario>`)
+- Async tests use `@pytest.mark.asyncio`
+- Module-level markers: `pytestmark = pytest.mark.integration`

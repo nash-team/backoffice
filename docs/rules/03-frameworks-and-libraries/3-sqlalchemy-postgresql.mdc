@@ -1,0 +1,76 @@
+---
+description: SQLAlchemy and PostgreSQL patterns including repository implementation, migration management, transaction handling, and database design following hexagonal architecture principles
+globs: "{infrastructure/**/*.py,migrations/**/*.py,alembic.ini}"
+alwaysApply: false
+---
+
+## Repository Pattern
+
+- Repository implementations only in @infrastructure/adapters/repositories
+- Implement domain ports, return domain models
+- Use SQLAlchemy models for database mapping
+- Convert between SQLAlchemy and domain models
+
+```python
+# infrastructure/adapters/repositories/user_repository.py
+from domain.ports.user_repository_port import UserRepositoryPort
+from domain.models.user import User
+from infrastructure.models.user_model import UserModel
+
+class UserRepository(UserRepositoryPort):
+    async def find_by_email(self, email: str) -> Optional[User]:
+        db_user = await session.query(UserModel).filter_by(email=email).first()
+        return User(**db_user.__dict__) if db_user else None
+```
+
+## Migration Management
+
+- Use Alembic for all schema changes
+- Descriptive migration messages
+- Review migrations before applying
+- Backup database before major migrations
+
+```bash
+# Good migration workflow
+alembic revision --autogenerate -m "add ebook validation status"
+alembic upgrade head
+```
+
+## Transaction Handling
+
+- Use database sessions through dependency injection
+- Explicit transaction boundaries in use cases
+- Rollback on exceptions
+- Connection pooling configuration
+
+```python
+# Good - transaction in use case
+async def validate_ebook(
+    self, 
+    ebook_id: int, 
+    session: AsyncSession = Depends(get_db_session)
+):
+    async with session.begin():
+        ebook = await self.ebook_repo.find_by_id(ebook_id)
+        ebook.status = "validated"
+        await self.ebook_repo.save(ebook)
+```
+
+## Database Design
+
+- Snake_case for table and column names
+- Primary keys named `id`
+- Foreign keys with descriptive names
+- Indexes on frequently queried columns
+- Constraints for data integrity
+
+```python
+# infrastructure/models/ebook_model.py
+class EbookModel(Base):
+    __tablename__ = "ebooks"
+    
+    id = Column(Integer, primary_key=True)
+    title = Column(String(255), nullable=False)
+    validation_status = Column(String(50), nullable=False, default="pending")
+    created_at = Column(DateTime, server_default=func.now())
+```
