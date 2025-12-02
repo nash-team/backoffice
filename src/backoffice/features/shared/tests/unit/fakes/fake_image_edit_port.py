@@ -38,7 +38,7 @@ class FakeImageEditPort(ImageEditPort):
 
     async def edit_image(
         self,
-        image: bytes,
+        image_bytes: bytes,
         edit_prompt: str,
         spec: ImageSpec,
     ) -> bytes:
@@ -57,7 +57,7 @@ class FakeImageEditPort(ImageEditPort):
         """
         # Track call
         self.call_count += 1
-        self.last_image = image
+        self.last_image = image_bytes
         self.last_edit_prompt = edit_prompt
         self.last_spec = spec
 
@@ -72,7 +72,7 @@ class FakeImageEditPort(ImageEditPort):
         # Succeed mode: return modified image
         # Simulate edit by adding prefix to original image
         edited_prefix = f"EDITED[{edit_prompt[:20]}]".encode()
-        fake_edited_image = edited_prefix + image
+        fake_edited_image = edited_prefix + image_bytes
 
         # Adjust size if needed
         if len(fake_edited_image) < self.edited_image_size:

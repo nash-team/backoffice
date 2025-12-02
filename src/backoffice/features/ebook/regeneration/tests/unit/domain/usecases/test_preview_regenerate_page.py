@@ -95,6 +95,53 @@ async def test_preview_regenerate_page_success():
 
 
 @pytest.mark.asyncio
+async def test_preview_regenerate_page_uses_modal_image_when_provided():
+    """Ensure preview regen chains from modal image via workflow_params."""
+    ebook_id = 1
+    page_index = 1
+    modal_image = base64.b64encode(b"MODAL_IMAGE").decode()
+
+    fake_ebook = Ebook(
+        id=ebook_id,
+        title="Test Coloring Book",
+        author="Test Author",
+        created_at=datetime.now(),
+        status=EbookStatus.DRAFT,
+        theme_id="dinosaurs",
+        audience="6-8",
+    )
+    fake_ebook.structure_json = {
+        "pages_meta": [
+            {"page_number": 0, "title": "Cover", "image_data_base64": modal_image},
+            {"page_number": 1, "title": "Page 1", "image_data_base64": modal_image},
+            {"page_number": 2, "title": "Back", "image_data_base64": modal_image},
+        ]
+    }
+
+    mock_repo = AsyncMock()
+    mock_repo.get_by_id.return_value = fake_ebook
+
+    mock_page_service = AsyncMock()
+    mock_page_service.generate_single_page.return_value = b"new_preview"
+
+    use_case = PreviewRegeneratePageUseCase(
+        ebook_repository=mock_repo,
+        page_service=mock_page_service,
+    )
+
+    await use_case.execute(
+        ebook_id=ebook_id,
+        page_index=page_index,
+        current_image_base64=modal_image,
+    )
+
+    # Assert workflow_params passed through with modal image hint
+    _, kwargs = mock_page_service.generate_single_page.call_args
+    assert "workflow_params" in kwargs
+    assert kwargs["workflow_params"].get("initial_image_base64") == modal_image
+
+
+@pytest.mark.asyncio
 async def test_preview_regenerate_page_fails_if_ebook_not_found():
     """Test preview regeneration fails if ebook doesn't exist."""
     # Arrange

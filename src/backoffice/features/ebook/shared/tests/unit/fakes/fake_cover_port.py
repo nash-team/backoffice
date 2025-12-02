@@ -78,15 +78,16 @@ class FakeCoverPort(CoverGenerationPort):
 
     async def remove_text_from_cover(
         self,
-        cover_bytes: bytes,
+        image_bytes: bytes | None = None,
         barcode_width_inches: float = 2.0,
         barcode_height_inches: float = 1.2,
         barcode_margin_inches: float = 0.25,
+        cover_bytes: bytes | None = None,  # backward compatibility
     ) -> bytes:
         """Remove text from cover to create back cover using AI vision.
 
         Args:
-            cover_bytes: Original cover image (with text)
+            image_bytes: Original cover image (with text)
             barcode_width_inches: KDP barcode width in inches (default: 2.0)
             barcode_height_inches: KDP barcode height in inches (default: 1.2)
             barcode_margin_inches: KDP barcode margin in inches (default: 0.25)
@@ -94,5 +95,10 @@ class FakeCoverPort(CoverGenerationPort):
         Returns:
             Same image without text with KDP-compliant barcode space (for back cover)
         """
+        # Accept both image_bytes (current port) and cover_bytes (legacy)
+        source_bytes = image_bytes or cover_bytes
+        if source_bytes is None:
+            raise ValueError("image_bytes is required")
+
         # For testing, just return the same bytes or a modified version
-        return cover_bytes
+        return source_bytes

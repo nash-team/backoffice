@@ -279,6 +279,7 @@ async def preview_regenerate_page(
     ebook_id: int,
     page_index: int,
     factory: RepositoryFactoryDep,
+    body: dict | None = Body(default=None),
 ) -> dict:
     """Preview regenerate a content page without saving to DB or storage.
 
@@ -290,6 +291,7 @@ async def preview_regenerate_page(
         ebook_id: ID of the ebook
         page_index: Index of the page to regenerate (1-based, content pages only)
         factory: Repository factory for dependency injection
+        body: Optional request body that may include the current modal image
 
     Returns:
         JSON response with base64 image data and metadata
@@ -299,6 +301,11 @@ async def preview_regenerate_page(
     """
     try:
         logger.info(f"Preview regenerating page {page_index} for ebook {ebook_id}")
+
+        # Extract optional current modal image (for chaining)
+        current_image_base64 = None
+        if body:
+            current_image_base64 = body.get("current_image_base64")
 
         # Get dependencies
         ebook_repo = factory.get_ebook_repository()
@@ -315,6 +322,7 @@ async def preview_regenerate_page(
         result = await use_case.execute(
             ebook_id=ebook_id,
             page_index=page_index,
+            current_image_base64=current_image_base64,
         )
 
         logger.info(f"✅ Preview regenerated page {page_index} for ebook {ebook_id}")
@@ -357,7 +365,8 @@ async def edit_page_image(
 
     Request body:
     {
-        "edit_prompt": "replace 5 toes with 3 toes"
+        "edit_prompt": "replace 5 toes with 3 toes",
+        "current_image_base64": "<latest modal image, optional>"
     }
 
     Args:
@@ -373,10 +382,11 @@ async def edit_page_image(
         HTTPException: If ebook not found, invalid status, invalid page index, or edit fails
     """
     try:
-        # Extract edit prompt from request
+        # Extract edit prompt and optional current image from request
         edit_prompt = edit_request.get("edit_prompt")
         if not edit_prompt:
             raise HTTPException(status_code=400, detail="edit_prompt is required in request body")
+        current_image_base64 = edit_request.get("current_image_base64")
 
         logger.info(f"Editing page {page_index} for ebook {ebook_id} with prompt: {edit_prompt[:100]}...")
 
@@ -395,6 +405,7 @@ async def edit_page_image(
             ebook_id=ebook_id,
             page_index=page_index,
             edit_prompt=edit_prompt,
+            current_image_base64=current_image_base64,
         )
 
         logger.info(f"✅ Edited page {page_index} for ebook {ebook_id}")

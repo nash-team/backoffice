@@ -139,6 +139,9 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    body: JSON.stringify({
+                        current_image_base64: currentImageBase64,
+                    }),
                 }
             );
 
@@ -206,6 +209,7 @@
                     },
                     body: JSON.stringify({
                         edit_prompt: editPrompt,
+                        current_image_base64: currentImageBase64,
                     }),
                 }
             );
