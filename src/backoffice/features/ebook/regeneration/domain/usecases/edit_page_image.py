@@ -3,7 +3,7 @@
 import base64
 import logging
 
-from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.entities.ebook import EbookStatus
 from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort

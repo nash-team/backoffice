@@ -9,6 +9,9 @@ from backoffice.features.ebook.regeneration.domain.entities.page_type import Pag
 from backoffice.features.ebook.regeneration.domain.services.regeneration_service import (
     RegenerationService,
 )
+from backoffice.features.ebook.regeneration.domain.usecases.add_new_pages import (
+    AddNewPagesUseCase,
+)
 from backoffice.features.ebook.regeneration.domain.usecases.apply_page_edit import (
     ApplyPageEditUseCase,
 )
@@ -271,6 +274,85 @@ async def complete_ebook_pages(
         raise HTTPException(
             status_code=500,
             detail="Error completing ebook. Please try again.",
+        ) from e
+
+
+@router.post("/{ebook_id}/add-pages")
+async def add_new_pages(
+    ebook_id: int,
+    factory: RepositoryFactoryDep,
+    request_body: Annotated[dict, Body(...)],
+) -> dict:
+    """Add new AI-generated coloring pages to an existing ebook.
+
+    Pages are generated using the same theme/style as the original ebook
+    and inserted before the back cover.
+
+    Request body:
+    {
+        "count": 5  // Number of pages to add (1-N)
+    }
+
+    Returns:
+        JSON response with pages added count, total pages, and limit info
+
+    Raises:
+        HTTPException: If ebook not found, not DRAFT, or error occurs
+    """
+    try:
+        count = request_body.get("count", 1)
+        if not isinstance(count, int) or count < 1:
+            raise HTTPException(status_code=400, detail="count must be a positive integer")
+
+        logger.info(f"Adding {count} new pages to ebook {ebook_id}")
+
+        # Get dependencies
+        ebook_repo = factory.get_ebook_repository()
+        file_storage = factory.get_file_storage()
+
+        # Create services
+        page_provider = ProviderFactory.create_content_page_provider()
+        page_service = ContentPageGenerationService(page_port=page_provider)
+
+        assembly_provider = WeasyPrintAssemblyProvider()
+        assembly_service = PDFAssemblyService(assembly_port=assembly_provider)
+        regeneration_service = RegenerationService(
+            assembly_service=assembly_service,
+            file_storage=file_storage,
+        )
+
+        # Create use case
+        use_case = AddNewPagesUseCase(
+            ebook_repository=ebook_repo,
+            page_service=page_service,
+            regeneration_service=regeneration_service,
+        )
+
+        result = await use_case.execute(ebook_id=ebook_id, count=count)
+
+        logger.info(f"Added {result.pages_added} pages to ebook {ebook_id}")
+
+        return {
+            "success": True,
+            "message": result.message,
+            "pages_added": result.pages_added,
+            "total_pages": result.total_pages,
+            "limit_reached": result.limit_reached,
+        }
+
+    except ValueError as e:
+        logger.warning(f"Validation error adding pages to ebook {ebook_id}: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Unexpected error adding pages to ebook {ebook_id}: {str(e)}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Error adding pages. Please try again.",
         ) from e
 
 

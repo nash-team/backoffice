@@ -1,7 +1,6 @@
 """Factory for creating provider instances (V1 slim)."""
 
 import logging
-import os
 
 from backoffice.features.ebook.shared.domain.policies.model_registry import ModelRegistry
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssemblyPort

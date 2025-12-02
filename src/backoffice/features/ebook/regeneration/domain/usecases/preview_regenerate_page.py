@@ -3,7 +3,7 @@
 import base64
 import logging
 
-from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.entities.ebook import EbookStatus
 from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
@@ -115,6 +115,7 @@ class PreviewRegeneratePageUseCase:
             total_pages=total_content_pages,
             themes_directory=theme_repo.themes_directory,
             seed=42,  # Default seed for reproducibility
+            audience="adults" if ebook.audience == "adults" else "children",
         )
         logger.info(f"Using YAML-based prompt: {prompt[:100]}...")
 

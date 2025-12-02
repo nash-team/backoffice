@@ -10,7 +10,6 @@ import uuid
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
-from typing import Optional
 from urllib.error import URLError
 
 import websocket  # type: ignore[import-not-found]
@@ -306,8 +305,8 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
     async def edit_image(
         self,
         image_bytes: bytes,
-        edit_prompt: Optional[str] = None,
-        spec: Optional[ImageSpec] = None,
+        edit_prompt: str | None = None,
+        spec: ImageSpec | None = None,
         barcode_width_inches: float = 2.0,
         barcode_height_inches: float = 1.5,
         barcode_margin_inches: float = 0.25,
@@ -376,10 +375,6 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
 
             for node_id in images:
                 for image_data in images[node_id]:
-                    import io
-
-                    from PIL import Image
-
                     result_bytes = image_data
 
             logger.info(f"✅ Generated edited image (COMFY): {len(result_bytes)} bytes")

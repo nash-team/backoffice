@@ -4,7 +4,7 @@
 ebook:
   pages:
     min: 24  # Amazon KDP minimum for paperback
-    max: 30  # Current project limit
+    max: 100  # Extended limit for add pages feature
 
   formats:
     default: "pdf"
