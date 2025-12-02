@@ -1,0 +1,77 @@
+---
+description: Enforce hexagonal architecture patterns with strict layer separation, dependency direction control, and port-adapter implementation for domain isolation in FastAPI applications with SQLAlchemy and external service integrations
+globs: ["**/domain/**/*.py", "**/infrastructure/**/*.py", "**/presentation/**/*.py"]
+alwaysApply: true
+---
+
+# Hexagonal Architecture (Ports & Adapters)
+
+## Layer Separation
+
+- **Domain**: Business logic, entities, use cases, ports (interfaces)
+- **Infrastructure**: Adapters, repositories, providers, database, EventBus
+- **Presentation**: FastAPI routes, request/response models, templates
+
+## Dependency Direction
+
+- Infrastructure → Domain (implements ports)
+- Presentation → Domain (calls use cases)
+- Domain → NOTHING (pure, no imports from infra/presentation)
+
+## Domain Layer
+
+- Contains: entities, events, usecases, ports (interfaces)
+- No infrastructure imports allowed
+- Use protocols/abstract classes for external deps
+- Keep domain pure and testable
+
+## Ports (Interfaces)
+
+- Define interfaces in `features/shared/domain/ports/`
+- Use Protocol or ABC for port definitions
+- Naming: `NounPort` (e.g., `EbookPort`, `FileStoragePort`)
+- Document expected behavior in docstrings
+
+## Adapters (Implementations)
+
+- Implement ports in `features/shared/infrastructure/adapters/`
+- Adapter imports domain port
+- Naming: `TechnologyNounAdapter` (e.g., `SqlAlchemyEbookRepository`)
+- Handle technical details, error conversion
+
+## Dependency Injection
+
+- Inject adapters into use cases via constructor
+- FastAPI `Depends()` at presentation layer
+- Repository/service instances created by DI container
+- Use cases receive port interfaces, not concrete types
+
+## Use Case Pattern
+
+- One use case per business operation
+- Inject ports via constructor
+- Execute business logic
+- Emit domain events
+- Return domain entities
+
+## Infrastructure Layer
+
+- Implements all ports from domain
+- Contains: repositories, providers, database, EventBus
+- Converts technical errors to `DomainError`
+- Handles external service communication
+
+## Presentation Layer
+
+- FastAPI routers and routes
+- Pydantic request/response models
+- Calls use cases with injected dependencies
+- Maps domain entities to API responses
+- Handles HTTP errors (4xx, 5xx)
+
+## Benefits
+
+- Domain testable without infrastructure
+- Easy to swap adapters (e.g., different DB)
+- Clear boundaries between layers
+- Business logic isolated from technical concerns

@@ -1,0 +1,64 @@
+---
+description: Enforce dead code detection (vulture) and dependency hygiene (deptry) to prevent unused code and dependency bloat. Vulture uses whitelist for intentional unused vars. Underscore prefix for side-effect-only fixtures. Deptry validates imports match declared dependencies.
+globs: ["src/**/*.py"]
+alwaysApply: true
+---
+
+# Vulture & Deptry Quality Checks
+
+## Vulture Dead Code Detection
+
+- Detects unused functions, classes, variables
+- 80% confidence threshold minimum
+- Use `.vulture_whitelist.py` for exceptions
+- Fails pre-commit if dead code found
+
+## Underscore Prefix Convention
+
+- Prefix side-effect fixtures with `_`
+- Prevents false positives for intentional unused
+- Common in pytest fixtures that setup data
+
+```python
+@pytest.fixture
+def _sample_ebooks(repository):
+    """Used for side effects, not return value."""
+    # Create test data
+    pass
+```
+
+## Vulture Whitelist
+
+- Add to `.vulture_whitelist.py` for valid unused code
+- Include unused but required methods (e.g., Django)
+- Document why code is in whitelist
+
+## Deptry Dependency Validation
+
+- Validates imports match `pyproject.toml` dependencies
+- Detects unused declared dependencies
+- Detects undeclared imported dependencies
+- Fails pre-commit if mismatches found
+
+## Configuration
+
+Vulture:
+```bash
+vulture src .vulture_whitelist.py --min-confidence=80
+```
+
+Deptry:
+```bash
+deptry src
+```
+
+## Common Issues
+
+- **Vulture false positive**: Add to whitelist or prefix with `_`
+- **Deptry undeclared import**: Add to `pyproject.toml` dependencies
+- **Deptry unused dependency**: Remove from `pyproject.toml`
+
+## Ignoring Specific Cases
+
+- Vulture: Add to `.vulture_whitelist.py`
+- Deptry: Configure `known_first_party` in `pyproject.toml`

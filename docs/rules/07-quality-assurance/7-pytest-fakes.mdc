@@ -1,0 +1,65 @@
+---
+description: Enforce Chicago-style testing with fakes (real simplified implementations) over mocks (London style). Fakes provide deterministic behavior, track calls, and avoid brittle test coupling. Shared fakes live in features/shared/tests/unit/fakes/ implementing domain ports with configurable modes.
+globs: ["**/tests/**/*.py"]
+alwaysApply: true
+---
+
+# Chicago-Style Testing with Fakes
+
+## Fakes Over Mocks
+
+- Use **Fakes** (real simplified implementations)
+- Avoid **Mocks** (test doubles with expectations)
+- Fakes implement actual port interfaces
+- Fakes provide predictable deterministic behavior
+- Fakes track call history for assertions
+
+## Fake Location
+
+- Shared fakes: `features/shared/tests/unit/fakes/`
+- Feature-specific fakes: `features/<feature>/tests/unit/fakes/`
+- Import from shared when possible
+
+## Fake Implementation
+
+- Implement domain port interface
+- Accept `mode` parameter for scenarios (`succeed`, `fail`, etc.)
+- Track calls: `call_count`, `last_prompt`, etc.
+- Return realistic data
+- Raise `DomainError` for failure modes
+
+## Configurable Modes
+
+- `succeed` - Normal success case
+- `fail` - Generic failure
+- `fail_timeout` - Provider timeout
+- `fail_quality` - Quality issues
+- Custom modes as needed
+
+## Fake Benefits
+
+- No brittle coupling to implementation
+- Tests survive refactoring
+- Clear intent in test code
+- Easy to debug failures
+- Reusable across tests
+
+## When to Create Fakes
+
+- For every domain port
+- When multiple tests need same behavior
+- To avoid real external dependencies
+- For predictable test data
+
+## Fake Naming
+
+- `Fake<PortName>` (e.g., `FakeCoverPort`)
+- Place in `fakes/` directory
+- One file per fake
+
+## Using Fakes in Tests
+
+- Instantiate with desired mode
+- Pass to use case/service
+- Assert on fake's tracked calls
+- Check returned data

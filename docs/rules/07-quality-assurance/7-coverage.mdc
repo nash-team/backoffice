@@ -1,0 +1,38 @@
+---
+description: Code coverage standards with minimum thresholds for unit tests, E2E tests, and integration scenarios to ensure comprehensive test coverage across all application layers
+globs: "tests/**/*.py"
+alwaysApply: false
+---
+
+## Unit Coverage
+
+- Minimum 80% coverage for domain layer
+- All use cases require test coverage
+- Repository interfaces fully tested
+- Critical business logic covered completely
+
+```bash
+# Run coverage analysis
+pytest --cov=domain --cov-report=html
+```
+
+## E2E Coverage
+
+- All FastAPI routes tested
+- HTMX interactions covered
+- Authentication flows verified
+- Template rendering validated
+
+## Integration Coverage
+
+- Database operations tested
+- External API integrations mocked
+- Error scenarios covered
+- End-to-end workflows validated
+
+## Coverage Reporting
+
+- HTML reports for detailed analysis
+- CI pipeline coverage checks
+- Coverage trends monitored over time
+- Fail builds below threshold

@@ -1,0 +1,73 @@
+---
+description: FastAPI patterns and best practices for route organization, dependency injection, request/response models, authentication, and error handling in hexagonal architecture applications
+globs: ["**/presentation/**/*.py", "**/main.py"]
+alwaysApply: false
+---
+
+# FastAPI Best Practices
+
+## Router Organization
+
+- Group related endpoints in separate routers
+- Use consistent prefix and tags
+- Place in `features/<feature>/presentation/routes/`
+- Register in `main.py` with `app.include_router()`
+
+## Dependency Injection
+
+- Use `Annotated` for type-safe DI
+- Define deps in route files or dedicated module
+- Inject use cases and repositories at route level
+- Use `Depends()` for factory patterns
+
+## Request/Response Models
+
+- Use Pydantic models for all schemas
+- Separate from domain entities
+- Include Field validation and descriptions
+- Place near routes or in dedicated schemas file
+
+## Route Handlers
+
+- Use async handlers for I/O operations
+- Single responsibility per endpoint
+- Return Pydantic response models
+- Handle domain errors appropriately
+
+## Error Handling
+
+- Catch `DomainError` and return HTTP errors
+- Use `HTTPException` for HTTP-specific errors
+- Return consistent error response structure
+- Map error codes to appropriate HTTP status
+
+## Path Parameters
+
+- Use path params for resource IDs
+- Use query params for filters/pagination
+- Validate params with Pydantic types
+- Document params with clear descriptions
+
+## Response Status Codes
+
+- 200: Successful GET
+- 201: Successful POST (created)
+- 204: Successful DELETE (no content)
+- 400: Validation error
+- 404: Resource not found
+- 422: Pydantic validation error
+- 500: Server error
+
+## API Documentation
+
+- Add docstrings to route handlers
+- Use `summary` and `description` in decorators
+- Include response_model for automatic docs
+- Document error responses with `responses` param
+
+## Startup/Shutdown Events
+
+- Register in `main.py` lifespan context
+- Bootstrap features (EventBus handlers)
+- Initialize shared resources
+- Clean up on shutdown

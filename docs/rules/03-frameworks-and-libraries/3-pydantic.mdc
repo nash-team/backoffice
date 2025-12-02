@@ -1,0 +1,65 @@
+---
+description: Pydantic v2 validation patterns with modern field_validator and model_validator decorators, advanced validation contexts, migration from v1, and proper FastAPI integration
+globs: ["**/presentation/**/*.py", "**/domain/**/*.py"]
+alwaysApply: false
+---
+
+# Pydantic v2 Models & Validation
+
+## BaseModel Structure
+
+- Use `BaseModel` for API request/response models
+- Separate domain entities from Pydantic models
+- Place API models in `presentation/` layer
+- Leverage model inheritance for shared fields
+
+## Field Validation
+
+- Use `Field()` with min/max constraints
+- Include descriptions for API documentation
+- Use regex patterns for format validation
+- Set appropriate default values
+
+## Custom Validators (v2)
+
+- Use `@field_validator` for single field validation
+- Use `@model_validator(mode='after')` for cross-field validation
+- Add `@classmethod` decorator to validators
+- Return typed values from validators
+- Use `ValidationInfo` for context-aware validation
+
+## Model Configuration
+
+- Use `model_config = ConfigDict(...)` (v2 syntax)
+- Set `from_attributes=True` for ORM models
+- Configure `use_enum_values` for enum serialization
+- Add `json_schema_extra` for API docs examples
+
+## Domain Integration
+
+- Create `from_domain()` classmethod for entity → model
+- Create `to_domain()` method for model → entity
+- Keep domain entities free of Pydantic dependencies
+- Handle type conversions appropriately
+
+## Request/Response Patterns
+
+- Structure request models with nested models
+- Use `Optional` for non-required fields
+- Include pagination metadata in list responses
+- Validate related fields together with `@model_validator`
+
+## Error Handling
+
+- Catch `ValidationError` in FastAPI routes
+- Format errors consistently for API responses
+- Use `PydanticCustomError` for custom error types
+- Log validation errors for debugging
+
+## Migration v1 → v2
+
+- Replace `@validator` with `@field_validator`
+- Replace `@root_validator` with `@model_validator`
+- Replace `class Config` with `model_config = ConfigDict`
+- Add type hints to all validator methods
+- Use `Self` return type for `model_validator`

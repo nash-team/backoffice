@@ -1,0 +1,75 @@
+---
+description: Enforce co-localized test structure where tests live next to the code they test within each feature directory. Tests mirror domain structure in features/<feature>/tests/{unit,integration}/ to strengthen feature ownership and prevent orphaned tests. Root tests/ only for cross-feature E2E and shared fixtures.
+globs: "src/backoffice/features/**/tests/**/*.py"
+alwaysApply: true
+---
+
+## Tests Co-location Structure
+
+- Tests live in `features/<feature>/tests/`
+- Mirror domain structure: `tests/unit/domain/usecases/test_*.py`
+- Root `tests/` ONLY for cross-feature tests (E2E, fixtures)
+- Each feature owns its tests completely
+- No orphaned tests in root `tests/`
+
+```
+features/ebook_creation/
+├── domain/
+│   ├── entities/creation_request.py
+│   └── usecases/create_ebook.py
+└── tests/                              # ✅ Tests co-located
+    └── unit/
+        └── domain/
+            └── usecases/
+                └── test_create_ebook.py
+
+# ❌ Bad - Tests in separate root directory
+tests/unit/test_create_ebook.py
+```
+
+## Test Directory Structure
+
+- `unit/` - Pure domain logic tests (no I/O)
+- `integration/` - DB, API, external service tests
+- Mirror code structure inside each test type
+- Use `conftest.py` for feature-specific fixtures
+
+```python
+# ✅ Good - Feature-specific conftest
+# features/ebook_creation/tests/conftest.py
+@pytest.fixture
+def creation_request():
+    return CreationRequest(theme="dinosaurs", page_count=24)
+```
+
+## Root Tests Directory Usage
+
+- `tests/e2e/` - End-to-end Playwright tests
+- `tests/fixtures/` - Shared test data files
+- `tests/conftest.py` - Global test fixtures (DB, test_client)
+- NO unit or integration tests in root
+
+```
+tests/                                  # Root tests (cross-feature)
+├── e2e/                                # ✅ E2E tests
+│   └── test_smoke.py
+├── fixtures/                           # ✅ Shared test data
+│   └── ebook_data.json
+└── conftest.py                         # ✅ Global fixtures
+```
+
+## Test Ownership
+
+- Feature = code + tests (single responsibility)
+- Tests deleted when feature code deleted
+- Tests updated when feature code updated
+- Tests reviewed with feature PRs
+- Each feature has own test coverage goal
+
+## Forbidden Patterns
+
+- ❌ Unit tests in root `tests/unit/` for feature code
+- ❌ Integration tests in root `tests/integration/`
+- ❌ Tests not mirroring domain structure
+- ❌ Orphaned tests with no matching code
+- ❌ Cross-feature test dependencies

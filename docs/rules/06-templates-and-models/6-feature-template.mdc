@@ -1,0 +1,83 @@
+---
+description: Template and guidelines for creating new features in feature-based architecture. Each feature is a DDD bounded context with minimum structure - domain/, presentation/, tests/. Add infrastructure/ only if needed. Features communicate via EventBus events only.
+globs: ["**/features/**/*"]
+alwaysApply: false
+---
+
+# Feature Creation Template
+
+## Minimum Structure
+
+- `domain/` - Entities, events, usecases (required)
+- `presentation/` - Routes, templates (required)
+- `tests/` - Unit and integration tests (required)
+- `infrastructure/` - ONLY if feature needs specific adapters (optional)
+- `README.md` - Feature documentation (recommended)
+
+## Directory Creation
+
+```bash
+mkdir -p features/my_feature/{domain,presentation,tests}
+mkdir -p features/my_feature/domain/{entities,events,usecases}
+mkdir -p features/my_feature/presentation/routes
+mkdir -p features/my_feature/tests/unit
+```
+
+## Use Case Pattern
+
+- Inject dependencies via constructor
+- Emit domain event after successful action
+- Return domain entities
+- Use EventBus for inter-feature communication
+- Handle errors with `DomainError`
+
+## Router Registration
+
+- Create APIRouter in `presentation/routes/__init__.py`
+- Define routes with proper HTTP methods
+- Use FastAPI dependency injection
+- Register router in `main.py` with prefix and tags
+
+## Event Publishing
+
+- Create DomainEvent in `domain/events/`
+- Use frozen dataclass for immutability
+- Emit event AFTER successful operation
+- Other features subscribe via EventHandler
+
+## Event Subscription
+
+- Create EventHandler in `infrastructure/event_handlers/`
+- Implement `handle()` method
+- Register handler in feature's `bootstrap()`
+- Handle errors gracefully
+
+## Feature Bootstrap
+
+- Create `bootstrap()` function in feature root
+- Register event handlers with EventBus
+- Call from `main.py` startup
+- Keep bootstrap minimal
+
+## Tests Organization
+
+- Co-locate tests next to code: `features/my_feature/tests/`
+- Mirror domain structure in test directories
+- Use fakes from `features/shared/tests/unit/fakes/`
+- Prefix side-effect fixtures with `_`
+
+## Feature Communication
+
+- Features NEVER import from each other directly
+- Use EventBus for all inter-feature communication
+- Shared code goes in `features/shared/`
+- Keep features decoupled and independent
+
+## README Template
+
+Include:
+- Feature purpose and responsibilities
+- API endpoints with examples
+- Domain events emitted/consumed
+- Dependencies on shared code
+- Testing approach

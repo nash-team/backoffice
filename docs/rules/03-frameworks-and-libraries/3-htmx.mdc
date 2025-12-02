@@ -1,0 +1,76 @@
+---
+description: HTMX patterns for server-side rendering with dynamic interactions, form handling, and partial HTML updates in FastAPI Jinja2 template context
+globs: ["**/presentation/templates/**/*.html", "**/presentation/**/*.py"]
+alwaysApply: false
+---
+
+# HTMX Dynamic UI Patterns
+
+## Server-Side Rendering
+
+- Jinja2 templates for full page rendering
+- Context data from domain use cases only
+- Template inheritance with `base.html`
+- Static assets served from `/presentation/static`
+- Keep templates in `features/<feature>/presentation/templates/`
+
+## HTMX Attributes
+
+- `hx-get` - Fetch data without page reload
+- `hx-post` - Submit forms dynamically
+- `hx-target` - Specify element to update
+- `hx-swap` - Control swap strategy (innerHTML, outerHTML, etc.)
+- `hx-trigger` - Custom event triggers
+- `hx-indicator` - Show loading state
+
+## Dynamic Interactions
+
+- Use HTMX for partial page updates
+- Target specific elements with CSS selectors
+- Swap strategies: innerHTML, outerHTML, beforebegin, afterend
+- Avoid full page reloads for simple updates
+
+## Form Handling
+
+- HTMX form submission with validation feedback
+- Server-side validation through Pydantic
+- Display errors in same form context
+- Success feedback with partial template updates
+- Use `hx-indicator` for loading states
+
+## FastAPI Response Patterns
+
+- Return partial HTML from endpoints
+- Use `TemplateResponse` for HTMX fragments
+- Keep response templates small and focused
+- Return validation errors as HTML fragments
+- Use consistent error response format
+
+## Template Organization
+
+- Full pages in `features/<feature>/presentation/templates/`
+- Partial fragments for HTMX responses
+- Reusable components as includes
+- Base template with common layout
+
+## Loading States
+
+- Use `hx-indicator` to show spinners
+- Disable buttons during requests
+- Show progress for long operations
+- Clear feedback on completion
+
+## Error Handling
+
+- Return error HTML fragments
+- Display validation errors inline
+- Use consistent error styling
+- Keep error messages user-friendly
+
+## Best Practices
+
+- Keep HTMX logic in HTML attributes
+- Minimize JavaScript usage
+- Use server-side rendering for SEO
+- Progressive enhancement approach
+- Test without JavaScript enabled

@@ -1,0 +1,80 @@
+---
+description: Enforce 100% feature-based architecture (Screaming Architecture) where all code is organized by business feature, not by technical layer. Features are self-contained bounded contexts with domain, infrastructure, presentation, and tests co-located. Shared code lives exclusively in features/shared/.
+globs: ["**/features/**/*.py"]
+alwaysApply: true
+---
+
+# Feature-Based Architecture (Screaming Architecture)
+
+## Core Principle
+
+- ALL code organized by business feature
+- NO technical folders at root (domain/, infrastructure/, presentation/ forbidden)
+- Each feature is a DDD Bounded Context
+- Codebase structure screams business intent
+
+## Feature Structure
+
+```
+features/
+├── ebook/creation/         # Feature: Create ebooks
+├── ebook/lifecycle/        # Feature: Approve/reject workflow
+├── ebook/listing/          # Feature: List/filter ebooks
+├── ebook/regeneration/     # Feature: Regenerate pages
+├── ebook/export/           # Feature: PDF/KDP export
+└── shared/                 # ONLY code used by 2+ features
+```
+
+## Each Feature Contains
+
+- `domain/` - Entities, events, usecases
+- `infrastructure/` - Event handlers, adapters (if needed)
+- `presentation/` - Routes, templates (if needed)
+- `tests/` - Co-located unit/integration tests
+- `README.md` - Feature documentation
+
+## Shared Code Policy
+
+- Shared code ONLY in `features/shared/`
+- Must be used by 2+ features
+- If only 1 feature uses it → keep in that feature
+- Examples: Ebook entity, EventBus, repositories
+
+## Shared Structure
+
+```
+features/shared/
+├── domain/              # Shared entities, ports, services
+├── infrastructure/      # Shared adapters, DB, EventBus
+├── presentation/        # Auth, templates, static files
+└── tests/               # Shared fakes & utilities
+```
+
+## Tests Co-location
+
+- Tests live IN the feature: `features/<feature>/tests/`
+- Mirror domain structure in test directories
+- Root `tests/` ONLY for E2E cross-feature tests
+- Each feature owns and maintains its tests
+
+## Import Paths
+
+- Use feature-based imports
+- `from backoffice.features.<feature>.domain...`
+- `from backoffice.features.shared.domain...`
+- NEVER import from technical layers at root
+
+## Benefits
+
+- Business features are visible in folder structure
+- Easy to find all code for a feature
+- Features can be extracted as microservices
+- Clear ownership and boundaries
+- Prevents god classes and technical coupling
+
+## Forbidden Patterns
+
+- Root-level technical folders (domain/, infrastructure/)
+- Cross-feature imports (feature A → feature B)
+- Separating tests from code (tests/ at root)
+- Technical organization over business organization

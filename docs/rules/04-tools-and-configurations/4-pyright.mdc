@@ -1,0 +1,34 @@
+---
+description: Pyright type checking configuration for strict type safety enforcement with proper error reporting and Python 3.11 compatibility in hexagonal architecture
+globs: "{pyrightconfig.json,**/*.py}"
+alwaysApply: false
+---
+
+## Type Configuration
+
+- Strict type checking mode enabled
+- Python 3.11 language version
+- Include all project directories
+- Exclude virtual environments and caches
+
+```json
+{
+  "include": ["domain", "infrastructure", "presentation"],
+  "exclude": ["venv", "__pycache__"],
+  "pythonVersion": "3.11"
+}
+```
+
+## Error Reporting
+
+- Report all type errors
+- No type ignore comments allowed
+- Mandatory return type annotations
+- Strict parameter type checking
+
+## Integration
+
+- Run in CI pipeline
+- IDE integration required
+- Pre-commit hook optional
+- Block merge on type errors

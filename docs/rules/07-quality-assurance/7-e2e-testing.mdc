@@ -1,0 +1,53 @@
+---
+description: End-to-end testing standards for FastAPI routes and HTMX interactions including template rendering, form submissions, and authentication flows in presentation layer
+globs: "tests/e2e/**/*.py"
+alwaysApply: false
+---
+
+## FastAPI Route Testing
+
+- Use AsyncClient for HTTP testing
+- Test all HTTP status codes
+- Validate response headers and content
+- Mock external service dependencies
+
+```python
+# tests/e2e/test_ebook_routes.py
+async def test_ebook_list_route(client):
+    response = await client.get("/ebooks")
+    assert response.status_code == 200
+```
+
+## HTMX Integration Testing
+
+- Test `HX-Request` header responses
+- Validate partial HTML content
+- Check HTMX attribute presence
+- Test dynamic content updates
+
+```python
+async def test_ebook_htmx_response(client):
+    response = await client.get("/ebooks", headers={"HX-Request": "true"})
+    assert "hx-target" in response.text
+```
+
+## Template Rendering Tests
+
+- Validate template context data
+- Check Jinja2 variable rendering
+- Test template inheritance chains
+- Verify static asset inclusion
+
+## Form Submission Tests
+
+- Test HTMX form POST requests
+- Validate form data processing
+- Check validation error responses
+- Test success feedback rendering
+
+## Authentication Flow Tests
+
+- Test login redirect logic
+- Validate session management
+- Check admin permission enforcement
+- Test logout functionality
