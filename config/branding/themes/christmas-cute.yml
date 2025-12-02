@@ -1,0 +1,144 @@
+id: christmas-cute
+label: "Christmas Cute"
+
+palette:
+  base: ["#c81d25", "#0f6d45", "#f6d365", "#fff9f0"]
+  accents_allowed: ["#ff9fb2", "#4ac0ff", "#ffe066", "#f28d35"]
+  forbidden_keywords: ["gothic", "spooky", "horror", "creepy", "grunge", "dark eerie", "drab", "muddy tones"]
+
+# ==========================================
+# COVER TEMPLATES (colorful, full-bleed)
+# ==========================================
+cover_templates:
+  default:
+    prompt_blocks:
+      subject: "an adorable Christmas character (smiling Santa, cheerful reindeer calf, playful elf, cuddly snowman), centered, big friendly eyes"
+      environment: "cozy snowy village with twinkling lights, gingerbread house street, toy workshop with warm fireplace, sparkling pine forest"
+      tone: "joyful, magical, heartwarming, soft and bright, kid-friendly holiday cheer"
+      positives:
+        - "high detail"
+        - "bright festive colors"
+        - "soft lighting"
+        - "glossy finish"
+        - "professional children's book cover"
+        - "Amazon bestseller look"
+        - "warm and inviting"
+        - "charming expressions"
+      negatives:
+        - "no text"
+        - "no mockup"
+        - "no borders"
+        - "no open book"
+        - "no spooky"
+        - "no horror"
+        - "no grunge"
+        - "no dull colors"
+
+  "comfy":
+    prompt: "Bright joyful Christmas cover: cute festive character in a cozy snowy village with lights and gifts. Soft glow, cheerful colors, professional children's book quality."
+
+    workflow_params:
+      "47": "text, mockup, borders, spooky, horror, grunge, dull colors"
+      "clip_g_suffix": "cheerful holiday, soft glow, polished illustration, professional quality"
+
+# ==========================================
+# COLORING PAGE TEMPLATES (B&W line art)
+# ==========================================
+coloring_page_templates:
+  default:
+    base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+
+    variables:
+      SHOT:
+        - "close-up"
+        - "medium shot"
+        - "wide shot"
+        - "full scene"
+
+      CHARACTER:
+        - "smiling Santa"
+        - "cheerful baby reindeer"
+        - "playful elf"
+        - "cuddly snowman"
+        - "cute polar bear with scarf"
+        - "gingerbread kid"
+        - "penguin with gift"
+        - "mouse in a stocking"
+        - "kid holding cocoa"
+
+      ACTION:
+        - "decorating a Christmas tree"
+        - "building a snowman"
+        - "wrapping presents"
+        - "delivering gifts"
+        - "singing carols"
+        - "sledding down a hill"
+        - "baking cookies"
+        - "hanging ornaments"
+        - "playing with toys"
+
+      ENV:
+        - "cozy living room with fireplace and stockings"
+        - "snowy village square with lights"
+        - "gingerbread house kitchen"
+        - "toy workshop full of gifts"
+        - "sparkling pine forest"
+        - "snowy rooftop with stars"
+        - "ice skating pond"
+        - "warm cabin doorway"
+
+      FOCUS:
+        - "head with festive hat"
+        - "full body"
+        - "holding gift or ornament"
+        - "group of friends"
+        - "animal buddies"
+        - "decorating hands visible"
+
+      COMPOSITION:
+        - "left-facing"
+        - "right-facing"
+        - "front view"
+        - "3/4 view"
+        - "jumping or sliding"
+        - "waving at viewer"
+
+    quality_settings: |
+      Black and white line art coloring page style.
+      ONLY black lines on white background. NO colors. NO gray shading.
+      Bold clean outlines, closed shapes, thick black lines.
+      NO FRAME, NO BORDER around the illustration.
+      Illustration touches or nearly touches edges naturally.
+      Printable 300 DPI, simple-to-medium detail (kids 4-8).
+      No text, no logo, no watermark.
+
+  "comfy":
+    base_structure: "{CHARACTER} {ACTION}. {STYLE}."
+
+    variables:
+      CHARACTER:
+        - "smiling Santa"
+        - "cheerful reindeer"
+        - "playful elf"
+        - "cuddly snowman"
+        - "penguin with scarf"
+
+      ACTION:
+        - "decorating tree"
+        - "wrapping presents"
+        - "sledding"
+        - "singing"
+        - "baking cookies"
+        - "hugging friends"
+
+      STYLE:
+        - "line art"
+        - "coloring page style"
+        - "simple outlines"
+
+    quality_settings: "B&W lineart. Bold lines. Cute and joyful holiday mood."
+
+    workflow_params:
+      "47": "color, shading, text, watermark, spooky, horror, grunge"
+      "clip_g_suffix": "clean outlines, cheerful holiday tone, professional line art"
+      "qwen_prompt": "Black and white lineart with bold outlines, cute joyful Christmas mood"
