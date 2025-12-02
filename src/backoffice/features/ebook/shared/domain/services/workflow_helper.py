@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from typing import Literal
 
 import yaml
 
@@ -96,7 +97,14 @@ def build_cover_prompt_from_yaml(theme_id: str, themes_directory: Path) -> str:
     return base_prompt
 
 
-def build_page_prompt_from_yaml(theme_id: str, page_index: int, total_pages: int, themes_directory: Path, seed: int) -> str:
+def build_page_prompt_from_yaml(
+    theme_id: str,
+    page_index: int,
+    total_pages: int,
+    themes_directory: Path,
+    seed: int,
+    audience: Literal["children", "adults"] | None = "children",
+) -> str:
     """Build content page prompt from theme YAML template.
 
     Args:
@@ -105,6 +113,7 @@ def build_page_prompt_from_yaml(theme_id: str, page_index: int, total_pages: int
         total_pages: Total number of pages
         themes_directory: Path to themes directory
         seed: Random seed for reproducibility
+        audience: Target audience ("children" or "adults")
 
     Returns:
         Content page prompt string
@@ -119,11 +128,12 @@ def build_page_prompt_from_yaml(theme_id: str, page_index: int, total_pages: int
 
     engine = PromptTemplateEngine(seed=seed)
 
-    # Generate single prompt using the engine
+    # Normalize audience and generate single prompt using the engine
+    audience_normalized = audience or "children"
     prompts = engine.generate_prompts(
         theme=theme_id,
         count=total_pages,
-        audience="children",
+        audience=audience_normalized,
         template_key=template_key,
     )
 

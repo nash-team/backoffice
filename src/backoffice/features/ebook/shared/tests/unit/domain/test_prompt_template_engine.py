@@ -154,19 +154,21 @@ class TestPromptTemplateEngine:
         assert prompts_full == prompts_partial
 
     def test_generate_prompts_audience_parameter(self):
-        """Test that audience parameter is accepted (for future use)."""
+        """Test that audience parameter adds tailored hints."""
         # Arrange
         engine = PromptTemplateEngine(seed=42)
 
-        # Act - audience parameter is optional and not currently used in prompt
+        # Act - audience parameter adds a short hint
         prompts_children = engine.generate_prompts(theme="dinosaurs", count=2, audience="children")
         prompts_adults = engine.generate_prompts(theme="dinosaurs", count=2, audience="adults")
 
-        # Assert - both should generate valid prompts with quality settings from YAML
+        # Assert - both should generate valid prompts with audience hints and quality settings from YAML
         assert len(prompts_children) == 2
         assert len(prompts_adults) == 2
         assert "Black and white line art" in prompts_children[0]
         assert "Black and white line art" in prompts_adults[0]
+        assert "children's coloring book" in prompts_children[0].lower()
+        assert "adult coloring book" in prompts_adults[0].lower()
 
     def test_generate_prompts_zero_count(self):
         """Test generating zero prompts."""

@@ -288,6 +288,16 @@ class PromptTemplateEngine:
         # Create a copy of base structure
         prompt = template.base_structure
 
+        # Add a short audience hint to steer the model
+        if audience:
+            audience_hints = {
+                "children": "For a children's coloring book: simple bold lines, clear shapes, kid-friendly composition.",
+                "adults": "For an adult coloring book: intricate, elegant line work with rich details.",
+            }
+            hint = audience_hints.get(audience.lower())
+            if hint:
+                prompt = f"{prompt} {hint}"
+
         # Replace each variable with random choice
         for var_name, options in template.variables.items():
             placeholder = f"{{{var_name}}}"

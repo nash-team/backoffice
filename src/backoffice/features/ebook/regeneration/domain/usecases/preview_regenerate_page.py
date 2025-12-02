@@ -115,6 +115,7 @@ class PreviewRegeneratePageUseCase:
             total_pages=total_content_pages,
             themes_directory=theme_repo.themes_directory,
             seed=42,  # Default seed for reproducibility
+            audience="adults" if ebook.audience == "adults" else "children",
         )
         logger.info(f"Using YAML-based prompt: {prompt[:100]}...")
 
