@@ -18,8 +18,14 @@ from backoffice.features.ebook.regeneration.domain.usecases.apply_page_edit impo
 from backoffice.features.ebook.regeneration.domain.usecases.complete_ebook_pages import (
     CompleteEbookPagesUseCase,
 )
+from backoffice.features.ebook.regeneration.domain.usecases.edit_cover_image import (
+    EditCoverImageUseCase,
+)
 from backoffice.features.ebook.regeneration.domain.usecases.edit_page_image import (
     EditPageImageUseCase,
+)
+from backoffice.features.ebook.regeneration.domain.usecases.preview_regenerate_cover import (
+    PreviewRegenerateCoverUseCase,
 )
 from backoffice.features.ebook.regeneration.domain.usecases.preview_regenerate_page import (
     PreviewRegeneratePageUseCase,
@@ -361,7 +367,7 @@ async def preview_regenerate_page(
     ebook_id: int,
     page_index: int,
     factory: RepositoryFactoryDep,
-    body: dict | None = Body(default=None),
+    body: Annotated[dict | None, Body()] = None,
 ) -> dict:
     """Preview regenerate a content page without saving to DB or storage.
 
@@ -384,10 +390,12 @@ async def preview_regenerate_page(
     try:
         logger.info(f"Preview regenerating page {page_index} for ebook {ebook_id}")
 
-        # Extract optional current modal image (for chaining)
+        # Extract optional parameters from body
         current_image_base64 = None
+        custom_prompt = None
         if body:
             current_image_base64 = body.get("current_image_base64")
+            custom_prompt = body.get("custom_prompt")
 
         # Get dependencies
         ebook_repo = factory.get_ebook_repository()
@@ -405,6 +413,7 @@ async def preview_regenerate_page(
             ebook_id=ebook_id,
             page_index=page_index,
             current_image_base64=current_image_base64,
+            custom_prompt=custom_prompt,
         )
 
         logger.info(f"✅ Preview regenerated page {page_index} for ebook {ebook_id}")
@@ -526,7 +535,7 @@ async def apply_page_edit(
 
     This endpoint:
     1. Receives base64 image from modal preview
-    2. Updates ebook structure_json with new image
+    2. Updates ebook structure_json with new image and optional prompt
     3. Rebuilds PDF with new page
     4. Resets APPROVED ebook to DRAFT if necessary
     5. Saves to DB and storage
@@ -534,14 +543,15 @@ async def apply_page_edit(
     Request body:
     {
         "image_base64": "base64-encoded-image-data",
-        "page_index": 1
+        "page_index": 1,
+        "prompt": "optional custom prompt used for regeneration"
     }
 
     Args:
         ebook_id: ID of the ebook
-        page_index: Index of the page to update (1-based, content pages only)
+        page_index: Index of the page to update (0 for cover, 1+ for content pages)
         factory: Repository factory for dependency injection
-        edit_data: Request body with image_base64 and page_index
+        edit_data: Request body with image_base64, page_index, and optional prompt
 
     Returns:
         JSON response with success status and updated ebook preview URL
@@ -552,10 +562,11 @@ async def apply_page_edit(
     try:
         logger.info(f"Applying edit for page {page_index} of ebook {ebook_id}")
 
-        # Extract image data from request
+        # Extract image data and optional prompt from request
         image_base64 = edit_data.get("image_base64")
         if not image_base64:
             raise HTTPException(status_code=400, detail="image_base64 is required in request body")
+        prompt = edit_data.get("prompt")
 
         # Get dependencies
         ebook_repo = factory.get_ebook_repository()
@@ -582,9 +593,11 @@ async def apply_page_edit(
             ebook_id=ebook_id,
             page_index=page_index,
             image_base64=image_base64,
+            prompt=prompt,
         )
 
-        logger.info(f"✅ Successfully applied edit for page {page_index} of ebook {ebook_id}")
+        page_type = "Couverture" if page_index == 0 else f"Page {page_index}"
+        logger.info(f"✅ Successfully applied edit for {page_type} of ebook {ebook_id}")
 
         return {
             "success": True,
@@ -606,4 +619,325 @@ async def apply_page_edit(
         raise HTTPException(
             status_code=500,
             detail="Error applying edit. Please try again.",
+        ) from e
+
+
+# ==================== PAGE DATA ENDPOINT ====================
+
+
+@router.get("/{ebook_id}/pages/{page_index}/data")
+async def get_page_data(
+    ebook_id: int,
+    page_index: int,
+    factory: RepositoryFactoryDep,
+) -> dict:
+    """Get page data (image base64 + prompt) for editing.
+
+    This endpoint returns the current image and prompt for a specific page,
+    allowing the frontend to fetch data on-demand rather than embedding
+    all images in the HTML.
+
+    Args:
+        ebook_id: ID of the ebook
+        page_index: Index of the page (0 for cover, 1+ for content pages)
+        factory: Repository factory for dependency injection
+
+    Returns:
+        JSON with image_base64 and prompt
+
+    Raises:
+        HTTPException: If ebook not found or invalid page index
+    """
+    try:
+        ebook_repo = factory.get_ebook_repository()
+        ebook = await ebook_repo.get_by_id(ebook_id)
+
+        if not ebook:
+            raise HTTPException(status_code=404, detail=f"Ebook {ebook_id} not found")
+
+        if not ebook.structure_json or "pages_meta" not in ebook.structure_json:
+            raise HTTPException(status_code=400, detail="Ebook has no structure data")
+
+        pages_meta = ebook.structure_json["pages_meta"]
+
+        # Validate page index (allow cover and content pages, not back cover)
+        if page_index < 0 or page_index >= len(pages_meta) - 1:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid page index {page_index}. Must be between 0 and {len(pages_meta) - 2}",
+            )
+
+        page = pages_meta[page_index]
+        return {
+            "success": True,
+            "ebook_id": ebook_id,
+            "page_index": page_index,
+            "image_base64": page.get("image_data_base64", ""),
+            "prompt": page.get("prompt", ""),
+            "title": page.get("title", f"Page {page_index}"),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting page data for ebook {ebook_id}, page {page_index}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error retrieving page data") from e
+
+
+# ==================== COVER ROUTES ====================
+
+
+@router.post("/{ebook_id}/cover/preview-regenerate")
+async def preview_regenerate_cover(
+    ebook_id: int,
+    factory: RepositoryFactoryDep,
+    body: Annotated[dict | None, Body()] = None,
+) -> dict:
+    """Preview regenerate the cover without saving to DB or storage.
+
+    This endpoint generates a new version of the cover for preview purposes only.
+    The image is returned as base64 but NOT saved to DB/storage.
+    No PDF rebuild occurs.
+
+    Request body (optional):
+    {
+        "current_image_base64": "<latest modal image for chaining>",
+        "custom_prompt": "<custom prompt to use instead of stored/template>"
+    }
+
+    Args:
+        ebook_id: ID of the ebook
+        factory: Repository factory for dependency injection
+        body: Optional request body with current_image_base64 and/or custom_prompt
+
+    Returns:
+        JSON response with base64 image data and metadata
+
+    Raises:
+        HTTPException: If ebook not found or invalid status
+    """
+    try:
+        logger.info(f"Preview regenerating cover for ebook {ebook_id}")
+
+        # Extract optional parameters from body
+        current_image_base64 = None
+        custom_prompt = None
+        if body:
+            current_image_base64 = body.get("current_image_base64")
+            custom_prompt = body.get("custom_prompt")
+
+        # Get dependencies
+        ebook_repo = factory.get_ebook_repository()
+        cover_provider = ProviderFactory.create_cover_provider()
+        cover_service = CoverGenerationService(cover_port=cover_provider)
+
+        # Create use case
+        use_case = PreviewRegenerateCoverUseCase(
+            ebook_repository=ebook_repo,
+            cover_service=cover_service,
+        )
+
+        # Execute preview regeneration
+        result = await use_case.execute(
+            ebook_id=ebook_id,
+            current_image_base64=current_image_base64,
+            custom_prompt=custom_prompt,
+        )
+
+        logger.info(f"✅ Preview regenerated cover for ebook {ebook_id}")
+
+        return {
+            "success": True,
+            "image_base64": result["image_base64"],
+            "page_index": result["page_index"],
+            "prompt_used": result["prompt_used"],
+        }
+
+    except ValueError as e:
+        logger.warning(f"Validation error preview regenerating cover for ebook {ebook_id}: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Unexpected error preview regenerating cover for ebook {ebook_id}: {str(e)}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Error preview regenerating cover. Please try again.",
+        ) from e
+
+
+@router.post("/{ebook_id}/cover/edit")
+async def edit_cover_image(
+    ebook_id: int,
+    factory: RepositoryFactoryDep,
+    edit_request: Annotated[dict, Body(...)],
+) -> dict:
+    """Edit the cover image with targeted corrections without saving to DB.
+
+    This endpoint applies specific corrections to an existing cover image.
+    The edited image is returned as base64 but NOT saved to DB/storage.
+    No PDF rebuild occurs - this is preview only.
+
+    Request body:
+    {
+        "edit_prompt": "replace 5 toes with 3 toes",
+        "current_image_base64": "<latest modal image, optional>"
+    }
+
+    Args:
+        ebook_id: ID of the ebook
+        factory: Repository factory for dependency injection
+        edit_request: Request body with edit_prompt
+
+    Returns:
+        JSON response with base64 edited image data and metadata
+
+    Raises:
+        HTTPException: If ebook not found, invalid status, or edit fails
+    """
+    try:
+        # Extract edit prompt and optional current image from request
+        edit_prompt = edit_request.get("edit_prompt")
+        if not edit_prompt:
+            raise HTTPException(status_code=400, detail="edit_prompt is required in request body")
+        current_image_base64 = edit_request.get("current_image_base64")
+
+        logger.info(f"Editing cover for ebook {ebook_id} with prompt: {edit_prompt[:100]}...")
+
+        # Get dependencies
+        ebook_repo = factory.get_ebook_repository()
+        image_edit_port = ProviderFactory.create_image_edit_provider()
+
+        # Create use case
+        use_case = EditCoverImageUseCase(
+            ebook_repository=ebook_repo,
+            image_edit_port=image_edit_port,
+        )
+
+        # Execute edit
+        result = await use_case.execute(
+            ebook_id=ebook_id,
+            edit_prompt=edit_prompt,
+            current_image_base64=current_image_base64,
+        )
+
+        logger.info(f"✅ Edited cover for ebook {ebook_id}")
+
+        return {
+            "success": True,
+            "image_base64": result["image_base64"],
+            "page_index": result["page_index"],
+            "edit_prompt_used": result["edit_prompt_used"],
+        }
+
+    except ValueError as e:
+        logger.warning(f"Validation error editing cover for ebook {ebook_id}: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Unexpected error editing cover for ebook {ebook_id}: {str(e)}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Error editing cover. Please try again.",
+        ) from e
+
+
+@router.post("/{ebook_id}/cover/apply-edit")
+async def apply_cover_edit(
+    ebook_id: int,
+    factory: RepositoryFactoryDep,
+    edit_data: Annotated[dict, Body(...)],
+) -> dict:
+    """Apply a cover edit by saving the preview image and rebuilding PDF.
+
+    This endpoint:
+    1. Receives base64 image from modal preview
+    2. Updates ebook structure_json with new cover image and optional prompt
+    3. Rebuilds PDF with new cover
+    4. Resets APPROVED ebook to DRAFT if necessary
+    5. Saves to DB and storage
+
+    Request body:
+    {
+        "image_base64": "base64-encoded-image-data",
+        "prompt": "optional custom prompt used for regeneration"
+    }
+
+    Args:
+        ebook_id: ID of the ebook
+        factory: Repository factory for dependency injection
+        edit_data: Request body with image_base64 and optional prompt
+
+    Returns:
+        JSON response with success status and updated ebook preview URL
+
+    Raises:
+        HTTPException: If ebook not found, invalid status, or save fails
+    """
+    try:
+        logger.info(f"Applying edit for cover of ebook {ebook_id}")
+
+        # Extract image data and optional prompt from request
+        image_base64 = edit_data.get("image_base64")
+        if not image_base64:
+            raise HTTPException(status_code=400, detail="image_base64 is required in request body")
+        prompt = edit_data.get("prompt")
+
+        # Get dependencies
+        ebook_repo = factory.get_ebook_repository()
+        file_storage = factory.get_file_storage()
+        event_bus = EventBus()
+
+        # Create shared services for PDF reassembly
+        assembly_provider = WeasyPrintAssemblyProvider()
+        assembly_service = PDFAssemblyService(assembly_port=assembly_provider)
+        regeneration_service = RegenerationService(
+            assembly_service=assembly_service,
+            file_storage=file_storage,
+        )
+
+        # Create use case (reuse ApplyPageEditUseCase with page_index=0)
+        use_case = ApplyPageEditUseCase(
+            ebook_repository=ebook_repo,
+            regeneration_service=regeneration_service,
+            event_bus=event_bus,
+        )
+
+        # Execute apply edit with page_index=0 for cover
+        updated_ebook = await use_case.execute(
+            ebook_id=ebook_id,
+            page_index=0,  # Cover is always at index 0
+            image_base64=image_base64,
+            prompt=prompt,
+        )
+
+        logger.info(f"✅ Successfully applied edit for cover of ebook {ebook_id}")
+
+        return {
+            "success": True,
+            "message": "Couverture mise à jour avec succès",
+            "ebook_id": updated_ebook.id,
+            "preview_url": updated_ebook.preview_url,
+        }
+
+    except ValueError as e:
+        logger.warning(f"Validation error applying edit for cover of ebook {ebook_id}: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Unexpected error applying edit for cover of ebook {ebook_id}: {str(e)}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Error applying cover edit. Please try again.",
         ) from e

@@ -41,6 +41,7 @@ class PreviewRegeneratePageUseCase:
         ebook_id: int,
         page_index: int,
         current_image_base64: str | None = None,
+        custom_prompt: str | None = None,
     ) -> dict[str, str | int]:
         """Preview regenerate a specific content page.
 
@@ -48,6 +49,7 @@ class PreviewRegeneratePageUseCase:
             ebook_id: ID of the ebook
             page_index: Index of the page to regenerate (1-based, excluding cover)
             current_image_base64: Optional latest modal image to chain from
+            custom_prompt: Optional custom prompt to use instead of template
 
         Returns:
             Dictionary with:
@@ -95,7 +97,7 @@ class PreviewRegeneratePageUseCase:
 
         logger.info(f"🔄 Preview regenerating CONTENT PAGE {page_index} for ebook {ebook_id}: {ebook.title}")
 
-        # Step 1: Build page prompt from YAML theme
+        # Step 1: Determine prompt to use
         from backoffice.features.ebook.shared.domain.services.workflow_helper import (
             build_page_prompt_from_yaml,
             load_workflow_params,
@@ -106,18 +108,25 @@ class PreviewRegeneratePageUseCase:
 
         theme_repo = ThemeRepository()
 
-        # Calculate total pages excluding cover and back cover
-        total_content_pages = len(pages_meta) - 2
-
-        prompt = build_page_prompt_from_yaml(
-            theme_id=ebook.theme_id or "dinosaurs",
-            page_index=page_index - 1,  # Convert to 0-based index
-            total_pages=total_content_pages,
-            themes_directory=theme_repo.themes_directory,
-            seed=42,  # Default seed for reproducibility
-            audience="adults" if ebook.audience == "adults" else "children",
-        )
-        logger.info(f"Using YAML-based prompt: {prompt[:100]}...")
+        # Priority: custom_prompt > stored prompt > template-generated prompt
+        if custom_prompt:
+            prompt = custom_prompt
+            logger.info(f"Using CUSTOM prompt: {prompt[:100]}...")
+        elif pages_meta[page_index].get("prompt"):
+            prompt = pages_meta[page_index]["prompt"]
+            logger.info(f"Using STORED prompt: {prompt[:100]}...")
+        else:
+            # Fallback: generate from YAML template
+            total_content_pages = len(pages_meta) - 2
+            prompt = build_page_prompt_from_yaml(
+                theme_id=ebook.theme_id or "dinosaurs",
+                page_index=page_index - 1,  # Convert to 0-based index
+                total_pages=total_content_pages,
+                themes_directory=theme_repo.themes_directory,
+                seed=42,  # Default seed for reproducibility
+                audience="adults" if ebook.audience == "adults" else "children",
+            )
+            logger.info(f"Using YAML-based prompt: {prompt[:100]}...")
 
         # Step 2: Load workflow params from YAML theme
         workflow_params = load_workflow_params(

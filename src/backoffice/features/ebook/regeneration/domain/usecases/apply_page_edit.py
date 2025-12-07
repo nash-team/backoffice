@@ -51,13 +51,15 @@ class ApplyPageEditUseCase:
         ebook_id: int,
         page_index: int,
         image_base64: str,
+        prompt: str | None = None,
     ) -> Ebook:
         """Apply the page edit by saving the image and rebuilding PDF.
 
         Args:
             ebook_id: ID of the ebook
-            page_index: Index of the page to update (1-based, content pages only)
+            page_index: Index of the page to update (0 for cover, 1+ for content pages)
             image_base64: Base64-encoded image data from preview
+            prompt: Optional prompt to save with the page (for prompt-based regeneration)
 
         Returns:
             Updated ebook with new page and PDF
@@ -92,15 +94,18 @@ class ApplyPageEditUseCase:
 
         pages_meta = ebook.structure_json["pages_meta"]
 
-        # Validate page index
-        if page_index < 1 or page_index >= len(pages_meta) - 1:
+        # Validate page index (0 = cover, 1 to N-2 = content, N-1 = back cover)
+        # We allow 0 for cover and 1 to N-2 for content pages (not back cover)
+        is_cover = page_index == 0
+        if page_index < 0 or page_index >= len(pages_meta) - 1:
             raise DomainError(
                 code=ErrorCode.VALIDATION_ERROR,
                 message=f"Invalid page index {page_index}",
-                actionable_hint=f"Must be between 1 and {len(pages_meta) - 2} (content pages only)",
+                actionable_hint=f"Must be between 0 (cover) and {len(pages_meta) - 2} (content pages)",
             )
 
-        logger.info(f"💾 Applying edit for page {page_index} of ebook {ebook_id}: {ebook.title}")
+        page_type = "COVER" if is_cover else f"page {page_index}"
+        logger.info(f"💾 Applying edit for {page_type} of ebook {ebook_id}: {ebook.title}")
 
         # Step 1: Decode image from base64
         try:
@@ -147,13 +152,25 @@ class ApplyPageEditUseCase:
         ebook.preview_url = preview_url
 
         # Step 3: Update structure_json with new page
+        # Preserve existing fields and update image + prompt
         updated_pages_meta = pages_meta.copy()
-        updated_pages_meta[page_index] = {
+        existing_page = pages_meta[page_index]
+
+        # Determine title based on page type
+        if is_cover:
+            title = "Cover"
+        else:
+            title = existing_page.get("title", f"Page {page_index}")
+
+        # Build updated page meta, preserving prompt if not provided
+        updated_page = {
             "page_number": page_index,
-            "title": f"Page {page_index}",
+            "title": title,
             "image_format": "PNG",
             "image_data_base64": base64.b64encode(new_page_data).decode(),
+            "prompt": prompt if prompt is not None else existing_page.get("prompt", ""),
         }
+        updated_pages_meta[page_index] = updated_page
 
         ebook.structure_json = {"pages_meta": updated_pages_meta}
 
@@ -164,15 +181,16 @@ class ApplyPageEditUseCase:
 
         # Step 5: Save updated ebook
         updated_ebook = await self.ebook_repository.save(ebook)
-        logger.info(f"✅ Ebook {ebook_id} saved with edited page {page_index}")
+        logger.info(f"✅ Ebook {ebook_id} saved with edited {page_type}")
 
         # Step 6: Emit domain event
+        prompt_info = prompt[:50] + "..." if prompt and len(prompt) > 50 else prompt or "[Edited via modal]"
         await self.event_bus.publish(
             ContentPageRegeneratedEvent(
                 ebook_id=ebook_id,
                 title=updated_ebook.title or "Untitled",
                 page_index=page_index,
-                prompt_used="[Edited via modal]",
+                prompt_used=prompt_info,
             )
         )
 

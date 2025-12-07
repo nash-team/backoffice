@@ -91,6 +91,7 @@ class CreateEbookUseCase:
                 "title": page.title,
                 "image_format": page.format,
                 "image_data_base64": base64.b64encode(page.image_data).decode(),
+                "prompt": page.prompt,
             }
             for page in generation_result.pages_meta
         ]

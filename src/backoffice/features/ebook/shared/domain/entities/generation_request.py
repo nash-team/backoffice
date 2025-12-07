@@ -83,6 +83,7 @@ class PageMeta:
     format: str
     size_bytes: int
     image_data: bytes  # Raw image data for regeneration
+    prompt: str = ""  # Prompt used to generate this page
 
 
 @dataclass

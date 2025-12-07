@@ -230,6 +230,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
                     format="PNG",
                     size_bytes=len(cover_data),
                     image_data=cover_data,
+                    prompt=cover_prompt,
                 )
             ]
             + [
@@ -239,6 +240,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
                     format="PNG",
                     size_bytes=len(page_data),
                     image_data=page_data,
+                    prompt=page_prompts[i],
                 )
                 for i, page_data in enumerate(pages_data)
             ]
@@ -249,6 +251,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
                     format="PNG",
                     size_bytes=len(back_cover_data),
                     image_data=back_cover_data,
+                    prompt="",  # Back cover is derived from cover, no generation prompt
                 )
             ]
         )

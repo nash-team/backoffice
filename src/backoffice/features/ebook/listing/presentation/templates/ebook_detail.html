@@ -271,23 +271,36 @@
                                     {% endif %}
 
                                     <div class="d-grid gap-2">
-                                        <button class="btn btn-outline-warning"
-                                                hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
-                                                hx-vals='{"page_type": "cover"}'
-                                                hx-ext="json-enc"
-                                                hx-indicator="#regenerateCoverSpinner"
-                                                hx-disabled-elt="this"
-                                                hx-on::after-request="
-                                                    if(event.detail.successful) {
-                                                        createToast('Couverture régénérée !', 'success');
-                                                        setTimeout(() => { location.reload(); }, 2000);
-                                                    }
-                                                "
-                                                data-testid="regenerate-cover-btn">
-                                            <span id="regenerateCoverSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
-                                            <i class="fas fa-sync-alt me-2"></i>
-                                            Couverture
-                                        </button>
+                                        <!-- Cover: Regenerate + Edit buttons -->
+                                        <div class="btn-group w-100" role="group" aria-label="Cover actions">
+                                            <button class="btn btn-outline-warning"
+                                                    hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
+                                                    hx-vals='{"page_type": "cover"}'
+                                                    hx-ext="json-enc"
+                                                    hx-indicator="#regenerateCoverSpinner"
+                                                    hx-disabled-elt="this"
+                                                    hx-on::after-request="
+                                                        if(event.detail.successful) {
+                                                            createToast('Couverture régénérée !', 'success');
+                                                            setTimeout(() => { location.reload(); }, 2000);
+                                                        }
+                                                    "
+                                                    data-testid="regenerate-cover-btn"
+                                                    title="Régénérer aléatoirement">
+                                                <span id="regenerateCoverSpinner" class="spinner-border spinner-border-sm me-2 htmx-indicator" aria-hidden="true"></span>
+                                                <i class="fas fa-sync-alt me-1"></i>
+                                                Couverture
+                                            </button>
+                                            {% if ebook.structure_json and ebook.structure_json.pages_meta and ebook.structure_json.pages_meta|length > 0 %}
+                                            <button type="button"
+                                                    class="btn btn-outline-primary"
+                                                    onclick="openEditPageModalById(0, this)"
+                                                    title="Éditer la couverture"
+                                                    data-testid="edit-cover-btn">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
 
                                         <button class="btn btn-outline-warning"
                                                 hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
@@ -340,7 +353,7 @@
                                                                 </div>
                                                                 <button type="button"
                                                                         class="btn btn-sm btn-outline-primary"
-                                                                        onclick="openEditPageModal({{ ebook.id }}, {{ page.page_number }}, '{{ page.image_data_base64 }}')"
+                                                                        onclick="openEditPageModalById({{ page.page_number }}, this)"
                                                                         title="Éditer cette page">
                                                                     <i class="fas fa-edit"></i>
                                                                 </button>
@@ -483,6 +496,40 @@
                         </div>
                     </div>
                 </div>
+
+<!-- Fetch page data from backend on-demand (avoids embedding large base64 in HTML) -->
+<script>
+    const EBOOK_ID = {{ ebook.id }};
+
+    /**
+     * Open edit modal by fetching page data from backend
+     */
+    async function openEditPageModalById(pageIndex, buttonElement) {
+        // Show loading state on button
+        const originalHtml = buttonElement.innerHTML;
+        buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        buttonElement.disabled = true;
+
+        try {
+            const response = await fetch(`/api/ebooks/${EBOOK_ID}/pages/${pageIndex}/data`);
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Erreur lors du chargement');
+            }
+
+            const data = await response.json();
+            openEditPageModal(EBOOK_ID, pageIndex, data.image_base64, data.prompt);
+
+        } catch (error) {
+            console.error('Error loading page data:', error);
+            createToast('Erreur lors du chargement des données: ' + error.message, 'error');
+        } finally {
+            // Restore button state
+            buttonElement.innerHTML = originalHtml;
+            buttonElement.disabled = false;
+        }
+    }
+</script>
 
 <!-- Include Edit Page Modal -->
 {% include "partials/edit_page_modal.html" %}
