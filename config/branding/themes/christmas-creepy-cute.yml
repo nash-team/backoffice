@@ -12,7 +12,7 @@ palette:
 cover_templates:
   default:
     prompt_blocks:
-      subject: "a cute creepy Christmas creature (friendly skeleton Santa, sweet zombie reindeer, tiny vampire elf, or smiling ghost snowman), centered, expressive eyes, soft spooky aesthetic"
+      subject: "a cute creepy Christmas Santa creature (friendly skeleton Santa, sweet zombie reindeer, tiny vampire elf, or smiling ghost snowman), centered, expressive eyes, soft spooky aesthetic"
       environment: "cozy haunted Christmas village with warm lanterns, snowy graveyard with glowing ornaments, inviting toy workshop with fireplace, moonlit forest with twinkling lights and candles"
       tone: "cozy dark, whimsical creepy, Tim Burton inspired, adorable gothic, child-friendly spooky, warm candlelight ambiance, inviting haunted charm"
       positives:
@@ -36,6 +36,15 @@ cover_templates:
         - "no frightening horror"
         - "no sharp teeth"
 
+
+  diffusers:
+    # Compact prompt for SDXL/CLIP (max 77 tokens)
+    prompt: "Vibrant children's book cover, cute creepy Christmas creature, skeleton Santa or zombie reindeer, Tim Burton style, festive gothic, warm candlelight glow, professional glossy illustration, high detail"
+    workflow_params:
+      negative_prompt: "text, mockup, border, gore, blood, frightening horror, sharp teeth, low quality, watermark"
+      guidance_scale: "7.0"
+      steps: "25"
+
   "comfy":
     prompt: "Vibrant children's book cover: cute creepy Christmas creature in cozy haunted village. Tim Burton style, gothic festive, warm candlelight, professional."
 
@@ -44,144 +53,126 @@ cover_templates:
       "clip_g_suffix": "cute but creepy, festive gothic, warm shadows, glossy, professional quality"
 
 # ==========================================
+# SHARED DEFINITIONS (anchors for reuse)
+# ==========================================
+
+# Shared variables for all coloring page templates
+_shared_variables: &shared_variables
+  SHOT:
+    - "close-up"
+    - "medium shot"
+    - "wide shot"
+    - "full atmospheric scene"
+
+  CHARACTER:
+    - "friendly skeleton Santa"
+    - "friendly reindeer Santa"
+    - "friendly vampire Santa"
+    - "friendly zombie Santa"
+    - "friendly Krampus Santa"
+    - "friendly gingerbread character Santa"
+    - "adorable zombie reindeer"
+    - "adorable zombie elf on the shelf"
+    - "adorable zombie nutcracker soldier"
+    - "adorable zombie sugar plum fairy"
+    - "adorable zombie snowman"
+    - "adorable zombie gingerbread character"
+    - "adorable zombie Pinocchio style wooden boy"
+    - "smiling ghost snowman"
+    - "smiling ghost nutcracker soldier"
+    - "smiling ghost elf on the shelf"
+    - "smiling ghost reindeer"
+    - "smiling ghost gingerbread character"
+    - "gothic Emo Elf on the shelf"
+    - "gentle Krampus with tiny horns"
+    - "cute skeleton elf on the shelf toy wrapper"
+    - "cute skeleton elf on the shelf christmas caroler"
+    - "cute zombie elf on the shelf christmas caroler"
+    - "cute zombie reindeer christmas caroler"
+    - "cute zombie gingerbread character christmas caroler"
+    - "cute Krampus christmas caroler"
+    - "cute zombie christmas caroler"
+    - "clumsy gingerbread character toy maker"
+    - "cute Krampus toy maker"
+    - "cute Zombie toy maker"
+
+  ACTION:
+    - "carrying spooky Christmas gifts with a little skull paper wrap "
+    - "decorating a creepy-cute Christmas tree adorned with bone garland and skull balls"
+    - "dancing with friendly ghosts"
+    - "flying over rooftops and dropping spooky gifts in the chimney"
+    - "baking cute creepy cookies in a messy but cute kitchen"
+    - "singing eerie cheerful christmas carols with notes dancing in the air"
+    - "wrapping creepy shaped presents - like a limb"
+    - "riding a misty sleigh with zombie reindeers"
+    - "hanging creepy but cute ornaments on a christmas tree"
+    - "hanging creepy but cute ornaments on a fireplace"
+    - "starting a fire in the fireplace while sant is trying to go through the chimney"
+    - "playing with haunted toys surrounded by bad spirits"
+
+  ENV:
+    - "cozy haunted cottage with fireplace and Christmas lights"
+    - "warm candlelit cemetery with festive ornaments and christmas trees"
+    - "inviting toy workshop with tools and wooden limbs"
+    - "snowy village with street lights and christmas decorations"
+    - "christmas fireplace with crackling fire and creepy stockings"
+    - "warm attic filled with vintage Christmas decorations"
+    - "moonlit snowy rooftop with stars in the sky"
+    - "friendly North Pole village with northern lights"
+    - "Night sky with the moon and stars"
+    - "Main street on a cute snowy village"
+    - "City hall place of a snowy cute village"
+    - "Christmas market on a cute snowy village"
+
+  FOCUS:
+    - "head with festive hat"
+    - "full body"
+    - "holding Christmas adornments"
+    - "holding Christmas decorations"
+    - "group of friendly spooky creatures"
+    - "holding an ornament or gift"
+    - "skeleton details visible but soft"
+
+  COMPOSITION:
+    - "left-facing"
+    - "right-facing"
+    - "front view"
+    - "3/4 view"
+    - "jumping or floating"
+
+# Shared quality settings
+_shared_quality_settings: &shared_quality_settings |
+  Black and white line art coloring page style.
+  ONLY black lines on white background. NO colors. NO gray shading.
+  Bold clean outlines, closed shapes, thick black lines.
+  NO FRAME, NO BORDER around the illustration.
+  Illustration touches or nearly touches edges naturally.
+  Printable 300 DPI, simple-to-medium detail (kids 4-8).
+  No text, no logo, no watermark.
+
+# ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
 # ==========================================
 coloring_page_templates:
   default:
     base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+    variables: *shared_variables
+    quality_settings: *shared_quality_settings
 
-    variables:
-      SHOT:
-        - "close-up"
-        - "medium shot"
-        - "wide shot"
-        - "full atmospheric scene"
+  diffusers:
+    # Compact prompt for SDXL/CLIP (max 77 tokens) - template variables are NOT expanded
+    # The strategy will use this prompt directly instead of building from base_structure
+    prompt: "Black and white line art coloring page, cute creepy Christmas character, skeleton Santa or zombie elf, bold clean outlines, simple shapes, thick black lines on white background, no shading, printable"
+    workflow_params:
+      negative_prompt: "color, grayscale, shading, gradient, gray, background texture, text, watermark, logo, gore, blood, frightening horror"
+      guidance_scale: "9.0"
+      steps: "35"
 
-      CHARACTER:
-        - "friendly skeleton Santa"
-        - "adorable zombie reindeer"
-        - "cute vampire elf"
-        - "smiling ghost snowman"
-        - "haunted gingerbread character"
-        - "gothic Christmas angel"
-        - "gentle Krampus with tiny horns"
-        - "skeleton toy wrapper"
-        - "cute zombie caroler"
-        - "vampire toy maker"
-
-      ACTION:
-        - "carrying spooky Christmas gifts"
-        - "decorating a creepy-cute Christmas tree"
-        - "dancing with friendly ghosts"
-        - "flying over rooftops with bats"
-        - "baking magical cookies"
-        - "singing eerie cheerful carols"
-        - "wrapping mysterious presents"
-        - "riding a misty sleigh"
-        - "hanging glowing ornaments"
-        - "playing with haunted toys"
-
-      ENV:
-        - "cozy haunted cottage with fireplace and Christmas lights"
-        - "warm candlelit cemetery with festive ornaments"
-        - "inviting toy workshop with hot cocoa mugs"
-        - "snowy village with glowing windows"
-        - "gothic fireplace with crackling fire and stockings"
-        - "warm attic filled with vintage Christmas decorations"
-        - "moonlit snowy rooftop with lanterns"
-        - "friendly North Pole village with warm lights"
-
-      FOCUS:
-        - "head with festive hat"
-        - "full body"
-        - "holding Christmas props"
-        - "group of friendly spooky creatures"
-        - "holding an ornament or gift"
-        - "skeleton details visible but soft"
-
-      COMPOSITION:
-        - "left-facing"
-        - "right-facing"
-        - "front view"
-        - "3/4 view"
-        - "jumping or floating"
-
-    quality_settings: |
-      Black and white line art coloring page style.
-      ONLY black lines on white background. NO colors. NO gray shading.
-      Bold clean outlines, closed shapes, thick black lines.
-      NO FRAME, NO BORDER around the illustration.
-      Illustration touches or nearly touches edges naturally.
-      Printable 300 DPI, simple-to-medium detail (kids 4-8).
-      No text, no logo, no watermark.
 
   comfy:
     base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
-
-    variables:
-      SHOT:
-        - "close-up"
-        - "medium shot"
-        - "wide shot"
-        - "full atmospheric scene"
-
-      CHARACTER:
-        - "friendly skeleton Santa"
-        - "adorable zombie reindeer"
-        - "cute vampire elf"
-        - "smiling ghost snowman"
-        - "haunted gingerbread character"
-        - "gothic Christmas angel"
-        - "gentle Krampus with tiny horns"
-        - "skeleton toy wrapper"
-        - "cute zombie caroler"
-        - "vampire toy maker"
-
-      ACTION:
-        - "carrying spooky Christmas gifts"
-        - "decorating a creepy-cute Christmas tree"
-        - "dancing with friendly ghosts"
-        - "flying over rooftops with bats"
-        - "baking magical cookies"
-        - "singing eerie cheerful carols"
-        - "wrapping mysterious presents"
-        - "riding a misty sleigh"
-        - "hanging glowing ornaments"
-        - "playing with haunted toys"
-
-      ENV:
-        - "cozy haunted cottage with fireplace and Christmas lights"
-        - "warm candlelit cemetery with festive ornaments"
-        - "inviting toy workshop with hot cocoa mugs"
-        - "snowy village with glowing windows"
-        - "gothic fireplace with crackling fire and stockings"
-        - "warm attic filled with vintage Christmas decorations"
-        - "moonlit snowy rooftop with lanterns"
-        - "friendly North Pole village with warm lights"
-
-      FOCUS:
-        - "head with festive hat"
-        - "full body"
-        - "holding Christmas props"
-        - "group of friendly spooky creatures"
-        - "holding an ornament or gift"
-        - "skeleton details visible but soft"
-
-      COMPOSITION:
-        - "left-facing"
-        - "right-facing"
-        - "front view"
-        - "3/4 view"
-        - "jumping or floating"
-
-    quality_settings: |
-      Black and white line art coloring page style.
-      ONLY black lines on white background. NO colors. NO gray shading.
-      Bold clean outlines, closed shapes, thick black lines.
-      NO FRAME, NO BORDER around the illustration.
-      Illustration touches or nearly touches edges naturally.
-      Printable 300 DPI, simple-to-medium detail (kids 4-8).
-      No text, no logo, no watermark.
+    variables: *shared_variables
+    quality_settings: *shared_quality_settings
 
     workflow_params:
       "47": "color, shading, text, watermark, gore, blood, frightening"

@@ -96,8 +96,19 @@ class ProviderFactory:
 
             provider = GeminiImageProvider(model=model_mapping.model)
 
+        elif model_mapping.provider == "diffusers":
+            from backoffice.features.ebook.shared.infrastructure.providers.images.diffusers import (
+                LocalDiffusionImageProvider,
+            )
+
+            provider = LocalDiffusionImageProvider(
+                model=model_mapping.model,
+                lora=model_mapping.lora,
+                lora_weight=model_mapping.lora_weight,
+            )
+
         else:
-            raise ValueError(f"Unknown cover provider: {model_mapping.provider}. " f"Supported: openrouter, gemini")
+            raise ValueError(f"Unknown cover provider: {model_mapping.provider}. " f"Supported: openrouter, gemini, comfy, diffusers")
 
         # Cache and return
         ProviderFactory._cover_provider_cache[cache_key] = provider
@@ -157,8 +168,19 @@ class ProviderFactory:
 
             provider = GeminiImageProvider(model=model_mapping.model)
 
+        elif model_mapping.provider == "diffusers":
+            from backoffice.features.ebook.shared.infrastructure.providers.images.diffusers import (
+                LocalDiffusionImageProvider,
+            )
+
+            provider = LocalDiffusionImageProvider(
+                model=model_mapping.model,
+                lora=model_mapping.lora,
+                lora_weight=model_mapping.lora_weight,
+            )
+
         else:
-            raise ValueError(f"Unknown content page provider: {model_mapping.provider}. " f"Supported: openrouter, gemini")
+            raise ValueError(f"Unknown content page provider: {model_mapping.provider}. " f"Supported: openrouter, gemini, comfy, diffusers")
 
         # Cache and return
         ProviderFactory._page_provider_cache[cache_key] = provider

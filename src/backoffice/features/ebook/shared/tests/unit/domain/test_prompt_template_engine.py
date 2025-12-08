@@ -95,6 +95,8 @@ class TestPromptTemplateEngine:
                 "Ankylosaurus",
                 "Velociraptor",
                 "Brachiosaurus",
+                "Spinosaurus",
+                "Parasaurolophus",
             ]
             assert any(s in prompt for s in species)
 
@@ -225,3 +227,166 @@ class TestPromptTemplateEngine:
         total_count = len(all_prompts)
         # At least 60% unique (allowing for some random collisions)
         assert unique_count >= total_count * 0.6
+
+
+class TestSpeciesProfileConstraints:
+    """Tests for species_profiles semantic constraints."""
+
+    def test_pteranodon_only_flies_never_runs(self):
+        """Test that Pteranodon only gets flying-related actions, never running."""
+        # Arrange
+        engine = PromptTemplateEngine(seed=None)
+
+        # Act - Generate many prompts to find Pteranodon
+        pteranodon_prompts = []
+        for seed in range(100):
+            engine = PromptTemplateEngine(seed=seed)
+            prompts = engine.generate_prompts(theme="dinosaurs", count=10)
+            pteranodon_prompts.extend([p for p in prompts if "Pteranodon" in p])
+
+        # Assert - Pteranodon should never have terrestrial actions
+        assert len(pteranodon_prompts) > 0, "Should find at least one Pteranodon prompt"
+        forbidden_actions = ["running", "eating leaves", "eating meat", "swimming", "wading", "hunting", "defending"]
+        for prompt in pteranodon_prompts:
+            for action in forbidden_actions:
+                assert action not in prompt, f"Pteranodon should not be {action}: {prompt[:100]}"
+
+    def test_trex_never_flies_or_swims(self):
+        """Test that T-Rex never flies or swims."""
+        # Arrange & Act
+        trex_prompts = []
+        for seed in range(100):
+            engine = PromptTemplateEngine(seed=seed)
+            prompts = engine.generate_prompts(theme="dinosaurs", count=10)
+            trex_prompts.extend([p for p in prompts if "T-Rex" in p])
+
+        # Assert
+        assert len(trex_prompts) > 0, "Should find at least one T-Rex prompt"
+        forbidden_actions = ["flying", "gliding", "diving", "swimming", "wading", "eating leaves"]
+        for prompt in trex_prompts:
+            for action in forbidden_actions:
+                assert action not in prompt, f"T-Rex should not be {action}: {prompt[:100]}"
+
+    def test_spinosaurus_can_swim(self):
+        """Test that Spinosaurus (semi-aquatic) gets swimming actions."""
+        # Arrange & Act
+        spinosaurus_prompts = []
+        for seed in range(200):
+            engine = PromptTemplateEngine(seed=seed)
+            prompts = engine.generate_prompts(theme="dinosaurs", count=10)
+            spinosaurus_prompts.extend([p for p in prompts if "Spinosaurus" in p])
+
+        # Assert - Spinosaurus should have aquatic actions
+        assert len(spinosaurus_prompts) > 0, "Should find at least one Spinosaurus prompt"
+        aquatic_actions = ["swimming", "wading"]
+        has_aquatic = any(any(action in prompt for action in aquatic_actions) for prompt in spinosaurus_prompts)
+        assert has_aquatic, "Spinosaurus should have at least one aquatic action"
+
+    def test_pteranodon_in_sky_environment(self):
+        """Test that Pteranodon is placed in appropriate sky/cliff environments."""
+        # Arrange & Act
+        pteranodon_prompts = []
+        for seed in range(100):
+            engine = PromptTemplateEngine(seed=seed)
+            prompts = engine.generate_prompts(theme="dinosaurs", count=10)
+            pteranodon_prompts.extend([p for p in prompts if "Pteranodon" in p])
+
+        # Assert - Pteranodon should never be in jungle/desert/volcanic plain
+        assert len(pteranodon_prompts) > 0
+        forbidden_envs = ["lush jungle", "volcanic plain", "desert", "swamp"]
+        for prompt in pteranodon_prompts:
+            for env in forbidden_envs:
+                assert env not in prompt, f"Pteranodon should not be in {env}: {prompt[:100]}"
+
+    def test_herbivores_eat_leaves_not_meat(self):
+        """Test that herbivores only eat leaves, never meat."""
+        # Arrange
+        herbivores = ["Diplodocus", "Brachiosaurus", "Triceratops", "Stegosaurus", "Ankylosaurus"]
+
+        # Act
+        herbivore_prompts = []
+        for seed in range(100):
+            engine = PromptTemplateEngine(seed=seed)
+            prompts = engine.generate_prompts(theme="dinosaurs", count=10)
+            herbivore_prompts.extend([p for p in prompts if any(h in p for h in herbivores)])
+
+        # Assert
+        assert len(herbivore_prompts) > 0
+        for prompt in herbivore_prompts:
+            assert "eating meat" not in prompt, f"Herbivore eating meat: {prompt[:100]}"
+            assert "hunting" not in prompt, f"Herbivore hunting: {prompt[:100]}"
+
+    def test_only_winged_unicorn_can_fly(self):
+        """Test that only unicorn with sparkling wings can fly."""
+        # Arrange & Act
+        flying_prompts = []
+        for seed in range(100):
+            engine = PromptTemplateEngine(seed=seed)
+            prompts = engine.generate_prompts(theme="unicorns", count=10)
+            flying_prompts.extend([p for p in prompts if "flying" in p])
+
+        # Assert - Only winged unicorns should fly
+        assert len(flying_prompts) > 0, "Should find at least one flying prompt"
+        for prompt in flying_prompts:
+            assert "unicorn with sparkling wings" in prompt, f"Non-winged unicorn flying: {prompt[:150]}"
+
+    def test_baby_unicorn_cannot_fly(self):
+        """Test that baby unicorn never flies (no wings)."""
+        # Arrange & Act
+        baby_prompts = []
+        for seed in range(100):
+            engine = PromptTemplateEngine(seed=seed)
+            prompts = engine.generate_prompts(theme="unicorns", count=10)
+            baby_prompts.extend([p for p in prompts if "baby unicorn" in p])
+
+        # Assert - baby unicorn should never fly
+        assert len(baby_prompts) > 0, "Should find at least one baby unicorn prompt"
+        for prompt in baby_prompts:
+            assert "flying" not in prompt, f"Baby unicorn flying: {prompt[:150]}"
+
+    def test_parrot_cannot_steer_ship(self):
+        """Test that parrot companion never does human actions like steering ship."""
+        # Arrange & Act
+        parrot_prompts = []
+        for seed in range(100):
+            engine = PromptTemplateEngine(seed=seed)
+            prompts = engine.generate_prompts(theme="pirates", count=10)
+            parrot_prompts.extend([p for p in prompts if "parrot companion" in p])
+
+        # Assert - parrot should never do human-only actions
+        assert len(parrot_prompts) > 0, "Should find at least one parrot prompt"
+        human_actions = ["steering ship", "digging for treasure", "looking through telescope", "sailing", "climbing rigging"]
+        for prompt in parrot_prompts:
+            for action in human_actions:
+                assert action not in prompt, f"Parrot doing human action '{action}': {prompt[:150]}"
+
+    def test_parrot_has_bird_actions(self):
+        """Test that parrot companion gets bird-appropriate actions."""
+        # Arrange & Act
+        parrot_prompts = []
+        for seed in range(200):
+            engine = PromptTemplateEngine(seed=seed)
+            prompts = engine.generate_prompts(theme="pirates", count=10)
+            parrot_prompts.extend([p for p in prompts if "parrot companion" in p])
+
+        # Assert - should find bird actions
+        assert len(parrot_prompts) > 0, "Should find at least one parrot prompt"
+        bird_actions = ["perched on shoulder", "flying over ship", "squawking", "eating crackers"]
+        has_bird_action = any(any(action in prompt for action in bird_actions) for prompt in parrot_prompts)
+        assert has_bird_action, "Parrot should have at least one bird action"
+
+    def test_character_profiles_work_with_different_variable_names(self):
+        """Test that character profiles work with UNICORN, CHARACTER, SPECIES variable names."""
+        # Arrange
+        engine = PromptTemplateEngine(seed=42)
+
+        # Act - all themes now have character_profiles
+        unicorn_prompts = engine.generate_prompts(theme="unicorns", count=5)
+        pirate_prompts = engine.generate_prompts(theme="pirates", count=5)
+        dino_prompts = engine.generate_prompts(theme="dinosaurs", count=5)
+
+        # Assert - should generate valid prompts with no unreplaced placeholders
+        for prompts in [unicorn_prompts, pirate_prompts, dino_prompts]:
+            assert len(prompts) == 5
+            for prompt in prompts:
+                assert "{" not in prompt, f"Unreplaced placeholder: {prompt[:100]}"

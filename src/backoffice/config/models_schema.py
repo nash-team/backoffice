@@ -1,8 +1,8 @@
 """Pydantic schemas for models.yaml configuration validation."""
 
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class ModelMapping(BaseModel):
@@ -11,22 +11,35 @@ class ModelMapping(BaseModel):
     Validates provider-specific constraints:
     - All providers require a model name
     - Provider must be one of the supported types
-
-    Note: This replaces the dataclass version in model_registry.py
+    - controlnet/lora/lora_weight are only valid for diffusers provider
     """
 
-    provider: Literal["openrouter", "gemini", "comfy"] = Field(..., description="Image generation provider")
+    provider: Literal["openrouter", "gemini", "comfy", "diffusers"] = Field(..., description="Image generation provider")
     model: str = Field(
         ...,
         min_length=1,
-        description="Model identifier (e.g., google/gemini-2.5-flash-image-preview)",
+        description="Model identifier (HF ID, local path, or workflow ID)",
     )
-    supports_vectorization: bool = Field(False, description="Whether model supports SVG/vector output")
+    supports_vectorization: bool = False
 
-    class Config:
-        """Pydantic config."""
+    # Diffusers-only options
+    controlnet: str | None = None
+    lora: str | None = None
+    lora_weight: float = Field(0.7, ge=0.0, le=1.0)
 
-        frozen = True  # Make immutable like dataclass
+    model_config = ConfigDict(frozen=True)
+
+    @model_validator(mode="after")
+    def validate_provider_specific_fields(self) -> Self:
+        """Validate that diffusers-only fields aren't set for other providers."""
+        if self.provider != "diffusers":
+            if self.controlnet is not None:
+                raise ValueError("controlnet is only supported when provider='diffusers'")
+            if self.lora is not None:
+                raise ValueError("lora is only supported when provider='diffusers'")
+            # lora_weight default is fine, ignored for non-diffusers
+
+        return self
 
 
 class ModelsConfig(BaseModel):
@@ -48,6 +61,6 @@ class ModelsConfig(BaseModel):
         missing_types = required_types - configured_types
 
         if missing_types:
-            raise ValueError(f"Missing required model types in configuration: {sorted(missing_types)}. " f"Please configure all required types: {sorted(required_types)}")
+            raise ValueError(f"Missing required model types: {sorted(missing_types)}. " f"Required: {sorted(required_types)}")
 
         return v

@@ -25,93 +25,113 @@ cover_templates:
       "clip_g_suffix": "bright saturated colors, glossy, professional quality"
 
 # ==========================================
+# SHARED DEFINITIONS (anchors for reuse)
+# ==========================================
+
+# Shared variables for all coloring page templates
+_shared_variables: &shared_variables
+  SHOT:
+    - "close-up"
+    - "medium"
+    - "wide"
+    - "magical scene"
+
+  UNICORN:
+    - "cute magical unicorn"
+    - "unicorn with rainbow mane"
+    - "unicorn with sparkling wings"
+    - "baby unicorn"
+    - "elegant unicorn"
+    - "playful unicorn"
+
+  ACTION:
+    - "prancing"
+    - "flying"
+    - "playing"
+    - "resting"
+    - "dancing"
+    - "jumping over rainbow"
+    - "spreading sparkles"
+    - "galloping"
+    - "nuzzling flowers"
+
+  ENV:
+    - "enchanted landscape"
+    - "soft clouds"
+    - "magical meadow"
+    - "starry sky"
+    - "flower garden"
+    - "rainbow bridge"
+    - "crystal castle background"
+
+  FOCUS:
+    - "head with horn"
+    - "full body"
+    - "with butterflies"
+    - "with stars"
+    - "with flowers"
+
+  COMPOSITION:
+    - "left-facing"
+    - "right-facing"
+    - "front"
+    - "3/4 view"
+    - "jumping"
+
+# Character profiles - semantic constraints
+# Prevents incoherent combos like "baby unicorn flying" (no wings!)
+_shared_character_profiles: &shared_character_profiles
+  # Winged unicorn (alicorn) - CAN fly
+  "unicorn with sparkling wings":
+    actions: ["prancing", "flying", "playing", "resting", "dancing", "jumping over rainbow", "spreading sparkles", "galloping"]
+    environments: ["enchanted landscape", "soft clouds", "magical meadow", "starry sky", "flower garden", "rainbow bridge", "crystal castle background"]
+
+  # Regular unicorns - CANNOT fly (no wings)
+  "cute magical unicorn":
+    actions: ["prancing", "playing", "resting", "dancing", "jumping over rainbow", "spreading sparkles", "galloping", "nuzzling flowers"]
+    environments: ["enchanted landscape", "magical meadow", "flower garden", "rainbow bridge", "crystal castle background"]
+
+  "unicorn with rainbow mane":
+    actions: ["prancing", "playing", "resting", "dancing", "jumping over rainbow", "spreading sparkles", "galloping", "nuzzling flowers"]
+    environments: ["enchanted landscape", "magical meadow", "flower garden", "rainbow bridge", "crystal castle background"]
+
+  "baby unicorn":
+    actions: ["playing", "resting", "nuzzling flowers", "prancing"]
+    environments: ["magical meadow", "flower garden", "enchanted landscape"]
+
+  "elegant unicorn":
+    actions: ["prancing", "resting", "dancing", "galloping", "spreading sparkles"]
+    environments: ["enchanted landscape", "magical meadow", "crystal castle background", "rainbow bridge"]
+
+  "playful unicorn":
+    actions: ["prancing", "playing", "jumping over rainbow", "galloping", "nuzzling flowers", "spreading sparkles"]
+    environments: ["magical meadow", "flower garden", "enchanted landscape", "rainbow bridge"]
+
+# Shared quality settings
+_shared_quality_settings: &shared_quality_settings |
+  Black and white line art coloring page style.
+  IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading.
+  Bold clean outlines, closed shapes, thick black lines.
+  NO FRAME, NO BORDER around the illustration.
+  Illustration extends naturally to image boundaries.
+  Printable 300 DPI, simple to medium detail for kids age 4-8.
+  No text, no logo, no watermark.
+
+# ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
 # ==========================================
 coloring_page_templates:
   default:
     base_structure: "Line art coloring page of a {UNICORN} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
-
-    variables:
-      SHOT:
-        - "close-up"
-        - "medium"
-        - "wide"
-        - "magical scene"
-
-      UNICORN:
-        - "cute magical unicorn"
-        - "unicorn with rainbow mane"
-        - "unicorn with sparkling wings"
-        - "baby unicorn"
-        - "elegant unicorn"
-        - "playful unicorn"
-
-      ACTION:
-        - "prancing"
-        - "flying"
-        - "playing"
-        - "resting"
-        - "dancing"
-        - "jumping over rainbow"
-        - "spreading sparkles"
-
-      ENV:
-        - "enchanted landscape"
-        - "soft clouds"
-        - "magical meadow"
-        - "starry sky"
-        - "flower garden"
-        - "rainbow bridge"
-        - "crystal castle background"
-
-      FOCUS:
-        - "head with horn"
-        - "full body"
-        - "with butterflies"
-        - "with stars"
-        - "with flowers"
-
-      COMPOSITION:
-        - "left-facing"
-        - "right-facing"
-        - "front"
-        - "3/4 view"
-        - "jumping"
-
-    quality_settings: |
-      Black and white line art coloring page style.
-      IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading.
-      Bold clean outlines, closed shapes, thick black lines.
-      NO FRAME, NO BORDER around the illustration.
-      Illustration extends naturally to image boundaries.
-      Printable 300 DPI, simple to medium detail for kids age 4-8.
-      No text, no logo, no watermark.
+    variables: *shared_variables
+    species_profiles: *shared_character_profiles
+    quality_settings: *shared_quality_settings
 
   "comfy":
-    base_structure: "{UNICORN} {ACTION}. {STYLE}."
-
-    variables:
-      UNICORN:
-        - "cute magical unicorn"
-        - "unicorn with rainbow mane"
-        - "baby unicorn"
-        - "elegant unicorn"
-        - "playful unicorn"
-
-      ACTION:
-        - "prancing"
-        - "flying"
-        - "playing"
-        - "dancing"
-        - "jumping"
-        - "spreading sparkles"
-
-      STYLE:
-        - "line art"
-        - "coloring page style"
-        - "simple outlines"
-
-    quality_settings: "B&W lineart. Bold lines."
+    base_structure: "Line art coloring page of a {UNICORN} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+    variables: *shared_variables
+    species_profiles: *shared_character_profiles
+    quality_settings: *shared_quality_settings
 
     workflow_params:
       "47": "color, shading, text, watermark"

@@ -159,6 +159,7 @@ exclude = ["tests", "features/**/tests", "migrations", "scripts", "alembic", ".v
 # Specify dev dependency groups (so deptry ignores them)
 pep621_dev_dependency_groups = ["dev"]
 
+
 # --- Pytest ---
 [tool.pytest.ini_options]
 testpaths = [
@@ -198,6 +199,8 @@ DEP002 = [
 ]
 DEP003 = [
     "backoffice",       # This is the local package, not a dependency
+    "torch",            # Optional: local SDXL generation (user installs manually)
+    "diffusers",        # Optional: local SDXL generation (user installs manually)
 ]
 DEP004 = [
     "alembic",          # Used in migrations (dev tool but imported in migration files)

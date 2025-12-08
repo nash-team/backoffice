@@ -17,6 +17,24 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
+class CharacterProfile:
+    """Profile defining valid actions and environments for a character/species.
+
+    Used to prevent incoherent combinations like:
+    - "T-Rex flying" (dinosaurs)
+    - "baby unicorn flying" (only winged unicorns fly)
+    - "parrot steering ship" (parrots can't steer)
+    """
+
+    actions: list[str]
+    environments: list[str]
+
+
+# Backward compatibility alias
+SpeciesProfile = CharacterProfile
+
+
+@dataclass
 class PromptTemplate:
     """Template for generating prompts with random variations.
 
@@ -25,12 +43,14 @@ class PromptTemplate:
         variables: Dict of variable names to list of possible values
         quality_settings: Common quality/technical requirements
         workflow_params: Free-form dict for workflow-specific params (ComfyUI, etc.)
+        species_profiles: Optional dict mapping species to their valid actions/environments
     """
 
     base_structure: str
     variables: dict[str, list[str]]
     quality_settings: str
     workflow_params: dict[str, str | float | int] | None = None
+    species_profiles: dict[str, SpeciesProfile] | None = None
 
 
 class PromptTemplateEngine:
@@ -120,21 +140,35 @@ class PromptTemplateEngine:
                 quality_settings="",
                 workflow_params={"negative": ", ".join(blocks["negatives"])},
             )
-        elif template_type == "cover" and "prompt" in template_data:
-            # New format: direct prompt
+        elif "prompt" in template_data:
+            # Direct prompt (for diffusers/SDXL with short CLIP-friendly prompts)
+            # Works for both cover and coloring_page templates
+            logger.info(f"Using direct prompt for {template_type} (no variable expansion)")
             return PromptTemplate(
                 base_structure=template_data["prompt"],
-                variables={},
-                quality_settings="",
+                variables={},  # No variables = prompt used as-is
+                quality_settings="",  # Already included in prompt
                 workflow_params=template_data.get("workflow_params", None),
             )
         else:
-            # Coloring page format (with variables)
+            # Coloring page format with variables (base_structure + variables + quality_settings)
+            # Parse species_profiles if present (for semantic constraints)
+            species_profiles = None
+            if "species_profiles" in template_data:
+                species_profiles = {}
+                for species_name, profile_data in template_data["species_profiles"].items():
+                    species_profiles[species_name] = SpeciesProfile(
+                        actions=profile_data.get("actions", []),
+                        environments=profile_data.get("environments", []),
+                    )
+                logger.info(f"Loaded species_profiles with {len(species_profiles)} species")
+
             return PromptTemplate(
                 base_structure=template_data["base_structure"],
                 variables=template_data["variables"],
                 quality_settings=template_data["quality_settings"],
                 workflow_params=template_data.get("workflow_params", None),
+                species_profiles=species_profiles,
             )
 
     def generate_prompts(
@@ -277,6 +311,9 @@ class PromptTemplateEngine:
     def _generate_single_prompt(self, template: PromptTemplate, index: int, audience: str | None) -> str:
         """Generate a single prompt from template.
 
+        Uses species_profiles (if defined) to ensure semantically valid combinations.
+        For example, prevents "T-Rex flying" or "Pteranodon swimming".
+
         Args:
             template: Template to use
             index: Index of prompt (for variation)
@@ -298,13 +335,18 @@ class PromptTemplateEngine:
             if hint:
                 prompt = f"{prompt} {hint}"
 
-        # Replace each variable with random choice
-        for var_name, options in template.variables.items():
-            placeholder = f"{{{var_name}}}"
-            if placeholder in prompt:
-                # Use index + var_name hash for deterministic variety across pages
-                choice = self._choose_value(options, index, var_name)
-                prompt = prompt.replace(placeholder, choice)
+        # If species_profiles exist, use constrained selection
+        # Auto-detect which variable the profiles apply to (SPECIES, UNICORN, CHARACTER, etc.)
+        profile_var = self._find_profile_variable(template)
+        if template.species_profiles and profile_var:
+            prompt = self._generate_with_character_constraints(template, prompt, index, profile_var)
+        else:
+            # Original behavior: independent random selection (backward compatible)
+            for var_name, options in template.variables.items():
+                placeholder = f"{{{var_name}}}"
+                if placeholder in prompt:
+                    choice = self._choose_value(options, index, var_name)
+                    prompt = prompt.replace(placeholder, choice)
 
         # Add quality settings (no age-specific customization needed)
         # Quality is defined in theme YAML and applies to audience
@@ -313,6 +355,85 @@ class PromptTemplateEngine:
         full_prompt = f"{prompt} {quality}"
 
         return full_prompt
+
+    def _find_profile_variable(self, template: PromptTemplate) -> str | None:
+        """Find which variable the species_profiles keys match.
+
+        Auto-detects the profile variable by checking which variable's values
+        overlap with the profile keys. Supports SPECIES, UNICORN, CHARACTER, etc.
+
+        Args:
+            template: Template to check
+
+        Returns:
+            Variable name if found, None otherwise
+        """
+        if not template.species_profiles:
+            return None
+
+        profile_keys = set(template.species_profiles.keys())
+
+        for var_name, var_values in template.variables.items():
+            # Check if there's overlap between profile keys and variable values
+            if set(var_values) & profile_keys:
+                return var_name
+
+        return None
+
+    def _generate_with_character_constraints(self, template: PromptTemplate, prompt: str, index: int, profile_var: str) -> str:
+        """Generate prompt with character-specific constraints.
+
+        Works with any profile variable (SPECIES, UNICORN, CHARACTER, etc.).
+
+        1. Choose a character from the profile variable list
+        2. Use character profile to filter valid ACTION and ENV options
+        3. Replace remaining variables normally
+
+        Args:
+            template: Template with species_profiles
+            prompt: Base prompt string
+            index: Page index for deterministic variation
+            profile_var: Name of the variable that profiles apply to (e.g., "SPECIES", "UNICORN")
+
+        Returns:
+            Prompt with all variables replaced (semantically valid)
+        """
+        # Step 1: Choose character from profile variable
+        character_options = template.variables[profile_var]
+        chosen_character = self._choose_value(character_options, index, profile_var)
+        prompt = prompt.replace(f"{{{profile_var}}}", chosen_character)
+
+        # Step 2: Get profile for this character (or use full lists as fallback)
+        profile = template.species_profiles.get(chosen_character) if template.species_profiles else None
+
+        # Step 3: Replace ACTION with character-valid options
+        if "{ACTION}" in prompt and "ACTION" in template.variables:
+            if profile and profile.actions:
+                action_options = profile.actions
+            else:
+                action_options = template.variables["ACTION"]
+            chosen_action = self._choose_value(action_options, index, "ACTION")
+            prompt = prompt.replace("{ACTION}", chosen_action)
+
+        # Step 4: Replace ENV with character-valid options
+        if "{ENV}" in prompt and "ENV" in template.variables:
+            if profile and profile.environments:
+                env_options = profile.environments
+            else:
+                env_options = template.variables["ENV"]
+            chosen_env = self._choose_value(env_options, index, "ENV")
+            prompt = prompt.replace("{ENV}", chosen_env)
+
+        # Step 5: Replace remaining variables normally (SHOT, FOCUS, COMPOSITION, etc.)
+        for var_name, options in template.variables.items():
+            if var_name in (profile_var, "ACTION", "ENV"):
+                continue  # Already handled
+            placeholder = f"{{{var_name}}}"
+            if placeholder in prompt:
+                choice = self._choose_value(options, index, var_name)
+                prompt = prompt.replace(placeholder, choice)
+
+        return prompt
 
     def _choose_value(self, options: list[str], index: int, var_name: str) -> str:
         """Choose value from options with deterministic randomness.

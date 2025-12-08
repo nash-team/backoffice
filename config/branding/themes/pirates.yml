@@ -25,94 +25,119 @@ cover_templates:
       "negative": "black and white, mockup, borders, low-res, distorted anatomy, missing title"
 
 # ==========================================
+# SHARED DEFINITIONS (anchors for reuse)
+# ==========================================
+
+# Shared variables for all coloring page templates
+_shared_variables: &shared_variables
+  SHOT:
+    - "close-up"
+    - "medium"
+    - "wide"
+    - "action scene"
+
+  CHARACTER:
+    - "friendly cartoon pirate"
+    - "pirate captain with hat"
+    - "young pirate kid"
+    - "pirate crew member"
+    - "parrot companion"
+    - "pirate with treasure map"
+
+  ACTION:
+    - "searching for treasure"
+    - "sailing"
+    - "digging for treasure"
+    - "looking through telescope"
+    - "celebrating"
+    - "climbing rigging"
+    - "steering ship"
+    - "perched on shoulder"
+    - "flying over ship"
+    - "squawking"
+    - "eating crackers"
+
+  ENV:
+    - "pirate ship deck"
+    - "treasure island"
+    - "beach with palm trees"
+    - "ocean waves"
+    - "treasure cave"
+    - "dock"
+    - "tropical island"
+    - "ship mast"
+
+  FOCUS:
+    - "pirate with treasure chest"
+    - "full body"
+    - "with ship"
+    - "with parrot"
+    - "with flag"
+
+  COMPOSITION:
+    - "left-facing"
+    - "right-facing"
+    - "front"
+    - "3/4 view"
+    - "action pose"
+
+# Character profiles - semantic constraints
+# Prevents incoherent combos like "parrot steering ship"
+_shared_character_profiles: &shared_character_profiles
+  # Human pirates - full range of human actions
+  "friendly cartoon pirate":
+    actions: ["searching for treasure", "sailing", "digging for treasure", "looking through telescope", "celebrating", "climbing rigging", "steering ship"]
+    environments: ["pirate ship deck", "treasure island", "beach with palm trees", "ocean waves", "treasure cave", "dock", "tropical island"]
+
+  "pirate captain with hat":
+    actions: ["steering ship", "looking through telescope", "celebrating", "sailing", "searching for treasure"]
+    environments: ["pirate ship deck", "treasure island", "dock", "ocean waves"]
+
+  "young pirate kid":
+    actions: ["searching for treasure", "digging for treasure", "celebrating", "climbing rigging", "playing"]
+    environments: ["pirate ship deck", "treasure island", "beach with palm trees", "treasure cave"]
+
+  "pirate crew member":
+    actions: ["sailing", "climbing rigging", "digging for treasure", "celebrating", "steering ship"]
+    environments: ["pirate ship deck", "treasure island", "beach with palm trees", "dock"]
+
+  "pirate with treasure map":
+    actions: ["searching for treasure", "looking through telescope", "digging for treasure", "celebrating"]
+    environments: ["treasure island", "beach with palm trees", "treasure cave", "pirate ship deck"]
+
+  # Parrot - bird-specific actions only!
+  "parrot companion":
+    actions: ["perched on shoulder", "flying over ship", "squawking", "eating crackers"]
+    environments: ["pirate ship deck", "ship mast", "tropical island", "beach with palm trees"]
+
+# Shared quality settings
+_shared_quality_settings: &shared_quality_settings |
+  Black and white line art coloring page style.
+  IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading.
+  Bold clean outlines, closed shapes, thick black lines.
+  NO FRAME, NO BORDER around the illustration.
+  Illustration extends naturally to image boundaries.
+  Printable 300 DPI, simple to medium detail for kids age 4-8.
+  No text, no logo, no watermark, no scary elements, no violence.
+
+# ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
 # ==========================================
 coloring_page_templates:
   default:
     base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
-
-    variables:
-      SHOT:
-        - "close-up"
-        - "medium"
-        - "wide"
-        - "action scene"
-
-      CHARACTER:
-        - "friendly cartoon pirate"
-        - "pirate captain with hat"
-        - "young pirate kid"
-        - "pirate crew member"
-        - "parrot companion"
-        - "pirate with treasure map"
-
-      ACTION:
-        - "searching for treasure"
-        - "sailing"
-        - "digging for treasure"
-        - "looking through telescope"
-        - "celebrating"
-        - "climbing rigging"
-        - "steering ship"
-
-      ENV:
-        - "pirate ship deck"
-        - "treasure island"
-        - "beach with palm trees"
-        - "ocean waves"
-        - "treasure cave"
-        - "dock"
-        - "tropical island"
-
-      FOCUS:
-        - "pirate with treasure chest"
-        - "full body"
-        - "with ship"
-        - "with parrot"
-        - "with flag"
-
-      COMPOSITION:
-        - "left-facing"
-        - "right-facing"
-        - "front"
-        - "3/4 view"
-        - "action pose"
-
-    quality_settings: |
-      Black and white line art coloring page style.
-      IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading.
-      Bold clean outlines, closed shapes, thick black lines.
-      NO FRAME, NO BORDER around the illustration.
-      Illustration extends naturally to image boundaries.
-      Printable 300 DPI, simple to medium detail for kids age 4-8.
-      No text, no logo, no watermark, no scary elements, no violence.
+    variables: *shared_variables
+    species_profiles: *shared_character_profiles
+    quality_settings: *shared_quality_settings
 
   "comfy":
-    base_structure: "{CHARACTER} {ACTION}. {STYLE}."
-
-    variables:
-      CHARACTER:
-        - "friendly cartoon pirate"
-        - "pirate captain"
-        - "young pirate kid"
-        - "pirate with parrot"
-
-      ACTION:
-        - "searching treasure"
-        - "sailing"
-        - "digging"
-        - "celebrating"
-        - "steering ship"
-
-      STYLE:
-        - "line art"
-        - "coloring page style"
-        - "simple outlines"
-
-    quality_settings: "B&W lineart. Bold lines."
+    base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+    variables: *shared_variables
+    species_profiles: *shared_character_profiles
+    quality_settings: *shared_quality_settings
 
     workflow_params:
       "prompt": "Line art coloring page for 2-4 years old kids of a {friendly cartoon pirate|pirate captain with hat|young pirate kid|pirate crew member|pirate with treasure map} {searching for treasure|sailing|digging for treasure with a shovel|looking through a telescope|celebrating|climbing rigging|steering ship} in a {pirate ship deck|treasure island|beach with palm trees|ocean waves|treasure cave|dock|tropical island}. {left-facing|right-facing|front|3/4 view|action pose}."
-#      "47": "color, shading, text, watermark, scary, violence"
-#      "clip_g_suffix": "professional line art, clean outlines"
-#      "qwen_prompt": "Clean black and white lineart with bold outlines"
+      "47": "color, shading, text, watermark, scary, violence"
+      "clip_g_suffix": "professional line art, clean outlines"
+      "qwen_prompt": "Clean black and white lineart with bold outlines"

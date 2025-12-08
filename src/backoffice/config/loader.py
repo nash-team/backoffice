@@ -367,17 +367,21 @@ class ConfigLoader:
     def get_template_key_for_type(self, image_type: str) -> str:
         """Get template key based on provider for a specific image type.
 
-        For ComfyUI provider, returns "comfy", otherwise "default".
+        Returns the provider name for providers with custom templates (comfy, diffusers),
+        otherwise "default".
 
         Args:
             image_type: Type of image ("cover" or "coloring_page")
 
         Returns:
-            Template key ("comfy" or "default")
+            Template key ("comfy", "diffusers", or "default")
         """
         model_config = self.get_model_config_for_type(image_type)
         provider = model_config["provider"]
-        return "comfy" if provider == "comfy" else "default"
+        # Providers with custom templates in theme YAML
+        if provider in ("comfy", "diffusers"):
+            return provider
+        return "default"
 
 
 # Singleton instance for easy import
