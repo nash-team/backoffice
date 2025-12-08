@@ -167,6 +167,7 @@ class RegenerateCoverUseCase:
                 "title": "Cover",
                 "image_format": "PNG",
                 "image_data_base64": base64.b64encode(cover_data).decode(),
+                "prompt": cover_prompt,  # Store prompt for regeneration/editing
             }
         ]
         # Keep all other pages (skip old cover)

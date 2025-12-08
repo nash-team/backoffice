@@ -195,6 +195,7 @@ class RegenerationService:
         page_number: int,
         new_image_data: bytes,
         title: str | None = None,
+        prompt: str | None = None,
     ) -> list[dict]:
         """Update a single page in structure_json pages metadata.
 
@@ -203,6 +204,7 @@ class RegenerationService:
             page_number: Page number to update (0-based)
             new_image_data: New image bytes
             title: Optional new title (defaults to "Page {page_number}" or "Cover")
+            prompt: Optional prompt (preserves existing prompt if None)
 
         Returns:
             Updated pages metadata
@@ -213,12 +215,17 @@ class RegenerationService:
         if title is None:
             title = "Cover" if page_number == 0 else f"Page {page_number}"
 
-        # Update the specific page
+        # Preserve existing prompt if not provided
+        existing_page = pages_meta[page_number] if page_number < len(pages_meta) else {}
+        final_prompt = prompt if prompt is not None else existing_page.get("prompt", "")
+
+        # Update the specific page (include prompt for edit modal)
         updated_pages_meta[page_number] = {
             "page_number": page_number,
             "title": title,
             "image_format": "PNG",
             "image_data_base64": base64.b64encode(new_image_data).decode(),
+            "prompt": final_prompt,  # Store prompt for regeneration/editing
         }
 
         return updated_pages_meta

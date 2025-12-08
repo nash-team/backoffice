@@ -179,7 +179,7 @@ class AddNewPagesUseCase:
                 workflow_params=workflow_params,
             )
 
-            # Add to pages_meta
+            # Add to pages_meta (include prompt for edit modal)
             pages_meta.append(
                 {
                     "page_number": page_number,
@@ -187,6 +187,7 @@ class AddNewPagesUseCase:
                     "image_data_base64": base64.b64encode(page_data).decode("utf-8"),
                     "image_format": "PNG",
                     "color_mode": "BLACK_WHITE",
+                    "prompt": prompt,  # Store prompt for regeneration/editing
                 }
             )
             logger.info(f"  Added page {page_number} ({len(page_data)} bytes)")

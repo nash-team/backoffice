@@ -170,13 +170,14 @@ class RegenerateContentPageUseCase:
         # Update ebook with new preview URL
         ebook.preview_url = preview_url
 
-        # Step 3: Update structure_json with new page
+        # Step 3: Update structure_json with new page (include prompt for edit modal)
         updated_pages_meta = pages_meta.copy()
         updated_pages_meta[page_index] = {
             "page_number": page_index,
             "title": f"Page {page_index}",
             "image_format": "PNG",
             "image_data_base64": base64.b64encode(new_page_data).decode(),
+            "prompt": prompt,  # Store prompt for regeneration/editing
         }
 
         ebook.structure_json = {"pages_meta": updated_pages_meta}
