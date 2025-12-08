@@ -39,10 +39,21 @@ _shared_variables: &shared_variables
   UNICORN:
     - "cute magical unicorn"
     - "unicorn with rainbow mane"
-    - "unicorn with sparkling wings"
+    - "unicorn with wings"
+    - "baby unicorn with wings"
     - "baby unicorn"
     - "elegant unicorn"
     - "playful unicorn"
+    - "chubby unicorn"
+    - "3 legged unicorn as an inclusive unicorn"
+    - "galloping unicorn"
+    - "sleepy unicorn"
+    - "curly mane unicorn"
+    - "unicorn from the forest with a mushroom hat"
+    - "unicorn from the sky with wings"
+    - "unicorn from the water with palmed hoofs or mermaid tail"
+    - "unicorn from the volcano with fire mane"
+    - "unicorn for the mountain with strong hooves"
 
   ACTION:
     - "prancing"
@@ -54,6 +65,17 @@ _shared_variables: &shared_variables
     - "spreading sparkles"
     - "galloping"
     - "nuzzling flowers"
+    - "galloping"
+    - "sleeping"
+    - "eating grass"
+    - "eating fruits"
+    - "flying over rainbow"
+    - "racing with other unicorns and horses friends"
+    - "baking pies"
+    - "lighting stars in the sky"
+    - "playing on clouds"
+    - "eating ice cream"
+    - "sleeping on a cloud"
 
   ENV:
     - "enchanted landscape"
@@ -63,6 +85,16 @@ _shared_variables: &shared_variables
     - "flower garden"
     - "rainbow bridge"
     - "crystal castle background"
+    - "snow landscape"
+    - "whimsical ice castle"
+    - "quiet volcano river"
+    - "snowy mountain"
+    - "green plains and valleys"
+    - "beautiful meadows"
+    - "wild orchard"
+    - "whimsical fairy temple ruins"
+    - "unicorn with wings"
+    - "Snowy mountain with northern lights"
 
   FOCUS:
     - "head with horn"
@@ -70,6 +102,13 @@ _shared_variables: &shared_variables
     - "with butterflies"
     - "with stars"
     - "with flowers"
+    - "with forest animals"
+    - "with farm animals"
+    - "with sea animals"
+    - "with horses"
+    - "with with fairies"
+    - "with snow"
+    - "with northern lights"
 
   COMPOSITION:
     - "left-facing"
@@ -77,6 +116,7 @@ _shared_variables: &shared_variables
     - "front"
     - "3/4 view"
     - "jumping"
+
 
 # Character profiles - semantic constraints
 # Prevents incoherent combos like "baby unicorn flying" (no wings!)
@@ -106,6 +146,7 @@ _shared_character_profiles: &shared_character_profiles
   "playful unicorn":
     actions: ["prancing", "playing", "jumping over rainbow", "galloping", "nuzzling flowers", "spreading sparkles"]
     environments: ["magical meadow", "flower garden", "enchanted landscape", "rainbow bridge"]
+
 
 # Shared quality settings
 _shared_quality_settings: &shared_quality_settings |

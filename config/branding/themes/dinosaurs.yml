@@ -89,6 +89,8 @@ _shared_variables: &shared_variables
     - "hunting"
     - "defending"
     - "nesting"
+    - "fighting"
+    - "walking in groups"
 
   # All possible environments (filtered per species via species_profiles)
   ENV:
@@ -103,6 +105,8 @@ _shared_variables: &shared_variables
     - "coastal cliffs"
     - "swamp"
     - "lake shore"
+    - "sunset"
+    - "Cave on a riverbank"
 
   FOCUS:
     - "head"
