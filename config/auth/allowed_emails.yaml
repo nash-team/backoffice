@@ -1,0 +1,6 @@
+# Allowed emails for Google OAuth authentication
+# Only users with these email addresses can access the application
+allowed_emails:
+  - franck.marchand@gmail.com
+  - mayane.laverdin@gmail.com
+  - blandineapo@gmail.com

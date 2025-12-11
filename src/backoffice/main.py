@@ -5,7 +5,10 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 
+from backoffice.features.auth.infrastructure.middleware import AuthMiddleware
+from backoffice.features.auth.presentation.routes import router as auth_router
 from backoffice.features.ebook.creation.presentation.routes import (
     router as ebook_creation_router,
 )
@@ -54,6 +57,16 @@ def get_cors_origins() -> list[str]:
             "http://127.0.0.1:8001",
         ]
 
+
+# Middleware order matters: first added = last executed
+# 1. AuthMiddleware (checks session) - runs first on request
+# 2. SessionMiddleware (required by authlib for OAuth state)
+# 3. CORSMiddleware - runs last on request
+
+app.add_middleware(AuthMiddleware)
+
+session_secret = os.getenv("SESSION_SECRET_KEY", "dev-secret-key-change-in-production")
+app.add_middleware(SessionMiddleware, secret_key=session_secret)
 
 app.add_middleware(
     CORSMiddleware,
@@ -107,7 +120,7 @@ async def test_reset_database() -> tuple[dict[str, str], int] | dict[str, str]:
 
 
 # Register all feature routes
-# app.include_router(auth_router)  # Auth not used
+app.include_router(auth_router)
 app.include_router(ebook_form_router)
 app.include_router(ebook_listing_router)
 app.include_router(ebook_creation_router)
