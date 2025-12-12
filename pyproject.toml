@@ -210,6 +210,7 @@ DEP003 = [
     "torch",            # Optional: local SDXL generation (user installs manually)
     "diffusers",        # Optional: local SDXL generation (user installs manually)
     "starlette",        # Transitive dependency of FastAPI (used for middleware, requests, responses)
+    "tests",            # Tests package imported in src/backoffice/conftest.py for fixture sharing
 ]
 DEP004 = [
     "alembic",          # Used in migrations (dev tool but imported in migration files)
