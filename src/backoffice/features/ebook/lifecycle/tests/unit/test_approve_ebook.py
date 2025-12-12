@@ -196,7 +196,7 @@ class TestApproveEbookUseCase:
     async def test_approve_nonexistent_ebook_raises_error(self, approve_ebook_usecase):
         """Should raise DomainError when ebook doesn't exist."""
         # Act & Assert
-        with pytest.raises(DomainError, match="Ebook with ID 999 not found"):
+        with pytest.raises(DomainError, match="Ebook 999 not found"):
             await approve_ebook_usecase.execute(999)
 
     @pytest.mark.asyncio
@@ -215,7 +215,7 @@ class TestApproveEbookUseCase:
         ebook_repository.add_ebook(rejected_ebook)
 
         # Act & Assert
-        with pytest.raises(DomainError, match="Ebook must be in DRAFT status"):
+        with pytest.raises(DomainError, match="Cannot modify ebook with status"):
             await approve_ebook_usecase.execute(3)
 
     @pytest.mark.asyncio
@@ -234,7 +234,7 @@ class TestApproveEbookUseCase:
         ebook_repository.add_ebook(approved_ebook)
 
         # Act & Assert
-        with pytest.raises(DomainError, match="Ebook must be in DRAFT status"):
+        with pytest.raises(DomainError, match="Cannot modify ebook with status"):
             await approve_ebook_usecase.execute(4)
 
         # Verify the ebook status remains unchanged

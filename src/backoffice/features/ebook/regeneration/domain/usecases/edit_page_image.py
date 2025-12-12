@@ -3,11 +3,11 @@
 import base64
 import logging
 
-from backoffice.features.ebook.shared.domain.entities.ebook import EbookStatus
 from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
 from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.ebook.shared.domain.ports.image_edit_port import ImageEditPort
+from backoffice.features.ebook.shared.domain.services.ebook_validator import EbookValidator
 
 logger = logging.getLogger(__name__)
 
@@ -58,31 +58,10 @@ class EditPageImageUseCase:
         Raises:
             DomainError: If ebook not found, not DRAFT, invalid page index, or edit fails
         """
-        # Retrieve the ebook
+        # Validate ebook (exists + DRAFT status + has structure)
         ebook = await self.ebook_repository.get_by_id(ebook_id)
-        if not ebook:
-            raise DomainError(
-                code=ErrorCode.EBOOK_NOT_FOUND,
-                message=f"Ebook with id {ebook_id} not found",
-                actionable_hint="Verify the ebook ID exists",
-            )
-
-        # Business rule: only DRAFT ebooks can be modified
-        if ebook.status != EbookStatus.DRAFT:
-            raise DomainError(
-                code=ErrorCode.VALIDATION_ERROR,
-                message=f"Cannot edit page for ebook with status {ebook.status.value}",
-                actionable_hint="Only DRAFT ebooks can be modified",
-            )
-
-        # Business rule: ebook must have structure_json with pages metadata
-        if not ebook.structure_json or "pages_meta" not in ebook.structure_json:
-            raise DomainError(
-                code=ErrorCode.VALIDATION_ERROR,
-                message="Cannot edit page: ebook structure is missing",
-                actionable_hint="Please regenerate the entire ebook first",
-            )
-
+        ebook = EbookValidator.validate_for_approval(ebook, ebook_id)
+        assert ebook.structure_json is not None  # Guaranteed by validate_for_approval
         pages_meta = ebook.structure_json["pages_meta"]
 
         # Validate page index (must be between cover and back cover)

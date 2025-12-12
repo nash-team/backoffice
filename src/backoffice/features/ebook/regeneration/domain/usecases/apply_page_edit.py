@@ -13,6 +13,7 @@ from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookS
 from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
+from backoffice.features.ebook.shared.domain.services.ebook_validator import EbookValidator
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -67,30 +68,12 @@ class ApplyPageEditUseCase:
         Raises:
             DomainError: If ebook not found, invalid status, or invalid data
         """
-        # Retrieve the ebook
+        # Validate ebook (exists + editable status + has structure)
+        # Allows DRAFT or APPROVED (will reset to DRAFT after edit)
         ebook = await self.ebook_repository.get_by_id(ebook_id)
-        if not ebook:
-            raise DomainError(
-                code=ErrorCode.EBOOK_NOT_FOUND,
-                message=f"Ebook with id {ebook_id} not found",
-                actionable_hint="Verify the ebook ID exists",
-            )
-
-        # Business rule: only DRAFT ebooks can be modified
-        if ebook.status != EbookStatus.DRAFT:
-            raise DomainError(
-                code=ErrorCode.VALIDATION_ERROR,
-                message=f"Cannot apply edit for ebook with status {ebook.status.value}",
-                actionable_hint="Only DRAFT ebooks can be modified",
-            )
-
-        # Business rule: ebook must have structure_json with pages metadata
-        if not ebook.structure_json or "pages_meta" not in ebook.structure_json:
-            raise DomainError(
-                code=ErrorCode.VALIDATION_ERROR,
-                message="Cannot apply edit: ebook structure is missing",
-                actionable_hint="Please regenerate the entire ebook first",
-            )
+        ebook = EbookValidator.validate_for_regeneration(ebook, ebook_id)
+        # Assert structure_json is valid (guaranteed by validator)
+        assert ebook.structure_json is not None
 
         pages_meta = ebook.structure_json["pages_meta"]
 

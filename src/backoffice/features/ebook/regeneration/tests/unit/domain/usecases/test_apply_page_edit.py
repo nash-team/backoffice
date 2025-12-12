@@ -146,8 +146,8 @@ async def test_apply_page_edit_fails_if_ebook_not_found():
 
 
 @pytest.mark.asyncio
-async def test_apply_page_edit_fails_if_not_draft():
-    """Test apply edit fails if ebook is not DRAFT."""
+async def test_apply_page_edit_fails_if_not_editable():
+    """Test apply edit fails if ebook status is not DRAFT or APPROVED."""
     # Arrange
     ebook_id = 1
     page_index = 1
@@ -158,7 +158,7 @@ async def test_apply_page_edit_fails_if_not_draft():
         title="Test Coloring Book",
         author="Test Author",
         created_at=datetime.now(),
-        status=EbookStatus.APPROVED,  # Not DRAFT
+        status=EbookStatus.REJECTED,  # Not DRAFT or APPROVED
         theme_id="dinosaurs",
         audience="6-8",
     )
@@ -184,7 +184,7 @@ async def test_apply_page_edit_fails_if_not_draft():
         )
 
     assert exc_info.value.code == ErrorCode.VALIDATION_ERROR
-    assert "DRAFT" in str(exc_info.value.actionable_hint)
+    assert "DRAFT" in str(exc_info.value.actionable_hint) or "APPROVED" in str(exc_info.value.actionable_hint)
 
 
 @pytest.mark.asyncio

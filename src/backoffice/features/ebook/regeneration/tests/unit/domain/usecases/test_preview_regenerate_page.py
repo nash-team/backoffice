@@ -274,4 +274,4 @@ async def test_preview_regenerate_page_fails_if_no_structure():
         await use_case.execute(ebook_id=ebook_id, page_index=page_index)
 
     assert exc_info.value.code == ErrorCode.VALIDATION_ERROR
-    assert "structure is missing" in str(exc_info.value.message)
+    assert "no structure data" in str(exc_info.value.message)

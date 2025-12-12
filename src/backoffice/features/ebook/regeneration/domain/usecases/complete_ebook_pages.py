@@ -10,9 +10,9 @@ from backoffice.features.ebook.regeneration.domain.services.regeneration_service
     RegenerationService,
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook
-from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
+from backoffice.features.ebook.shared.domain.services.ebook_validator import EbookValidator
 
 logger = logging.getLogger(__name__)
 
@@ -50,23 +50,11 @@ class CompleteEbookPagesUseCase:
         Raises:
             DomainError: If ebook not found or already has enough pages
         """
-        # 1. Load ebook
+        # Validate ebook (exists + has structure)
         ebook = await self.ebook_repository.get_by_id(ebook_id)
-        if not ebook:
-            raise DomainError(
-                code=ErrorCode.EBOOK_NOT_FOUND,
-                message=f"Ebook with ID {ebook_id} not found",
-                actionable_hint="Verify ebook ID",
-            )
-
-        # 2. Check if ebook has structure
-        if not ebook.structure_json or "pages_meta" not in ebook.structure_json:
-            raise DomainError(
-                code=ErrorCode.VALIDATION_ERROR,
-                message="Ebook has no structure - cannot complete pages",
-                actionable_hint="Generate ebook first",
-            )
-
+        ebook = EbookValidator.validate_exists(ebook, ebook_id)
+        EbookValidator.validate_structure(ebook)
+        assert ebook.structure_json is not None  # Guaranteed by validate_structure
         pages_meta = ebook.structure_json["pages_meta"]
         total_pages = len(pages_meta)
 
@@ -118,6 +106,7 @@ class CompleteEbookPagesUseCase:
         pages_meta.append(back_cover)
 
         # 9. Update ebook structure and page count
+        assert ebook.structure_json is not None  # Still valid from initial validation
         ebook.structure_json["pages_meta"] = pages_meta
         ebook.page_count = len(pages_meta)
 

@@ -13,6 +13,7 @@ from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookS
 from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.ebook.shared.domain.ports.file_storage_port import FileStoragePort
+from backoffice.features.ebook.shared.domain.services.ebook_validator import EbookValidator
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -60,22 +61,9 @@ class ApproveEbookUseCase:
         Raises:
             DomainError: If ebook not found, not in DRAFT status, or upload fails
         """
-        # 1. Load ebook from repository
+        # 1. Load and validate ebook (exists + DRAFT status + has structure)
         ebook = await self.ebook_repository.get_by_id(ebook_id)
-        if not ebook:
-            raise DomainError(
-                code=ErrorCode.EBOOK_NOT_FOUND,
-                message=f"Ebook with ID {ebook_id} not found",
-                actionable_hint="Verify ebook ID",
-            )
-
-        # 2. Validate status (must be DRAFT)
-        if ebook.status != EbookStatus.DRAFT:
-            raise DomainError(
-                code=ErrorCode.VALIDATION_ERROR,
-                message=f"Ebook must be in DRAFT status to approve (current: {ebook.status.value})",
-                actionable_hint="Only DRAFT ebooks can be approved",
-            )
+        ebook = EbookValidator.validate_for_approval(ebook, ebook_id)
 
         # 3. Check storage availability
         if not self.file_storage.is_available():

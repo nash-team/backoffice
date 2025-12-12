@@ -9,11 +9,11 @@ from backoffice.features.ebook.regeneration.domain.services.regeneration_service
     RegenerationService,
 )
 from backoffice.features.ebook.shared.domain.constants import MAX_PAGES
-from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.entities.ebook import Ebook
 from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
-from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
+from backoffice.features.ebook.shared.domain.services.ebook_validator import EbookValidator
 from backoffice.features.ebook.shared.domain.services.page_generation import (
     ContentPageGenerationService,
 )
@@ -69,31 +69,11 @@ class AddNewPagesUseCase:
         Raises:
             DomainError: If ebook not found, not DRAFT, or no structure
         """
-        # 1. Load ebook
+        # Validate ebook (exists + DRAFT status + has structure)
         ebook = await self.ebook_repository.get_by_id(ebook_id)
-        if not ebook:
-            raise DomainError(
-                code=ErrorCode.EBOOK_NOT_FOUND,
-                message=f"Ebook with ID {ebook_id} not found",
-                actionable_hint="Verify ebook ID",
-            )
-
-        # 2. Validate DRAFT status
-        if ebook.status != EbookStatus.DRAFT:
-            raise DomainError(
-                code=ErrorCode.VALIDATION_ERROR,
-                message=f"Cannot add pages to ebook with status {ebook.status.value}",
-                actionable_hint="Only DRAFT ebooks can be modified",
-            )
-
-        # 3. Validate structure exists
-        if not ebook.structure_json or "pages_meta" not in ebook.structure_json:
-            raise DomainError(
-                code=ErrorCode.VALIDATION_ERROR,
-                message="Ebook has no structure - cannot add pages",
-                actionable_hint="Generate ebook first",
-            )
-
+        ebook = EbookValidator.validate_for_approval(ebook, ebook_id)
+        # Assert structure_json is valid (guaranteed by validator)
+        assert ebook.structure_json is not None
         pages_meta = ebook.structure_json["pages_meta"]
         current_total = len(pages_meta)
         current_interior = current_total - 2  # Exclude cover and back cover
@@ -197,6 +177,7 @@ class AddNewPagesUseCase:
         pages_meta.append(back_cover)
 
         # 10. Update ebook structure and page count
+        assert ebook.structure_json is not None  # Still valid from initial validation
         ebook.structure_json["pages_meta"] = pages_meta
         ebook.page_count = len(pages_meta)
 

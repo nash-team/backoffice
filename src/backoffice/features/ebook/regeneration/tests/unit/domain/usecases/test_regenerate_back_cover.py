@@ -10,6 +10,7 @@ from backoffice.features.ebook.regeneration.domain.usecases.regenerate_back_cove
     RegenerateBackCoverUseCase,
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook, EbookStatus
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 
@@ -138,7 +139,7 @@ async def test_regenerate_back_cover_not_pending():
     )
 
     # Act & Assert
-    with pytest.raises(ValueError, match="Only DRAFT ebooks"):
+    with pytest.raises(DomainError, match="Cannot modify ebook with status"):
         await use_case.execute(ebook_id=ebook_id)
 
 
@@ -170,5 +171,5 @@ async def test_regenerate_back_cover_missing_structure():
     )
 
     # Act & Assert
-    with pytest.raises(ValueError, match="structure is missing"):
+    with pytest.raises(DomainError, match="Ebook has no structure data"):
         await use_case.execute(ebook_id=ebook_id)

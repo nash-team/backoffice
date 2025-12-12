@@ -9,9 +9,11 @@ from backoffice.features.ebook.export.domain.protocols import (
     ImageProviderProtocol,
     KDPAssemblyProviderProtocol,
 )
+from backoffice.features.ebook.export.domain.services.kdp_export_validator import (
+    KdpExportValidator,
+)
 from backoffice.features.ebook.shared.domain.entities.ebook import (
     Ebook,
-    EbookStatus,
     KDPExportConfig,
 )
 from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
@@ -64,58 +66,16 @@ class ExportToKDPUseCase:
         Raises:
             DomainError: If ebook not found, not approved, or export fails
         """
-        # 1. Load ebook from repository
+        # 1. Load and validate ebook
         ebook = await self.ebook_repository.get_by_id(ebook_id)
-        if not ebook:
-            raise DomainError(
-                code=ErrorCode.EBOOK_NOT_FOUND,
-                message=f"Ebook with ID {ebook_id} not found",
-                actionable_hint="Verify ebook ID",
-            )
-
-        # 2. Validate status (must be APPROVED for download, DRAFT allowed for preview)
-        if not preview_mode and ebook.status != EbookStatus.APPROVED:
-            raise DomainError(
-                code=ErrorCode.VALIDATION_ERROR,
-                message=(f"Ebook must be APPROVED to download KDP export " f"(current: {ebook.status.value})"),
-                actionable_hint="Only APPROVED ebooks can be downloaded as KDP",
-            )
-
-        # For preview mode, allow DRAFT or APPROVED
-        if preview_mode and ebook.status not in [EbookStatus.DRAFT, EbookStatus.APPROVED]:
-            raise DomainError(
-                code=ErrorCode.VALIDATION_ERROR,
-                message=(f"Ebook must be DRAFT or APPROVED to preview KDP " f"(current: {ebook.status.value})"),
-                actionable_hint="Only DRAFT or APPROVED ebooks can be previewed",
-            )
-
-        # 3. Validate page_count is present
-        if not ebook.page_count:
-            raise DomainError(
-                code=ErrorCode.VALIDATION_ERROR,
-                message="Ebook must have page_count for KDP export",
-                actionable_hint="Regenerate the ebook to populate page_count",
-            )
+        ebook = KdpExportValidator.validate_for_export(ebook, ebook_id, preview_mode, export_type="KDP")
 
         logger.info(f"Exporting ebook {ebook_id} to KDP format: '{ebook.title}' ({ebook.page_count} pages)")
 
-        # 4. Use default KDP config if none provided
-        if kdp_config is None:
-            kdp_config = KDPExportConfig()
+        # 2. Adjust KDP config for short books if needed
+        kdp_config = KdpExportValidator.adjust_config_for_short_books(ebook, kdp_config)
 
-        # 4b. Adjust paper type for short books (premium_color requires 24-828 pages)
-        if ebook.page_count < 24 and kdp_config.paper_type == "premium_color":
-            logger.warning(f"Ebook has {ebook.page_count} pages (< 24), " f"switching from premium_color to standard_color")
-            kdp_config = KDPExportConfig(
-                trim_size=kdp_config.trim_size,
-                bleed_size=kdp_config.bleed_size,
-                paper_type="standard_color",
-                include_barcode=kdp_config.include_barcode,
-                cover_finish=kdp_config.cover_finish,
-                icc_rgb_profile=kdp_config.icc_rgb_profile,
-            )
-
-        # 5. Initialize providers if not injected
+        # 3. Initialize providers if not injected
         if not self.image_provider:
             from backoffice.features.ebook.shared.infrastructure.providers.images.openrouter import (
                 openrouter_image_provider as or_provider,
@@ -130,14 +90,14 @@ class ExportToKDPUseCase:
 
             self.kdp_assembly_provider = kdp_provider.KDPAssemblyProvider()
 
-        # 6. Get front cover bytes (WITH text - for assembly)
+        # 4. Get front cover bytes (WITH text - for assembly)
         front_cover_bytes = await self._get_front_cover_bytes(ebook)
 
-        # 7. Get back cover bytes (already generated in coloring_book_strategy)
+        # 5. Get back cover bytes (already generated in coloring_book_strategy)
         logger.info("Extracting existing back cover from ebook structure...")
         back_cover_bytes = await self._get_back_cover_bytes(ebook)
 
-        # 8. Assemble KDP PDF (back + spine + front)
+        # 6. Assemble KDP PDF (back + spine + front)
         logger.info("Assembling KDP paperback PDF...")
         kdp_pdf_bytes = await self.kdp_assembly_provider.assemble_kdp_paperback(
             ebook=ebook,
@@ -148,14 +108,16 @@ class ExportToKDPUseCase:
 
         logger.info(f"✅ KDP export completed: {len(kdp_pdf_bytes)} bytes")
 
-        # 8b. Visual validation against KDP template
+        # 7. Visual validation against KDP template
+        # Assert page_count is set (guaranteed by KdpExportValidator.validate_for_export)
+        assert ebook.page_count is not None
         await self._validate_cover_against_template(
             back_cover_bytes=back_cover_bytes,
             front_cover_bytes=front_cover_bytes,
             page_count=ebook.page_count,
         )
 
-        # 9. Emit domain event
+        # 8. Emit domain event
         await self.event_bus.publish(
             KDPExportGeneratedEvent(
                 ebook_id=ebook_id,
