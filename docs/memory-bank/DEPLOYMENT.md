@@ -25,7 +25,7 @@
 
 **Test Automation**:
 
-- Unit tests: Run on every push/PR (146 tests, ~1s)
+- Unit tests: Run on every push/PR (287 tests, ~20s)
 - Integration tests: Disabled (fixture import issue)
 - E2E tests: Run on every push/PR (Playwright, Chromium, ~6s)
 
@@ -111,6 +111,11 @@ backoffice/
 ├── tests/
 │   ├── e2e/                # Playwright E2E tests
 │   └── fixtures/           # Shared test data
+├── config/
+│   └── generation/         # AI model configuration
+│       ├── models.yaml     # Provider/model selection
+│       ├── loras/          # LoRA model files (.safetensors)
+│       └── comfy/          # ComfyUI workflow files
 ├── ebooks/                 # Generated ebook storage (local files)
 ├── credentials/            # Google service account JSON
 ├── specs/                  # Ebook generation specs (YAML)
@@ -130,7 +135,6 @@ backoffice/
 
 **Core:**
 - `ENVIRONMENT` - `development` | `staging` | `production`
-- `SECRET_KEY` - JWT signing key (generate: `openssl rand -hex 32`)
 - `DATABASE_URL` - PostgreSQL: `postgresql://user:pass@host:5432/db`
 - `HOST` - Server bind (`127.0.0.1` dev, `0.0.0.0` prod)
 - `PORT` - Server port (default: `8001`)
@@ -138,27 +142,25 @@ backoffice/
 - `APP_VERSION` - Version string
 - `DEBUG` - `True` | `False`
 
-**Security:**
-- `JWT_ALGORITHM` - Default: `HS256`
-- `ACCESS_TOKEN_EXPIRE_MINUTES` - Default: `30`
-
 **AI Services:**
 - `OPENROUTER_API_KEY` - OpenRouter API key for image/text generation
 - `OPENROUTER_BASE_URL` - `https://openrouter.ai/api/v1`
 - `GEMINI_API_KEY` - Google Gemini direct API key (optional)
-- `HF_API_TOKEN` - HuggingFace token for gated models (FLUX.1)
-- `REPLICATE_API_TOKEN` - Replicate API token (alternative provider)
+
+**Google OAuth (Authentication):**
+- `GOOGLE_CLIENT_ID` - OAuth 2.0 Client ID (Web application type)
+- `GOOGLE_CLIENT_SECRET` - OAuth 2.0 Client Secret
+- `SESSION_SECRET_KEY` - Secret key for signing session cookies
 
 **Google Drive (Optional):**
 - `GOOGLE_DRIVE_FOLDER_ID` - Drive folder for ebook backups
 - `GOOGLE_API_KEY` - Google API key
 - `GOOGLE_CREDENTIALS_PATH` - Service account JSON path (default: `credentials/google_credentials.json`)
 
-**Local Stable Diffusion (Optional):**
-- `LOCAL_SD_USE_CPU` - `true` | `false` - Force CPU usage (default: `false`, uses GPU if available)
-- `SDXL_TURBO_STEPS` - SDXL-turbo generation steps (default: `6`, range: 1-10)
-- `SDXL_TURBO_GUIDANCE` - SDXL-turbo guidance scale (default: `0.0`, range: 0.0-2.0)
-- Note: Provider selection configured in @config/generation/models.yaml (covers, coloring_page)
+**Local Image Generation:**
+- Provider selection: @config/generation/models.yaml (covers, coloring_page)
+- Supported providers: `openrouter`, `gemini`, `comfy`, `diffusers`
+- LoRA support: Local .safetensors files for fine-tuned styles
 
 **Local Storage:**
 - `LOCAL_STORAGE_PATH` - Path for local PDF storage (default: `./storage`)
@@ -169,10 +171,7 @@ backoffice/
 
 ### CI Environment Variables
 
-- `SECRET_KEY` - `test-key-for-ci`
 - `DATABASE_URL` - `postgresql://test:test@localhost:5432/test`
-- `ALGORITHM` - `HS256`
-- `ACCESS_TOKEN_EXPIRE_MINUTES` - `30`
 - `GOOGLE_DRIVE_CREDENTIALS_FILE` - From GitHub secrets
 
 ## URLs
@@ -250,7 +249,7 @@ All commands via `make` → @Makefile
 - `make db-status` - Show current migration status and history (`alembic current && alembic history`)
 
 **Testing:**
-- `make test` - Run unit tests only (146 tests, ~1s) - excludes integration/E2E
+- `make test` - Run unit tests only (287 tests, ~20s) - excludes integration/E2E
 - `make test-unit` - Unit tests from all features (`pytest src/backoffice/features/*/tests/unit`)
 - `make test-integration` - ⚠️ Currently disabled (fixture import issue, requires Docker + testcontainers)
 - `make test-smoke` - E2E health check smoke test (Playwright, Chromium, ~6s)
