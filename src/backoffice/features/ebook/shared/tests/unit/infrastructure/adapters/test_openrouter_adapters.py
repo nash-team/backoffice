@@ -66,11 +66,9 @@ class TestOpenRouterImageProvider:
 
     @pytest.mark.asyncio
     async def test_generate_cover_uses_default_model(self, mock_openai_client):
-        """Test that provider uses default model when none specified."""
-        # Arrange
-        with patch.dict("os.environ", {"LLM_IMAGE_MODEL": "google/gemini-custom-image"}):
-            provider = OpenRouterImageProvider()
-
+        """Test that provider uses default Gemini model when none specified."""
+        # Arrange - no model specified, should use default
+        provider = OpenRouterImageProvider()
         provider.client = mock_openai_client
         spec = ImageSpec(width_px=1024, height_px=1024, format="png", color_mode=ColorMode.COLOR)
 
@@ -81,9 +79,9 @@ class TestOpenRouterImageProvider:
         assert result is not None
         assert isinstance(result, bytes)
 
-        # Should use environment variable model
+        # Should use default Gemini model (model selection is in models.yaml)
         call_kwargs = mock_openai_client.chat.completions.create.call_args.kwargs
-        assert call_kwargs["model"] == "google/gemini-custom-image"
+        assert call_kwargs["model"] == "google/gemini-2.5-flash-image-preview"
 
     @pytest.mark.asyncio
     async def test_generate_cover_with_bw_color_mode(self, mock_openai_client):
@@ -163,7 +161,7 @@ class TestOpenRouterImageProvider:
     def test_provider_uses_api_key_from_environment(self):
         """Test that provider loads API key from environment."""
         # Arrange & Act
-        with patch.dict("os.environ", {"LLM_API_KEY": "test-api-key"}):
+        with patch.dict("os.environ", {"OPENROUTER_API_KEY": "test-api-key"}):
             provider = OpenRouterImageProvider()
 
         # Assert - client should be initialized (not None)

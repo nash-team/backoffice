@@ -38,7 +38,7 @@ services:
 
       # API Keys (override with .env file)
       GEMINI_API_KEY: ${GEMINI_API_KEY:-your_gemini_key_here}
-      LLM_API_KEY: ${LLM_API_KEY:-your_llm_key_here}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
 
       # Feature flags for testing
       USE_FAKE_PROVIDERS: ${USE_FAKE_PROVIDERS:-false}

@@ -45,11 +45,10 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         """Initialize OpenRouter provider.
 
         Args:
-            model: Specific model to use (defaults to Gemini 2.5 Flash Image Preview)
+            model: Model to use (from config/generation/models.yaml)
         """
-
-        self.api_key = os.getenv("LLM_API_KEY")
-        self.model = model or os.getenv("LLM_IMAGE_MODEL", "google/gemini-2.5-flash-image-preview") or "google/gemini-2.5-flash-image-preview"
+        self.api_key = os.getenv("OPENROUTER_API_KEY")
+        self.model = model or "google/gemini-2.5-flash-image-preview"
         self.base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
         if self.api_key:
@@ -62,7 +61,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
         else:
             self.client = None
             self.extractor = response_extractor.OpenRouterResponseExtractor(model=self.model)
-            logger.warning("LLM_API_KEY not found")
+            logger.warning("OPENROUTER_API_KEY not found")
 
     def is_available(self) -> bool:
         """Check if provider is available."""
@@ -92,7 +91,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             raise DomainError(
                 code=ErrorCode.MODEL_UNAVAILABLE,
                 message="OpenRouter provider not available",
-                actionable_hint="Configure LLM_API_KEY in .env",
+                actionable_hint="Configure OPENROUTER_API_KEY in .env",
                 context={"provider": "openrouter", "model": self.model},
             )
 
@@ -124,7 +123,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             raise DomainError(
                 code=ErrorCode.PROVIDER_UNAVAILABLE,
                 message="OpenRouter client not initialized (missing API key)",
-                actionable_hint="Set LLM_API_KEY environment variable",
+                actionable_hint="Set OPENROUTER_API_KEY environment variable",
             )
 
         try:
@@ -183,7 +182,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             raise DomainError(
                 code=ErrorCode.PROVIDER_TIMEOUT,
                 message=f"OpenRouter generation failed: {str(e)}",
-                actionable_hint="Check LLM_API_KEY validity and model availability",
+                actionable_hint="Check OPENROUTER_API_KEY validity and model availability",
                 context={"provider": "openrouter", "model": self.model, "error": str(e)},
             ) from e
 
@@ -234,7 +233,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             raise DomainError(
                 code=ErrorCode.MODEL_UNAVAILABLE,
                 message="OpenRouter provider not available",
-                actionable_hint="Configure LLM_API_KEY in .env",
+                actionable_hint="Configure OPENROUTER_API_KEY in .env",
                 context={"provider": "openrouter", "model": self.model},
             )
 
@@ -244,7 +243,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
             raise DomainError(
                 code=ErrorCode.PROVIDER_UNAVAILABLE,
                 message="OpenRouter client not initialized (missing API key)",
-                actionable_hint="Set LLM_API_KEY environment variable",
+                actionable_hint="Set OPENROUTER_API_KEY environment variable",
             )
 
         try:

@@ -296,7 +296,7 @@ cd backoffice
 
 # 2. Copy environment variables (optional, works with defaults)
 cp .env.example .env
-# Edit .env and add your API keys (GEMINI_API_KEY, LLM_API_KEY)
+# Edit .env and add your API keys (GEMINI_API_KEY, OPENROUTER_API_KEY)
 
 # 3. Build and start services
 make docker-up
@@ -351,7 +351,7 @@ SECRET_KEY=dev-secret-key-change-in-production
 
 # API Keys (REQUIRED - add your own keys)
 GEMINI_API_KEY=your_gemini_key_here
-LLM_API_KEY=your_openrouter_key_here
+OPENROUTER_API_KEY=your_openrouter_key_here
 
 # Feature flags for testing
 USE_FAKE_PROVIDERS=false  # Set to "true" to skip real API calls
