@@ -11,7 +11,7 @@
 PY ?= python
 PIP ?= pip
 APP ?= backoffice.main:app
-HOST ?= 127.0.0.1
+HOST ?= localhost
 PORT ?= 8001
 REQ ?= requirements.txt
 
