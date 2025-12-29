@@ -39,7 +39,8 @@ _shared_variables: &shared_variables
   UNICORN:
     - "cute magical unicorn"
     - "unicorn with rainbow mane"
-    - "unicorn with sparkling wings"
+    - "unicorn with wings"
+    - "baby unicorn with wings"
     - "baby unicorn"
     - "elegant unicorn"
     - "playful unicorn"
@@ -49,6 +50,7 @@ _shared_variables: &shared_variables
     - "sleepy unicorn"
     - "curly mane unicorn"
     - "unicorn from the forest with a mushroom hat"
+    - "unicorn from the sky with wings"
     - "unicorn from the water with palmed hoofs or mermaid tail"
     - "unicorn from the volcano with fire mane"
     - "unicorn for the mountain with strong hooves"
@@ -74,6 +76,7 @@ _shared_variables: &shared_variables
     - "playing on clouds"
     - "eating ice cream"
     - "sleeping on a cloud"
+    - "exploring happily"
 
   ENV:
     - "enchanted landscape"
@@ -85,14 +88,15 @@ _shared_variables: &shared_variables
     - "crystal castle background"
     - "snow landscape"
     - "whimsical ice castle"
-    - "quiet volcano river"
+    - "quiet volcano lava river"
     - "snowy mountain"
     - "green plains and valleys"
     - "beautiful meadows"
     - "wild orchard"
     - "whimsical fairy temple ruins"
-    - "unicorn with wings"
+    - "whimsical forest temple ruins"
     - "Snowy mountain with northern lights"
+    - "beautiful canyons"
 
   FOCUS:
     - "head with horn"
@@ -144,42 +148,6 @@ _shared_character_profiles: &shared_character_profiles
   "playful unicorn":
     actions: ["prancing", "playing", "jumping over rainbow", "galloping", "nuzzling flowers", "spreading sparkles"]
     environments: ["magical meadow", "flower garden", "enchanted landscape", "rainbow bridge"]
-
-  "chubby unicorn":
-    actions: ["resting", "eating grass", "eating fruits", "playing", "nuzzling flowers", "sleeping"]
-    environments: ["magical meadow", "flower garden", "enchanted landscape"]
-
-  "3 legged unicorn as an inclusive unicorn":
-    actions: ["prancing", "playing", "resting", "spreading sparkles", "nuzzling flowers"]
-    environments: ["magical meadow", "flower garden", "enchanted landscape", "rainbow bridge"]
-
-  "galloping unicorn":
-    actions: ["galloping", "prancing", "racing with other unicorns and horses friends", "jumping over rainbow"]
-    environments: ["magical meadow", "green plains and valleys", "beautiful meadows", "enchanted landscape"]
-
-  "sleepy unicorn":
-    actions: ["sleeping", "resting", "sleeping on a cloud", "nuzzling flowers"]
-    environments: ["magical meadow", "flower garden", "soft clouds", "enchanted landscape"]
-
-  "curly mane unicorn":
-    actions: ["prancing", "playing", "dancing", "galloping", "spreading sparkles"]
-    environments: ["magical meadow", "flower garden", "enchanted landscape", "crystal castle background"]
-
-  "unicorn from the forest with a mushroom hat":
-    actions: ["prancing", "playing", "resting", "nuzzling flowers", "eating fruits"]
-    environments: ["enchanted landscape", "wild orchard", "flower garden", "whimsical fairy temple ruins"]
-
-  "unicorn from the water with palmed hoofs or mermaid tail":
-    actions: ["playing", "resting", "spreading sparkles", "dancing"]
-    environments: ["enchanted landscape", "quiet volcano river", "flower garden"]
-
-  "unicorn from the volcano with fire mane":
-    actions: ["prancing", "galloping", "spreading sparkles", "dancing"]
-    environments: ["quiet volcano river", "snowy mountain", "enchanted landscape"]
-
-  "unicorn for the mountain with strong hooves":
-    actions: ["galloping", "prancing", "jumping over rainbow", "resting"]
-    environments: ["snowy mountain", "Snowy mountain with northern lights", "green plains and valleys", "enchanted landscape"]
 
 
 # Shared quality settings
