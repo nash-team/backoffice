@@ -33,10 +33,10 @@ models:
     #model: black-forest-labs/flux-schnell
 
     # Option 3: Comfy (FREE, best quality, 17GB disk, 32GB RAM)
-#    provider: comfy
-#    model: cover-page-workflow-flux-2.json
     provider: comfy
-    model: cover-page-workflow-z-image.json
+    model: cover-page-workflow-flux-2.json
+#    provider: comfy
+#    model: cover-page-workflow-z-image.json
 
 #    provider: diffusers
 #    model: "stabilityai/stable-diffusion-xl-base-1.0"
@@ -65,10 +65,10 @@ models:
     #model: google/gemini-2.5-flash-image-preview
 
     # Option 2: Comfy (FREE, best quality, 17GB disk, 32GB RAM)
-#    provider: comfy
-#    model: coloring-page-workflow-flux-2.json
     provider: comfy
-    model: coloring-page-workflow-z-image.json
+    model: coloring-page-workflow-flux-2.json
+#    provider: comfy
+#    model: coloring-page-workflow-z-image.json
 
     # ===== BEST FREE LOCAL SETUP =====
 #    provider: diffusers
