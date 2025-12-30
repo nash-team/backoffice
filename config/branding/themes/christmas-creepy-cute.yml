@@ -13,7 +13,8 @@ cover_templates:
   default:
     prompt_blocks:
       subject: "a cute creepy Christmas Santa creature (friendly skeleton Santa, sweet zombie reindeer, tiny vampire elf, or smiling ghost snowman), centered, expressive eyes, soft spooky aesthetic"
-      environment: "cozy haunted Christmas village with warm lanterns, snowy graveyard with glowing ornaments, inviting toy workshop with fireplace, moonlit forest with twinkling lights and candles"
+      environment: "cozy haunted Christmas village with warm lanterns, snowy graveyard with glowing ornaments, inviting toy workshop with fireplace, moonlit fo
+      rest with twinkling lights and candles"
       tone: "cozy dark, whimsical creepy, Tim Burton inspired, adorable gothic, child-friendly spooky, warm candlelight ambiance, inviting haunted charm"
       positives:
         - "high detail"
@@ -141,7 +142,180 @@ _shared_variables: &shared_variables
     - "3/4 view"
     - "jumping or floating"
 
-# Shared quality settings
+  SECONDARY_ELEMENTS:
+    - "Surrounded by 3-4 small friendly ghosts with rounded shapes, floating."
+    - "A few tiny bats and floating ornaments nearby."
+    - "Small candy canes and skull decorations scattered around."
+    - ""  # Sometimes no secondary elements
+
+# Character-specific profiles for coherent combinations
+_shared_species_profiles: &shared_species_profiles
+  # Skeleton characters
+  "friendly skeleton Santa":
+    secondary_elements:
+      - "Surrounded by 3-4 small skeleton elves with tiny bone decorations."
+      - "Floating skull ornaments and bone candy canes nearby."
+      - "Small dancing skeleton toys around."
+      - ""
+  "cute skeleton elf on the shelf toy wrapper":
+    secondary_elements:
+      - "Surrounded by small skeleton toys and bone-wrapped presents."
+      - "Tiny skull ornaments floating nearby."
+      - ""
+  "cute skeleton elf on the shelf christmas caroler":
+    secondary_elements:
+      - "Surrounded by 2-3 small skeleton carolers with songbooks."
+      - "Floating musical notes and bone decorations."
+      - ""
+
+  # Ghost characters
+  "smiling ghost snowman":
+    secondary_elements:
+      - "Surrounded by 3-4 small friendly ghosts with rounded shapes, floating."
+      - "Wisps of mist and ghostly snowflakes drifting."
+      - ""
+  "smiling ghost nutcracker soldier":
+    secondary_elements:
+      - "Surrounded by 2-3 small ghost soldiers floating in formation."
+      - "Ghostly wisps and floating toy drums nearby."
+      - ""
+  "smiling ghost elf on the shelf":
+    secondary_elements:
+      - "Surrounded by 3-4 small friendly ghosts with rounded shapes, floating."
+      - "Ghostly wisps and transparent ornaments drifting."
+      - ""
+  "smiling ghost reindeer":
+    secondary_elements:
+      - "Surrounded by 2-3 small ghost reindeer floating gracefully."
+      - "Misty trails and ghostly snowflakes."
+      - ""
+  "smiling ghost gingerbread character":
+    secondary_elements:
+      - "Surrounded by 3-4 small ghost cookies floating."
+      - "Ghostly wisps of frosting and transparent candy."
+      - ""
+
+  # Zombie characters
+  "friendly zombie Santa":
+    secondary_elements:
+      - "Surrounded by 3-4 small zombie elves with stitches."
+      - "Scattered zombie cookies and wrapped presents with bite marks."
+      - ""
+  "adorable zombie reindeer":
+    secondary_elements:
+      - "Surrounded by 2-3 small zombie woodland creatures."
+      - "Scattered bones and zombie carrots nearby."
+      - ""
+  "adorable zombie elf on the shelf":
+    secondary_elements:
+      - "Surrounded by 3-4 small zombie toys with stitches."
+      - "Scattered candy with bite marks and zombie cookies."
+      - ""
+  "adorable zombie nutcracker soldier":
+    secondary_elements:
+      - "Surrounded by 2-3 small zombie toy soldiers."
+      - "Scattered nuts and zombie drumsticks nearby."
+      - ""
+  "adorable zombie sugar plum fairy":
+    secondary_elements:
+      - "Surrounded by 3-4 small zombie fairies with tattered wings."
+      - "Floating zombie sugar plums and wilted flowers."
+      - ""
+  "adorable zombie snowman":
+    secondary_elements:
+      - "Surrounded by 2-3 small zombie snowmen with crooked smiles."
+      - "Melting snowflakes and zombie carrots nearby."
+      - ""
+  "adorable zombie gingerbread character":
+    secondary_elements:
+      - "Surrounded by 3-4 small zombie cookies with bite marks."
+      - "Scattered zombie candy and frosting drips."
+      - ""
+  "adorable zombie Pinocchio style wooden boy":
+    secondary_elements:
+      - "Surrounded by 2-3 small zombie wooden toys."
+      - "Scattered wooden limbs and zombie puppets."
+      - ""
+  "cute zombie elf on the shelf christmas caroler":
+    secondary_elements:
+      - "Surrounded by 2-3 small zombie carolers with songbooks."
+      - "Floating zombie musical notes and tattered sheet music."
+      - ""
+  "cute zombie reindeer christmas caroler":
+    secondary_elements:
+      - "Surrounded by 2-3 small zombie reindeer carolers."
+      - "Floating musical notes and zombie jingle bells."
+      - ""
+  "cute zombie gingerbread character christmas caroler":
+    secondary_elements:
+      - "Surrounded by 2-3 small zombie cookie carolers."
+      - "Floating musical notes and cookie crumbs."
+      - ""
+  "cute zombie christmas caroler":
+    secondary_elements:
+      - "Surrounded by 3-4 small zombie carolers with festive hats."
+      - "Floating zombie musical notes and tattered songbooks."
+      - ""
+  "cute Zombie toy maker":
+    secondary_elements:
+      - "Surrounded by 2-3 small zombie toy helpers."
+      - "Scattered zombie tools and half-made toys."
+      - ""
+
+  # Krampus characters
+  "friendly Krampus Santa":
+    secondary_elements:
+      - "Surrounded by 2-3 small mischievous imps with tiny horns."
+      - "Scattered chains and rustic bells nearby."
+      - ""
+  "gentle Krampus with tiny horns":
+    secondary_elements:
+      - "Surrounded by 2-3 small friendly imps playing."
+      - "Scattered birch twigs and rustic ornaments."
+      - ""
+  "cute Krampus christmas caroler":
+    secondary_elements:
+      - "Surrounded by 2-3 small imp carolers with songbooks."
+      - "Floating musical notes and rustic bells."
+      - ""
+  "cute Krampus toy maker":
+    secondary_elements:
+      - "Surrounded by 2-3 small imp helpers with tools."
+      - "Scattered rustic toys and wooden crafts."
+      - ""
+
+  # Gingerbread characters
+  "friendly gingerbread character Santa":
+    secondary_elements:
+      - "Surrounded by 3-4 small gingerbread helpers with frosting details."
+      - "Scattered candy canes and gumdrop decorations."
+      - ""
+  "clumsy gingerbread character toy maker":
+    secondary_elements:
+      - "Surrounded by 2-3 small gingerbread helpers making toys."
+      - "Scattered cookie crumbs and candy tools."
+      - ""
+
+  # Vampire characters
+  "friendly vampire Santa":
+    secondary_elements:
+      - "Surrounded by 2-3 small vampire bats with festive bows."
+      - "Floating gothic ornaments and red ribbons."
+      - ""
+
+  # Other characters
+  "friendly reindeer Santa":
+    secondary_elements:
+      - "Surrounded by 2-3 small festive reindeer with jingle bells."
+      - "Floating snowflakes and candy canes."
+      - ""
+  "gothic Emo Elf on the shelf":
+    secondary_elements:
+      - "Surrounded by 2-3 small gothic ornaments and dark ribbons."
+      - "Floating black snowflakes and tiny skulls."
+      - ""
+
+# Shared quality settings (legacy fallback)
 _shared_quality_settings: &shared_quality_settings |
   Black and white line art coloring page style.
   ONLY black lines on white background. NO colors. NO gray shading.
@@ -151,14 +325,51 @@ _shared_quality_settings: &shared_quality_settings |
   Printable 300 DPI, simple-to-medium detail (kids 4-8).
   No text, no logo, no watermark.
 
+# Audience-specific quality profiles
+_quality_children: &quality_children
+  prefix: |
+    Children's coloring book page, clean black and white line art.
+    Single main character centered:
+  suffix: |
+    Very simple face, no inner textures, no shading, no skeleton or internal anatomy visible.
+    {SECONDARY_ELEMENTS}
+    Background: minimal details, large open spaces for easy coloring.
+    Thick bold outlines, uniform line weight.
+    Clear closed shapes for easy coloring.
+    No cross-hatching, no gradients, no background clutter.
+    High contrast, printable coloring book style.
+    ONLY black lines on white background. NO colors. NO gray shading.
+    No text, no logo, no watermark.
+    Kid-friendly, ages 4-7.
+
+_quality_adults: &quality_adults
+  prefix: |
+    Adult coloring book page, detailed black and white line art.
+    Main subject centered:
+  suffix: |
+    {SECONDARY_ELEMENTS}
+    Intricate patterns and fine line details welcome.
+    Varied line weights for depth and visual interest.
+    Background can include decorative patterns and textures (in line art only).
+    Cross-hatching and line textures allowed for shading effects.
+    Complex shapes with smaller areas to color.
+    High contrast, printable coloring book style.
+    ONLY black lines on white background. NO colors. NO gray shading.
+    No text, no logo, no watermark.
+    Sophisticated aesthetic for adults.
+
 # ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
 # ==========================================
 coloring_page_templates:
   default:
-    base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+    base_structure: "a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
     variables: *shared_variables
     quality_settings: *shared_quality_settings
+    quality_settings_by_audience:
+      children: *quality_children
+      adults: *quality_adults
+    species_profiles: *shared_species_profiles
 
   diffusers:
     # Compact prompt for SDXL/CLIP (max 77 tokens) - template variables are NOT expanded
@@ -169,11 +380,14 @@ coloring_page_templates:
       guidance_scale: "9.0"
       steps: "35"
 
-
   comfy:
-    base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+    base_structure: "a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
     variables: *shared_variables
     quality_settings: *shared_quality_settings
+    quality_settings_by_audience:
+      children: *quality_children
+      adults: *quality_adults
+    species_profiles: *shared_species_profiles
 
     workflow_params:
       "47": "color, shading, text, watermark, gore, blood, frightening"

@@ -18,20 +18,35 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CharacterProfile:
-    """Profile defining valid actions and environments for a character/species.
+    """Profile defining valid actions, environments, and secondary elements for a character/species.
 
     Used to prevent incoherent combinations like:
     - "T-Rex flying" (dinosaurs)
     - "baby unicorn flying" (only winged unicorns fly)
     - "parrot steering ship" (parrots can't steer)
+    - "skeleton elf surrounded by zombies" (should be skeleton-themed elements)
     """
 
     actions: list[str]
     environments: list[str]
+    secondary_elements: list[str] | None = None
 
 
 # Backward compatibility alias
 SpeciesProfile = CharacterProfile
+
+
+@dataclass
+class AudienceQualityProfile:
+    """Quality profile for a specific audience (children or adults).
+
+    Attributes:
+        prefix: Text prepended to the prompt (e.g., "Children's coloring book page...")
+        suffix: Technical constraints appended (e.g., "Thick bold outlines, no gradients...")
+    """
+
+    prefix: str
+    suffix: str
 
 
 @dataclass
@@ -41,9 +56,10 @@ class PromptTemplate:
     Attributes:
         base_structure: Base prompt structure with {VARIABLE} placeholders
         variables: Dict of variable names to list of possible values
-        quality_settings: Common quality/technical requirements
+        quality_settings: Common quality/technical requirements (fallback)
         workflow_params: Free-form dict for workflow-specific params (ComfyUI, etc.)
         species_profiles: Optional dict mapping species to their valid actions/environments
+        quality_settings_by_audience: Optional dict mapping audience to quality profile
     """
 
     base_structure: str
@@ -51,6 +67,7 @@ class PromptTemplate:
     quality_settings: str
     workflow_params: dict[str, str | float | int] | None = None
     species_profiles: dict[str, SpeciesProfile] | None = None
+    quality_settings_by_audience: dict[str, AudienceQualityProfile] | None = None
 
 
 class PromptTemplateEngine:
@@ -162,15 +179,28 @@ class PromptTemplateEngine:
                     species_profiles[species_name] = SpeciesProfile(
                         actions=profile_data.get("actions", []),
                         environments=profile_data.get("environments", []),
+                        secondary_elements=profile_data.get("secondary_elements"),
                     )
                 logger.info(f"Loaded species_profiles with {len(species_profiles)} species")
+
+            # Parse quality_settings_by_audience if present (for audience-specific prompts)
+            quality_settings_by_audience = None
+            if "quality_settings_by_audience" in template_data:
+                quality_settings_by_audience = {}
+                for audience_key, profile_data in template_data["quality_settings_by_audience"].items():
+                    quality_settings_by_audience[audience_key] = AudienceQualityProfile(
+                        prefix=profile_data.get("prefix", ""),
+                        suffix=profile_data.get("suffix", ""),
+                    )
+                logger.info(f"Loaded quality_settings_by_audience with {len(quality_settings_by_audience)} profiles")
 
             return PromptTemplate(
                 base_structure=template_data["base_structure"],
                 variables=template_data["variables"],
-                quality_settings=template_data["quality_settings"],
+                quality_settings=template_data.get("quality_settings", ""),
                 workflow_params=template_data.get("workflow_params", None),
                 species_profiles=species_profiles,
+                quality_settings_by_audience=quality_settings_by_audience,
             )
 
     def generate_prompts(
@@ -316,6 +346,9 @@ class PromptTemplateEngine:
         Uses species_profiles (if defined) to ensure semantically valid combinations.
         For example, prevents "T-Rex flying" or "Pteranodon swimming".
 
+        Uses quality_settings_by_audience (if defined) for audience-specific prompt structure.
+        Falls back to quality_settings for backward compatibility.
+
         Args:
             template: Template to use
             index: Index of prompt (for variation)
@@ -326,22 +359,13 @@ class PromptTemplateEngine:
         """
         # Create a copy of base structure
         prompt = template.base_structure
-
-        # Add a short audience hint to steer the model
-        if audience:
-            audience_hints = {
-                "children": "For a children's coloring book: simple bold lines, clear shapes, kid-friendly composition.",
-                "adults": "For an adult coloring book: intricate, elegant line work with rich details.",
-            }
-            hint = audience_hints.get(audience.lower())
-            if hint:
-                prompt = f"{prompt} {hint}"
+        chosen_character_profile: CharacterProfile | None = None
 
         # If species_profiles exist, use constrained selection
         # Auto-detect which variable the profiles apply to (SPECIES, UNICORN, CHARACTER, etc.)
         profile_var = self._find_profile_variable(template)
         if template.species_profiles and profile_var:
-            prompt = self._generate_with_character_constraints(template, prompt, index, profile_var)
+            prompt, chosen_character_profile = self._generate_with_character_constraints_v2(template, prompt, index, profile_var)
         else:
             # Original behavior: independent random selection (backward compatible)
             for var_name, options in template.variables.items():
@@ -350,13 +374,74 @@ class PromptTemplateEngine:
                     choice = self._choose_value(options, index, var_name)
                     prompt = prompt.replace(placeholder, choice)
 
-        # Add quality settings (no age-specific customization needed)
-        # Quality is defined in theme YAML and applies to audience
-        quality = template.quality_settings
-
-        full_prompt = f"{prompt} {quality}"
+        # Build final prompt with audience-specific quality settings
+        full_prompt = self._apply_quality_settings(template, prompt, audience, index, chosen_character_profile)
 
         return full_prompt
+
+    def _apply_quality_settings(
+        self,
+        template: PromptTemplate,
+        prompt: str,
+        audience: str | None,
+        index: int = 0,
+        character_profile: CharacterProfile | None = None,
+    ) -> str:
+        """Apply quality settings based on audience.
+
+        Uses quality_settings_by_audience if available, otherwise falls back to quality_settings.
+        Uses character_profile.secondary_elements if available for coherent secondary elements.
+
+        Args:
+            template: Template with quality settings
+            prompt: Base prompt with variables replaced
+            audience: Target audience ("children" or "adults"), defaults to "children"
+            index: Page index for variable selection in suffix
+            character_profile: Optional CharacterProfile with character-specific secondary_elements
+
+        Returns:
+            Full prompt with quality settings applied
+        """
+        # Check if audience-specific profiles exist
+        if template.quality_settings_by_audience:
+            # Normalize audience, default to children
+            audience_key = (audience or "children").lower()
+
+            # Get profile for requested audience, fallback to children
+            profile: AudienceQualityProfile | None = None
+            if audience_key in template.quality_settings_by_audience:
+                profile = template.quality_settings_by_audience[audience_key]
+            elif "children" in template.quality_settings_by_audience:
+                logger.warning(f"Audience profile '{audience_key}' not found, falling back to 'children'")
+                profile = template.quality_settings_by_audience["children"]
+
+            if profile is not None:
+                # Replace variables in suffix (e.g., {SECONDARY_ELEMENTS})
+                suffix = profile.suffix
+                for var_name, options in template.variables.items():
+                    placeholder = f"{{{var_name}}}"
+                    if placeholder in suffix:
+                        # Use character-specific secondary_elements if available
+                        if var_name == "SECONDARY_ELEMENTS" and character_profile and character_profile.secondary_elements:
+                            options = character_profile.secondary_elements
+                        choice = self._choose_value(options, index, var_name)
+                        suffix = suffix.replace(placeholder, choice)
+
+                # Build prompt: prefix + base_prompt + suffix
+                return f"{profile.prefix} {prompt} {suffix}".strip()
+
+        # Fallback: use legacy quality_settings (backward compatible)
+        # Also add a short audience hint for legacy templates
+        if audience:
+            audience_hints = {
+                "children": "For a children's coloring book: simple bold lines, clear shapes, kid-friendly composition.",
+                "adults": "For an adult coloring book: intricate, elegant line work with rich details.",
+            }
+            hint = audience_hints.get(audience.lower(), "")
+            if hint:
+                prompt = f"{prompt} {hint}"
+
+        return f"{prompt} {template.quality_settings}".strip()
 
     def _find_profile_variable(self, template: PromptTemplate) -> str | None:
         """Find which variable the species_profiles keys match.
@@ -436,6 +521,59 @@ class PromptTemplateEngine:
                 prompt = prompt.replace(placeholder, choice)
 
         return prompt
+
+    def _generate_with_character_constraints_v2(self, template: PromptTemplate, prompt: str, index: int, profile_var: str) -> tuple[str, CharacterProfile | None]:
+        """Generate prompt with character-specific constraints, returning the chosen profile.
+
+        Same as _generate_with_character_constraints but also returns the CharacterProfile
+        so that secondary_elements can be used in quality settings.
+
+        Args:
+            template: Template with species_profiles
+            prompt: Base prompt string
+            index: Page index for deterministic variation
+            profile_var: Name of the variable that profiles apply to
+
+        Returns:
+            Tuple of (prompt with variables replaced, chosen CharacterProfile or None)
+        """
+        # Step 1: Choose character from profile variable
+        character_options = template.variables[profile_var]
+        chosen_character = self._choose_value(character_options, index, profile_var)
+        prompt = prompt.replace(f"{{{profile_var}}}", chosen_character)
+
+        # Step 2: Get profile for this character (or use full lists as fallback)
+        profile = template.species_profiles.get(chosen_character) if template.species_profiles else None
+
+        # Step 3: Replace ACTION with character-valid options
+        if "{ACTION}" in prompt and "ACTION" in template.variables:
+            if profile and profile.actions:
+                action_options = profile.actions
+            else:
+                action_options = template.variables["ACTION"]
+            chosen_action = self._choose_value(action_options, index, "ACTION")
+            prompt = prompt.replace("{ACTION}", chosen_action)
+
+        # Step 4: Replace ENV with character-valid options
+        if "{ENV}" in prompt and "ENV" in template.variables:
+            if profile and profile.environments:
+                env_options = profile.environments
+            else:
+                env_options = template.variables["ENV"]
+            chosen_env = self._choose_value(env_options, index, "ENV")
+            prompt = prompt.replace("{ENV}", chosen_env)
+
+        # Step 5: Replace remaining variables normally (SHOT, FOCUS, COMPOSITION, etc.)
+        # Skip SECONDARY_ELEMENTS - it will be handled in _apply_quality_settings
+        for var_name, options in template.variables.items():
+            if var_name in (profile_var, "ACTION", "ENV", "SECONDARY_ELEMENTS"):
+                continue  # Already handled or handled later
+            placeholder = f"{{{var_name}}}"
+            if placeholder in prompt:
+                choice = self._choose_value(options, index, var_name)
+                prompt = prompt.replace(placeholder, choice)
+
+        return prompt, profile
 
     def _choose_value(self, options: list[str], index: int, var_name: str) -> str:
         """Choose value from options with deterministic randomness.
