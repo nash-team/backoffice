@@ -143,11 +143,13 @@ class PromptTemplateEngine:
         elif "prompt" in template_data:
             # Direct prompt (for diffusers/SDXL with short CLIP-friendly prompts)
             # Works for both cover and coloring_page templates
-            logger.info(f"Using direct prompt for {template_type} (no variable expansion)")
+            # Still include quality_settings if defined (for hybrid templates)
+            quality_settings = template_data.get("quality_settings", "")
+            logger.info(f"Using direct prompt for {template_type} (no variable expansion, quality_settings={'yes' if quality_settings else 'no'})")
             return PromptTemplate(
                 base_structure=template_data["prompt"],
                 variables={},  # No variables = prompt used as-is
-                quality_settings="",  # Already included in prompt
+                quality_settings=quality_settings,
                 workflow_params=template_data.get("workflow_params", None),
             )
         else:
