@@ -25,9 +25,9 @@ def upgrade() -> None:
     - book_memory: 0 records, no code references
     - orchestrator_config: 1 orphaned record, no code references
     """
-    # Drop unused tables IF EXISTS (safe for fresh DBs like Supabase)
-    op.execute(sa.text("DROP TABLE IF EXISTS book_memory"))
-    op.execute(sa.text("DROP TABLE IF EXISTS orchestrator_config"))
+    # Drop unused tables (no foreign key dependencies)
+    # op.drop_table("book_memory")
+    # op.drop_table("orchestrator_config")
 
 
 def downgrade() -> None:

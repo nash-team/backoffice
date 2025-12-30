@@ -65,3 +65,4 @@ aidd-docs/
 aidd-generated/
 
 # </AIDD-PRIVACY>*.safetensors
+/postgres_data/

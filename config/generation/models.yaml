@@ -33,16 +33,18 @@ models:
     #model: black-forest-labs/flux-schnell
 
     # Option 3: Comfy (FREE, best quality, 17GB disk, 32GB RAM)
-    #provider: comfy
-    #model: cover-page-workflow-flux-2.json
+#    provider: comfy
+#    model: cover-page-workflow-flux-2.json
+    provider: comfy
+    model: cover-page-workflow-z-image.json
 
-    provider: diffusers
-    model: "stabilityai/stable-diffusion-xl-base-1.0"
+#    provider: diffusers
+#    model: "stabilityai/stable-diffusion-xl-base-1.0"
 
     # Optional enhancements
-    controlnet: null          # no controlnet for covers
-    lora: null                # optional: local path or HF ID
-    lora_weight: 0.7
+#    controlnet: null          # no controlnet for covers
+#    lora: null                # optional: local path or HF ID
+#    lora_weight: 0.7
 
   # ========================================
   # CONTENT PAGE GENERATION (Coloring Pages)
@@ -63,23 +65,25 @@ models:
     #model: google/gemini-2.5-flash-image-preview
 
     # Option 2: Comfy (FREE, best quality, 17GB disk, 32GB RAM)
-    #provider: comfy
-    #model: coloring-page-workflow-flux-2.json
+#    provider: comfy
+#    model: coloring-page-workflow-flux-2.json
+    provider: comfy
+    model: coloring-page-workflow-z-image.json
 
     # ===== BEST FREE LOCAL SETUP =====
-    provider: diffusers
+#    provider: diffusers
 
     # SDXL base (or use a fine-tuned checkpoint for better line art)
     # Options:
     #   - stabilityai/stable-diffusion-xl-base-1.0  (default, general purpose)
-    model: "stabilityai/stable-diffusion-xl-base-1.0"
+#    model: "stabilityai/stable-diffusion-xl-base-1.0"
 
     # ControlNet: NOT YET SUPPORTED (txt2img only for now)
     # controlnet: "diffusers/controlnet-canny-sdxl-1.0"
 
     # LoRA for coloring book style (ColoringBook Redmond - trigger: ColoringBookAF)
-    lora: "config/generation/loras/ColoringBookRedmond-ColoringBook-ColoringBookAF.safetensors"
-    lora_weight: 0.8
+#    lora: "config/generation/loras/ColoringBookRedmond-ColoringBook-ColoringBookAF.safetensors"
+#    lora_weight: 0.8
 
 
 # ========================================

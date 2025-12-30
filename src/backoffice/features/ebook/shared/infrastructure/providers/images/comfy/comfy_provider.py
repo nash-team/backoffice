@@ -174,7 +174,15 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 context={"provider": "comfy", "model": self.model},
             )
 
-        self.workflow["25"]["inputs"]["noise_seed"] = seed
+        if prompt:
+            logger.info(f"Generate image (COMFY=>{self.model}) using this prompt: \n*****\n{prompt}\n******")
+
+        # "noise_seed" if flux-2 otherwise "seed" (if z-image)
+        if self.workflow["25"]["inputs"].get("noise_seed", None):
+            self.workflow["25"]["inputs"]["noise_seed"] = seed
+        else:
+            self.workflow["25"]["inputs"]["seed"] = seed
+
         self.workflow["6"]["inputs"]["text"] = prompt
 
         # Inject workflow params (e.g., negative prompt in node 47)
@@ -241,6 +249,10 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 context={"provider": "comfy", "model": self.model},
             )
 
+        if prompt:
+            logger.info(f"Generate image (COMFY=>{self.model}) using this prompt: \n*****\n{prompt}\n******")
+
+
         self._retrieve_workflow(cover=False)
 
         if self.workflow is None:
@@ -250,22 +262,20 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 actionable_hint="Check workflow JSON file",
                 context={"provider": "comfy", "model": self.model},
             )
+        # "noise_seed" if flux-2 otherwise "seed" (if z-image)
+        if self.workflow["25"]["inputs"].get("noise_seed", None):
+            self.workflow["25"]["inputs"]["noise_seed"] = seed
+        else:
+            self.workflow["25"]["inputs"]["seed"] = seed
 
-        self.workflow["25"]["inputs"]["noise_seed"] = seed
-
-        # put the seed for random prompts
-        prompt_seed = random.randint(0, 2048)
-        self.workflow["63"]["inputs"]["seed"] = prompt_seed
-
-        # Coloring page workflow dual clip random prompts (clip_l and t5xxl)
-
-        # self.workflow["63"]["inputs"]["text"] = workflow_params["prompt"]
-        self.workflow["63"]["inputs"]["text"] = prompt
-        # self.workflow["51"]["inputs"]["text"] = workflow_params["prompt_2"]
-
-        # Inject workflow params (e.g., negative prompt in node 47)
-        # if workflow_params and "47" in workflow_params:
-        #     self.workflow["47"]["inputs"]["text"] = workflow_params["negative"]
+        # if this is the flux-2 workflow
+        if self.workflow.get("63", None):
+            # put the seed for random prompts
+            prompt_seed = random.randint(0, 2048)
+            self.workflow["63"]["inputs"]["seed"] = prompt_seed
+            self.workflow["63"]["inputs"]["text"] = prompt
+        else:
+            self.workflow["6"]["inputs"]["text"] = prompt
 
         try:
             ws = websocket.WebSocket()

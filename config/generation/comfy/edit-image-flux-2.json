@@ -192,15 +192,6 @@
       "title": "Scale Image to Total Pixels"
     }
   },
-  "46": {
-    "inputs": {
-      "image": "ComfyUI_temp_zknsx_00002_.png"
-    },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "Load Image"
-    }
-  },
   "47": {
     "inputs": {
       "width": 1024,
