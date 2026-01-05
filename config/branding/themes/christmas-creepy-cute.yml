@@ -116,19 +116,19 @@ _shared_variables: &shared_variables
     # Role-specific actions are defined in species_profiles below
 
   ENV:
-    - "cozy haunted cottage with fireplace and Christmas lights"
-    - "warm candlelit cemetery with festive ornaments and christmas trees"
-    - "inviting toy workshop with tools and toy parts"
-    - "snowy village with street lights and christmas decorations"
-    - "christmas fireplace with crackling fire and creepy stockings inside a cosy house"
-    - "warm attic filled with vintage Christmas decorations"
-    - "warm and cosy kitchen inside a cosy home from where you can see the snowy street from the window"
-    - "moonlit snowy rooftop with stars in the sky"
-    - "friendly North Pole village with northern lights"
-    - "Night sky with the moon and stars"
-    - "Main street on a cute snowy village"
-    - "City hall place of a snowy cute village"
-    - "Christmas market on a cute snowy village"
+    - "simple cozy haunted cottage with fireplace and a few Christmas lights"
+    - "simple warm candlelit cemetery with a few ornaments and one christmas tree"
+    - "simple toy workshop with a few tools and toy parts"
+    - "simple snowy village street with 1-2 houses and a street light"
+    - "simple christmas fireplace with stockings inside a cosy house"
+    - "simple warm attic with a few vintage Christmas decorations"
+    - "simple cosy kitchen with a window and a hint of snowy street"
+    - "simple moonlit snowy rooftop with a few stars"
+    - "simple North Pole village with 1-2 houses and northern lights"
+    - "simple night sky with the moon and a few stars"
+    - "simple main street with 1-2 stalls in a cute snowy village"
+    - "simple city hall facade in a snowy cute village"
+    - "simple Christmas market stall in a cute snowy village"
 
   FOCUS:
     - "centered in frame"
@@ -595,7 +595,7 @@ _quality_children: &quality_children
   suffix: |
     Very simple face, no inner textures, no shading, no skeleton or internal anatomy visible.
     {SECONDARY_ELEMENTS}
-    Background: minimal scene elements only, large open spaces for easy coloring.
+    Background: minimal scene elements only, large open spaces for easy coloring, no full buildings or detailed scenes.
     NO FRAME, NO BORDER, NO VIGNETTE around the illustration.
     Thick bold outlines, uniform line weight.
     Clear closed shapes for easy coloring.
