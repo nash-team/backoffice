@@ -74,6 +74,7 @@ _shared_variables: &shared_variables
     - "friendly gingerbread Santa"
     # Caroler variants (singing) - 3 chars only (was too many)
     - "cute zombie gingerbread christmas caroler"
+    - "cute zombie elf on the shelf christmas caroler"
     - "cute ghost christmas caroler"
     - "cute Krampus christmas caroler"
     # Toy maker variants (crafting) - 4 chars
@@ -108,10 +109,8 @@ _shared_variables: &shared_variables
   ACTION:
     # Generic actions (for any character)
     - "carrying spooky Christmas gifts with patterned wrap"
-    - "decorating a creepy-cute Christmas tree"
     - "dancing with friendly ghosts"
     - "wrapping oddly shaped presents"
-    - "hanging creepy but cute ornaments"
     - "playing with haunted toys"
     - "riding a misty sleigh"
     # Role-specific actions are defined in species_profiles below
@@ -188,6 +187,21 @@ _shared_species_profiles: &shared_species_profiles
     secondary_elements:
       - "Surrounded by 2-3 small zombie cookie carolers."
       - "Floating musical notes and cookie crumbs."
+      - ""
+
+  "cute zombie elf on the shelf christmas caroler":
+    actions:
+      - "singing eerie cheerful christmas carols"
+      - "holding a songbook and singing"
+      - "caroling with floating musical notes"
+    environments:
+      - "snowy village with street lights and christmas decorations"
+      - "Main street on a cute snowy village"
+      - "Christmas market on a cute snowy village"
+      - "City hall place of a snowy cute village"
+    secondary_elements:
+      - "Surrounded by 2-3 small zombie elf carolers with stitches."
+      - "Floating musical notes and tiny bells."
       - ""
 
   "cute ghost christmas caroler":
