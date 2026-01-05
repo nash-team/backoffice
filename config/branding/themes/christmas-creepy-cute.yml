@@ -63,22 +63,40 @@ _shared_variables: &shared_variables
     - "close-up"
     - "medium shot"
     - "wide shot"
-    - "full atmospheric scene"
 
   CHARACTER:
-    - "friendly skeleton Santa"
+    # Santa variants (delivering gifts) - 6 chars
+    - "friendly sugar-skull styled Santa"
     - "friendly reindeer Santa"
-    - "friendly vampire Santa"
-    - "friendly zombie Santa"
+    - "friendly vampire Santa with tiny fangs"
+    - "friendly zombie Santa with cute stitches"
     - "friendly Krampus Santa"
-    - "friendly gingerbread character Santa"
+    - "friendly gingerbread Santa"
+    # Caroler variants (singing) - 3 chars only (was too many)
+    - "cute zombie gingerbread christmas caroler"
+    - "cute ghost christmas caroler"
+    - "cute Krampus christmas caroler"
+    # Toy maker variants (crafting) - 4 chars
+    - "cute sugar-skull styled elf toy maker"
+    - "clumsy gingerbread toy maker"
+    - "cute Krampus toy maker"
+    - "cute zombie toy maker"
+    # Baker variants (baking cookies) - 3 chars NEW
+    - "cheerful zombie gingerbread baker"
+    - "cute ghost baker with apron"
+    - "friendly vampire baker"
+    # Decorator variants (decorating) - 3 chars NEW
+    - "adorable zombie elf decorator"
+    - "cute ghost snowman decorator"
+    - "friendly Krampus decorator"
+    # Generic creepy cute characters (any action) - 10 chars
     - "adorable zombie reindeer"
     - "adorable zombie elf on the shelf"
     - "adorable zombie nutcracker soldier"
     - "adorable zombie sugar plum fairy"
     - "adorable zombie snowman"
     - "adorable zombie gingerbread character"
-    - "adorable zombie Pinocchio style wooden boy"
+    - "adorable zombie wooden boy"
     - "smiling ghost snowman"
     - "smiling ghost nutcracker soldier"
     - "smiling ghost elf on the shelf"
@@ -86,35 +104,22 @@ _shared_variables: &shared_variables
     - "smiling ghost gingerbread character"
     - "gothic Emo Elf on the shelf"
     - "gentle Krampus with tiny horns"
-    - "cute skeleton elf on the shelf toy wrapper"
-    - "cute skeleton elf on the shelf christmas caroler"
-    - "cute zombie elf on the shelf christmas caroler"
-    - "cute zombie reindeer christmas caroler"
-    - "cute zombie gingerbread character christmas caroler"
-    - "cute Krampus christmas caroler"
-    - "cute zombie christmas caroler"
-    - "clumsy gingerbread character toy maker"
-    - "cute Krampus toy maker"
-    - "cute Zombie toy maker"
 
   ACTION:
-    - "carrying spooky Christmas gifts with a little skull paper wrap "
-    - "decorating a creepy-cute Christmas tree adorned with bone garland and skull balls"
+    # Generic actions (for any character)
+    - "carrying spooky Christmas gifts with patterned wrap"
+    - "decorating a creepy-cute Christmas tree"
     - "dancing with friendly ghosts"
-    - "flying over rooftops and dropping spooky gifts in the chimney"
-    - "baking cute creepy cookies in a messy but cute kitchen"
-    - "singing eerie cheerful christmas carols with notes dancing in the air"
-    - "wrapping creepy shaped presents - like a limb"
-    - "riding a misty sleigh with zombie reindeers"
-    - "hanging creepy but cute ornaments on a christmas tree"
-    - "hanging creepy but cute ornaments on a fireplace"
-    - "starting a fire in the fireplace while sant is trying to go through the chimney"
-    - "playing with haunted toys surrounded by bad spirits"
+    - "wrapping oddly shaped presents"
+    - "hanging creepy but cute ornaments"
+    - "playing with haunted toys"
+    - "riding a misty sleigh"
+    # Role-specific actions are defined in species_profiles below
 
   ENV:
     - "cozy haunted cottage with fireplace and Christmas lights"
     - "warm candlelit cemetery with festive ornaments and christmas trees"
-    - "inviting toy workshop with tools and wooden limbs"
+    - "inviting toy workshop with tools and toy parts"
     - "snowy village with street lights and christmas decorations"
     - "christmas fireplace with crackling fire and creepy stockings inside a cosy house"
     - "warm attic filled with vintage Christmas decorations"
@@ -127,84 +132,386 @@ _shared_variables: &shared_variables
     - "Christmas market on a cute snowy village"
 
   FOCUS:
-    - "head with festive hat"
-    - "full body"
-    - "holding Christmas adornments"
-    - "holding Christmas decorations"
-    - "group of friendly spooky creatures"
-    - "holding an ornament or gift"
-    - "skeleton details visible but soft"
+    - "centered in frame"
+    - "with expressive pose"
+    - "in dynamic action"
+    - "with festive accessories"
+    - "with props nearby"
+    - "in cheerful stance"
 
   COMPOSITION:
     - "left-facing"
     - "right-facing"
     - "front view"
     - "3/4 view"
-    - "jumping or floating"
 
   SECONDARY_ELEMENTS:
     - "Surrounded by 3-4 small friendly ghosts with rounded shapes, floating."
     - "A few tiny bats and floating ornaments nearby."
-    - "Small candy canes and skull decorations scattered around."
+    - "Small candy canes and spooky ornaments scattered around."
     - ""  # Sometimes no secondary elements
 
 # Character-specific profiles for coherent combinations
 _shared_species_profiles: &shared_species_profiles
-  # Skeleton characters
-  "friendly skeleton Santa":
+  # ==========================================
+  # SANTA VARIANTS (delivering gifts)
+  # ==========================================
+  "friendly sugar-skull styled Santa":
+    actions:
+      - "delivering spooky Christmas gifts"
+      - "climbing down a chimney with presents"
+      - "flying on a misty sleigh"
+      - "checking his naughty-or-nice list"
+    environments:
+      - "moonlit snowy rooftop with stars in the sky"
+      - "friendly North Pole village with northern lights"
+      - "Night sky with the moon and stars"
+      - "snowy village with street lights and christmas decorations"
     secondary_elements:
-      - "Surrounded by 3-4 small skeleton elves with tiny bone decorations."
-      - "Floating skull ornaments and bone candy canes nearby."
-      - "Small dancing skeleton toys around."
-      - ""
-  "cute skeleton elf on the shelf toy wrapper":
-    secondary_elements:
-      - "Surrounded by small skeleton toys and bone-wrapped presents."
-      - "Tiny skull ornaments floating nearby."
-      - ""
-  "cute skeleton elf on the shelf christmas caroler":
-    secondary_elements:
-      - "Surrounded by 2-3 small skeleton carolers with songbooks."
-      - "Floating musical notes and bone decorations."
+      - "Surrounded by 2-3 small sugar-skull elves with patterned faces."
+      - "Spooky ornaments and candy canes nearby."
       - ""
 
-  # Ghost characters
+  # ==========================================
+  # CAROLER VARIANTS (singing)
+  # ==========================================
+  "cute zombie gingerbread christmas caroler":
+    actions:
+      - "singing eerie cheerful christmas carols"
+      - "holding a songbook and singing"
+      - "caroling with floating musical notes"
+    environments:
+      - "snowy village with street lights and christmas decorations"
+      - "Main street on a cute snowy village"
+      - "Christmas market on a cute snowy village"
+      - "City hall place of a snowy cute village"
+    secondary_elements:
+      - "Surrounded by 2-3 small zombie cookie carolers."
+      - "Floating musical notes and cookie crumbs."
+      - ""
+
+  "cute ghost christmas caroler":
+    actions:
+      - "singing eerie cheerful christmas carols"
+      - "holding a songbook and singing"
+      - "caroling with floating musical notes"
+    environments:
+      - "snowy village with street lights and christmas decorations"
+      - "Main street on a cute snowy village"
+      - "Christmas market on a cute snowy village"
+      - "City hall place of a snowy cute village"
+    secondary_elements:
+      - "Surrounded by 2-3 small ghost carolers floating."
+      - "Floating musical notes and ghostly wisps."
+      - ""
+
+  "cute Krampus christmas caroler":
+    actions:
+      - "singing eerie cheerful christmas carols"
+      - "holding a songbook and singing"
+      - "caroling with floating musical notes"
+    environments:
+      - "snowy village with street lights and christmas decorations"
+      - "Main street on a cute snowy village"
+      - "Christmas market on a cute snowy village"
+      - "City hall place of a snowy cute village"
+    secondary_elements:
+      - "Surrounded by 2-3 small imp carolers with songbooks."
+      - "Floating musical notes and rustic bells."
+      - ""
+
+  # ==========================================
+  # TOY MAKER VARIANTS (crafting)
+  # ==========================================
+  "cute sugar-skull styled elf toy maker":
+    actions:
+      - "crafting spooky toys at a workbench"
+      - "hammering and building creepy toys"
+      - "painting a wooden toy"
+    environments:
+      - "inviting toy workshop with tools and toy parts"
+      - "warm attic filled with vintage Christmas decorations"
+      - "cozy haunted cottage with fireplace and Christmas lights"
+    secondary_elements:
+      - "Surrounded by small sugar-skull toys and wrapped presents."
+      - "Tiny spooky ornaments floating nearby."
+      - ""
+
+  "clumsy gingerbread toy maker":
+    actions:
+      - "crafting spooky toys at a workbench"
+      - "hammering and building creepy toys"
+      - "painting a wooden toy"
+    environments:
+      - "inviting toy workshop with tools and toy parts"
+      - "warm attic filled with vintage Christmas decorations"
+      - "cozy haunted cottage with fireplace and Christmas lights"
+    secondary_elements:
+      - "Surrounded by 2-3 small gingerbread helpers making toys."
+      - "Scattered cookie crumbs and candy tools."
+      - ""
+
+  "cute Krampus toy maker":
+    actions:
+      - "crafting spooky toys at a workbench"
+      - "hammering and building creepy toys"
+      - "painting a wooden toy"
+    environments:
+      - "inviting toy workshop with tools and toy parts"
+      - "warm attic filled with vintage Christmas decorations"
+      - "cozy haunted cottage with fireplace and Christmas lights"
+    secondary_elements:
+      - "Surrounded by 2-3 small imp helpers with tools."
+      - "Scattered rustic toys and wooden crafts."
+      - ""
+
+  "cute zombie toy maker":
+    actions:
+      - "crafting spooky toys at a workbench"
+      - "hammering and building creepy toys"
+      - "painting a wooden toy"
+    environments:
+      - "inviting toy workshop with tools and toy parts"
+      - "warm attic filled with vintage Christmas decorations"
+      - "cozy haunted cottage with fireplace and Christmas lights"
+    secondary_elements:
+      - "Surrounded by 2-3 small zombie toy helpers."
+      - "Scattered zombie tools and half-made toys."
+      - ""
+
+  # ==========================================
+  # BAKER VARIANTS (baking cookies) - NEW
+  # ==========================================
+  "cheerful zombie gingerbread baker":
+    actions:
+      - "baking creepy cute cookies"
+      - "decorating gingerbread with frosting"
+      - "mixing dough in a spooky bowl"
+    environments:
+      - "warm and cosy kitchen inside a cosy home"
+      - "cozy haunted cottage with fireplace and Christmas lights"
+      - "christmas fireplace with crackling fire and creepy stockings inside a cosy house"
+    secondary_elements:
+      - "Surrounded by zombie cookie helpers."
+      - "Scattered cookie cutters and frosting."
+      - ""
+
+  "cute ghost baker with apron":
+    actions:
+      - "baking creepy cute cookies"
+      - "decorating gingerbread with frosting"
+      - "mixing dough in a spooky bowl"
+    environments:
+      - "warm and cosy kitchen inside a cosy home"
+      - "cozy haunted cottage with fireplace and Christmas lights"
+      - "christmas fireplace with crackling fire and creepy stockings inside a cosy house"
+    secondary_elements:
+      - "Surrounded by floating ghost cookies."
+      - "Ghostly wisps of flour and sugar."
+      - ""
+
+  "friendly vampire baker":
+    actions:
+      - "baking creepy cute cookies"
+      - "decorating gingerbread with frosting"
+      - "mixing dough in a spooky bowl"
+    environments:
+      - "warm and cosy kitchen inside a cosy home"
+      - "cozy haunted cottage with fireplace and Christmas lights"
+      - "christmas fireplace with crackling fire and creepy stockings inside a cosy house"
+    secondary_elements:
+      - "Surrounded by tiny vampire bat cookies."
+      - "Gothic baking tools and dark frosting."
+      - ""
+
+  # ==========================================
+  # DECORATOR VARIANTS (decorating) - NEW
+  # ==========================================
+  "adorable zombie elf decorator":
+    actions:
+      - "hanging creepy ornaments on a tree"
+      - "putting up spooky garlands"
+      - "decorating a haunted gingerbread house"
+    environments:
+      - "cozy haunted cottage with fireplace and Christmas lights"
+      - "warm attic filled with vintage Christmas decorations"
+      - "snowy village with street lights and christmas decorations"
+    secondary_elements:
+      - "Surrounded by zombie decoration helpers."
+      - "Scattered ornaments and tinsel."
+      - ""
+
+  "cute ghost snowman decorator":
+    actions:
+      - "hanging creepy ornaments on a tree"
+      - "putting up spooky garlands"
+      - "decorating a haunted gingerbread house"
+    environments:
+      - "cozy haunted cottage with fireplace and Christmas lights"
+      - "warm attic filled with vintage Christmas decorations"
+      - "snowy village with street lights and christmas decorations"
+    secondary_elements:
+      - "Surrounded by floating ghost ornaments."
+      - "Ghostly garlands and transparent decorations."
+      - ""
+
+  "friendly Krampus decorator":
+    actions:
+      - "hanging creepy ornaments on a tree"
+      - "putting up spooky garlands"
+      - "decorating a haunted gingerbread house"
+    environments:
+      - "cozy haunted cottage with fireplace and Christmas lights"
+      - "warm attic filled with vintage Christmas decorations"
+      - "snowy village with street lights and christmas decorations"
+    secondary_elements:
+      - "Surrounded by small imp decorators."
+      - "Rustic ornaments and ribbons."
+      - ""
+
+  # ==========================================
+  # SANTA VARIANTS (other types)
+  # ==========================================
+  "friendly reindeer Santa":
+    actions:
+      - "delivering spooky Christmas gifts"
+      - "climbing down a chimney with presents"
+      - "flying on a misty sleigh"
+    environments:
+      - "moonlit snowy rooftop with stars in the sky"
+      - "friendly North Pole village with northern lights"
+      - "Night sky with the moon and stars"
+      - "snowy village with street lights and christmas decorations"
+    secondary_elements:
+      - "Surrounded by 2-3 small festive reindeer with jingle bells."
+      - "Floating snowflakes and candy canes."
+      - ""
+
+  "friendly Krampus Santa":
+    actions:
+      - "delivering spooky Christmas gifts"
+      - "climbing down a chimney with presents"
+      - "flying on a misty sleigh"
+    environments:
+      - "moonlit snowy rooftop with stars in the sky"
+      - "friendly North Pole village with northern lights"
+      - "Night sky with the moon and stars"
+      - "snowy village with street lights and christmas decorations"
+    secondary_elements:
+      - "Surrounded by 2-3 small mischievous imps with tiny horns."
+      - "Scattered rustic bells and ribbons nearby."
+      - ""
+
+  "friendly gingerbread Santa":
+    actions:
+      - "delivering spooky Christmas gifts"
+      - "climbing down a chimney with presents"
+      - "flying on a misty sleigh"
+    environments:
+      - "moonlit snowy rooftop with stars in the sky"
+      - "friendly North Pole village with northern lights"
+      - "Night sky with the moon and stars"
+      - "snowy village with street lights and christmas decorations"
+    secondary_elements:
+      - "Surrounded by 3-4 small gingerbread helpers with frosting details."
+      - "Scattered candy canes and gumdrop decorations."
+      - ""
+
+  "friendly vampire Santa with tiny fangs":
+    actions:
+      - "delivering spooky Christmas gifts"
+      - "climbing down a chimney with presents"
+      - "flying on a misty sleigh"
+    environments:
+      - "moonlit snowy rooftop with stars in the sky"
+      - "friendly North Pole village with northern lights"
+      - "Night sky with the moon and stars"
+      - "snowy village with street lights and christmas decorations"
+    secondary_elements:
+      - "Surrounded by 2-3 small vampire bats with festive bows."
+      - "Floating gothic ornaments and red ribbons."
+      - ""
+
+  "friendly zombie Santa with cute stitches":
+    actions:
+      - "delivering spooky Christmas gifts"
+      - "climbing down a chimney with presents"
+      - "flying on a misty sleigh"
+    environments:
+      - "moonlit snowy rooftop with stars in the sky"
+      - "friendly North Pole village with northern lights"
+      - "Night sky with the moon and stars"
+      - "snowy village with street lights and christmas decorations"
+    secondary_elements:
+      - "Surrounded by 3-4 small zombie elves with stitches."
+      - "Scattered zombie cookies and wrapped presents."
+      - ""
+
+  # ==========================================
+  # GENERIC CHARACTERS (any action from ACTION list)
+  # ==========================================
+  # Ghost characters (can float!)
   "smiling ghost snowman":
+    actions:
+      - "floating gracefully"
+      - "dancing with friendly ghosts"
+      - "carrying spooky Christmas gifts with patterned wrap"
+      - "decorating a creepy-cute Christmas tree"
     secondary_elements:
       - "Surrounded by 3-4 small friendly ghosts with rounded shapes, floating."
       - "Wisps of mist and ghostly snowflakes drifting."
       - ""
   "smiling ghost nutcracker soldier":
+    actions:
+      - "floating gracefully"
+      - "marching in mid-air"
+      - "carrying spooky Christmas gifts with patterned wrap"
+      - "playing with haunted toys"
     secondary_elements:
       - "Surrounded by 2-3 small ghost soldiers floating in formation."
       - "Ghostly wisps and floating toy drums nearby."
       - ""
   "smiling ghost elf on the shelf":
+    actions:
+      - "floating gracefully"
+      - "dancing with friendly ghosts"
+      - "hanging creepy but cute ornaments"
+      - "playing with haunted toys"
     secondary_elements:
       - "Surrounded by 3-4 small friendly ghosts with rounded shapes, floating."
       - "Ghostly wisps and transparent ornaments drifting."
       - ""
   "smiling ghost reindeer":
+    actions:
+      - "floating gracefully"
+      - "flying through the night sky"
+      - "riding a misty sleigh"
+      - "dancing with friendly ghosts"
+    environments:
+      - "Night sky with the moon and stars"
+      - "moonlit snowy rooftop with stars in the sky"
+      - "friendly North Pole village with northern lights"
+      - "snowy village with street lights and christmas decorations"
     secondary_elements:
       - "Surrounded by 2-3 small ghost reindeer floating gracefully."
       - "Misty trails and ghostly snowflakes."
       - ""
   "smiling ghost gingerbread character":
+    actions:
+      - "floating gracefully"
+      - "dancing with friendly ghosts"
+      - "carrying spooky Christmas gifts with patterned wrap"
+      - "playing with haunted toys"
     secondary_elements:
       - "Surrounded by 3-4 small ghost cookies floating."
       - "Ghostly wisps of frosting and transparent candy."
       - ""
 
-  # Zombie characters
-  "friendly zombie Santa":
-    secondary_elements:
-      - "Surrounded by 3-4 small zombie elves with stitches."
-      - "Scattered zombie cookies and wrapped presents with bite marks."
-      - ""
+  # Zombie characters (generic - any action)
   "adorable zombie reindeer":
     secondary_elements:
       - "Surrounded by 2-3 small zombie woodland creatures."
-      - "Scattered bones and zombie carrots nearby."
+      - "Scattered spooky carrots and winter pebbles nearby."
       - ""
   "adorable zombie elf on the shelf":
     secondary_elements:
@@ -217,6 +524,11 @@ _shared_species_profiles: &shared_species_profiles
       - "Scattered nuts and zombie drumsticks nearby."
       - ""
   "adorable zombie sugar plum fairy":
+    actions:
+      - "floating gracefully with tattered wings"
+      - "dancing with friendly ghosts"
+      - "sprinkling zombie sugar plums"
+      - "twirling in mid-air"
     secondary_elements:
       - "Surrounded by 3-4 small zombie fairies with tattered wings."
       - "Floating zombie sugar plums and wilted flowers."
@@ -231,84 +543,20 @@ _shared_species_profiles: &shared_species_profiles
       - "Surrounded by 3-4 small zombie cookies with bite marks."
       - "Scattered zombie candy and frosting drips."
       - ""
-  "adorable zombie Pinocchio style wooden boy":
+  "adorable zombie wooden boy":
     secondary_elements:
       - "Surrounded by 2-3 small zombie wooden toys."
-      - "Scattered wooden limbs and zombie puppets."
-      - ""
-  "cute zombie elf on the shelf christmas caroler":
-    secondary_elements:
-      - "Surrounded by 2-3 small zombie carolers with songbooks."
-      - "Floating zombie musical notes and tattered sheet music."
-      - ""
-  "cute zombie reindeer christmas caroler":
-    secondary_elements:
-      - "Surrounded by 2-3 small zombie reindeer carolers."
-      - "Floating musical notes and zombie jingle bells."
-      - ""
-  "cute zombie gingerbread character christmas caroler":
-    secondary_elements:
-      - "Surrounded by 2-3 small zombie cookie carolers."
-      - "Floating musical notes and cookie crumbs."
-      - ""
-  "cute zombie christmas caroler":
-    secondary_elements:
-      - "Surrounded by 3-4 small zombie carolers with festive hats."
-      - "Floating zombie musical notes and tattered songbooks."
-      - ""
-  "cute Zombie toy maker":
-    secondary_elements:
-      - "Surrounded by 2-3 small zombie toy helpers."
-      - "Scattered zombie tools and half-made toys."
+      - "Scattered wooden toy parts and zombie puppets."
       - ""
 
-  # Krampus characters
-  "friendly Krampus Santa":
-    secondary_elements:
-      - "Surrounded by 2-3 small mischievous imps with tiny horns."
-      - "Scattered chains and rustic bells nearby."
-      - ""
+  # Krampus characters (generic - any action)
   "gentle Krampus with tiny horns":
     secondary_elements:
       - "Surrounded by 2-3 small friendly imps playing."
       - "Scattered birch twigs and rustic ornaments."
       - ""
-  "cute Krampus christmas caroler":
-    secondary_elements:
-      - "Surrounded by 2-3 small imp carolers with songbooks."
-      - "Floating musical notes and rustic bells."
-      - ""
-  "cute Krampus toy maker":
-    secondary_elements:
-      - "Surrounded by 2-3 small imp helpers with tools."
-      - "Scattered rustic toys and wooden crafts."
-      - ""
 
-  # Gingerbread characters
-  "friendly gingerbread character Santa":
-    secondary_elements:
-      - "Surrounded by 3-4 small gingerbread helpers with frosting details."
-      - "Scattered candy canes and gumdrop decorations."
-      - ""
-  "clumsy gingerbread character toy maker":
-    secondary_elements:
-      - "Surrounded by 2-3 small gingerbread helpers making toys."
-      - "Scattered cookie crumbs and candy tools."
-      - ""
-
-  # Vampire characters
-  "friendly vampire Santa":
-    secondary_elements:
-      - "Surrounded by 2-3 small vampire bats with festive bows."
-      - "Floating gothic ornaments and red ribbons."
-      - ""
-
-  # Other characters
-  "friendly reindeer Santa":
-    secondary_elements:
-      - "Surrounded by 2-3 small festive reindeer with jingle bells."
-      - "Floating snowflakes and candy canes."
-      - ""
+  # Other generic characters
   "gothic Emo Elf on the shelf":
     secondary_elements:
       - "Surrounded by 2-3 small gothic ornaments and dark ribbons."
@@ -333,12 +581,13 @@ _quality_children: &quality_children
   suffix: |
     Very simple face, no inner textures, no shading, no skeleton or internal anatomy visible.
     {SECONDARY_ELEMENTS}
-    Background: minimal details, large open spaces for easy coloring.
+    Background: minimal scene elements only, large open spaces for easy coloring.
+    NO FRAME, NO BORDER, NO VIGNETTE around the illustration.
     Thick bold outlines, uniform line weight.
     Clear closed shapes for easy coloring.
     No cross-hatching, no gradients, no background clutter.
     High contrast, printable coloring book style.
-    ONLY black lines on white background. NO colors. NO gray shading.
+    ONLY black lines on pure white background. NO colors. NO gray shading. NO gray background.
     No text, no logo, no watermark.
     Kid-friendly, ages 4-7.
 
@@ -363,7 +612,7 @@ _quality_adults: &quality_adults
 # ==========================================
 coloring_page_templates:
   default:
-    base_structure: "a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+    base_structure: "a {CHARACTER}, {ACTION}. Simple {ENV} background. {SHOT}, {FOCUS}, {COMPOSITION}."
     variables: *shared_variables
     quality_settings: *shared_quality_settings
     quality_settings_by_audience:
