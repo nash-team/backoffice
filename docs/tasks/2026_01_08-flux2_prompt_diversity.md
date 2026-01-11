@@ -28,7 +28,6 @@
    - Use natural language sentences, avoid keyword stacking
 3. In `generate_page()`: if Flux 2, call transform before injecting into node 63
 4. In `generate_cover()`: if Flux 2, call transform before injecting into node 6
-5. Add `flux2_guidance` param support from workflow_params (default 4.5, matching doc example for [flex])
 
 ### Phase 2: Theme YAML - Reformulate for Flux 2
 
@@ -45,7 +44,6 @@
 3. Rewrite `_quality_adults` prefix/suffix similarly with positive phrasing
 4. Update `comfy:` section in `coloring_page_templates`:
    - Remove `workflow_params["47"]` (negative prompt unused by Flux 2)
-   - Add `flux2_guidance: 4.5`
    - Keep `clip_g_suffix` with concrete style references
 
 ### Phase 3: Theme YAML - Enrich Diversity
@@ -90,7 +88,6 @@
   - ✅ Clear Flux 2 documentation available (Subject+Action+Style+Context order)
   - ✅ Existing code structure supports changes
   - ✅ species_profiles mechanism already handles coherence
-  - ✅ Guidance configurable per theme (no hardcoded default)
   - ❌ Risk: Flux 2 prompt behavior may need iterative tuning
 - **Complexity**: Medium (mostly YAML editing + small provider changes)
 

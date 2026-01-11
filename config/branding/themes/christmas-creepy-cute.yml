@@ -105,6 +105,21 @@ _shared_variables: &shared_variables
     - "smiling ghost gingerbread character"
     - "gothic Emo Elf on the shelf"
     - "gentle Krampus with tiny horns"
+    # NEW: Mummy variants
+    - "cute mummy elf wrapped in festive bandages"
+    - "friendly mummy snowman with loose wrappings"
+    # NEW: Witch variants
+    - "friendly Christmas witch with pointy hat and candy cane wand"
+    - "cute little witch stirring a cauldron of hot cocoa"
+    # NEW: Frankenstein variants
+    - "adorable Frankenstein helper with bolts and Santa hat"
+    - "sweet Frankenstein snowman with stitched smile"
+    # NEW: Werewolf variants
+    - "tiny werewolf cub in Christmas sweater"
+    - "friendly werewolf pup with jingle bell collar"
+    # NEW: Scarecrow variants
+    - "cute scarecrow snowman with patchwork scarf"
+    - "friendly scarecrow elf with button eyes"
 
   ACTION:
     # Generic actions (for any character)
@@ -113,22 +128,47 @@ _shared_variables: &shared_variables
     - "wrapping oddly shaped presents"
     - "playing with haunted toys"
     - "riding a misty sleigh"
+    # NEW: Additional generic actions
+    - "reading a spooky Christmas storybook"
+    - "ice skating on a frozen haunted pond"
+    - "building a creepy-cute snowman"
+    - "catching magical snowflakes"
+    - "hugging a spooky teddy bear"
+    - "peeking around a decorated Christmas tree"
     # Role-specific actions are defined in species_profiles below
 
   ENV:
+    # Indoor environments
     - "simple cozy haunted cottage with fireplace and a few Christmas lights"
-    - "simple warm candlelit cemetery with a few ornaments and one christmas tree"
-    - "simple toy workshop with a few tools and toy parts"
-    - "simple snowy village street with 1-2 houses and a street light"
     - "simple christmas fireplace with stockings inside a cosy house"
     - "simple warm attic with a few vintage Christmas decorations"
     - "simple cosy kitchen with a window and a hint of snowy street"
-    - "simple moonlit snowy rooftop with a few stars"
-    - "simple North Pole village with 1-2 houses and northern lights"
-    - "simple night sky with the moon and a few stars"
+    - "simple toy workshop with a few tools and toy parts"
+    - "simple witch's cozy cottage with smoke from chimney"
+    # Outdoor - varied street perspectives
+    - "simple snowy village street with 1-2 houses and a street light"
+    - "simple cobblestone village square with a fountain and benches"
+    - "simple snowy crossroads with a signpost and lanterns"
+    - "simple winding alley between crooked houses"
+    - "simple village bridge over a frozen stream"
+    - "simple stone archway entrance to a snowy village"
+    # Outdoor - market and public spaces
     - "simple main street with 1-2 stalls in a cute snowy village"
     - "simple city hall facade in a snowy cute village"
     - "simple Christmas market stall in a cute snowy village"
+    - "simple bandstand in a snowy village park"
+    - "simple gazebo decorated with Christmas lights"
+    # Outdoor - nature and cemetery
+    - "simple warm candlelit cemetery with a few ornaments and one christmas tree"
+    - "simple graveyard with friendly tombstones and snow"
+    - "simple frozen pond surrounded by bare winter trees"
+    - "simple enchanted forest path with glowing lanterns"
+    # Outdoor - rooftops and sky
+    - "simple moonlit snowy rooftop with a few stars"
+    - "simple North Pole village with 1-2 houses and northern lights"
+    - "simple night sky with the moon and a few stars"
+    - "simple old clock tower with snow on the roof"
+    - "simple church steeple with snow and bells"
 
   FOCUS:
     - "centered in frame"
@@ -148,6 +188,9 @@ _shared_variables: &shared_variables
     - "Surrounded by 3-4 small friendly ghosts with rounded shapes, floating."
     - "A few tiny bats and floating ornaments nearby."
     - "Small candy canes and spooky ornaments scattered around."
+    - "Floating magical snowflakes and twinkling stars."
+    - "Small jack-o-lanterns with Christmas hats nearby."
+    - "Friendly spider webs with tiny ornaments hanging."
     - ""  # Sometimes no secondary elements
 
 # Character-specific profiles for coherent combinations
@@ -577,49 +620,194 @@ _shared_species_profiles: &shared_species_profiles
       - "Floating black snowflakes and tiny skulls."
       - ""
 
+  # ==========================================
+  # NEW: MUMMY VARIANTS
+  # ==========================================
+  "cute mummy elf wrapped in festive bandages":
+    actions:
+      - "unwrapping Christmas presents"
+      - "tangled in holiday lights"
+      - "wrapping gifts with bandages"
+    environments:
+      - "simple warm attic filled with vintage Christmas decorations"
+      - "simple cozy haunted cottage with fireplace and Christmas lights"
+      - "simple toy workshop with a few tools and toy parts"
+    secondary_elements:
+      - "Surrounded by 2-3 small mummy helpers with loose bandages."
+      - "Scattered bandage ribbons and ornaments."
+      - ""
+
+  "friendly mummy snowman with loose wrappings":
+    actions:
+      - "building a snowman friend"
+      - "ice skating on a frozen haunted pond"
+      - "catching magical snowflakes"
+    environments:
+      - "simple frozen pond surrounded by bare winter trees"
+      - "simple snowy village street with 1-2 houses and a street light"
+      - "simple graveyard with friendly tombstones and snow"
+    secondary_elements:
+      - "Surrounded by 2-3 small mummy snowmen."
+      - "Floating bandage streamers and snowflakes."
+      - ""
+
+  # ==========================================
+  # NEW: WITCH VARIANTS
+  # ==========================================
+  "friendly Christmas witch with pointy hat and candy cane wand":
+    actions:
+      - "casting sparkly Christmas magic"
+      - "flying on a broomstick with presents"
+      - "reading a spooky Christmas storybook"
+    environments:
+      - "simple witch's cozy cottage with smoke from chimney"
+      - "simple enchanted forest path with glowing lanterns"
+      - "simple moonlit snowy rooftop with a few stars"
+    secondary_elements:
+      - "Surrounded by 2-3 small witch cats with Santa hats."
+      - "Floating magical sparkles and candy canes."
+      - ""
+
+  "cute little witch stirring a cauldron of hot cocoa":
+    actions:
+      - "stirring a bubbling cauldron"
+      - "baking magical cookies"
+      - "mixing a festive potion"
+    environments:
+      - "simple witch's cozy cottage with smoke from chimney"
+      - "simple cosy kitchen with a window and a hint of snowy street"
+      - "simple cozy haunted cottage with fireplace and Christmas lights"
+    secondary_elements:
+      - "Surrounded by floating cocoa cups and marshmallows."
+      - "Magical steam and sparkles rising."
+      - ""
+
+  # ==========================================
+  # NEW: FRANKENSTEIN VARIANTS
+  # ==========================================
+  "adorable Frankenstein helper with bolts and Santa hat":
+    actions:
+      - "building creepy-cute toys"
+      - "carrying heavy presents"
+      - "decorating with clumsy charm"
+    environments:
+      - "simple toy workshop with a few tools and toy parts"
+      - "simple warm attic filled with vintage Christmas decorations"
+      - "simple cozy haunted cottage with fireplace and Christmas lights"
+    secondary_elements:
+      - "Surrounded by 2-3 small Frankenstein helpers."
+      - "Scattered bolts, nuts, and toy parts."
+      - ""
+
+  "sweet Frankenstein snowman with stitched smile":
+    actions:
+      - "building a snowman friend"
+      - "hugging a spooky teddy bear"
+      - "catching magical snowflakes"
+    environments:
+      - "simple frozen pond surrounded by bare winter trees"
+      - "simple snowy village street with 1-2 houses and a street light"
+      - "simple graveyard with friendly tombstones and snow"
+    secondary_elements:
+      - "Surrounded by 2-3 small stitched snowmen."
+      - "Floating bolts and stitched ornaments."
+      - ""
+
+  # ==========================================
+  # NEW: WEREWOLF VARIANTS
+  # ==========================================
+  "tiny werewolf cub in Christmas sweater":
+    actions:
+      - "playing with haunted toys"
+      - "chasing magical snowflakes"
+      - "howling at the moon with joy"
+    environments:
+      - "simple enchanted forest path with glowing lanterns"
+      - "simple moonlit snowy rooftop with a few stars"
+      - "simple cozy haunted cottage with fireplace and Christmas lights"
+    secondary_elements:
+      - "Surrounded by 2-3 small wolf pups with scarves."
+      - "Floating snowflakes and paw prints in snow."
+      - ""
+
+  "friendly werewolf pup with jingle bell collar":
+    actions:
+      - "pulling a tiny sleigh"
+      - "dancing with friendly ghosts"
+      - "carrying spooky Christmas gifts"
+    environments:
+      - "simple night sky with the moon and a few stars"
+      - "simple snowy village street with 1-2 houses and a street light"
+      - "simple North Pole village with 1-2 houses and northern lights"
+    secondary_elements:
+      - "Surrounded by 2-3 small pups with jingle bells."
+      - "Floating bells and pawprint ornaments."
+      - ""
+
+  # ==========================================
+  # NEW: SCARECROW VARIANTS
+  # ==========================================
+  "cute scarecrow snowman with patchwork scarf":
+    actions:
+      - "building a snowman friend"
+      - "decorating a haunted gingerbread house"
+      - "catching magical snowflakes"
+    environments:
+      - "simple graveyard with friendly tombstones and snow"
+      - "simple frozen pond surrounded by bare winter trees"
+      - "simple snowy village street with 1-2 houses and a street light"
+    secondary_elements:
+      - "Surrounded by 2-3 small scarecrow helpers."
+      - "Floating hay strands and button ornaments."
+      - ""
+
+  "friendly scarecrow elf with button eyes":
+    actions:
+      - "crafting spooky toys at a workbench"
+      - "wrapping oddly shaped presents"
+      - "peeking around a decorated Christmas tree"
+    environments:
+      - "simple toy workshop with a few tools and toy parts"
+      - "simple warm attic filled with vintage Christmas decorations"
+      - "simple cozy haunted cottage with fireplace and Christmas lights"
+    secondary_elements:
+      - "Surrounded by 2-3 small button-eyed helpers."
+      - "Scattered fabric patches and buttons."
+      - ""
+
 # Shared quality settings (legacy fallback)
 _shared_quality_settings: &shared_quality_settings |
-  Black and white line art coloring page style.
-  ONLY black lines on white background. NO colors. NO gray shading.
-  Bold clean outlines, closed shapes, thick black lines.
-  NO FRAME, NO BORDER around the illustration.
-  Illustration touches or nearly touches edges naturally.
-  Printable 300 DPI, simple-to-medium detail (kids 4-8).
-  No text, no logo, no watermark.
+  Black and white line art coloring page, bold black lines on pure white background.
+  Clean closed shapes with thick uniform outlines, ready for coloring.
+  Full-bleed illustration extending naturally to edges.
+  Printable 300 DPI, simple-to-medium detail for children ages 4-8.
 
 # Audience-specific quality profiles
 _quality_children: &quality_children
   prefix: |
-    Children's coloring book page, clean black and white line art.
-    Single main character centered:
+    Children's coloring book page featuring a single main character centered.
+    Clean black and white line art with bold outlines:
   suffix: |
-    Very simple face, no inner textures, no shading, no skeleton or internal anatomy visible.
+    Simple friendly face with expressive features, smooth clean surfaces.
     {SECONDARY_ELEMENTS}
-    Background: minimal scene elements only, large open spaces for easy coloring, no full buildings or detailed scenes.
-    NO FRAME, NO BORDER, NO VIGNETTE around the illustration.
-    Thick bold outlines, uniform line weight.
-    Clear closed shapes for easy coloring.
-    No cross-hatching, no gradients, no background clutter.
-    High contrast, printable coloring book style.
-    ONLY black lines on pure white background. NO colors. NO gray shading. NO gray background.
-    No text, no logo, no watermark.
-    Kid-friendly, ages 4-7.
+    Minimal background with large open spaces for easy coloring.
+    Full-bleed illustration with edges blending naturally.
+    Thick bold outlines, uniform line weight throughout.
+    Clear closed shapes, high contrast, pure white background with solid black lines only.
+    Kid-friendly coloring book style for ages 4-7.
 
 _quality_adults: &quality_adults
   prefix: |
-    Adult coloring book page, detailed black and white line art.
-    Main subject centered:
+    Adult coloring book page featuring detailed black and white line art.
+    Main subject centered with intricate details:
   suffix: |
     {SECONDARY_ELEMENTS}
-    Intricate patterns and fine line details welcome.
-    Varied line weights for depth and visual interest.
-    Background can include decorative patterns and textures (in line art only).
-    Cross-hatching and line textures allowed for shading effects.
-    Complex shapes with smaller areas to color.
-    High contrast, printable coloring book style.
-    ONLY black lines on white background. NO colors. NO gray shading.
-    No text, no logo, no watermark.
-    Sophisticated aesthetic for adults.
+    Fine line details with intricate patterns throughout.
+    Varied line weights creating depth and visual interest.
+    Decorative background patterns and textures in pure line art.
+    Complex shapes with smaller detailed areas to color.
+    High contrast, pure white background with solid black lines.
+    Sophisticated aesthetic for adult coloring enthusiasts.
 
 # ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
@@ -653,6 +841,6 @@ coloring_page_templates:
     species_profiles: *shared_species_profiles
 
     workflow_params:
-      "47": "color, shading, text, watermark, gore, blood, frightening"
-      "clip_g_suffix": "professional line art, clean outlines, cute but creepy"
+      # Note: Flux 2 ignores negative prompts, quality comes from positive descriptions
+      "clip_g_suffix": "children's coloring book illustration, clean line art, cute but creepy Tim Burton style"
       "qwen_prompt": "Clean black and white lineart with bold outlines"
