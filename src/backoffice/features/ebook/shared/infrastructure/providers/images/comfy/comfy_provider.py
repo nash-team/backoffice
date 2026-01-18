@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 #  This is for flux 2 but there's should be
 #  an API endpoints to retrieve this from the workflow directly.
 nodes_steps_edit: dict = {
-                    "nb_total_steps": 31,
+                    "nb_total_steps": 37,
                     "nodes": {
                         "13": {
                             "max": 20,
@@ -56,10 +56,6 @@ nodes_steps_edit: dict = {
                             "value": 1.0
                         },
                         "10": {
-                            "max": 1.0,
-                            "value": 1.0
-                        },
-                        "12": {
                             "max": 1.0,
                             "value": 1.0
                         },
@@ -115,11 +111,31 @@ nodes_steps_edit: dict = {
                 }
 
 nodes_steps_generate: dict = {
-                "nb_total_steps": 29,
+                "nb_total_steps": 35,
                 "nodes": {
+                    "6": {
+                        "max": 1.0,
+                        "value": 1.0
+                    },
+                    "8": {
+                        "max": 1.0,
+                        "value": 1.0
+                    },
+                    "9": {
+                        "max": 1.0,
+                        "value": 1.0
+                    },
+                    "10": {
+                        "max": 1,
+                        "value": 1
+                    },
                     "13": {
                         "max": 20,
                         "value": 20
+                    },
+                    "16": {
+                        "max": 1,
+                        "value": 1
                     },
                     "22": {
                         "max": 1.0,
@@ -133,7 +149,15 @@ nodes_steps_generate: dict = {
                         "max": 1.0,
                         "value": 1.0
                     },
-                    "6": {
+                    "38": {
+                        "max": 1.0,
+                        "value": 1.0
+                    },
+                    "47": {
+                        "max": 1.0,
+                        "value": 1.0
+                    },
+                    "48": {
                         "max": 1.0,
                         "value": 1.0
                     },
@@ -149,11 +173,7 @@ nodes_steps_generate: dict = {
                         "max": 1.0,
                         "value": 1.0
                     },
-                    "8": {
-                        "max": 1.0,
-                        "value": 1.0
-                    },
-                    "9": {
+                    "66": {
                         "max": 1.0,
                         "value": 1.0
                     }
@@ -215,8 +235,6 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
             current_step=None
         ))
 
-        all_message_progress_state = []
-
         while True:
             out = ws.recv()
             if isinstance(out, str):
@@ -228,10 +246,12 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
 
                 await asyncio.sleep(0.2)
 
+                if message["type"] == "execution_cached":
+                    for node in message["data"]["nodes"]:
+                        nb_total_steps -= workflow_nodes_steps["nodes"][node]["max"]
+
                 if message["type"] == "progress_state":
                     finished_step_count = 0
-
-                    all_message_progress_state.append(message["data"]["nodes"])
 
                     for node_progress in message["data"]["nodes"]:
                         value = message["data"]["nodes"][node_progress]["value"]
