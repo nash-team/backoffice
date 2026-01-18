@@ -111,6 +111,8 @@ class EditCoverImageUseCase:
             format="PNG",
             dpi=300,
             color_mode=ColorMode.COLOR,
+            ebook_id=ebook_id,
+            page_index=0
         )
 
         edited_image_bytes = await self.image_edit_port.edit_image(

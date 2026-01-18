@@ -1,5 +1,5 @@
 """Local Stable Diffusion provider (100% FREE, runs locally, no API token needed)."""
-
+import asyncio
 import base64
 import json
 import logging
@@ -11,6 +11,10 @@ from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
 from urllib.error import URLError
+
+from backoffice.features.ebook.regeneration.domain.events.content_page_regenerating_status_event import \
+    ContentPageRegeneratingStatusEvent
+from backoffice.features.shared.infrastructure.events import event_bus_singleton
 
 import websocket  # type: ignore[import-not-found]
 from PIL import Image, ImageDraw
@@ -25,6 +29,136 @@ from backoffice.features.ebook.shared.domain.ports.image_edit_port import ImageE
 
 logger = logging.getLogger(__name__)
 
+# TODO
+#  This is for flux 2 but there's should be
+#  an API endpoints to retrieve this from the workflow directly.
+nodes_steps_edit: dict = {
+                    "nb_total_steps": 31,
+                    "nodes": {
+                        "13": {
+                            "max": 20,
+                            "value": 20
+                        },
+                        "16": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "22": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "8": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "9": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "10": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "12": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "25": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "26": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "38": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "43": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "44": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "45": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "47": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "48": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "62": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "66": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "6": {
+                            "max": 1.0,
+                            "value": 1.0
+                        },
+                        "67": {
+                            "max": 1.0,
+                            "value": 1.0
+                        }
+                    }
+                }
+
+nodes_steps_generate: dict = {
+                "nb_total_steps": 29,
+                "nodes": {
+                    "13": {
+                        "max": 20,
+                        "value": 20
+                    },
+                    "22": {
+                        "max": 1.0,
+                        "value": 1.0
+                    },
+                    "25": {
+                        "max": 1.0,
+                        "value": 1.0
+                    },
+                    "26": {
+                        "max": 1.0,
+                        "value": 1.0
+                    },
+                    "6": {
+                        "max": 1.0,
+                        "value": 1.0
+                    },
+                    "62": {
+                        "max": 1.0,
+                        "value": 1.0
+                    },
+                    "63": {
+                        "max": 1.0,
+                        "value": 1.0
+                    },
+                    "64": {
+                        "max": 1.0,
+                        "value": 1.0
+                    },
+                    "8": {
+                        "max": 1.0,
+                        "value": 1.0
+                    },
+                    "9": {
+                        "max": 1.0,
+                        "value": 1.0
+                    }
+                }
+            }
 
 class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPort):
     """Local Stable Diffusion provider using Comfy (100% FREE, no API).
@@ -49,6 +183,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         self.comfy_url = comfy_url
         self.model = model
         self.workflow = None
+        self.event_bus = event_bus_singleton.get_event_bus()
 
     def queue_prompt(self, prompt):
         p = {"prompt": prompt, "client_id": self.client_id}
@@ -66,16 +201,72 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         with urllib.request.urlopen(f"http://{self.comfy_url}/history/{prompt_id}") as response:
             return json.loads(response.read())
 
-    def get_images(self, ws, prompt):
+    async def get_images(self, ws, prompt, spec, workflow_nodes_steps: dict):
         prompt_id = self.queue_prompt(prompt)["prompt_id"]
         output_images = {}
+
+        nb_total_steps = workflow_nodes_steps["nb_total_steps"]
+
+        await self.event_bus.publish(ContentPageRegeneratingStatusEvent(
+            page_index=spec.page_index,
+            ebook_id=spec.ebook_id,
+            status=0,
+            nb_total_steps=nb_total_steps,
+            current_step=None
+        ))
+
+        all_message_progress_state = []
+
         while True:
             out = ws.recv()
             if isinstance(out, str):
                 message = json.loads(out)
+
+                workflow_state = "running"
+                status= 0
+                finished_step_count = 0
+
+                await asyncio.sleep(0.2)
+
+                if message["type"] == "progress_state":
+                    finished_step_count = 0
+
+                    all_message_progress_state.append(message["data"]["nodes"])
+
+                    for node_progress in message["data"]["nodes"]:
+                        value = message["data"]["nodes"][node_progress]["value"]
+                        state = message["data"]["nodes"][node_progress]["state"]
+
+                        if state == 'finished' or state == 'running':
+                            finished_step_count += value
+
+
+
+                    status = finished_step_count * 100 / nb_total_steps
+
+                    await self.event_bus.publish(ContentPageRegeneratingStatusEvent(
+                        page_index=spec.page_index,
+                        ebook_id=spec.ebook_id,
+                        status=int(status),
+                        state=workflow_state,
+                        nb_total_steps=nb_total_steps,
+                        current_step=finished_step_count
+                    ))
+
                 if message["type"] == "executing":
                     data = message["data"]
                     if data["node"] is None and data["prompt_id"] == prompt_id:
+                        status = 100
+                        workflow_state = "finished"
+                        await self.event_bus.publish(ContentPageRegeneratingStatusEvent(
+                            page_index=spec.page_index,
+                            ebook_id=spec.ebook_id,
+                            status=int(status),
+                            state=workflow_state,
+                            nb_total_steps=nb_total_steps,
+                            current_step=finished_step_count
+                        ))
+
                         break  # Execution is done
             else:
                 continue  # previews are binary data
@@ -190,22 +381,21 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         #     self.workflow["47"]["inputs"]["text"] = workflow_params["negative"]
 
         try:
-            ws = websocket.WebSocket()
-            ws.connect(f"ws://{self.comfy_url}/ws?clientId={self.client_id}")
-            images = self.get_images(ws, self.workflow)
+            comfy_ws = websocket.WebSocket()
+            comfy_ws.connect(f"ws://{self.comfy_url}/ws?clientId={self.client_id}")
+            images = await self.get_images(comfy_ws, self.workflow,
+                                           spec, nodes_steps_generate)
 
             result_bytes = None
 
             for node_id in images:
                 for image_data in images[node_id]:
-                    import io
-
                     from PIL import Image
 
                     # buffer = BytesIO()
                     result_bytes = image_data
                     # save image
-                    image = Image.open(io.BytesIO(image_data))
+                    image = Image.open(BytesIO(image_data))
                     image.save(f"/tmp/test-{node_id}-{seed}.png")
 
             logger.info(f"✅ Generated cover (COMFY): {len(result_bytes)} bytes")
@@ -280,7 +470,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         try:
             ws = websocket.WebSocket()
             ws.connect(f"ws://{self.comfy_url}/ws?clientId={self.client_id}")
-            images = self.get_images(ws, self.workflow)
+            images = await self.get_images(ws, self.workflow, spec, nodes_steps_generate)
 
             result_bytes = None
 
@@ -307,10 +497,10 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 context={"provider": "comfy", "model": self.model, "error": str(e)},
             ) from e
 
-    async def remove_text_from_cover(self, image_bytes: bytes, barcode_width_inches: float = 2.0, barcode_height_inches: float = 1.2, barcode_margin_inches: float = 0.25) -> bytes:
+    async def remove_text_from_cover(self, image_bytes: bytes, spec: ImageSpec ,barcode_width_inches: float = 2.0, barcode_height_inches: float = 1.2, barcode_margin_inches: float = 0.25) -> bytes:
         logger.info("🗑️  Removing text from cover (COMFY): returning cover without text elements ...")
 
-        return await self.edit_image(image_bytes, barcode_width_inches=barcode_width_inches, barcode_height_inches=barcode_height_inches, barcode_margin_inches=barcode_margin_inches)
+        return await self.edit_image(image_bytes, spec=spec, barcode_width_inches=barcode_width_inches, barcode_height_inches=barcode_height_inches, barcode_margin_inches=barcode_margin_inches)
 
     async def edit_image(
         self,
@@ -379,7 +569,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         try:
             ws = websocket.WebSocket()
             ws.connect(f"ws://{self.comfy_url}/ws?clientId={self.client_id}")
-            images = self.get_images(ws, self.workflow)
+            images = await self.get_images(ws, self.workflow, spec, nodes_steps_edit)
 
             result_bytes = None
 

@@ -201,7 +201,7 @@ class ProviderFactory:
         """
         # Get model configuration (reuse coloring_page config)
         registry = ModelRegistry.get_instance()
-        model_mapping = registry.get_page_model()
+        model_mapping = registry.get_page_model(edit=True)
 
         # Create cache key
         cache_key = ProviderFactory._make_cache_key(

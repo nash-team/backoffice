@@ -120,6 +120,8 @@ class EditPageImageUseCase:
             format="PNG",
             dpi=300,
             color_mode=ColorMode.BLACK_WHITE,
+            ebook_id=ebook_id,
+            page_index=page_index
         )
 
         edited_image_bytes = await self.image_edit_port.edit_image(

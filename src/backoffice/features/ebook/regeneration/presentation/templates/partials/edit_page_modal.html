@@ -21,9 +21,9 @@
                     <!-- Loading Spinner (hidden by default) -->
                     <div id="regenerateSpinner" class="mt-3 d-none">
                         <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Génération en cours...</span>
+                            <span class="visually-hidden">Génération en cours... </span>
                         </div>
-                        <p class="text-muted mt-2">Génération en cours, veuillez patienter...</p>
+                        <p id="status_percent" class="text-muted mt-2">Génération en cours: 0%</p>
                     </div>
                     <!-- Error Message (hidden by default) -->
                     <div id="regenerateError" class="alert alert-danger mt-3 d-none" role="alert">
@@ -87,6 +87,12 @@
                             onclick="previewWithEdit()">
                         <i class="fas fa-eye me-2"></i>Prévisualiser
                     </button>
+                    <button type="button"
+                            id="undoEditBtn"
+                            class="btn btn-info mt-2"
+                            onclick="undoWithEdit()">
+                        <i class="fas fa-undo me-2"></i>
+                    </button>
                 </div>
 
                 <!-- Info about current operation -->
@@ -115,6 +121,7 @@
     let currentEbookId = null;
     let currentPageIndex = null;
     let currentImageBase64 = null;
+    let lastImageBase64 = null;
     let currentPrompt = '';
     let currentMode = 'regenerate'; // 'regenerate' | 'correct'
     let isCover = false;
@@ -130,8 +137,12 @@
         currentEbookId = ebookId;
         currentPageIndex = pageIndex;
         currentImageBase64 = imageBase64;
+        lastImageBase64 = undefined
         currentPrompt = prompt || '';
         isCover = pageIndex === 0;
+
+        // no undo available when the edit modal window is opened
+        document.getElementById('undoEditBtn').disabled = true;
 
         // Update modal title
         const pageTitle = isCover ? 'Couverture' : `Page ${pageIndex}`;
@@ -204,6 +215,11 @@
         document.getElementById('regenerateError').classList.add('d-none');
         document.getElementById('previewRegenerateBtn').disabled = true;
         document.getElementById('previewEditBtn').disabled = true;
+
+        if (!lastImageBase64) {
+            document.getElementById('undoEditBtn').disabled = true;
+        }
+
         document.getElementById('applyBtn').disabled = true;
     }
 
@@ -214,6 +230,11 @@
         document.getElementById('regenerateSpinner').classList.add('d-none');
         document.getElementById('previewRegenerateBtn').disabled = false;
         document.getElementById('previewEditBtn').disabled = false;
+
+        if (lastImageBase64) {
+            document.getElementById('undoEditBtn').disabled = false;
+        }
+
         document.getElementById('applyBtn').disabled = false;
     }
 
@@ -234,8 +255,29 @@
             return;
         }
 
-        const customPrompt = document.getElementById('promptTextarea').value.trim();
+        const wsClientId = window.crypto.randomUUID()
+        const hostAndPort = `${window.location.host}`
+        const wsURL = `wss://${hostAndPort}/api/ws/${wsClientId}`
 
+        let socket = new WebSocket(wsURL)
+
+        socket.addEventListener('open', (event) => {
+            console.log(`WS Connection opened: ${wsURL}`)
+        })
+
+        socket.addEventListener('close', (event) => {
+            console.log(`WS Connection closed: ${wsURL}`)
+        })
+
+        socket.addEventListener('message', (event) => {
+            var progress = JSON.parse(event.data);
+
+            if (currentEbookId === progress.ebook_id && currentPageIndex === progress.page_index) {
+                document.getElementById('status_percent').textContent = `Génération en cours: ${progress.status}%`;
+            }
+        })
+
+        const customPrompt = document.getElementById('promptTextarea').value.trim();
         showLoading();
 
         try {
@@ -271,6 +313,10 @@
             createToast('Erreur lors de la régénération', 'error');
         } finally {
             hideLoading();
+            document.getElementById('status_percent').textContent = `Génération en cours: 0%`;
+            document.getElementById('undoEditBtn').disabled = true;
+            socket.close()
+            socket = undefined
         }
     }
 
@@ -283,6 +329,28 @@
             return;
         }
 
+        const wsClientId = window.crypto.randomUUID()
+        const hostAndPort = `${window.location.host}`
+        const wsURL = `wss://${hostAndPort}/api/ws/${wsClientId}`
+
+        let socket = new WebSocket(wsURL)
+
+        socket.addEventListener('open', (event) => {
+            console.log(`WS Connection opened: ${wsURL}`)
+        })
+
+        socket.addEventListener('close', (event) => {
+            console.log(`WS Connection closed: ${wsURL}`)
+        })
+
+        socket.addEventListener('message', (event) => {
+            var progress = JSON.parse(event.data);
+
+            if (currentEbookId === progress.ebook_id && currentPageIndex === progress.page_index) {
+                document.getElementById('status_percent').textContent = `Génération en cours: ${progress.status}%`;
+            }
+        })
+
         const editPrompt = document.getElementById('editPromptTextarea').value.trim();
         if (!editPrompt) {
             createToast('Veuillez entrer un prompt de correction', 'error');
@@ -292,6 +360,8 @@
         showLoading();
 
         try {
+            lastImageBase64 = currentImageBase64
+
             const response = await fetch(getApiEndpoint('edit'), {
                 method: 'POST',
                 headers: {
@@ -322,6 +392,26 @@
             createToast('Erreur lors de l\'édition', 'error');
         } finally {
             hideLoading();
+            document.getElementById('status_percent').textContent = `Génération en cours: 0%`;
+            socket.close()
+            socket = undefined
+        }
+    }
+
+    /**
+     * Undo previous correction
+     */
+    function undoWithEdit() {
+        try {
+            currentImageBase64 = lastImageBase64;
+            document.getElementById('pagePreviewImage').src = 'data:image/png;base64,' + lastImageBase64;
+            lastImageBase64 = undefined;
+        } catch (error) {
+            console.error('Error undo:', error);
+            showError(error.message);
+            createToast('Erreur lors de l\'annulation de la précédente correction', 'error');
+        } finally {
+            document.getElementById('undoEditBtn').disabled = true;
         }
     }
 

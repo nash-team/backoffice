@@ -10,6 +10,7 @@ from backoffice.features.ebook.regeneration.domain.services.regeneration_service
     RegenerationService,
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook
+from backoffice.features.ebook.shared.domain.entities.generation_request import ImageSpec, ColorMode
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.ebook.shared.domain.services.cover_generation import CoverGenerationService
@@ -86,11 +87,22 @@ class RegenerateBackCoverUseCase:
 
         kdp_config = KDPExportConfig()
 
+        page_spec = ImageSpec(
+            width_px=2626,
+            height_px=2626,
+            format="PNG",
+            dpi=300,
+            color_mode=ColorMode.COLOR,
+            ebook_id=ebook_id,
+            page_index=0
+        )
+
         back_cover_data = await self.cover_service.cover_port.remove_text_from_cover(
             image_bytes=front_cover_bytes,
             barcode_width_inches=kdp_config.barcode_width,
             barcode_height_inches=kdp_config.barcode_height,
             barcode_margin_inches=kdp_config.barcode_margin,
+            spec=page_spec
         )
 
         logger.info(f"✅ Back cover regenerated: {len(back_cover_data)} bytes")

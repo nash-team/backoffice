@@ -24,15 +24,23 @@ class EventBus:
         self._handlers: dict[type[DomainEvent], list[EventHandler]] = defaultdict(list)
         self._lock = asyncio.Lock()
 
-    def subscribe(self, event_type: type[DomainEvent], handler: EventHandler) -> None:
+    def subscribe(self, event_type: type[DomainEvent], handler: EventHandler) -> int:
         """Subscribe a handler to an event type.
 
         Args:
             event_type: Type of event to handle
             handler: Handler instance to register
         """
+        handler_id = len(self._handlers[event_type])
+        handler.handler_id = handler_id
         self._handlers[event_type].append(handler)
+
         logger.info(f"📬 Subscribed {handler.__class__.__name__} to {event_type.__name__}")
+        return len(self._handlers[event_type]) - 1
+
+    def unsubscribe(self, event_type: type[DomainEvent], handler_id: int) -> None:
+        del self._handlers[event_type][handler_id]
+        logger.info(f"📬 Unsubscribed {handler_id} to {event_type.__name__}")
 
     async def publish(self, event: DomainEvent) -> None:
         """Publish an event to all registered handlers.
@@ -72,6 +80,8 @@ class EventBus:
                 f"❌ {handler.__class__.__name__} failed to handle " f"{event.event_name()}: {str(e)}",
                 exc_info=True,
             )
+    def nb_handlers(self):
+        return len(self._handlers)
 
     def clear(self) -> None:
         """Clear all registered handlers (useful for testing)."""

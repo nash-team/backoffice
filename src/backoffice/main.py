@@ -1,8 +1,9 @@
+import asyncio
 import logging
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
@@ -20,9 +21,13 @@ from backoffice.features.ebook.lifecycle.presentation.routes import (
     router as ebook_lifecycle_router,
 )
 from backoffice.features.ebook.listing.presentation.routes import router as ebook_listing_router
+from backoffice.features.ebook.regeneration.domain.events.content_page_regenerating_status_event import \
+    ContentPageRegeneratingStatusEvent
 from backoffice.features.ebook.regeneration.presentation.routes import (
     router as ebook_regeneration_router,
 )
+from backoffice.features.shared.infrastructure.events import event_bus_singleton
+from backoffice.features.shared.infrastructure.events.event_handler import EventHandler
 from backoffice.features.shared.presentation.routes.templates import templates
 
 # Configure logging level based on environment
@@ -83,11 +88,51 @@ app.mount(
     name="static",
 )
 
-
 @app.get("/")
 async def dashboard_page(request: Request):
     """Serve the main dashboard page."""
     return templates.TemplateResponse("dashboard.html", {"request": request})
+
+@app.websocket('/api/ws/{client_id}')
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    loop_condition = True
+
+    class NewStatusHandler(EventHandler[ContentPageRegeneratingStatusEvent]):
+        async def handle(self, event: ContentPageRegeneratingStatusEvent) -> None:
+            await manager.broadcast({ "status" : event.status,
+                                      "ebook_id": event.ebook_id,
+                                      "page_index": event.page_index,
+                                      "current_step": event.current_step,
+                                      "state": event.state})
+
+
+            if event.state == "finished":
+                await websocket.close()
+                manager.disconnect(websocket)
+                event_bus_singleton.get_event_bus().unsubscribe(ContentPageRegeneratingStatusEvent,
+                                                                self.handler_id)
+
+            await asyncio.sleep(0.2)
+
+
+
+    event_bus_singleton.get_event_bus().subscribe(ContentPageRegeneratingStatusEvent, NewStatusHandler())
+
+
+    try:
+        await manager.connect(websocket)
+        print(f"WS Connection established with {client_id}")
+
+        while loop_condition:
+            # if event_bus_singleton.get_event_bus().nb_handlers() == 0:
+            #     break
+
+            await asyncio.sleep(0.2)
+            # data = await websocket.receive_json()
+        #     await websocket.send_json({"message": "test"})
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        print(f"Websocket for {client_id} disconnected.")
 
 
 @app.get("/healthz")
@@ -117,6 +162,26 @@ async def test_reset_database() -> tuple[dict[str, str], int] | dict[str, str]:
         return {"status": "reset_ok"}
     except Exception as e:
         return {"error": str(e)}, 500
+
+
+# Websocket Connection Handler
+# handle connections for websocket in order to update generation or correction status
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        for connection in self.active_connections:
+            await connection.send_json(message)
+
+manager = ConnectionManager()
 
 
 # Register all feature routes

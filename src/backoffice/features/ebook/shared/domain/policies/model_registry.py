@@ -112,6 +112,10 @@ class ModelRegistry:
         """Get model for cover generation."""
         return self._mappings.get("cover", self._mappings["cover"])
 
-    def get_page_model(self) -> ModelMapping:
-        """Get model for content page generation."""
-        return self._mappings.get("coloring_page", self._mappings["coloring_page"])
+    def get_page_model(self, edit: bool = False) -> ModelMapping:
+        """Get model for content page generation. But if edit = True then page model returned is "editing_page."""
+
+        if edit:
+            return self._mappings.get("editing_page", self._mappings["editing_page"])
+        else:
+            return self._mappings.get("coloring_page", self._mappings["coloring_page"])

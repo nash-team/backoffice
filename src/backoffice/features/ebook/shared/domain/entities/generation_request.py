@@ -72,6 +72,8 @@ class ImageSpec:
     format: str
     dpi: int | None = None
     color_mode: ColorMode | None = None
+    ebook_id: int | None = None
+    page_index: int | None = None
 
 
 @dataclass

@@ -127,6 +127,8 @@ class PreviewRegeneratePageUseCase:
             format="PNG",
             dpi=300,
             color_mode=ColorMode.BLACK_WHITE,
+            ebook_id=ebook_id,
+            page_index=page_index
         )
 
         new_page_data = await self.page_service.generate_single_page(

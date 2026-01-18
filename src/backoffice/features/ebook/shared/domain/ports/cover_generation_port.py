@@ -41,6 +41,7 @@ class CoverGenerationPort(ABC):
     async def remove_text_from_cover(
         self,
         image_bytes: bytes,
+        spec: ImageSpec,
         barcode_width_inches: float = 2.0,
         barcode_height_inches: float = 1.2,
         barcode_margin_inches: float = 0.25,
@@ -51,10 +52,11 @@ class CoverGenerationPort(ABC):
         (Gemini Vision for OpenRouter, etc.) and adds KDP-compliant barcode space.
 
         Args:
-            image_bytes: Original cover image (with text)
-            barcode_width_inches: KDP barcode width in inches (default: 2.0)
-            barcode_height_inches: KDP barcode height in inches (default: 1.2)
-            barcode_margin_inches: KDP barcode margin in inches (default: 0.25)
+            :param image_bytes: Original cover image (with text)
+            :param spec: Image specifications (resolution, color mode)
+            :param barcode_width_inches: KDP barcode width in inches (default: 2.0)
+            :param barcode_height_inches: KDP barcode height in inches (default: 1.2)
+            :param barcode_margin_inches: KDP barcode margin in inches (default: 0.25)
 
         Returns:
             Same image without text with KDP-compliant barcode space (for back cover)

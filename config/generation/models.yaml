@@ -46,6 +46,11 @@ models:
 #    lora: null                # optional: local path or HF ID
 #    lora_weight: 0.7
 
+  editing_page:
+    provider: comfy
+    model: edit-image-flux-2.json
+
+
   # ========================================
   # CONTENT PAGE GENERATION (Coloring Pages)
   # ========================================
