@@ -57,6 +57,7 @@ _shared_variables: &shared_variables
     - "wide shot"
     - "action scene"
     - "group scene"
+    - "bird's-eye view"
 
   CHARACTER:
     - "friendly cartoon pirate"
@@ -111,6 +112,9 @@ _shared_variables: &shared_variables
     - "sleeping and snoring"
     - "talking to mermaids"
     - "playing in the waves"
+    - "hoisting a flag"
+    - "polishing the wheel"
+    - "setting out lanterns for the evening"
     # Parrot actions
     - "perched on shoulder"
     - "flying over ship"
@@ -140,6 +144,10 @@ _shared_variables: &shared_variables
     - "underwater coral reef"
     - "pirate accessories shop"
     - "seaside village"
+    - "lighthouse cliff"
+    - "calm harbor"
+    - "misty cove"
+    - "foggy morning sea"
 
   FOCUS:
     - "centered in frame"
@@ -148,6 +156,7 @@ _shared_variables: &shared_variables
     - "with parrot on shoulder"
     - "with treasure chest"
     - "with jolly roger flag"
+    - "with friendly crew gathered nearby"
 
   COMPOSITION:
     - "left-facing"
@@ -163,6 +172,10 @@ _shared_variables: &shared_variables
     - "Wooden barrels and rope coils nearby."
     - "Tropical fish swimming around."
     - "Palm fronds and coconuts in the scene."
+    - "Lanterns and pennants dangling from the rigging."
+    - "Coiled anchor rope with a nearby anchor."
+    - "A small picnic basket with fruit and crackers."
+    - "A rolled-up treasure map held open by a compass."
     - ""  # Sometimes no secondary elements
 
 # Character profiles - semantic constraints
