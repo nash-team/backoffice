@@ -1,5 +1,6 @@
 id: pirates
 label: "Pirates"
+
 palette:
   base: ["#8b4513", "#2f4f4f", "#b8860b"]
   accents_allowed: ["#ffd700", "#ff6347"]
@@ -11,18 +12,38 @@ palette:
 cover_templates:
   default:
     prompt_blocks:
-      subject: "a friendly cartoon pirate with treasure chest, centered composition"
+      subject: "a friendly cartoon pirate with treasure chest, centered composition, expressive eyes, friendly face"
       environment: "pirate ship deck, ocean waves, treasure island in background"
-      tone: "adventurous, fun, swashbuckling"
-      positives: ["vibrant colors", "detailed", "professional children's book cover", "engaging"]
-      negatives: ["no text", "no mockup", "no borders", "no open book", "no scary elements", "no violence"]
+      tone: "adventurous, fun, swashbuckling, warm inviting colors, professional children's book quality"
+      positives:
+        - "high detail"
+        - "vibrant colors"
+        - "glossy illustration"
+        - "professional children's book cover"
+        - "Amazon bestseller look"
+        - "warm lighting"
+        - "inviting atmosphere"
+      negatives:
+        - "no text"
+        - "no borders"
+        - "no mockup"
+        - "no open book"
+        - "no scary"
+        - "no violence"
+
+  diffusers:
+    # Compact prompt for SDXL/CLIP (max 77 tokens)
+    prompt: "Vibrant children's book cover, friendly cartoon pirate with treasure chest, ship deck, ocean waves, professional glossy illustration, kid-friendly, high detail"
+    workflow_params:
+      negative_prompt: "text, mockup, border, scary, violence, dark, low quality, watermark"
+      guidance_scale: "7.0"
+      steps: "25"
 
   "comfy":
-    prompt: "Vibrant, joyful, inviting, fun with children's book cover: friendly cartoon pirate with treasure on ship deck. Colorful, adventurous, fun, professional. full page. A title box on the top with \"Pirates\" written inside. The title box MUST be present."
+    prompt: "Vibrant children's book cover: friendly cartoon pirate with treasure chest on ship deck with ocean waves. Professional, glossy, kid-friendly, adventurous."
 
     workflow_params:
-      "prompt": "Vibrant, joyful, inviting, fun with children's book cover: friendly cartoon pirate with treasure on ship deck. Colorful, adventurous, fun, professional. full page. A title box on the top with \"Pirates\" written inside. The title box MUST be present."
-      "negative": "black and white, mockup, borders, low-res, distorted anatomy, missing title"
+      "clip_g_suffix": "vibrant colors, professional children's book, glossy, high quality, warm inviting, adventurous"
 
 # ==========================================
 # SHARED DEFINITIONS (anchors for reuse)
@@ -133,6 +154,12 @@ _shared_variables: &shared_variables
     - "3/4 view"
     - "action pose"
 
+  SECONDARY_ELEMENTS:
+    - "Surrounded by 2-3 small treasure chests and gold coins."
+    - "A few floating seagulls and ocean spray."
+    - "Scattered treasure maps and compass."
+    - ""  # Sometimes no secondary elements
+
 # Character profiles - semantic constraints
 # Prevents incoherent combos like "parrot steering ship"
 _shared_character_profiles: &shared_character_profiles
@@ -162,34 +189,72 @@ _shared_character_profiles: &shared_character_profiles
     actions: ["perched on shoulder", "flying over ship", "squawking", "eating crackers"]
     environments: ["pirate ship deck", "ship mast", "tropical island", "beach with palm trees"]
 
-# Shared quality settings
+# Base quality settings (used when no audience-specific profile is selected)
 _shared_quality_settings: &shared_quality_settings |
-  Black and white line art coloring page style.
-  IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading.
-  Bold clean outlines, closed shapes, thick black lines.
-  NO FRAME, NO BORDER around the illustration.
-  Illustration extends naturally to image boundaries.
-  Printable 300 DPI, simple to medium detail for kids age 4-8.
-  No text, no logo, no watermark, no scary elements, no violence.
+  Black and white line art coloring page, bold black lines on pure white background.
+  Clean closed shapes with thick uniform outlines, ready for coloring.
+  Full-bleed illustration extending naturally to edges.
+  Printable 300 DPI, simple-to-medium detail for children ages 4-8.
+  No scary elements, no violence.
+
+# Audience-specific quality profiles
+_quality_children: &quality_children
+  prefix: |
+    Children's coloring book page featuring a single main pirate character centered.
+    Clean black and white line art with bold outlines:
+  suffix: |
+    Simple friendly face with expressive features, smooth clean surfaces.
+    {SECONDARY_ELEMENTS}
+    Minimal background with large open spaces for easy coloring.
+    Full-bleed illustration with edges blending naturally.
+    Thick bold outlines, uniform line weight throughout.
+    Clear closed shapes, high contrast, pure white background with solid black lines only.
+    Kid-friendly coloring book style for ages 4-7. No scary elements, no violence.
+
+_quality_adults: &quality_adults
+  prefix: |
+    Adult coloring book page featuring detailed black and white line art.
+    Main pirate character centered with intricate details:
+  suffix: |
+    {SECONDARY_ELEMENTS}
+    Fine line details with intricate patterns throughout.
+    Varied line weights creating depth and visual interest.
+    Decorative background patterns and textures in pure line art.
+    Complex shapes with smaller detailed areas to color.
+    High contrast, pure white background with solid black lines.
+    Sophisticated aesthetic for adult coloring enthusiasts.
 
 # ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
 # ==========================================
 coloring_page_templates:
   default:
-    base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+    base_structure: "a {CHARACTER}, {ACTION}. Simple {ENV} background. {SHOT}, {FOCUS}, {COMPOSITION}."
     variables: *shared_variables
-    species_profiles: *shared_character_profiles
     quality_settings: *shared_quality_settings
+    quality_settings_by_audience:
+      children: *quality_children
+      adults: *quality_adults
+    species_profiles: *shared_character_profiles
 
-  "comfy":
-    base_structure: "Line art coloring page of a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+  diffusers:
+    # Compact prompt for SDXL/CLIP (max 77 tokens)
+    prompt: "Black and white line art coloring page, friendly cartoon pirate, bold clean outlines, simple shapes, thick black lines on white background, no shading, printable"
+    workflow_params:
+      negative_prompt: "color, grayscale, shading, gradient, gray, background texture, text, watermark, logo, scary, violence"
+      guidance_scale: "9.0"
+      steps: "35"
+
+  comfy:
+    base_structure: "a {CHARACTER} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
     variables: *shared_variables
-    species_profiles: *shared_character_profiles
     quality_settings: *shared_quality_settings
+    quality_settings_by_audience:
+      children: *quality_children
+      adults: *quality_adults
+    species_profiles: *shared_character_profiles
 
     workflow_params:
-      "prompt": "Line art coloring page for 2-4 years old kids of a {friendly cartoon pirate|pirate captain with hat|young pirate kid|pirate crew member|pirate with treasure map} {searching for treasure|sailing|digging for treasure with a shovel|looking through a telescope|celebrating|climbing rigging|steering ship} in a {pirate ship deck|treasure island|beach with palm trees|ocean waves|treasure cave|dock|tropical island}. {left-facing|right-facing|front|3/4 view|action pose}."
-      "47": "color, shading, text, watermark, scary, violence"
-      "clip_g_suffix": "professional line art, clean outlines"
+      # Note: Flux 2 ignores negative prompts, quality comes from positive descriptions
+      "clip_g_suffix": "children's coloring book illustration, clean line art, friendly pirate adventure style"
       "qwen_prompt": "Clean black and white lineart with bold outlines"
