@@ -123,6 +123,9 @@ _shared_variables: &shared_variables
     - "A few prehistoric plants and ferns nearby."
     - "Small dinosaur eggs in a nest."
     - "Scattered rocks and boulders."
+    - "A calm river bend with gentle ripples."
+    - "Low-growing palms or shrubs framing the scene."
+    - "A curious butterfly hovering near the foliage."
     - ""  # Sometimes no secondary elements
 
 # Shared species profiles - semantic constraints
