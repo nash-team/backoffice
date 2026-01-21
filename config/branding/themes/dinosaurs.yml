@@ -72,6 +72,7 @@ _shared_variables: &shared_variables
   ACTION:
     - "roaring"
     - "eating leaves"
+    - "nibbling on foliage"
     - "eating meat"
     - "running"
     - "walking"
@@ -97,6 +98,7 @@ _shared_variables: &shared_variables
     - "tropical forest"
     - "desert"
     - "prehistoric landscape"
+    - "grassy plains"
     - "mountains"
     - "sky with clouds"
     - "coastal cliffs"
@@ -147,30 +149,30 @@ _shared_species_profiles: &shared_species_profiles
 
   # Large Herbivores (long-necked)
   "Diplodocus":
-    actions: ["eating leaves", "walking", "sleeping", "nesting", "drinking at a river"]
-    environments: ["lush jungle", "tropical forest", "riverbank", "prehistoric landscape"]
+    actions: ["eating leaves", "nibbling on foliage", "walking", "sleeping", "nesting", "drinking at a river"]
+    environments: ["lush jungle", "tropical forest", "riverbank", "grassy plains", "prehistoric landscape"]
 
   "Brachiosaurus":
-    actions: ["eating leaves", "walking", "sleeping", "nesting"]
-    environments: ["lush jungle", "tropical forest", "lake shore", "prehistoric landscape"]
+    actions: ["eating leaves", "nibbling on foliage", "walking", "sleeping", "nesting"]
+    environments: ["lush jungle", "tropical forest", "lake shore", "grassy plains", "prehistoric landscape"]
 
   # Armored Herbivores
   "Triceratops":
-    actions: ["eating leaves", "walking", "running", "defending", "sleeping", "nesting", "playing"]
-    environments: ["volcanic plain", "tropical forest", "prehistoric landscape", "riverbank"]
+    actions: ["eating leaves", "nibbling on foliage", "walking", "running", "defending", "sleeping", "nesting", "playing"]
+    environments: ["volcanic plain", "tropical forest", "grassy plains", "prehistoric landscape", "riverbank"]
 
   "Stegosaurus":
-    actions: ["eating leaves", "walking", "defending", "sleeping", "nesting"]
-    environments: ["lush jungle", "tropical forest", "riverbank", "prehistoric landscape"]
+    actions: ["eating leaves", "nibbling on foliage", "walking", "defending", "sleeping", "nesting"]
+    environments: ["lush jungle", "tropical forest", "grassy plains", "riverbank", "prehistoric landscape"]
 
   "Ankylosaurus":
-    actions: ["eating leaves", "walking", "defending", "sleeping", "nesting"]
-    environments: ["volcanic plain", "desert", "prehistoric landscape", "tropical forest"]
+    actions: ["eating leaves", "nibbling on foliage", "walking", "defending", "sleeping", "nesting"]
+    environments: ["volcanic plain", "desert", "grassy plains", "prehistoric landscape", "tropical forest"]
 
   # Duck-billed Herbivore
   "Parasaurolophus":
-    actions: ["eating leaves", "walking", "running", "swimming", "nesting", "playing"]
-    environments: ["riverbank", "swamp", "lake shore", "tropical forest", "lush jungle"]
+    actions: ["eating leaves", "nibbling on foliage", "walking", "running", "swimming", "nesting", "playing"]
+    environments: ["riverbank", "swamp", "lake shore", "grassy plains", "tropical forest", "lush jungle"]
 
 # Base quality settings (used when no audience-specific profile is selected)
 _shared_quality_settings: &shared_quality_settings |
