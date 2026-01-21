@@ -1,5 +1,6 @@
 id: dinosaurs
 label: "Dinosaurs"
+
 palette:
   base: ["#35654d", "#6a8f49", "#e0b46b"]
   accents_allowed: ["#ffd166"]
@@ -9,43 +10,40 @@ palette:
 # COVER TEMPLATES (colorful, full-bleed)
 # ==========================================
 cover_templates:
-  # Default template (backward compatibility)
   default:
     prompt_blocks:
-      subject: "a cute but majestic T-Rex dinosaur, centered composition"
-      environment: "lush jungle, tropical plants, distant volcano, other dinosaurs in background"
-      tone: "adventurous, exciting, kid-friendly"
-      positives: ["highly detailed", "glossy", "professional children's book cover", "Amazon bestseller style"]
-      negatives: ["no text", "no mockup", "no borders", "no open book", "no low-res", "no distorted anatomy"]
+      subject: "a cute but majestic T-Rex dinosaur, centered composition, expressive eyes, friendly face"
+      environment: "lush jungle with tropical plants, distant volcano with gentle smoke, other friendly dinosaurs in background"
+      tone: "adventurous, exciting, kid-friendly, warm inviting colors, professional children's book quality"
+      positives:
+        - "high detail"
+        - "vibrant colors"
+        - "glossy illustration"
+        - "professional children's book cover"
+        - "Amazon bestseller look"
+        - "warm lighting"
+        - "inviting atmosphere"
+      negatives:
+        - "no text"
+        - "no borders"
+        - "no mockup"
+        - "no open book"
+        - "no scary"
+        - "no dark horror"
 
-  # Diffusers/SDXL - Compact prompts for CLIP tokenizer (max 77 tokens)
   diffusers:
-    prompt: "Children's book cover, cute majestic T-Rex dinosaur, lush jungle, tropical plants, volcano, professional illustration, vibrant colors, glossy, kid-friendly"
+    # Compact prompt for SDXL/CLIP (max 77 tokens)
+    prompt: "Vibrant children's book cover, cute majestic T-Rex dinosaur, lush jungle, tropical plants, volcano, professional glossy illustration, kid-friendly, high detail"
     workflow_params:
-      negative_prompt: "text, mockup, border, low quality, distorted anatomy, scary"
+      negative_prompt: "text, mockup, border, scary, dark, low quality, distorted anatomy, watermark"
       guidance_scale: "7.0"
       steps: "25"
 
-  # ComfyUI workflow - Concise prompts for FLUX via ComfyUI
   "comfy":
-    # Main prompt (will be injected into workflow_params["54"])
-    prompt: "A book cover for kids, joyful, inviting, fun with a cute majestic T-Rex dinosaur in the center
-             lush jungle, tropical plants, distant volcano, other dinosaurs in background.
-             A title box on the top with \"Coloring Book Dinosaurs\" written inside and wood borders.
-             professional quality, vibrant colors."
+    prompt: "Vibrant children's book cover: cute majestic T-Rex dinosaur in lush jungle with tropical plants and distant volcano. Professional, glossy, kid-friendly."
 
-    # ComfyUI workflow node parameters (mapped to node IDs in workflow JSON)
-    # The provider will inject: workflow["54"]["inputs"]["text"] = prompt (from above)
-    #                           workflow["47"]["inputs"]["text"] = workflow_params["47"]
     workflow_params:
-      # Add any custom ComfyUI node IDs or params here
-      prompt: "A book cover for kids, joyful, inviting, fun with a cute majestic T-Rex dinosaur in the center
-               lush jungle, tropical plants, distant volcano, other dinosaurs in background. Kawai.
-               A title box nice wood borders on the top with \"Coloring Book Dinosaurs\" written inside.
-               professional quality, vibrant colors.
-               The title MUST be present."
-
-      "negative": "black and white, mockup, borders, low-res, distorted anatomy, missing title"   # Negative CLIPTextEncode node
+      "clip_g_suffix": "vibrant colors, professional children's book, glossy, high quality, warm inviting"
 
 # ==========================================
 # SHARED DEFINITIONS (anchors for reuse)
@@ -122,6 +120,9 @@ _shared_variables: &shared_variables
     - "3/4 view"
     - "top-down"
 
+  SECONDARY_ELEMENTS:
+    - ""  # Dinosaurs theme doesn't use secondary elements
+
 # Shared species profiles - semantic constraints
 # Prevents incoherent combos like "T-Rex flying"
 _shared_species_profiles: &shared_species_profiles
@@ -171,43 +172,71 @@ _shared_species_profiles: &shared_species_profiles
     actions: ["eating leaves", "walking", "running", "swimming", "nesting", "playing"]
     environments: ["riverbank", "swamp", "lake shore", "tropical forest", "lush jungle"]
 
-# Shared quality settings
+# Base quality settings (used when no audience-specific profile is selected)
 _shared_quality_settings: &shared_quality_settings |
-  Black and white line art coloring page style.
-  IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading.
-  Bold clean outlines, closed shapes, thick black lines.
-  NO FRAME, NO BORDER around the illustration.
-  Illustration extends naturally to image boundaries.
-  Printable 300 DPI, simple to medium detail for kids age 4-8.
-  No text, no logo, no watermark.
+  Black and white line art coloring page, bold black lines on pure white background.
+  Clean closed shapes with thick uniform outlines, ready for coloring.
+  Full-bleed illustration extending naturally to edges.
+  Printable 300 DPI, simple-to-medium detail for children ages 4-8.
+
+# Audience-specific quality profiles
+_quality_children: &quality_children
+  prefix: |
+    Children's coloring book page featuring a single main dinosaur centered.
+    Clean black and white line art with bold outlines:
+  suffix: |
+    Simple friendly face with expressive features, smooth clean surfaces.
+    {SECONDARY_ELEMENTS}
+    Minimal background with large open spaces for easy coloring.
+    Full-bleed illustration with edges blending naturally.
+    Thick bold outlines, uniform line weight throughout.
+    Clear closed shapes, high contrast, pure white background with solid black lines only.
+    Kid-friendly coloring book style for ages 4-7.
+
+_quality_adults: &quality_adults
+  prefix: |
+    Adult coloring book page featuring detailed black and white line art.
+    Main dinosaur centered with intricate details:
+  suffix: |
+    {SECONDARY_ELEMENTS}
+    Fine line details with intricate patterns throughout.
+    Varied line weights creating depth and visual interest.
+    Decorative background patterns and textures in pure line art.
+    Complex shapes with smaller detailed areas to color.
+    High contrast, pure white background with solid black lines.
+    Sophisticated aesthetic for adult coloring enthusiasts.
 
 # ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
 # ==========================================
 coloring_page_templates:
-  # Default template (backward compatibility)
   default:
-    base_structure: "Line art coloring page of a {SPECIES} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+    base_structure: "a {SPECIES}, {ACTION}. Simple {ENV} background. {SHOT}, {FOCUS}, {COMPOSITION}."
     variables: *shared_variables
-    species_profiles: *shared_species_profiles
     quality_settings: *shared_quality_settings
+    quality_settings_by_audience:
+      children: *quality_children
+      adults: *quality_adults
+    species_profiles: *shared_species_profiles
 
-  # Diffusers/SDXL + ColoringBook Redmond LoRA (trigger: ColoringBookAF)
-  # Prompt optimized for white background with black outlines
   diffusers:
-    prompt: "ColoringBookAF, cute dinosaur, simple line art, white background, black outlines, no shading, kid-friendly coloring page"
+    # Compact prompt for SDXL/CLIP (max 77 tokens)
+    prompt: "Black and white line art coloring page, cute dinosaur, bold clean outlines, simple shapes, thick black lines on white background, no shading, printable"
     workflow_params:
-      negative_prompt: "color, filled, shading, gradient, gray, realistic, photo, 3d, complex"
-      guidance_scale: "7.5"
-      steps: "30"
+      negative_prompt: "color, grayscale, shading, gradient, gray, background texture, text, watermark, logo, scary"
+      guidance_scale: "9.0"
+      steps: "35"
 
-  # ComfyUI workflow - Ultra concise prompts optimized for FLUX via ComfyUI
-  "comfy":
-    base_structure: "Line art coloring page of a {SPECIES} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+  comfy:
+    base_structure: "a {SPECIES} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
     variables: *shared_variables
-    species_profiles: *shared_species_profiles
     quality_settings: *shared_quality_settings
+    quality_settings_by_audience:
+      children: *quality_children
+      adults: *quality_adults
+    species_profiles: *shared_species_profiles
 
-    # ComfyUI workflow node parameters (mapped to node IDs in workflow JSON)
     workflow_params:
-      "prompt": "a coloring book page for kids in black and white on with {only one dinosaur|4 dinosaurs}.{eating|fighting|sleeping|playing}. For a coloring book page for kids. The kid will be able to color his favorites dinosaurs. Cute for kids. A lot of details and professional coloring book page style. Kawai."
+      # Note: Flux 2 ignores negative prompts, quality comes from positive descriptions
+      "clip_g_suffix": "children's coloring book illustration, clean line art, cute friendly dinosaur style"
+      "qwen_prompt": "Clean black and white lineart with bold outlines"
