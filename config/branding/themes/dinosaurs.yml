@@ -53,9 +53,8 @@ cover_templates:
 _shared_variables: &shared_variables
   SHOT:
     - "close-up"
-    - "medium"
-    - "wide"
-    - "silhouette"
+    - "medium shot"
+    - "wide shot"
 
   SPECIES:
     - "T-Rex"
@@ -87,8 +86,8 @@ _shared_variables: &shared_variables
     - "hunting"
     - "defending"
     - "nesting"
-    - "fighting"
-    - "walking in groups"
+    - "drinking at a river"
+    - "walking in a group"
 
   # All possible environments (filtered per species via species_profiles)
   ENV:
@@ -103,15 +102,13 @@ _shared_variables: &shared_variables
     - "coastal cliffs"
     - "swamp"
     - "lake shore"
-    - "sunset"
-    - "Cave on a riverbank"
+    - "cave entrance"
 
   FOCUS:
-    - "head"
-    - "full body"
-    - "group of 2-3"
-    - "parent & baby"
-    - "footprint pattern"
+    - "centered in frame"
+    - "full body visible"
+    - "with 2-3 dinosaur friends"
+    - "parent with baby dinosaur"
 
   COMPOSITION:
     - "left-facing"
@@ -121,7 +118,10 @@ _shared_variables: &shared_variables
     - "top-down"
 
   SECONDARY_ELEMENTS:
-    - ""  # Dinosaurs theme doesn't use secondary elements
+    - "A few prehistoric plants and ferns nearby."
+    - "Small dinosaur eggs in a nest."
+    - "Scattered rocks and boulders."
+    - ""  # Sometimes no secondary elements
 
 # Shared species profiles - semantic constraints
 # Prevents incoherent combos like "T-Rex flying"
@@ -147,7 +147,7 @@ _shared_species_profiles: &shared_species_profiles
 
   # Large Herbivores (long-necked)
   "Diplodocus":
-    actions: ["eating leaves", "walking", "sleeping", "nesting", "drinking"]
+    actions: ["eating leaves", "walking", "sleeping", "nesting", "drinking at a river"]
     environments: ["lush jungle", "tropical forest", "riverbank", "prehistoric landscape"]
 
   "Brachiosaurus":
