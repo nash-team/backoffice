@@ -1,5 +1,6 @@
 id: unicorns
 label: "Unicorns"
+
 palette:
   base: ["#ffffff", "#ffe8fb"]
   accents_allowed: ["rainbow", "sparkles", "stars"]
@@ -11,18 +12,37 @@ palette:
 cover_templates:
   default:
     prompt_blocks:
-      subject: "a cute magical unicorn with rainbow mane and sparkling wings, centered"
-      environment: "enchanted landscape, soft clouds, butterflies"
-      tone: "whimsical, joyful"
-      positives: ["bright saturated colors", "glossy", "professional children's book cover"]
-      negatives: ["no text", "no mockup", "no borders", "no open book", "no realistic gore"]
+      subject: "a cute magical unicorn with rainbow mane and sparkling wings, centered composition, expressive eyes, friendly face"
+      environment: "enchanted landscape, soft clouds, butterflies, magical sparkles"
+      tone: "whimsical, joyful, magical, warm inviting colors, professional children's book quality"
+      positives:
+        - "high detail"
+        - "bright saturated colors"
+        - "glossy illustration"
+        - "professional children's book cover"
+        - "Amazon bestseller look"
+        - "warm lighting"
+        - "magical atmosphere"
+      negatives:
+        - "no text"
+        - "no borders"
+        - "no mockup"
+        - "no open book"
+        - "no scary"
+
+  diffusers:
+    # Compact prompt for SDXL/CLIP (max 77 tokens)
+    prompt: "Vibrant children's book cover, cute magical unicorn with rainbow mane, enchanted landscape, soft clouds, professional glossy illustration, kid-friendly, high detail"
+    workflow_params:
+      negative_prompt: "text, mockup, border, scary, dark, low quality, watermark"
+      guidance_scale: "7.0"
+      steps: "25"
 
   "comfy":
-    prompt: "Vibrant children's book cover: cute magical unicorn with rainbow mane in enchanted landscape. Colorful, whimsical, joyful, professional."
+    prompt: "Vibrant children's book cover: cute magical unicorn with rainbow mane in enchanted landscape with soft clouds. Professional, glossy, whimsical, magical."
 
     workflow_params:
-      "47": "text, mockup, borders, low-res, realistic gore"
-      "clip_g_suffix": "bright saturated colors, glossy, professional quality"
+      "clip_g_suffix": "bright saturated colors, professional children's book, glossy, high quality, magical whimsical"
 
 # ==========================================
 # SHARED DEFINITIONS (anchors for reuse)
@@ -119,6 +139,11 @@ _shared_variables: &shared_variables
     - "3/4 view"
     - "jumping"
 
+  SECONDARY_ELEMENTS:
+    - "Surrounded by 2-3 small butterflies and magical sparkles."
+    - "A few floating stars and rainbow wisps."
+    - "Scattered flowers and glowing fireflies."
+    - ""  # Sometimes no secondary elements
 
 # Character profiles - semantic constraints
 # Prevents incoherent combos like "baby unicorn flying" (no wings!)
@@ -150,33 +175,71 @@ _shared_character_profiles: &shared_character_profiles
     environments: ["magical meadow", "flower garden", "enchanted landscape", "rainbow bridge"]
 
 
-# Shared quality settings
+# Base quality settings (used when no audience-specific profile is selected)
 _shared_quality_settings: &shared_quality_settings |
-  Black and white line art coloring page style.
-  IMPORTANT: Use ONLY black lines on white background, NO colors, NO gray shading.
-  Bold clean outlines, closed shapes, thick black lines.
-  NO FRAME, NO BORDER around the illustration.
-  Illustration extends naturally to image boundaries.
-  Printable 300 DPI, simple to medium detail for kids age 4-8.
-  No text, no logo, no watermark.
+  Black and white line art coloring page, bold black lines on pure white background.
+  Clean closed shapes with thick uniform outlines, ready for coloring.
+  Full-bleed illustration extending naturally to edges.
+  Printable 300 DPI, simple-to-medium detail for children ages 4-8.
+
+# Audience-specific quality profiles
+_quality_children: &quality_children
+  prefix: |
+    Children's coloring book page featuring a single main unicorn centered.
+    Clean black and white line art with bold outlines:
+  suffix: |
+    Simple friendly face with expressive features, smooth clean surfaces.
+    {SECONDARY_ELEMENTS}
+    Minimal background with large open spaces for easy coloring.
+    Full-bleed illustration with edges blending naturally.
+    Thick bold outlines, uniform line weight throughout.
+    Clear closed shapes, high contrast, pure white background with solid black lines only.
+    Kid-friendly coloring book style for ages 4-7.
+
+_quality_adults: &quality_adults
+  prefix: |
+    Adult coloring book page featuring detailed black and white line art.
+    Main unicorn centered with intricate details:
+  suffix: |
+    {SECONDARY_ELEMENTS}
+    Fine line details with intricate patterns throughout.
+    Varied line weights creating depth and visual interest.
+    Decorative background patterns and textures in pure line art.
+    Complex shapes with smaller detailed areas to color.
+    High contrast, pure white background with solid black lines.
+    Sophisticated aesthetic for adult coloring enthusiasts.
 
 # ==========================================
 # COLORING PAGE TEMPLATES (B&W line art)
 # ==========================================
 coloring_page_templates:
   default:
-    base_structure: "Line art coloring page of a {UNICORN} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+    base_structure: "a {UNICORN}, {ACTION}. Simple {ENV} background. {SHOT}, {FOCUS}, {COMPOSITION}."
     variables: *shared_variables
-    species_profiles: *shared_character_profiles
     quality_settings: *shared_quality_settings
+    quality_settings_by_audience:
+      children: *quality_children
+      adults: *quality_adults
+    species_profiles: *shared_character_profiles
 
-  "comfy":
-    base_structure: "Line art coloring page of a {UNICORN} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
+  diffusers:
+    # Compact prompt for SDXL/CLIP (max 77 tokens)
+    prompt: "Black and white line art coloring page, cute magical unicorn, bold clean outlines, simple shapes, thick black lines on white background, no shading, printable"
+    workflow_params:
+      negative_prompt: "color, grayscale, shading, gradient, gray, background texture, text, watermark, logo"
+      guidance_scale: "9.0"
+      steps: "35"
+
+  comfy:
+    base_structure: "a {UNICORN} {ACTION} in a {ENV}, {SHOT}, {FOCUS}, {COMPOSITION}."
     variables: *shared_variables
-    species_profiles: *shared_character_profiles
     quality_settings: *shared_quality_settings
+    quality_settings_by_audience:
+      children: *quality_children
+      adults: *quality_adults
+    species_profiles: *shared_character_profiles
 
     workflow_params:
-      "47": "color, shading, text, watermark"
-      "clip_g_suffix": "professional line art, clean outlines"
+      # Note: Flux 2 ignores negative prompts, quality comes from positive descriptions
+      "clip_g_suffix": "children's coloring book illustration, clean line art, magical unicorn style"
       "qwen_prompt": "Clean black and white lineart with bold outlines"
