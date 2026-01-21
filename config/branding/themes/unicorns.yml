@@ -52,32 +52,32 @@ cover_templates:
 _shared_variables: &shared_variables
   SHOT:
     - "close-up"
-    - "medium"
-    - "wide"
+    - "medium shot"
+    - "wide shot"
     - "magical scene"
+    - "dreamy portrait"
 
   UNICORN:
     - "cute magical unicorn"
     - "unicorn with rainbow mane"
-    - "unicorn with wings"
-    - "baby unicorn with wings"
+    - "unicorn with sparkling wings"
+    - "baby unicorn with tiny wings"
     - "baby unicorn"
     - "elegant unicorn"
     - "playful unicorn"
     - "chubby unicorn"
-    - "3 legged unicorn as an inclusive unicorn"
-    - "galloping unicorn"
     - "sleepy unicorn"
     - "curly mane unicorn"
-    - "unicorn from the forest with a mushroom hat"
-    - "unicorn from the sky with wings"
-    - "unicorn from the water with palmed hoofs or mermaid tail"
-    - "unicorn from the volcano with fire mane"
-    - "unicorn for the mountain with strong hooves"
+    - "forest unicorn with flower crown"
+    - "sky unicorn with cloud-like mane"
+    - "water unicorn with flowing mane"
+    - "snow unicorn with fluffy coat"
+    - "rainbow unicorn"
 
+  # All possible actions (filtered per character via character_profiles)
   ACTION:
+    # Ground actions (all unicorns)
     - "prancing"
-    - "flying"
     - "playing"
     - "resting"
     - "dancing"
@@ -85,18 +85,16 @@ _shared_variables: &shared_variables
     - "spreading sparkles"
     - "galloping"
     - "nuzzling flowers"
-    - "galloping"
-    - "sleeping"
+    - "sleeping peacefully"
     - "eating grass"
-    - "eating fruits"
-    - "flying over rainbow"
-    - "racing with other unicorns and horses friends"
-    - "baking pies"
-    - "lighting stars in the sky"
-    - "playing on clouds"
-    - "eating ice cream"
-    - "sleeping on a cloud"
+    - "eating apples"
     - "exploring happily"
+    - "making friends"
+    - "watching butterflies"
+    # Flying actions (winged unicorns only)
+    - "flying gracefully"
+    - "soaring through clouds"
+    - "gliding over rainbow"
 
   ENV:
     - "enchanted landscape"
@@ -106,31 +104,28 @@ _shared_variables: &shared_variables
     - "flower garden"
     - "rainbow bridge"
     - "crystal castle background"
-    - "snow landscape"
+    - "snowy landscape"
     - "whimsical ice castle"
-    - "quiet volcano lava river"
     - "snowy mountain"
     - "green plains and valleys"
     - "beautiful meadows"
     - "wild orchard"
-    - "whimsical fairy temple ruins"
-    - "whimsical forest temple ruins"
-    - "Snowy mountain with northern lights"
-    - "beautiful canyons"
+    - "fairy forest clearing"
+    - "mushroom village"
+    - "northern lights sky"
+    - "peaceful lake shore"
+    - "cherry blossom garden"
 
   FOCUS:
-    - "head with horn"
-    - "full body"
+    - "centered in frame"
+    - "full body visible"
     - "with butterflies"
-    - "with stars"
-    - "with flowers"
-    - "with forest animals"
-    - "with farm animals"
-    - "with sea animals"
-    - "with horses"
-    - "with with fairies"
-    - "with snow"
-    - "with northern lights"
+    - "with stars around"
+    - "with flowers nearby"
+    - "with forest friends"
+    - "with fairy companions"
+    - "with rainbow in background"
+    - "with sparkles all around"
 
   COMPOSITION:
     - "left-facing"
@@ -143,36 +138,76 @@ _shared_variables: &shared_variables
     - "Surrounded by 2-3 small butterflies and magical sparkles."
     - "A few floating stars and rainbow wisps."
     - "Scattered flowers and glowing fireflies."
+    - "Tiny mushrooms and clover patches nearby."
+    - "Floating hearts and sparkle trails."
+    - "A small rainbow arcing in the corner."
+    - "Puffy clouds drifting peacefully."
     - ""  # Sometimes no secondary elements
 
 # Character profiles - semantic constraints
 # Prevents incoherent combos like "baby unicorn flying" (no wings!)
 _shared_character_profiles: &shared_character_profiles
-  # Winged unicorn (alicorn) - CAN fly
+  # Winged unicorns - CAN fly
   "unicorn with sparkling wings":
-    actions: ["prancing", "flying", "playing", "resting", "dancing", "jumping over rainbow", "spreading sparkles", "galloping"]
-    environments: ["enchanted landscape", "soft clouds", "magical meadow", "starry sky", "flower garden", "rainbow bridge", "crystal castle background"]
+    actions: ["prancing", "flying gracefully", "soaring through clouds", "gliding over rainbow", "playing", "resting", "dancing", "jumping over rainbow", "spreading sparkles", "galloping"]
+    environments: ["enchanted landscape", "soft clouds", "magical meadow", "starry sky", "flower garden", "rainbow bridge", "crystal castle background", "northern lights sky"]
+
+  "baby unicorn with tiny wings":
+    actions: ["playing", "resting", "flying gracefully", "spreading sparkles", "prancing"]
+    environments: ["soft clouds", "magical meadow", "flower garden", "enchanted landscape"]
+
+  "sky unicorn with cloud-like mane":
+    actions: ["flying gracefully", "soaring through clouds", "gliding over rainbow", "prancing", "resting", "spreading sparkles"]
+    environments: ["soft clouds", "starry sky", "northern lights sky", "rainbow bridge"]
 
   # Regular unicorns - CANNOT fly (no wings)
   "cute magical unicorn":
-    actions: ["prancing", "playing", "resting", "dancing", "jumping over rainbow", "spreading sparkles", "galloping", "nuzzling flowers"]
-    environments: ["enchanted landscape", "magical meadow", "flower garden", "rainbow bridge", "crystal castle background"]
+    actions: ["prancing", "playing", "resting", "dancing", "jumping over rainbow", "spreading sparkles", "galloping", "nuzzling flowers", "making friends"]
+    environments: ["enchanted landscape", "magical meadow", "flower garden", "rainbow bridge", "crystal castle background", "cherry blossom garden"]
 
   "unicorn with rainbow mane":
     actions: ["prancing", "playing", "resting", "dancing", "jumping over rainbow", "spreading sparkles", "galloping", "nuzzling flowers"]
     environments: ["enchanted landscape", "magical meadow", "flower garden", "rainbow bridge", "crystal castle background"]
 
+  "rainbow unicorn":
+    actions: ["prancing", "playing", "dancing", "jumping over rainbow", "spreading sparkles", "galloping"]
+    environments: ["enchanted landscape", "magical meadow", "rainbow bridge", "flower garden"]
+
   "baby unicorn":
-    actions: ["playing", "resting", "nuzzling flowers", "prancing"]
-    environments: ["magical meadow", "flower garden", "enchanted landscape"]
+    actions: ["playing", "resting", "nuzzling flowers", "prancing", "sleeping peacefully", "watching butterflies"]
+    environments: ["magical meadow", "flower garden", "enchanted landscape", "cherry blossom garden"]
 
   "elegant unicorn":
     actions: ["prancing", "resting", "dancing", "galloping", "spreading sparkles"]
     environments: ["enchanted landscape", "magical meadow", "crystal castle background", "rainbow bridge"]
 
   "playful unicorn":
-    actions: ["prancing", "playing", "jumping over rainbow", "galloping", "nuzzling flowers", "spreading sparkles"]
-    environments: ["magical meadow", "flower garden", "enchanted landscape", "rainbow bridge"]
+    actions: ["prancing", "playing", "jumping over rainbow", "galloping", "nuzzling flowers", "spreading sparkles", "making friends"]
+    environments: ["magical meadow", "flower garden", "enchanted landscape", "rainbow bridge", "wild orchard"]
+
+  "chubby unicorn":
+    actions: ["eating grass", "eating apples", "resting", "sleeping peacefully", "prancing", "playing"]
+    environments: ["magical meadow", "wild orchard", "flower garden", "green plains and valleys"]
+
+  "sleepy unicorn":
+    actions: ["sleeping peacefully", "resting", "nuzzling flowers", "prancing"]
+    environments: ["magical meadow", "flower garden", "soft clouds", "enchanted landscape"]
+
+  "curly mane unicorn":
+    actions: ["prancing", "dancing", "playing", "galloping", "spreading sparkles", "nuzzling flowers"]
+    environments: ["enchanted landscape", "magical meadow", "flower garden", "cherry blossom garden"]
+
+  "forest unicorn with flower crown":
+    actions: ["prancing", "exploring happily", "nuzzling flowers", "resting", "making friends", "watching butterflies"]
+    environments: ["fairy forest clearing", "mushroom village", "wild orchard", "flower garden", "enchanted landscape"]
+
+  "water unicorn with flowing mane":
+    actions: ["prancing", "playing", "resting", "galloping", "exploring happily"]
+    environments: ["peaceful lake shore", "magical meadow", "enchanted landscape", "flower garden"]
+
+  "snow unicorn with fluffy coat":
+    actions: ["prancing", "playing", "galloping", "resting", "exploring happily"]
+    environments: ["snowy landscape", "snowy mountain", "whimsical ice castle", "northern lights sky"]
 
 
 # Base quality settings (used when no audience-specific profile is selected)
