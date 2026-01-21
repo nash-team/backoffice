@@ -53,8 +53,8 @@ cover_templates:
 _shared_variables: &shared_variables
   SHOT:
     - "close-up"
-    - "medium"
-    - "wide"
+    - "medium shot"
+    - "wide shot"
     - "action scene"
     - "group scene"
 
@@ -95,57 +95,59 @@ _shared_variables: &shared_variables
     - "beautiful and friendly sirens lads"
     - "corsair"
 
+  # All possible actions (filtered per character via character_profiles)
   ACTION:
+    # Human pirate actions
     - "searching for treasure"
-    - "pirate with treasure map"
-    - "wielding swords"
-    - "with old wooden guns"
+    - "reading a treasure map"
     - "sailing"
     - "checking the horizon"
-    - "gambling"
     - "digging for treasure"
     - "looking through telescope"
     - "celebrating"
-    - "singing"
+    - "singing sea shanties"
     - "climbing rigging"
     - "steering ship"
+    - "sleeping and snoring"
+    - "talking to mermaids"
+    - "playing in the waves"
+    # Parrot actions
     - "perched on shoulder"
     - "flying over ship"
     - "squawking"
     - "eating crackers"
-    - "sleeping and snoring"
-    - "talking to mermaids"
-    - "swimming with sea animals"
-    - "playing in the waves with sea animals"
-    - "fighting corsairs"
+    # Sea creature actions
+    - "swimming gracefully"
+    - "playing with bubbles"
+    - "resting on rocks"
 
   ENV:
     - "pirate ship deck"
     - "pirate tavern"
-    - "captain's private quarter"
+    - "captain's quarters"
     - "treasure island"
     - "beach with palm trees"
     - "ocean waves"
     - "ocean depths"
     - "treasure cave"
-    - "dock filled with boats"
-    - "island port and its docks"
+    - "busy dock with boats"
+    - "island port"
     - "tropical island"
     - "ship mast"
     - "ship upper deck"
     - "ship lower deck"
     - "shipwreck on the beach"
-    - "shipwreck deep in the water"
-    - "pirate clothes an accessory shop"
-    - "pirate hairdresser shop"
-    - "pirate pet shop"
+    - "underwater coral reef"
+    - "pirate accessories shop"
+    - "seaside village"
 
   FOCUS:
-    - "pirate with treasure chest"
-    - "full body"
-    - "with ship"
-    - "with parrot"
-    - "with flag"
+    - "centered in frame"
+    - "full body visible"
+    - "with pirate ship in background"
+    - "with parrot on shoulder"
+    - "with treasure chest"
+    - "with jolly roger flag"
 
   COMPOSITION:
     - "left-facing"
@@ -158,6 +160,9 @@ _shared_variables: &shared_variables
     - "Surrounded by 2-3 small treasure chests and gold coins."
     - "A few floating seagulls and ocean spray."
     - "Scattered treasure maps and compass."
+    - "Wooden barrels and rope coils nearby."
+    - "Tropical fish swimming around."
+    - "Palm fronds and coconuts in the scene."
     - ""  # Sometimes no secondary elements
 
 # Character profiles - semantic constraints
@@ -165,29 +170,58 @@ _shared_variables: &shared_variables
 _shared_character_profiles: &shared_character_profiles
   # Human pirates - full range of human actions
   "friendly cartoon pirate":
-    actions: ["searching for treasure", "sailing", "digging for treasure", "looking through telescope", "celebrating", "climbing rigging", "steering ship"]
-    environments: ["pirate ship deck", "treasure island", "beach with palm trees", "ocean waves", "treasure cave", "dock", "tropical island"]
+    actions: ["searching for treasure", "sailing", "digging for treasure", "looking through telescope", "celebrating", "climbing rigging", "steering ship", "singing sea shanties"]
+    environments: ["pirate ship deck", "treasure island", "beach with palm trees", "treasure cave", "busy dock with boats", "tropical island"]
 
   "pirate captain with hat":
-    actions: ["steering ship", "looking through telescope", "celebrating", "sailing", "searching for treasure"]
-    environments: ["pirate ship deck", "treasure island", "dock", "ocean waves"]
+    actions: ["steering ship", "looking through telescope", "celebrating", "sailing", "searching for treasure", "checking the horizon"]
+    environments: ["pirate ship deck", "captain's quarters", "treasure island", "busy dock with boats"]
 
-  "young pirate kid":
-    actions: ["searching for treasure", "digging for treasure", "celebrating", "climbing rigging", "playing"]
+  "pirate captain with parrot on the shoulder":
+    actions: ["steering ship", "looking through telescope", "celebrating", "sailing", "searching for treasure"]
+    environments: ["pirate ship deck", "captain's quarters", "treasure island", "ship upper deck"]
+
+  "lady pirate captain with hat":
+    actions: ["steering ship", "looking through telescope", "celebrating", "sailing", "searching for treasure", "checking the horizon"]
+    environments: ["pirate ship deck", "captain's quarters", "treasure island", "busy dock with boats"]
+
+  "young pirate boy":
+    actions: ["searching for treasure", "digging for treasure", "celebrating", "climbing rigging", "playing in the waves"]
     environments: ["pirate ship deck", "treasure island", "beach with palm trees", "treasure cave"]
 
-  "pirate crew member":
-    actions: ["sailing", "climbing rigging", "digging for treasure", "celebrating", "steering ship"]
-    environments: ["pirate ship deck", "treasure island", "beach with palm trees", "dock"]
+  "young pirate girl":
+    actions: ["searching for treasure", "digging for treasure", "celebrating", "climbing rigging", "playing in the waves"]
+    environments: ["pirate ship deck", "treasure island", "beach with palm trees", "treasure cave"]
+
+  "pirate crew members with ladies and lads":
+    actions: ["sailing", "climbing rigging", "digging for treasure", "celebrating", "singing sea shanties"]
+    environments: ["pirate ship deck", "treasure island", "beach with palm trees", "busy dock with boats"]
 
   "pirate with treasure map":
-    actions: ["searching for treasure", "looking through telescope", "digging for treasure", "celebrating"]
+    actions: ["searching for treasure", "reading a treasure map", "digging for treasure", "celebrating"]
     environments: ["treasure island", "beach with palm trees", "treasure cave", "pirate ship deck"]
 
   # Parrot - bird-specific actions only!
   "parrot companion":
     actions: ["perched on shoulder", "flying over ship", "squawking", "eating crackers"]
     environments: ["pirate ship deck", "ship mast", "tropical island", "beach with palm trees"]
+
+  # Sea creatures - aquatic actions only!
+  "beautiful and friendly mermaids":
+    actions: ["swimming gracefully", "playing with bubbles", "resting on rocks", "talking to mermaids"]
+    environments: ["ocean waves", "ocean depths", "underwater coral reef", "beach with palm trees"]
+
+  "friendly cute octopus":
+    actions: ["swimming gracefully", "playing with bubbles", "resting on rocks"]
+    environments: ["ocean depths", "underwater coral reef", "shipwreck on the beach"]
+
+  "cute and friendly shark":
+    actions: ["swimming gracefully", "playing with bubbles"]
+    environments: ["ocean waves", "ocean depths", "underwater coral reef"]
+
+  "cute and friendly dolphins":
+    actions: ["swimming gracefully", "playing with bubbles", "playing in the waves"]
+    environments: ["ocean waves", "ocean depths", "beach with palm trees"]
 
 # Base quality settings (used when no audience-specific profile is selected)
 _shared_quality_settings: &shared_quality_settings |
