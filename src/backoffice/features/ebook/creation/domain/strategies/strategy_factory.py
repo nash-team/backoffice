@@ -6,6 +6,7 @@ from backoffice.features.ebook.creation.domain.strategies.coloring_book_strategy
     ColoringBookStrategy,
 )
 from backoffice.features.ebook.shared.domain.entities.generation_request import EbookType
+from backoffice.features.ebook.shared.domain.policies.model_registry import ModelRegistry
 from backoffice.features.ebook.shared.domain.ports.ebook_generation_strategy_port import (
     EbookGenerationStrategyPort,
 )
@@ -59,6 +60,14 @@ class StrategyFactory:
         pages_provider = ProviderFactory.create_content_page_provider()
         assembly_provider = ProviderFactory.create_assembly_provider()
 
+        # Determine max_concurrent based on provider type
+        # - ComfyUI (local GPU): sequential (1) to avoid race conditions on shared workflow/client_id
+        # - Cloud APIs (OpenRouter, Gemini): parallel (3) as they handle concurrent requests
+        registry = ModelRegistry.get_instance()
+        page_model = registry.get_page_model()
+        max_concurrent = 1 if page_model.provider == "comfy" else 3
+        logger.info(f"📊 Page generation concurrency: {max_concurrent} (provider: {page_model.provider})")
+
         # Create services with provider injection
         cover_service = CoverGenerationService(
             cover_port=cover_provider,
@@ -67,7 +76,7 @@ class StrategyFactory:
 
         pages_service = ContentPageGenerationService(
             page_port=pages_provider,
-            max_concurrent=3,  # V1: simple Semaphore limit
+            max_concurrent=max_concurrent,
             enable_cache=True,
         )
 
