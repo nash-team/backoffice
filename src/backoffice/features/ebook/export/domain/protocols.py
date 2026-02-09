@@ -37,15 +37,17 @@ class ImageProviderProtocol(Protocol):
 
     async def remove_text_from_cover(
         self,
-        cover_bytes: bytes,
-        barcode_width_inches: float,
-        barcode_height_inches: float,
-        barcode_margin_inches: float,
+        image_bytes: bytes,
+        spec: ImageSpec,
+        barcode_width_inches: float = 2.0,
+        barcode_height_inches: float = 1.2,
+        barcode_margin_inches: float = 0.25,
     ) -> bytes:
         """Remove text from cover image for back cover.
 
         Args:
-            cover_bytes: Original cover image bytes
+            image_bytes: Original cover image bytes
+            spec: Image specifications
             barcode_width_inches: Width of barcode space to preserve
             barcode_height_inches: Height of barcode space to preserve
             barcode_margin_inches: Margin around barcode space

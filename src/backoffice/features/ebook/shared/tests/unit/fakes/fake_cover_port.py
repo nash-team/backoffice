@@ -1,8 +1,35 @@
 """Fake cover generation port for testing."""
 
+import io
+
+from PIL import Image
+
 from backoffice.features.ebook.shared.domain.entities.generation_request import ImageSpec
 from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
+
+_FAKE_PNG_CACHE: bytes | None = None
+
+
+def _make_fake_png(width: int = 500, height: int = 500) -> bytes:
+    """Create a valid PNG image for testing (> 1KB to pass quality validation).
+
+    Uses a gradient pattern to ensure the PNG compresses to > 1KB.
+    Cached to avoid regenerating on every call.
+    """
+    global _FAKE_PNG_CACHE  # noqa: PLW0603
+    if _FAKE_PNG_CACHE is not None:
+        return _FAKE_PNG_CACHE
+
+    img = Image.new("RGB", (width, height))
+    pixels = img.load()
+    for y in range(height):
+        for x in range(width):
+            pixels[x, y] = (x % 256, y % 256, (x + y) % 256)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    _FAKE_PNG_CACHE = buf.getvalue()
+    return _FAKE_PNG_CACHE
 
 
 class FakeCoverPort(CoverGenerationPort):
@@ -73,21 +100,22 @@ class FakeCoverPort(CoverGenerationPort):
             # Return image that's too small
             return b"FAKE_COVER_TOO_SMALL"
 
-        # Return valid fake image
-        return b"F" * self.image_size  # Synthetic PNG-like data
+        # Return valid fake PNG image
+        return _make_fake_png()
 
     async def remove_text_from_cover(
         self,
-        image_bytes: bytes | None = None,
+        image_bytes: bytes,
+        spec: ImageSpec,
         barcode_width_inches: float = 2.0,
         barcode_height_inches: float = 1.2,
         barcode_margin_inches: float = 0.25,
-        cover_bytes: bytes | None = None,  # backward compatibility
     ) -> bytes:
         """Remove text from cover to create back cover using AI vision.
 
         Args:
             image_bytes: Original cover image (with text)
+            spec: Image specifications (unused in fake, kept for interface compatibility)
             barcode_width_inches: KDP barcode width in inches (default: 2.0)
             barcode_height_inches: KDP barcode height in inches (default: 1.2)
             barcode_margin_inches: KDP barcode margin in inches (default: 0.25)
@@ -95,10 +123,5 @@ class FakeCoverPort(CoverGenerationPort):
         Returns:
             Same image without text with KDP-compliant barcode space (for back cover)
         """
-        # Accept both image_bytes (current port) and cover_bytes (legacy)
-        source_bytes = image_bytes or cover_bytes
-        if source_bytes is None:
-            raise ValueError("image_bytes is required")
-
         # For testing, just return the same bytes or a modified version
-        return source_bytes
+        return image_bytes

@@ -41,7 +41,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         logger.info(f"[AuthMiddleware] Path: {path}, Cookie present: {bool(session_token)}")
 
         if not session_token:
-            logger.info(f"[AuthMiddleware] No session cookie, redirecting to login")
+            logger.info("[AuthMiddleware] No session cookie, redirecting to login")
             return RedirectResponse(url="/login", status_code=302)
 
         # Verify session token
@@ -50,7 +50,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         if session_data is None:
             # Session expired or invalid
-            logger.info(f"[AuthMiddleware] Session invalid/expired, redirecting to login")
+            logger.info("[AuthMiddleware] Session invalid/expired, redirecting to login")
             response = RedirectResponse(url="/login?error=session_expired", status_code=302)
             response.delete_cookie(key=SESSION_COOKIE_NAME)
             return response

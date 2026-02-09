@@ -208,9 +208,10 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort, ImageE
 
     async def remove_text_from_cover(
         self,
-        cover_bytes: bytes,
+        image_bytes: bytes,
+        spec: ImageSpec,
         barcode_width_inches: float = 2.0,
-        barcode_height_inches: float = 1.5,
+        barcode_height_inches: float = 1.2,
         barcode_margin_inches: float = 0.25,
     ) -> bytes:
         """Remove text from cover to create back cover.
@@ -219,7 +220,7 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort, ImageE
         The barcode space will be added later during KDP export assembly, not here.
 
         Args:
-            cover_bytes: Original cover image (with text)
+            image_bytes: Original cover image (with text)
             barcode_width_inches: Unused (kept for interface compatibility)
             barcode_height_inches: Unused (kept for interface compatibility)
             barcode_margin_inches: Unused (kept for interface compatibility)
@@ -234,8 +235,8 @@ class GeminiImageProvider(CoverGenerationPort, ContentPageGenerationPort, ImageE
 
         # Just return the cover - barcode space will be added during KDP export
         # not during back cover generation
-        logger.info(f"✅ Back cover ready (no barcode space): {len(cover_bytes)} bytes")
-        return cover_bytes
+        logger.info(f"✅ Back cover ready (no barcode space): {len(image_bytes)} bytes")
+        return image_bytes
 
     async def edit_image(
         self,

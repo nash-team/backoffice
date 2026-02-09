@@ -210,17 +210,19 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
 
     async def remove_text_from_cover(
         self,
-        cover_bytes: bytes,
+        image_bytes: bytes,
+        spec: ImageSpec,
         barcode_width_inches: float = 2.0,
-        barcode_height_inches: float = 1.5,
+        barcode_height_inches: float = 1.2,
         barcode_margin_inches: float = 0.25,
     ) -> bytes:
         """Remove text from cover to create back cover using Gemini vision.
 
         Args:
-            cover_bytes: Original cover image (with text)
+            image_bytes: Original cover image (with text)
+            spec: Image specifications (unused, kept for interface compatibility)
             barcode_width_inches: KDP barcode width in inches (default: 2.0)
-            barcode_height_inches: KDP barcode height in inches (default: 1.5)
+            barcode_height_inches: KDP barcode height in inches (default: 1.2)
             barcode_margin_inches: KDP barcode margin in inches (default: 0.25)
 
         Returns:
@@ -248,7 +250,7 @@ class OpenRouterImageProvider(CoverGenerationPort, ContentPageGenerationPort):
 
         try:
             # Encode cover to base64
-            cover_b64 = base64.b64encode(cover_bytes).decode()
+            cover_b64 = base64.b64encode(image_bytes).decode()
 
             # ULTRA-SIMPLE prompt: just remove text, nothing else
             prompt_text = "Remove all text and typography from this image."

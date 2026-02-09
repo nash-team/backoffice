@@ -24,7 +24,6 @@ from backoffice.features.ebook.shared.infrastructure.factories.repository_factor
     get_repository_factory,
 )
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
-
 from backoffice.features.shared.presentation.routes.templates import templates
 
 # Type alias for dependency injection

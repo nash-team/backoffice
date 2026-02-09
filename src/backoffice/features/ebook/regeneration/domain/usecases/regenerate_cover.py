@@ -1,5 +1,6 @@
 """Use case for regenerating ebook cover (V1 slim)."""
 
+import base64
 import logging
 
 from backoffice.features.ebook.regeneration.domain.events.cover_regenerated_event import (
@@ -10,10 +11,19 @@ from backoffice.features.ebook.regeneration.domain.services.regeneration_service
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook
 from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
+from backoffice.features.ebook.shared.domain.services.cover_compositor import CoverCompositor
 from backoffice.features.ebook.shared.domain.services.cover_generation import CoverGenerationService
 from backoffice.features.ebook.shared.domain.services.ebook_validator import EbookValidator
+from backoffice.features.ebook.shared.domain.services.workflow_helper import (
+    build_cover_prompt_from_yaml,
+    load_workflow_params,
+)
+from backoffice.features.ebook.shared.infrastructure.adapters.theme_repository import (
+    ThemeRepository,
+)
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -67,20 +77,17 @@ class RegenerateCoverUseCase:
         # Validate ebook (exists + DRAFT status + has structure)
         ebook = await self.ebook_repository.get_by_id(ebook_id)
         ebook = EbookValidator.validate_for_approval(ebook, ebook_id)
-        # Assert structure_json is valid (guaranteed by validator)
-        assert ebook.structure_json is not None
+        # structure_json is guaranteed non-None by validate_for_approval
+        if ebook.structure_json is None:  # pragma: no cover – defensive; validator already checked
+            raise DomainError(
+                code=ErrorCode.VALIDATION_ERROR,
+                message="Ebook has no structure data",
+                actionable_hint="The ebook must be fully generated before this operation",
+            )
 
         logger.info(f"🔄 Regenerating cover for ebook {ebook_id}: {ebook.title}")
 
         # Step 1: Build cover prompt from YAML theme
-        from backoffice.features.ebook.shared.domain.services.workflow_helper import (
-            build_cover_prompt_from_yaml,
-            load_workflow_params,
-        )
-        from backoffice.features.ebook.shared.infrastructure.adapters.theme_repository import (
-            ThemeRepository,
-        )
-
         theme_repo = ThemeRepository()
         cover_prompt = build_cover_prompt_from_yaml(theme_id=ebook.theme_id or "dinosaurs", themes_directory=theme_repo.themes_directory)
         logger.info(f"Using YAML-based prompt: {cover_prompt[:100]}...")
@@ -108,12 +115,14 @@ class RegenerateCoverUseCase:
             workflow_params=workflow_params,
         )
 
+        # Overlay title and footer images from theme
+        theme_profile = theme_repo.get_theme_by_id(ebook.theme_id or "dinosaurs")
+        cover_data = CoverCompositor().apply_cover_overlays(cover_data, theme_profile)
+
         logger.info(f"✅ Cover regenerated: {len(cover_data)} bytes")
 
         # Step 3: Rebuild PDF with new cover using RegenerationService
         # Extract pages metadata from structure_json
-        import base64
-
         pages_meta = ebook.structure_json["pages_meta"]
 
         # Build assembled pages list with new cover

@@ -6,6 +6,9 @@ palette:
   accents_allowed: ["#ffd166"]
   forbidden_keywords: ["rainbow", "neon", "pastel gradient"]
 
+cover_title_image: "config/branding/themes/assets/dinosaurs/cover_title.png"
+cover_footer_image: "config/branding/assets/cover_footer.png"
+
 # ==========================================
 # COVER TEMPLATES (colorful, full-bleed)
 # ==========================================
@@ -40,7 +43,7 @@ cover_templates:
       steps: "25"
 
   "comfy":
-    prompt: "Vibrant children's book cover: cute majestic T-Rex dinosaur in lush jungle with tropical plants and distant volcano. Professional, glossy, kid-friendly."
+    prompt: "Vibrant children's book cover: cute majestic T-Rex dinosaur in lush jungle with tropical plants and distant volcano. Professional, glossy, kid-friendly, without text, no letters, no words."
 
     workflow_params:
       "clip_g_suffix": "vibrant colors, professional children's book, glossy, high quality, warm inviting"

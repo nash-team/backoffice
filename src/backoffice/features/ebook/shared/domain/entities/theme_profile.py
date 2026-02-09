@@ -60,6 +60,8 @@ class ThemeProfileModel(BaseModel):
     id: str = Field(..., min_length=1, pattern=r"^[a-z0-9_-]+$", description="Theme identifier")
     label: str = Field(..., min_length=1, description="Human-readable theme name")
     palette: PaletteModel
+    cover_title_image: str = Field(..., min_length=1, description="Path to cover title PNG (transparent)")
+    cover_footer_image: str = Field(..., min_length=1, description="Path to cover footer PNG (transparent)")
     cover_templates: dict[str, CoverTemplateModel] = Field(..., min_length=1)
     coloring_page_templates: dict[str, ColoringPageTemplateModel] = Field(default_factory=dict)
 
@@ -108,6 +110,8 @@ class ThemeProfile:
     label: str
     palette: Palette
     blocks: PromptBlocks
+    cover_title_image: str
+    cover_footer_image: str
 
     @classmethod
     def from_model(cls, model: ThemeProfileModel) -> "ThemeProfile":
@@ -135,6 +139,8 @@ class ThemeProfile:
                 positives=default_cover.prompt_blocks.positives,
                 negatives=default_cover.prompt_blocks.negatives,
             ),
+            cover_title_image=model.cover_title_image,
+            cover_footer_image=model.cover_footer_image,
         )
 
 

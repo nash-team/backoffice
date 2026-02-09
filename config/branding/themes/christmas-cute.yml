@@ -6,6 +6,9 @@ palette:
   accents_allowed: ["#ff9fb2", "#4ac0ff", "#ffe066", "#f28d35"]
   forbidden_keywords: ["gothic", "spooky", "horror", "creepy", "grunge", "dark eerie", "drab", "muddy tones"]
 
+cover_title_image: "config/branding/themes/assets/christmas-cute/cover_title.png"
+cover_footer_image: "config/branding/assets/cover_footer.png"
+
 # ==========================================
 # COVER TEMPLATES (colorful, full-bleed)
 # ==========================================
@@ -35,7 +38,7 @@ cover_templates:
         - "no dull colors"
 
   "comfy":
-    prompt: "Bright joyful Christmas cover: cute festive character in a cozy snowy village with lights and gifts. Soft glow, cheerful colors, professional children's book quality."
+    prompt: "Bright joyful Christmas cover: cute festive character in a cozy snowy village with lights and gifts. Soft glow, cheerful colors, professional children's book quality, without text, no letters, no words."
 
     workflow_params:
       "47": "text, mockup, borders, spooky, horror, grunge, dull colors"

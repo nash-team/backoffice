@@ -6,6 +6,9 @@ palette:
   accents_allowed: ["#d45500", "#d4a017", "#ff9a56", "#ffd700"]
   forbidden_keywords: ["rainbow", "pastel", "neon", "hyper-saturated", "gradient", "cold blue", "icy"]
 
+cover_title_image: "config/branding/themes/assets/christmas-creepy-cute/cover_title.png"
+cover_footer_image: "config/branding/assets/cover_footer.png"
+
 # ==========================================
 # COVER TEMPLATES (colorful, full-bleed)
 # ==========================================
@@ -47,7 +50,7 @@ cover_templates:
       steps: "25"
 
   "comfy":
-    prompt: "Vibrant children's book cover: cute creepy Christmas creature in cozy haunted village. Tim Burton style, gothic festive, warm candlelight, professional."
+    prompt: "Vibrant children's book cover: cute creepy Christmas creature in cozy haunted village. Tim Burton style, gothic festive, warm candlelight, professional, without text, no letters, no words."
 
     workflow_params:
       "47": "text, mockup, borders, gore, blood, frightening horror, sharp teeth"

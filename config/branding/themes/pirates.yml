@@ -6,6 +6,9 @@ palette:
   accents_allowed: ["#ffd700", "#ff6347"]
   forbidden_keywords: ["bright neon", "rainbow", "pastel"]
 
+cover_title_image: "config/branding/themes/assets/pirates/cover_title.png"
+cover_footer_image: "config/branding/assets/cover_footer.png"
+
 # ==========================================
 # COVER TEMPLATES (colorful, full-bleed)
 # ==========================================
@@ -40,7 +43,7 @@ cover_templates:
       steps: "25"
 
   "comfy":
-    prompt: "Vibrant children's book cover: friendly cartoon pirate with treasure chest on ship deck with ocean waves. Professional, glossy, kid-friendly, adventurous."
+    prompt: "Vibrant children's book cover: friendly cartoon pirate with treasure chest on ship deck with ocean waves. Professional, glossy, kid-friendly, adventurous, without text, no letters, no words."
 
     workflow_params:
       "clip_g_suffix": "vibrant colors, professional children's book, glossy, high quality, warm inviting, adventurous"

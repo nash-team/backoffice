@@ -73,7 +73,7 @@ class KdpExportValidator:
             raise DomainError(
                 code=ErrorCode.VALIDATION_ERROR,
                 message=f"Ebook must be DRAFT or APPROVED to preview {export_type} (current: {ebook.status.value})",
-                actionable_hint=f"Only DRAFT or APPROVED ebooks can be previewed",
+                actionable_hint="Only DRAFT or APPROVED ebooks can be previewed",
             )
 
     @staticmethod

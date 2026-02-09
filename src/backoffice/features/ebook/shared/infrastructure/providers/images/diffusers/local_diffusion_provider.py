@@ -391,6 +391,7 @@ class LocalDiffusionImageProvider(CoverGenerationPort, ContentPageGenerationPort
     async def remove_text_from_cover(
         self,
         image_bytes: bytes,
+        spec: ImageSpec,
         barcode_width_inches: float = 2.0,
         barcode_height_inches: float = 1.2,
         barcode_margin_inches: float = 0.25,

@@ -96,18 +96,21 @@ src/backoffice/
 │   │       │   ├── models/            # Domain models
 │   │       │   ├── policies/          # ModelRegistry, QualityValidator
 │   │       │   ├── ports/             # EbookPort, EbookQueryPort, FileStoragePort, CoverGenerationPort, ContentPageGenerationPort, ContentGenerationPort, AssemblyPort, EbookGenerationStrategyPort
-│   │       │   ├── services/          # CoverGenerationService, PageGenerationService, PdfAssemblyService, PromptTemplateEngine
+│   │       │   ├── services/          # CoverGenerationService, CoverCompositor, PageGenerationService, PdfAssemblyService, PromptTemplateEngine
 │   │       │   ├── theme/             # ThemeLoader
 │   │       │   └── value_objects/     # Value objects
 │   │       ├── infrastructure/
 │   │       │   ├── adapters/
 │   │       │   │   ├── auth/          # Auth adapters
+│   │       │   │   ├── repositories/  # SqlAlchemyEbookRepository, SqlAlchemyPaginationRepository
 │   │       │   │   ├── sources/       # Source adapters
-│   │       │   │   └── tests/         # Test adapters
+│   │       │   │   ├── tests/         # Test adapters
+│   │       │   │   └── theme_repository.py  # ThemeRepository (loads ThemeProfile from YAML)
 │   │       │   ├── factories/         # Factories
 │   │       │   ├── models/            # SQLAlchemy models
 │   │       │   ├── providers/         # Domain-specific providers
 │   │       │   │   ├── images/        # Image generation providers
+│   │       │   │   │   ├── diffusers/ # DiffusersImageProvider (local SDXL)
 │   │       │   │   │   ├── gemini/    # GeminiImageProvider
 │   │       │   │   │   └── openrouter/ # OpenRouterImageProvider
 │   │       │   │   ├── publishing/    # Publishing providers
@@ -117,7 +120,6 @@ src/backoffice/
 │   │       │   │   ├── weasyprint_assembly_provider.py
 │   │       │   │   └── provider_factory.py
 │   │       │   ├── queries/           # SqlAlchemyEbookQuery
-│   │       │   ├── repositories/      # SqlAlchemyEbookRepository, SqlAlchemyPaginationRepository
 │   │       │   └── utils/             # Infrastructure utilities
 │   │       ├── presentation/
 │   │       │   └── templates/         # dashboard.html
@@ -274,4 +276,10 @@ features/
 - **App Config Location**: `src/backoffice/config/` @path
   - `loader.py` (config loader)
   - `models_schema.py` (model schema definitions)
+- **Branding Config**: `config/branding/` @path
+  - `themes/` - Theme YAML definitions (dinosaurs, pirates, unicorns, etc.)
+  - `themes/assets/` - Per-theme assets (e.g., `dinosaurs/cover_title.png`)
+  - `assets/` - Shared branding assets (e.g., `cover_footer.png`)
+  - `audiences.yaml` - Audience configuration
+  - `identity.yaml` - Brand identity settings
 - **Database Config**: `src/backoffice/features/shared/infrastructure/database.py` @path

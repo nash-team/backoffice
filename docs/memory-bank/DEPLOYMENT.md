@@ -25,7 +25,7 @@
 
 **Test Automation**:
 
-- Unit tests: Run on every push/PR (287 tests, ~20s)
+- Unit tests: Run on every push/PR (309 tests, ~20s)
 - Integration tests: Disabled (fixture import issue)
 - E2E tests: Run on every push/PR (Playwright, Chromium, ~6s)
 
@@ -249,7 +249,7 @@ All commands via `make` → @Makefile
 - `make db-status` - Show current migration status and history (`alembic current && alembic history`)
 
 **Testing:**
-- `make test` - Run unit tests only (287 tests, ~20s) - excludes integration/E2E
+- `make test` - Run unit tests only (309 tests, ~20s) - excludes integration/E2E
 - `make test-unit` - Unit tests from all features (`pytest src/backoffice/features/*/tests/unit`)
 - `make test-integration` - ⚠️ Currently disabled (fixture import issue, requires Docker + testcontainers)
 - `make test-smoke` - E2E health check smoke test (Playwright, Chromium, ~6s)

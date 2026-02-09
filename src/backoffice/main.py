@@ -21,8 +21,7 @@ from backoffice.features.ebook.lifecycle.presentation.routes import (
     router as ebook_lifecycle_router,
 )
 from backoffice.features.ebook.listing.presentation.routes import router as ebook_listing_router
-from backoffice.features.ebook.regeneration.domain.events.content_page_regenerating_status_event import \
-    ContentPageRegeneratingStatusEvent
+from backoffice.features.ebook.regeneration.domain.events.content_page_regenerating_status_event import ContentPageRegeneratingStatusEvent
 from backoffice.features.ebook.regeneration.presentation.routes import (
     router as ebook_regeneration_router,
 )
@@ -88,36 +87,30 @@ app.mount(
     name="static",
 )
 
+
 @app.get("/")
 async def dashboard_page(request: Request):
     """Serve the main dashboard page."""
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
-@app.websocket('/api/ws/{client_id}')
+
+@app.websocket("/api/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     loop_condition = True
 
     class NewStatusHandler(EventHandler[ContentPageRegeneratingStatusEvent]):
         async def handle(self, event: ContentPageRegeneratingStatusEvent) -> None:
-            await manager.broadcast({ "status" : event.status,
-                                      "ebook_id": event.ebook_id,
-                                      "page_index": event.page_index,
-                                      "current_step": event.current_step,
-                                      "state": event.state})
-
+            await manager.broadcast({"status": event.status, "ebook_id": event.ebook_id, "page_index": event.page_index, "current_step": event.current_step, "state": event.state})
 
             if event.state == "finished":
                 await websocket.close()
                 manager.disconnect(websocket)
-                event_bus_singleton.get_event_bus().unsubscribe(ContentPageRegeneratingStatusEvent,
-                                                                self.handler_id)
+                if self.handler_id is not None:
+                    event_bus_singleton.get_event_bus().unsubscribe(ContentPageRegeneratingStatusEvent, self.handler_id)
 
             await asyncio.sleep(0.2)
 
-
-
     event_bus_singleton.get_event_bus().subscribe(ContentPageRegeneratingStatusEvent, NewStatusHandler())
-
 
     try:
         await manager.connect(websocket)
@@ -180,6 +173,7 @@ class ConnectionManager:
     async def broadcast(self, message: dict):
         for connection in self.active_connections:
             await connection.send_json(message)
+
 
 manager = ConnectionManager()
 

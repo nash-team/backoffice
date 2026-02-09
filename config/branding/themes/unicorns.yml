@@ -6,6 +6,9 @@ palette:
   accents_allowed: ["rainbow", "sparkles", "stars"]
   forbidden_keywords: []
 
+cover_title_image: "config/branding/themes/assets/unicorns/cover_title.png"
+cover_footer_image: "config/branding/assets/cover_footer.png"
+
 # ==========================================
 # COVER TEMPLATES (colorful, full-bleed)
 # ==========================================
@@ -39,7 +42,7 @@ cover_templates:
       steps: "25"
 
   "comfy":
-    prompt: "Vibrant children's book cover: cute magical unicorn with rainbow mane in enchanted landscape with soft clouds. Professional, glossy, whimsical, magical."
+    prompt: "Vibrant children's book cover: cute magical unicorn with rainbow mane in enchanted landscape with soft clouds. Professional, glossy, whimsical, magical, without text, no letters, no words."
 
     workflow_params:
       "clip_g_suffix": "bright saturated colors, professional children's book, glossy, high quality, magical whimsical"

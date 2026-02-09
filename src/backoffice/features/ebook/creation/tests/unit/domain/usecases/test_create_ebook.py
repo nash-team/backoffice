@@ -1,7 +1,5 @@
 """Unit tests for CreateEbookUseCase (Chicago style with fakes)."""
 
-from datetime import datetime
-
 import pytest
 
 from backoffice.features.ebook.creation.domain.usecases.create_ebook import (

@@ -39,7 +39,7 @@ class TestCoverGenerationService:
         )
 
         # Assert
-        assert len(result) == 10000
+        assert len(result) > 1024  # Valid PNG > 1KB
         assert fake_port.call_count == 1
         assert fake_port.last_prompt == "Test cover"
         assert fake_port.last_seed == 42

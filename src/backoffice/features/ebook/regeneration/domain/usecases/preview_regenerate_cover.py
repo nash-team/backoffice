@@ -3,10 +3,21 @@
 import base64
 import logging
 
+import yaml
+
+from backoffice.config import ConfigLoader
 from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
+from backoffice.features.ebook.shared.domain.services.cover_compositor import CoverCompositor
 from backoffice.features.ebook.shared.domain.services.cover_generation import CoverGenerationService
 from backoffice.features.ebook.shared.domain.services.ebook_validator import EbookValidator
+from backoffice.features.ebook.shared.domain.services.workflow_helper import (
+    load_workflow_params,
+)
+from backoffice.features.ebook.shared.infrastructure.adapters.theme_repository import (
+    ThemeRepository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +69,15 @@ class PreviewRegenerateCoverUseCase:
         # Validate ebook (exists + DRAFT status + has structure)
         ebook = await self.ebook_repository.get_by_id(ebook_id)
         ebook = EbookValidator.validate_for_approval(ebook, ebook_id)
-        # Assert structure_json is valid (guaranteed by validator)
-        assert ebook.structure_json is not None
-        pages_meta = ebook.structure_json["pages_meta"]
+        # structure_json is guaranteed non-None by validate_for_approval
+        structure_json = ebook.structure_json
+        if structure_json is None:  # pragma: no cover – defensive; validator already checked
+            raise DomainError(
+                code=ErrorCode.VALIDATION_ERROR,
+                message="Ebook has no structure data",
+                actionable_hint="The ebook must be fully generated before this operation",
+            )
+        pages_meta = structure_json["pages_meta"]
 
         logger.info(f"🔄 Preview regenerating COVER for ebook {ebook_id}: {ebook.title}")
 
@@ -78,13 +95,6 @@ class PreviewRegenerateCoverUseCase:
             logger.info(f"Using THEME-based prompt: {prompt[:100]}...")
 
         # Load workflow params from YAML theme
-        from backoffice.features.ebook.shared.domain.services.workflow_helper import (
-            load_workflow_params,
-        )
-        from backoffice.features.ebook.shared.infrastructure.adapters.theme_repository import (
-            ThemeRepository,
-        )
-
         theme_repo = ThemeRepository()
         workflow_params = load_workflow_params(
             theme_id=ebook.theme_id or "dinosaurs",
@@ -100,15 +110,7 @@ class PreviewRegenerateCoverUseCase:
             }
 
         # Generate new cover with color
-        cover_spec = ImageSpec(
-            width_px=2626,
-            height_px=2626,
-            format="PNG",
-            dpi=300,
-            color_mode=ColorMode.COLOR,
-            ebook_id=ebook_id,
-            page_index=0
-        )
+        cover_spec = ImageSpec(width_px=2626, height_px=2626, format="PNG", dpi=300, color_mode=ColorMode.COLOR, ebook_id=ebook_id, page_index=0)
 
         new_cover_data = await self.cover_service.generate_cover(
             prompt=prompt,
@@ -116,6 +118,10 @@ class PreviewRegenerateCoverUseCase:
             seed=None,  # Random seed for variety
             workflow_params=workflow_params,
         )
+
+        # Overlay title and footer images from theme
+        theme_profile = theme_repo.get_theme_by_id(ebook.theme_id or "dinosaurs")
+        new_cover_data = CoverCompositor().apply_cover_overlays(new_cover_data, theme_profile)
 
         logger.info(f"✅ Preview cover generated: {len(new_cover_data)} bytes (not saved)")
 
@@ -135,13 +141,6 @@ class PreviewRegenerateCoverUseCase:
         Returns:
             Cover prompt string
         """
-        import yaml
-
-        from backoffice.config import ConfigLoader
-        from backoffice.features.ebook.shared.infrastructure.adapters.theme_repository import (
-            ThemeRepository,
-        )
-
         theme_repo = ThemeRepository()
         config = ConfigLoader()
 

@@ -2,7 +2,7 @@
 
 import base64
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import ANY, AsyncMock, MagicMock
 
 import pytest
 
@@ -95,6 +95,7 @@ async def test_regenerate_back_cover_success():
         barcode_width_inches=2.0,
         barcode_height_inches=1.2,
         barcode_margin_inches=0.25,
+        spec=ANY,
     )
 
     # Verify structure_json was updated with new back cover

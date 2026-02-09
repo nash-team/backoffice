@@ -138,4 +138,6 @@ class ThemeLoader:
                     "no dark themes",
                 ],
             ),
+            cover_title_image="",
+            cover_footer_image="",
         )

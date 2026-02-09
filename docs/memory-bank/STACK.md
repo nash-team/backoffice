@@ -64,6 +64,7 @@ Located at @features/ebook/shared/infrastructure/providers/images/
 - OpenRouter (Gemini 2.5 Flash via OpenRouter API)
 - Gemini Direct (Google Gemini API)
 - ComfyUI (local Stable Diffusion via WebSocket)
+- Diffusers (local SDXL via HuggingFace diffusers library)
 
 ### Publishing Providers
 Located at @features/ebook/shared/infrastructure/providers/publishing/kdp/
@@ -97,8 +98,9 @@ graph LR
 - Dependency flow: `presentation → infrastructure → domain`
 
 ### DDD
-- Entities: `Ebook`, `ImagePage`, `ThemeProfile`
+- Entities: `Ebook`, `ImagePage`, `ThemeProfile` (includes `cover_title_image`, `cover_footer_image` fields)
 - Value Objects: `CreationRequest`, `ImageSpec`, `Pagination`
+- Domain Services: `CoverGenerationService`, `CoverCompositor` (Pillow-based overlay), `RegenerationService`
 - Use Cases: Command/query handlers
 - Domain Events: Published via EventBus
 - Repositories: Data access abstraction
@@ -118,7 +120,7 @@ graph LR
 ### Chicago-style Testing
 - Fakes (simplified real implementations) instead of mocks
 - Located at @features/ebook/shared/tests/unit/fakes/
-- Examples: `FakeCoverPort`, `FakePagePort`, `FakeAssemblyPort`
+- Examples: `FakeCoverPort` (returns valid PNG), `FakePagePort`, `FakeAssemblyPort`
 
 ## Security & Authentication
 - JWT (authentication tokens)

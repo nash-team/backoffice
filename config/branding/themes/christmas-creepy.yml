@@ -6,6 +6,9 @@ palette:
   accents_allowed: ["#c41e3a", "#8b3f8f", "#d47b26", "#9e1b32"]
   forbidden_keywords: ["rainbow", "pastel", "neon", "cartoony cute", "cheerful only", "bright pink", "baby blue", "sparkly unicorn"]
 
+cover_title_image: "config/branding/themes/assets/christmas-creepy/cover_title.png"
+cover_footer_image: "config/branding/assets/cover_footer.png"
+
 # ==========================================
 # COVER TEMPLATES (colorful, full-bleed)
 # ==========================================
@@ -36,7 +39,7 @@ cover_templates:
         - "no bright pastel"
 
   "comfy":
-    prompt: "Dark whimsical Christmas cover: spooky festive character in haunted snowy village with candles and wreaths. Gothic holiday vibe, warm glow, professional and polished."
+    prompt: "Dark whimsical Christmas cover: spooky festive character in haunted snowy village with candles and wreaths. Gothic holiday vibe, warm glow, professional and polished, without text, no letters, no words."
 
     workflow_params:
       "47": "text, mockup, borders, gore, blood, overt horror, bright pastel, kawaii only"

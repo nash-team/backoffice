@@ -16,6 +16,7 @@ from backoffice.features.ebook.shared.domain.ports.assembly_port import Assemble
 from backoffice.features.ebook.shared.domain.ports.ebook_generation_strategy_port import (
     EbookGenerationStrategyPort,
 )
+from backoffice.features.ebook.shared.domain.services.cover_compositor import CoverCompositor
 from backoffice.features.ebook.shared.domain.services.cover_generation import CoverGenerationService
 from backoffice.features.ebook.shared.domain.services.page_generation import (
     ContentPageGenerationService,
@@ -50,6 +51,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
         pages_service: ContentPageGenerationService,
         assembly_service: PDFAssemblyService,
         theme_repository: ThemeRepository | None = None,
+        cover_compositor: CoverCompositor | None = None,
     ):
         """Initialize coloring book strategy.
 
@@ -59,11 +61,14 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
             assembly_service: Service for PDF assembly
             theme_repository: Repository for loading theme configurations
                 (optional, creates default if None)
+            cover_compositor: Service for overlaying title/footer on cover
+                (optional, creates default if None)
         """
         self.cover_service = cover_service
         self.pages_service = pages_service
         self.assembly_service = assembly_service
         self.theme_repository = theme_repository or ThemeRepository()
+        self.cover_compositor = cover_compositor or CoverCompositor()
 
     def _load_workflow_params(self, theme_id: str, image_type: str = "cover") -> dict[str, str]:
         """Load workflow_params from theme YAML based on configured provider.
@@ -148,6 +153,10 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
             workflow_params=workflow_params,
         )
 
+        # Step 1b: Overlay title and footer on cover
+        theme_profile = self.theme_repository.get_theme_by_id(request.theme)
+        cover_data = self.cover_compositor.apply_cover_overlays(cover_data, theme_profile)
+
         # Step 2: Generate content pages (B&W) SECOND
         logger.info(f"\n📋 Step 2/4: Generating {request.page_count} content pages...")
 
@@ -181,6 +190,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
 
         back_cover_data = await self.cover_service.cover_port.remove_text_from_cover(
             image_bytes=cover_data,
+            spec=cover_spec,
             barcode_width_inches=kdp_config.barcode_width,
             barcode_height_inches=kdp_config.barcode_height,
             barcode_margin_inches=kdp_config.barcode_margin,
