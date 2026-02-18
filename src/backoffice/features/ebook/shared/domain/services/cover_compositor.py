@@ -14,11 +14,38 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# KDP safe zone constants
+# ---------------------------------------------------------------------------
+# Overlay placement constants (KDP print-safe)
+# ---------------------------------------------------------------------------
+#
+# Amazon KDP trims covers after printing. Two zones matter:
+#
+#   1. Bleed (0.125" = 38px @300DPI) — will be CUT OFF, never visible.
+#   2. Safe zone (0.25" = 75px @300DPI) — may shift slightly during trim.
+#
+# Minimum safe distance from image edge = bleed + safe zone = 0.375" ≈ 113px.
+# Minimum *text* distance from trim line = 0.125" (KDP spec) → 76px from edge.
+#
+# HOW TO ADJUST SPACING:
+#   - To move the TITLE up/down    → change PADDING_PX  (lower = closer to top)
+#   - To move the FOOTER up/down   → change FOOTER_BOTTOM_PADDING_PX (lower = closer to bottom)
+#   - To limit overlay HEIGHT      → change TITLE/FOOTER_MAX_HEIGHT_RATIO
+#   - Hard minimum for any value   → 76px (below that, content enters the bleed zone)
+#
+# After changing, run:
+#   python scripts/verify_cover_overlay.py --theme dinosaurs
+# to visually confirm the placement.
+# ---------------------------------------------------------------------------
+
 KDP_SAFE_ZONE_INCHES = 0.25
 KDP_BLEED_INCHES = 0.125
 COVER_DPI = 300
-PADDING_PX = int((KDP_SAFE_ZONE_INCHES + KDP_BLEED_INCHES) * COVER_DPI)  # 113 px
+
+PADDING_PX = 90  # title distance from top edge (76px minimum)
+FOOTER_BOTTOM_PADDING_PX = 76  # footer distance from bottom edge (76px minimum)
+
+TITLE_MAX_HEIGHT_RATIO = 0.25  # title occupies at most 25% of cover height
+FOOTER_MAX_HEIGHT_RATIO = 0.20  # footer occupies at most 20% of cover height
 
 
 # Allowed base directories for overlay images (relative to project root)
@@ -106,13 +133,15 @@ class CoverCompositor:
 
         # Max width for overlays: cover width minus padding on each side
         max_overlay_width = cover_width - (2 * PADDING_PX)
+        max_title_height = int(cover_height * TITLE_MAX_HEIGHT_RATIO)
+        max_footer_height = int(cover_height * FOOTER_MAX_HEIGHT_RATIO)
 
         # Overlay title (top, centered)
         if self._validate_overlay_path(title_image_path):
             title_path = Path(title_image_path)
             if title_path.exists():
                 title_img = Image.open(title_path).convert("RGBA")
-                title_img = self._fit_width(title_img, max_overlay_width)
+                title_img = self._fit_dimensions(title_img, max_overlay_width, max_title_height)
 
                 x = (cover_width - title_img.width) // 2
                 y = PADDING_PX
@@ -126,10 +155,10 @@ class CoverCompositor:
             footer_path = Path(footer_image_path)
             if footer_path.exists():
                 footer_img = Image.open(footer_path).convert("RGBA")
-                footer_img = self._fit_width(footer_img, max_overlay_width)
+                footer_img = self._fit_dimensions(footer_img, max_overlay_width, max_footer_height)
 
                 x = (cover_width - footer_img.width) // 2
-                y = cover_height - PADDING_PX - footer_img.height
+                y = cover_height - FOOTER_BOTTOM_PADDING_PX - footer_img.height
                 base.paste(footer_img, (x, y), footer_img)
                 logger.info(f"Footer overlaid at ({x}, {y}), size={footer_img.size}")
             else:
@@ -141,19 +170,23 @@ class CoverCompositor:
         return output.getvalue()
 
     @staticmethod
-    def _fit_width(image: Image.Image, max_width: int) -> Image.Image:
-        """Resize image proportionally if wider than max_width.
+    def _fit_dimensions(image: Image.Image, max_width: int, max_height: int) -> Image.Image:
+        """Resize image proportionally to fit within max_width and max_height.
+
+        Uses the most constraining dimension to maintain aspect ratio.
 
         Args:
             image: PIL Image to resize
             max_width: Maximum allowed width in pixels
+            max_height: Maximum allowed height in pixels
 
         Returns:
             Resized image (or original if already fits)
         """
-        if image.width <= max_width:
+        if image.width <= max_width and image.height <= max_height:
             return image
 
-        ratio = max_width / image.width
+        ratio = min(max_width / image.width, max_height / image.height)
+        new_width = int(image.width * ratio)
         new_height = int(image.height * ratio)
-        return image.resize((max_width, new_height), Image.LANCZOS)
+        return image.resize((new_width, new_height), Image.LANCZOS)

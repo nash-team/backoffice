@@ -194,7 +194,6 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
             barcode_width_inches=kdp_config.barcode_width,
             barcode_height_inches=kdp_config.barcode_height,
             barcode_margin_inches=kdp_config.barcode_margin,
-            spec=page_spec
         )
 
         # Step 4: Assemble PDF

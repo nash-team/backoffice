@@ -8,6 +8,7 @@ import pytest
 from PIL import Image
 
 from backoffice.features.ebook.shared.domain.services.cover_compositor import (
+    FOOTER_BOTTOM_PADDING_PX,
     PADDING_PX,
     CoverCompositor,
 )
@@ -104,8 +105,8 @@ class TestCoverCompositor:
         )
 
         result_img = Image.open(io.BytesIO(result))
-        # Footer bottom edge should be at cover_height - PADDING_PX
-        footer_y = 2626 - PADDING_PX - footer_height
+        # Footer bottom edge should be at cover_height - FOOTER_BOTTOM_PADDING_PX
+        footer_y = 2626 - FOOTER_BOTTOM_PADDING_PX - footer_height
         center_x = 2626 // 2
         pixel = result_img.getpixel((center_x, footer_y + 50))
         assert pixel[2] == 255  # Blue channel
@@ -177,6 +178,37 @@ class TestCoverCompositor:
 
         result_img = Image.open(io.BytesIO(result))
         assert result_img.size == (cover_size, cover_size)
+
+    @pytest.mark.usefixtures("_allow_tmp_paths")
+    def test_compose_cover_tall_overlay_constrained_by_height(self, tmp_path: Path) -> None:
+        """Test that overlays taller than max ratio are shrunk by height, not just width."""
+        compositor = CoverCompositor()
+
+        cover_size = 1024
+        base_cover = _make_png(cover_size, cover_size, "white")
+        title_path = tmp_path / "title.png"
+        # 1536x1024 overlay (same aspect as real assets) — much taller than 25% of 1024
+        _save_png(title_path, 1536, 1024, "red")
+
+        result = compositor.compose_cover(
+            base_cover=base_cover,
+            title_image_path=str(title_path),
+            footer_image_path="",
+        )
+
+        result_img = Image.open(io.BytesIO(result))
+        assert result_img.size == (cover_size, cover_size)
+
+        # Title should NOT extend past 25% of cover height + padding
+        # max_title_height = 1024 * 0.25 = 256
+        # With 1536x1024 overlay, height-constrained: ratio = 256/1024 = 0.25
+        # Result: 384x256 — well within bounds
+        # Check that the area below title zone is still white (not red)
+        mid_y = cover_size // 2
+        center_x = cover_size // 2
+        pixel = result_img.getpixel((center_x, mid_y))
+        assert pixel[0] == 255  # White — title didn't reach here
+        assert pixel[1] == 255
 
 
 class TestCoverCompositorPathValidation:
