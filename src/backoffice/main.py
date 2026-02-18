@@ -120,7 +120,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
             # if event_bus_singleton.get_event_bus().nb_handlers() == 0:
             #     break
 
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.1)
             # data = await websocket.receive_json()
         #     await websocket.send_json({"message": "test"})
     except WebSocketDisconnect:

@@ -48,7 +48,8 @@ models:
 
   editing_page:
     provider: comfy
-    model: edit-image-flux-2.json
+#   model: edit-image-flux-2.json
+    model: image_flux2_klein_image_edit_9b_distilled.json
 
 
   # ========================================
