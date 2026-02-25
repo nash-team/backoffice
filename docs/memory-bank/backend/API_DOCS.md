@@ -175,5 +175,5 @@
 
 - **Storage**: Local filesystem (@src/backoffice/data/storage/) or Google Drive (optional)
 - **PDF Cache**: Disabled (`Cache-Control: no-cache`) for fresh PDFs after regeneration
-- **KDP Specs**: 8×10", 300 DPI, 0.125" bleed, 24-30 pages
+- **KDP Specs**: 8×10", 300 DPI, 0.125" bleed, 24-100 pages
 - **Image Format**: PNG (base64 in structure_json, binary for PDF assembly)

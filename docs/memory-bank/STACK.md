@@ -42,7 +42,7 @@
 - ImageCms (ICC profile conversion)
 
 ### Configuration & Utilities
-- PyYAML 6 (theme configuration)
+- PyYAML 6 (business limits, KDP specs, branding, and theme configuration via ConfigLoader)
 - python-dotenv 1 (environment variables)
 - python-multipart 0 (file uploads)
 - aiofiles 23 (async file I/O)

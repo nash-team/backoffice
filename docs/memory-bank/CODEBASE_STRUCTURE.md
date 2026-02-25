@@ -282,4 +282,9 @@ features/
   - `assets/` - Shared branding assets (e.g., `cover_footer.png`)
   - `audiences.yaml` - Audience configuration
   - `identity.yaml` - Brand identity settings
+- **Business Config**: `config/business/` @path
+  - `limits.yaml` - Business constraints (page limits: 24-100, formats, engines, image pixel constraints)
+- **Generation Config**: `config/generation/` @path
+  - `models.yaml` - AI model configuration
+  - `comfy/` - ComfyUI workflow definitions (cover, coloring pages, text removal)
 - **Database Config**: `src/backoffice/features/shared/infrastructure/database.py` @path
