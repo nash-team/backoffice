@@ -82,7 +82,7 @@ class ModelRegistry:
             # Extract validated mappings
             self._mappings = validated_config.models
 
-            logger.info(f"✅ Loaded and validated {len(self._mappings)} model mappings " f"from {self._config_path}")
+            logger.info(f"✅ Loaded and validated {len(self._mappings)} model mappings from {self._config_path}")
 
         except ValidationError:
             logger.error(f"❌ Invalid model configuration in {self._config_path}")

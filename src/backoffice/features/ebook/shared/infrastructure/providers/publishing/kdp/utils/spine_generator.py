@@ -139,7 +139,7 @@ def create_spine_with_text(width: int, height: int, title: str, author: str) -> 
 
     if (width - (y + text_height)) < min_margin_px:
         bottom_margin = width - (y + text_height)
-        logger.error(f"Texte spine trop proche du bord bas: " f"bottom_margin={bottom_margin}, min={min_margin_px}")
+        logger.error(f"Texte spine trop proche du bord bas: bottom_margin={bottom_margin}, min={min_margin_px}")
         raise ValueError("Texte spine trop proche du bord bas")
 
     temp_draw.text((x, y), temp_text, fill=(0, 0, 0), font=font)

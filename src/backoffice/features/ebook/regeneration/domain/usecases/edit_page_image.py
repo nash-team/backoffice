@@ -114,15 +114,7 @@ class EditPageImageUseCase:
             )
 
         # Step 3: Edit the image with the edit prompt
-        page_spec = ImageSpec(
-            width_px=2626,
-            height_px=2626,
-            format="PNG",
-            dpi=300,
-            color_mode=ColorMode.BLACK_WHITE,
-            ebook_id=ebook_id,
-            page_index=page_index
-        )
+        page_spec = ImageSpec(width_px=2626, height_px=2626, format="PNG", dpi=300, color_mode=ColorMode.BLACK_WHITE, ebook_id=ebook_id, page_index=page_index)
 
         edited_image_bytes = await self.image_edit_port.edit_image(
             image_bytes=current_image_bytes,

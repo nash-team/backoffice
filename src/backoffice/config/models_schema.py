@@ -61,6 +61,6 @@ class ModelsConfig(BaseModel):
         missing_types = required_types - configured_types
 
         if missing_types:
-            raise ValueError(f"Missing required model types: {sorted(missing_types)}. " f"Required: {sorted(required_types)}")
+            raise ValueError(f"Missing required model types: {sorted(missing_types)}. Required: {sorted(required_types)}")
 
         return v

@@ -70,7 +70,7 @@ class KDPInteriorAssemblyProvider:
         page_width_px = trim_width_px + 2 * bleed_px
         page_height_px = trim_height_px + 2 * bleed_px
 
-        logger.info(f"KDP interior dimensions: trim={trim_width_px}x{trim_height_px}px, " f"with bleed={page_width_px}x{page_height_px}px")
+        logger.info(f"KDP interior dimensions: trim={trim_width_px}x{trim_height_px}px, with bleed={page_width_px}x{page_height_px}px")
 
         # 3. Extract interior pages (exclude first and last - cover and back cover)
         interior_pages = pages_meta[1:-1]
@@ -87,7 +87,7 @@ class KDPInteriorAssemblyProvider:
         min_pages_required = 24  # KDP minimum for standard_color
         if len(interior_pages) < min_pages_required:
             pages_to_add = min_pages_required - len(interior_pages)
-            logger.info(f"⚠️ Interior has {len(interior_pages)} pages (< {min_pages_required}), " f"adding {pages_to_add} blank page(s) for KDP compliance")
+            logger.info(f"⚠️ Interior has {len(interior_pages)} pages (< {min_pages_required}), adding {pages_to_add} blank page(s) for KDP compliance")
 
             # Generate blank white page (2626x2626 for 8.5" + bleed @ 300 DPI)
             blank_img = Image.new("RGB", (2626, 2626), (255, 255, 255))
@@ -166,7 +166,7 @@ class KDPInteriorAssemblyProvider:
 
         if page_count < min_required or page_count > max_required:
             paper_type = config.paper_type
-            msg = f"KDP {paper_type} interior requires {min_required}-{max_required} pages, " f"got {page_count}"
+            msg = f"KDP {paper_type} interior requires {min_required}-{max_required} pages, got {page_count}"
             raise DomainError(
                 code=ErrorCode.VALIDATION_ERROR,
                 message=msg,

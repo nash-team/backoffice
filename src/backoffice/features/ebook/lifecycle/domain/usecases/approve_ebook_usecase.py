@@ -124,7 +124,7 @@ class ApproveEbookUseCase:
                 metadata=cover_metadata,
             )
 
-            logger.info(f"✅ KDP Cover uploaded to Drive: {cover_result.get('storage_id')} " f"(URL: {cover_result.get('storage_url')})")
+            logger.info(f"✅ KDP Cover uploaded to Drive: {cover_result.get('storage_id')} (URL: {cover_result.get('storage_url')})")
         except Exception as e:
             logger.error(f"❌ Failed to upload KDP Cover to storage: {e}")
             raise DomainError(
@@ -148,7 +148,7 @@ class ApproveEbookUseCase:
                 metadata=interior_metadata,
             )
 
-            logger.info(f"✅ KDP Interior uploaded to Drive: {interior_result.get('storage_id')} " f"(URL: {interior_result.get('storage_url')})")
+            logger.info(f"✅ KDP Interior uploaded to Drive: {interior_result.get('storage_id')} (URL: {interior_result.get('storage_url')})")
         except Exception as e:
             logger.error(f"❌ Failed to upload KDP Interior to storage: {e}")
             raise DomainError(
@@ -175,5 +175,5 @@ class ApproveEbookUseCase:
             )
         )
 
-        logger.info(f"✅ Ebook {ebook_id} approved: 2 KDP files uploaded to Drive " f"(Cover: {ebook.drive_id_cover}, Interior: {ebook.drive_id_interior})")
+        logger.info(f"✅ Ebook {ebook_id} approved: 2 KDP files uploaded to Drive (Cover: {ebook.drive_id_cover}, Interior: {ebook.drive_id_interior})")
         return updated_ebook

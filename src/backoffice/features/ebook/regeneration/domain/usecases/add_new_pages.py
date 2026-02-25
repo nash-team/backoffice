@@ -97,7 +97,7 @@ class AddNewPagesUseCase:
             count = remaining_capacity
             limit_reached = True
 
-        logger.info(f"Adding {count} new pages to ebook {ebook_id} " f"(current: {current_interior}, max: {max_interior})")
+        logger.info(f"Adding {count} new pages to ebook {ebook_id} (current: {current_interior}, max: {max_interior})")
 
         # 6. Load theme configuration
         from backoffice.features.ebook.shared.domain.services.workflow_helper import (

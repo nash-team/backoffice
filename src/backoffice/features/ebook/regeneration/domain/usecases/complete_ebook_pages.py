@@ -65,15 +65,13 @@ class CompleteEbookPagesUseCase:
 
         # 3. Check if already complete
         if interior_pages >= target_pages:
-            logger.info(f"Ebook {ebook_id} already has {interior_pages} interior pages " f"(target: {target_pages}, total: {total_pages})")
+            logger.info(f"Ebook {ebook_id} already has {interior_pages} interior pages (target: {target_pages}, total: {total_pages})")
             return ebook
 
         # 4. Calculate pages to add (to interior)
         pages_to_add = target_pages - interior_pages
         logger.info(
-            f"Completing ebook {ebook_id}: adding {pages_to_add} blank interior pages "
-            f"(current interior: {interior_pages}, target interior: {target_pages}, "
-            f"total will be: {target_total_pages})"
+            f"Completing ebook {ebook_id}: adding {pages_to_add} blank interior pages (current interior: {interior_pages}, target interior: {target_pages}, total will be: {target_total_pages})"
         )
 
         # 5. Generate blank page image (white, 2626x2626px @ 300 DPI for 8.5"x8.5" + 0.125" bleed)
@@ -124,7 +122,7 @@ class CompleteEbookPagesUseCase:
             filename_suffix="completed",
         )
 
-        logger.info(f"✅ Ebook {ebook_id} completed: added {pages_to_add} blank pages " f"(new total: {updated_ebook.page_count}), PDF reassembled")
+        logger.info(f"✅ Ebook {ebook_id} completed: added {pages_to_add} blank pages (new total: {updated_ebook.page_count}), PDF reassembled")
 
         return updated_ebook
 

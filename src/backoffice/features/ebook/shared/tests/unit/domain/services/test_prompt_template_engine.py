@@ -1,7 +1,5 @@
 """Unit tests for PromptTemplateEngine (Chicago style with fakes)."""
 
-from pathlib import Path
-
 import pytest
 import yaml
 

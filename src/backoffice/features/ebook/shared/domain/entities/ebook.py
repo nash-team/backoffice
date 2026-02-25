@@ -106,12 +106,12 @@ class KDPExportConfig:
         # Validate paper_type
         valid_papers = _config.get_valid_paper_types()
         if self.paper_type not in valid_papers:
-            raise ValueError(f"Invalid paper_type: '{self.paper_type}'. " f"Must be one of: {', '.join(valid_papers)}. " f"Check config/kdp/specifications.yaml")
+            raise ValueError(f"Invalid paper_type: '{self.paper_type}'. Must be one of: {', '.join(valid_papers)}. Check config/kdp/specifications.yaml")
 
         # Validate cover_finish
         valid_finishes = _config.get_valid_cover_finishes()
         if self.cover_finish not in valid_finishes:
-            raise ValueError(f"Invalid cover_finish: '{self.cover_finish}'. " f"Must be one of: {', '.join(valid_finishes)}. " f"Check config/kdp/specifications.yaml")
+            raise ValueError(f"Invalid cover_finish: '{self.cover_finish}'. Must be one of: {', '.join(valid_finishes)}. Check config/kdp/specifications.yaml")
 
 
 # KDP utility functions

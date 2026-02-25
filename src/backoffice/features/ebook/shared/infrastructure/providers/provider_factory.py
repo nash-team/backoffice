@@ -108,7 +108,7 @@ class ProviderFactory:
             )
 
         else:
-            raise ValueError(f"Unknown cover provider: {model_mapping.provider}. " f"Supported: openrouter, gemini, comfy, diffusers")
+            raise ValueError(f"Unknown cover provider: {model_mapping.provider}. Supported: openrouter, gemini, comfy, diffusers")
 
         # Cache and return
         ProviderFactory._cover_provider_cache[cache_key] = provider
@@ -180,7 +180,7 @@ class ProviderFactory:
             )
 
         else:
-            raise ValueError(f"Unknown content page provider: {model_mapping.provider}. " f"Supported: openrouter, gemini, comfy, diffusers")
+            raise ValueError(f"Unknown content page provider: {model_mapping.provider}. Supported: openrouter, gemini, comfy, diffusers")
 
         # Cache and return
         ProviderFactory._page_provider_cache[cache_key] = provider
@@ -244,7 +244,7 @@ class ProviderFactory:
             provider = GeminiImageProvider(model=model_mapping.model)
 
         else:
-            raise ValueError(f"Unknown image edit provider: {model_mapping.provider}. " f"Supported: openrouter, gemini, comfy")
+            raise ValueError(f"Unknown image edit provider: {model_mapping.provider}. Supported: openrouter, gemini, comfy")
 
         # Cache and return
         ProviderFactory._edit_provider_cache[cache_key] = provider

@@ -114,7 +114,7 @@ class KdpExportValidator:
             kdp_config = KDPExportConfig()
 
         if ebook.page_count and ebook.page_count < 24 and kdp_config.paper_type == "premium_color":
-            logger.warning(f"Ebook has {ebook.page_count} pages (< 24), " f"switching from premium_color to standard_color")
+            logger.warning(f"Ebook has {ebook.page_count} pages (< 24), switching from premium_color to standard_color")
             return KDPExportConfig(
                 trim_size=kdp_config.trim_size,
                 bleed_size=kdp_config.bleed_size,

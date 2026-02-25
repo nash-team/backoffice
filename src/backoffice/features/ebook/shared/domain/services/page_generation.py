@@ -187,7 +187,7 @@ class ContentPageGenerationService:
 
             # Double-check cache after acquiring semaphore
             if self.enable_cache and cache_key in self._cache:
-                logger.info(f"✅ Cache hit for page {page_number} (after semaphore) - " f"NO COST TRACKED (cache return)")
+                logger.info(f"✅ Cache hit for page {page_number} (after semaphore) - NO COST TRACKED (cache return)")
                 return self._cache[cache_key]
 
             # Generate page
@@ -199,7 +199,7 @@ class ContentPageGenerationService:
             )
 
             # Log successful generation
-            logger.info(f"✅ Page {page_number} generated successfully " f"({len(image_data):,} bytes, {spec.width_px}x{spec.height_px}px)")
+            logger.info(f"✅ Page {page_number} generated successfully ({len(image_data):,} bytes, {spec.width_px}x{spec.height_px}px)")
 
             # Post-validation
             QualityValidator.validate_image(

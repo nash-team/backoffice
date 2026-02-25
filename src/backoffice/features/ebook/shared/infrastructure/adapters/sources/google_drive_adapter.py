@@ -57,7 +57,7 @@ class GoogleDriveAdapter:
             file_content = f"""# {title}
 
 **Auteur:** {author}
-**Date de création:** {datetime.now().strftime('%d/%m/%Y')}
+**Date de création:** {datetime.now().strftime("%d/%m/%Y")}
 
 ---
 

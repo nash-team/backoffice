@@ -105,15 +105,7 @@ class EditCoverImageUseCase:
 
         # Edit the image with the edit prompt
         # Cover uses COLOR mode (not BLACK_WHITE like content pages)
-        cover_spec = ImageSpec(
-            width_px=2626,
-            height_px=2626,
-            format="PNG",
-            dpi=300,
-            color_mode=ColorMode.COLOR,
-            ebook_id=ebook_id,
-            page_index=0
-        )
+        cover_spec = ImageSpec(width_px=2626, height_px=2626, format="PNG", dpi=300, color_mode=ColorMode.COLOR, ebook_id=ebook_id, page_index=0)
 
         edited_image_bytes = await self.image_edit_port.edit_image(
             image_bytes=current_image_bytes,

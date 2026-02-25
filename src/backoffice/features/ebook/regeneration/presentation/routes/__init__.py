@@ -90,7 +90,7 @@ async def regenerate_ebook_page(
         except ValueError as e:
             raise HTTPException(
                 status_code=400,
-                detail=(f"Invalid page_type. Must be one of: cover, back_cover, content_page. " f"Got: {page_type_str}"),
+                detail=(f"Invalid page_type. Must be one of: cover, back_cover, content_page. Got: {page_type_str}"),
             ) from e
 
         # Get dependencies from factory

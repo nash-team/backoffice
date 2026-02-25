@@ -221,7 +221,7 @@ class ExportToKDPUseCase:
                 logger.info(f"✅ {validation_result['message']}")
             else:
                 logger.warning(f"⚠️ {validation_result['message']}")
-                logger.warning(f"   Cover size: {validation_result.get('cover_size')} vs " f"expected: {validation_result.get('expected_size')}")
+                logger.warning(f"   Cover size: {validation_result.get('cover_size')} vs expected: {validation_result.get('expected_size')}")
 
         except Exception as e:
             # Don't fail export if validation fails - just log warning

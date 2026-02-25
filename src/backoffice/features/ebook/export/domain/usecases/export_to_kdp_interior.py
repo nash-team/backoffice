@@ -60,7 +60,7 @@ class ExportToKDPInteriorUseCase:
         ebook = await self.ebook_repository.get_by_id(ebook_id)
         ebook = KdpExportValidator.validate_for_export(ebook, ebook_id, preview_mode, export_type="KDP interior")
 
-        logger.info(f"Exporting ebook {ebook_id} interior to KDP format: " f"'{ebook.title}' ({ebook.page_count} pages)")
+        logger.info(f"Exporting ebook {ebook_id} interior to KDP format: '{ebook.title}' ({ebook.page_count} pages)")
 
         # 2. Adjust KDP config for short books if needed
         kdp_config = KdpExportValidator.adjust_config_for_short_books(ebook, kdp_config)

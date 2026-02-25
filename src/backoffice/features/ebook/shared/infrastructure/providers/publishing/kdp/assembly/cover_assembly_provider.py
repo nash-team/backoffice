@@ -75,7 +75,7 @@ class KDPAssemblyProvider:
         # ✅ Spine height includes bleed top/bottom
         spine_height_px = trim_height_px + 2 * bleed_px
 
-        logger.info(f"KDP dimensions: trim={trim_width_px}x{trim_height_px}px, " f"bleed={bleed_px}px, spine={spine_width_px}px")
+        logger.info(f"KDP dimensions: trim={trim_width_px}x{trim_height_px}px, bleed={bleed_px}px, spine={spine_width_px}px")
 
         # 2. Generate spine (RGB format - KDP requirement)
         spine_bytes = spine_generator.generate_spine(
@@ -186,7 +186,7 @@ class KDPAssemblyProvider:
         if page_count < min_required or page_count > max_required:
             raise DomainError(
                 code=ErrorCode.VALIDATION_ERROR,
-                message=(f"KDP {config.paper_type} requires {min_required}-{max_required} pages, " f"got {page_count}"),
+                message=(f"KDP {config.paper_type} requires {min_required}-{max_required} pages, got {page_count}"),
                 actionable_hint="Adjust page count or use different paper type",
             )
 

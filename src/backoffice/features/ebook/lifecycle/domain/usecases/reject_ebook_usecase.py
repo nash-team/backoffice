@@ -63,7 +63,7 @@ class RejectEbookUseCase:
                 actionable_hint="Only DRAFT or APPROVED ebooks can be rejected",
             )
 
-        logger.info(f"Rejecting ebook {ebook_id}: '{ebook.title}' " f"(reason: {reason or 'No reason provided'})")
+        logger.info(f"Rejecting ebook {ebook_id}: '{ebook.title}' (reason: {reason or 'No reason provided'})")
 
         # 3. Update status to REJECTED
         ebook.status = EbookStatus.REJECTED

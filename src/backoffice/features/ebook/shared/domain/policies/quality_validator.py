@@ -42,7 +42,7 @@ class QualityValidator:
         if spec.width_px > MAX_RESOLUTION_PX or spec.height_px > MAX_RESOLUTION_PX:
             raise DomainError(
                 code=ErrorCode.RESOLUTION_TOO_HIGH,
-                message=(f"Resolution {spec.width_px}x{spec.height_px} " f"exceeds max {MAX_RESOLUTION_PX}"),
+                message=(f"Resolution {spec.width_px}x{spec.height_px} exceeds max {MAX_RESOLUTION_PX}"),
                 actionable_hint=f"Use resolution <= {MAX_RESOLUTION_PX}x{MAX_RESOLUTION_PX}",
                 context={
                     "requested": f"{spec.width_px}x{spec.height_px}",

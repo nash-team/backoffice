@@ -18,8 +18,8 @@ class TestDashboardPagination:
         ebooks = []
         for i in range(20):
             ebook = EbookModel(
-                title=f"Test Ebook {i+1}",
-                author=f"Test Author {i+1}",
+                title=f"Test Ebook {i + 1}",
+                author=f"Test Author {i + 1}",
                 status=EbookStatus.DRAFT.value if i % 2 == 0 else EbookStatus.APPROVED.value,
                 created_at=datetime.now(UTC),
             )

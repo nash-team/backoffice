@@ -79,7 +79,7 @@ class RegenerateContentPageUseCase:
 
         # Validate page index (must be between cover and back cover)
         if page_index < 1 or page_index >= len(pages_meta) - 1:
-            raise ValueError(f"Invalid page index {page_index}. " f"Must be between 1 and {len(pages_meta) - 2} (content pages only).")
+            raise ValueError(f"Invalid page index {page_index}. Must be between 1 and {len(pages_meta) - 2} (content pages only).")
 
         logger.info(f"🔄 Regenerating CONTENT PAGE {page_index} for ebook {ebook_id}: {ebook.title}")
 

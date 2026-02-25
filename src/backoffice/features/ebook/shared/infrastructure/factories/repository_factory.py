@@ -54,7 +54,7 @@ class RepositoryFactory:
                     logger.info("✅ Using Google Drive storage (credentials found)")
                     return drive_adapter
                 else:
-                    logger.warning("⚠️ Google Drive credentials found but Drive unavailable, " "falling back to local storage")
+                    logger.warning("⚠️ Google Drive credentials found but Drive unavailable, falling back to local storage")
             except Exception as e:
                 logger.warning(f"⚠️ Failed to initialize Google Drive: {e}, falling back to local storage")
 

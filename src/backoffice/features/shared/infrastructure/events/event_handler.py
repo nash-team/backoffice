@@ -14,6 +14,7 @@ class EventHandler(ABC, Generic[TEvent]):
     Event handlers are responsible for reacting to domain events.
     Each handler should handle a single event type.
     """
+
     handler_id: int | None = None
 
     @abstractmethod

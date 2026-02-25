@@ -80,7 +80,7 @@ class LocalDiffusionImageProvider(CoverGenerationPort, ContentPageGenerationPort
         # Thread lock for pipeline access (diffusers not officially thread-safe)
         self._lock = threading.Lock()
 
-        logger.info(f"LocalDiffusionImageProvider: model={self.model}, device={self.device}, " f"lora={self.lora} (weight={self.lora_weight if self.lora else 'N/A'})")
+        logger.info(f"LocalDiffusionImageProvider: model={self.model}, device={self.device}, lora={self.lora} (weight={self.lora_weight if self.lora else 'N/A'})")
 
     def _detect_device(self) -> str:
         """Auto-detect best available device."""
@@ -286,7 +286,7 @@ class LocalDiffusionImageProvider(CoverGenerationPort, ContentPageGenerationPort
         gen_height = SDXL_NATIVE_SIZE
         needs_upscale = spec.width_px != SDXL_NATIVE_SIZE or spec.height_px != SDXL_NATIVE_SIZE
 
-        logger.info(f"Generating: {gen_width}x{gen_height} → upscale to {spec.width_px}x{spec.height_px}, " f"seed={seed}, steps={num_inference_steps}, cfg={guidance_scale}, bw={is_bw}")
+        logger.info(f"Generating: {gen_width}x{gen_height} → upscale to {spec.width_px}x{spec.height_px}, seed={seed}, steps={num_inference_steps}, cfg={guidance_scale}, bw={is_bw}")
         logger.debug(f"Prompt: {prompt[:200]}...")
 
         # Run diffusion in executor with thread lock
@@ -320,7 +320,7 @@ class LocalDiffusionImageProvider(CoverGenerationPort, ContentPageGenerationPort
                 image = image.resize((spec.width_px, spec.height_px), Image.Resampling.LANCZOS)
 
             # Debug: log image info before any post-processing
-            logger.info(f"[DEBUG] Raw SDXL output: mode={image.mode}, size={image.size}, " f"min/max pixel={(min(image.getdata()), max(image.getdata())) if image.mode == 'L' else 'N/A (RGB)'}")
+            logger.info(f"[DEBUG] Raw SDXL output: mode={image.mode}, size={image.size}, min/max pixel={(min(image.getdata()), max(image.getdata())) if image.mode == 'L' else 'N/A (RGB)'}")
 
             # DEBUG: Save raw image to /tmp for inspection
             if is_bw:
@@ -400,5 +400,5 @@ class LocalDiffusionImageProvider(CoverGenerationPort, ContentPageGenerationPort
 
         Use GeminiImageProvider or ComfyProvider for text removal.
         """
-        logger.warning("LocalDiffusionImageProvider.remove_text_from_cover not implemented. " "Use Gemini or Comfy provider.")
+        logger.warning("LocalDiffusionImageProvider.remove_text_from_cover not implemented. Use Gemini or Comfy provider.")
         return image_bytes

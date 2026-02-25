@@ -76,7 +76,7 @@ def assemble_full_kdp_cover(
     full_width = bleed_px + back.width + spine_width_px + front.width + bleed_px
     full_height = bleed_px + back.height + bleed_px
 
-    logger.info(f"Assembling full KDP cover: {full_width}×{full_height}px " f'({full_width / 300:.3f}" × {full_height / 300:.3f}" @ 300 DPI) ' f"with {spine_width_px}px spine for {page_count} pages")
+    logger.info(f'Assembling full KDP cover: {full_width}×{full_height}px ({full_width / 300:.3f}" × {full_height / 300:.3f}" @ 300 DPI) with {spine_width_px}px spine for {page_count} pages')
 
     # Create blank canvas with bleeds
     canvas = Image.new("RGB", (full_width, full_height), color=(255, 255, 255))
@@ -165,7 +165,7 @@ def overlay_kdp_template(
             # Resize template to exactly match cover
             template_300 = template_300.resize(cover_img.size, Image.Resampling.LANCZOS)
 
-        logger.info(f"✂️ Template resized: {template_w}×{template_h}px @ 600 DPI → " f"{template_300.size[0]}×{template_300.size[1]}px @ 300 DPI")
+        logger.info(f"✂️ Template resized: {template_w}×{template_h}px @ 600 DPI → {template_300.size[0]}×{template_300.size[1]}px @ 300 DPI")
 
         # Adjust template opacity
         alpha = template_300.split()[3]

@@ -141,16 +141,16 @@ class PromptTemplateEngine:
             logger.info(f"Using {template_type} template '{template_key}' in theme '{theme_id}'")
             template_data = templates[template_key]
         elif "default" in templates:
-            logger.info(f"Template '{template_key}' not found, " f"using default {template_type} template for theme '{theme_id}'")
+            logger.info(f"Template '{template_key}' not found, using default {template_type} template for theme '{theme_id}'")
             template_data = templates["default"]
         else:
-            raise ValueError(f"Theme '{theme_id}' has no template for '{template_key}' " f"and no default template in {section_name}")
+            raise ValueError(f"Theme '{theme_id}' has no template for '{template_key}' and no default template in {section_name}")
 
         # Handle old format (prompt_blocks for cover) vs new format
         if template_type == "cover" and "prompt_blocks" in template_data:
             # Old format: assemble from blocks
             blocks = template_data["prompt_blocks"]
-            prompt = f"{blocks['subject']}, {blocks['environment']}, {blocks['tone']}. " f"{', '.join(blocks['positives'])}"
+            prompt = f"{blocks['subject']}, {blocks['environment']}, {blocks['tone']}. {', '.join(blocks['positives'])}"
             return PromptTemplate(
                 base_structure=prompt,
                 variables={},
@@ -224,7 +224,7 @@ class PromptTemplateEngine:
         # Load template from YAML
         template = self._find_template(theme, template_key=template_key)
 
-        logger.info(f"Generating {count} prompts for theme '{theme}' " f"(template_key={template_key}, audience={audience}, seed={self.seed})")
+        logger.info(f"Generating {count} prompts for theme '{theme}' (template_key={template_key}, audience={audience}, seed={self.seed})")
 
         prompts = []
         for i in range(count):
@@ -234,7 +234,7 @@ class PromptTemplateEngine:
 
             # Log first and last for debugging
             if i == 0 or i == count - 1:
-                logger.debug(f"Prompt {i+1}/{count}: {prompt[:150]}...")
+                logger.debug(f"Prompt {i + 1}/{count}: {prompt[:150]}...")
 
         return prompts
 
@@ -259,7 +259,7 @@ class PromptTemplateEngine:
         # Load template from YAML
         template = self._find_template(theme, template_key=template_key)
 
-        logger.info(f"Generating {count} prompts with params for theme '{theme}' " f"(template_key={template_key}, audience={audience}, seed={self.seed})")
+        logger.info(f"Generating {count} prompts with params for theme '{theme}' (template_key={template_key}, audience={audience}, seed={self.seed})")
 
         prompts = []
         for i in range(count):
@@ -269,7 +269,7 @@ class PromptTemplateEngine:
 
             # Log first and last for debugging
             if i == 0 or i == count - 1:
-                logger.debug(f"Prompt {i+1}/{count}: {prompt[:150]}...")
+                logger.debug(f"Prompt {i + 1}/{count}: {prompt[:150]}...")
 
         return {
             "prompts": prompts,
@@ -338,7 +338,7 @@ class PromptTemplateEngine:
             logger.debug(f"Error during theme template search: {e}. Continuing to fallback.")
 
         # No match found - raise error instead of silent fallback
-        raise FileNotFoundError(f"No template found for theme '{theme}'. Available themes: " f"{', '.join([f.stem for f in self.themes_directory.glob('*.yml')])}")
+        raise FileNotFoundError(f"No template found for theme '{theme}'. Available themes: {', '.join([f.stem for f in self.themes_directory.glob('*.yml')])}")
 
     def _generate_single_prompt(self, template: PromptTemplate, index: int, audience: str | None) -> str:
         """Generate a single prompt from template.
