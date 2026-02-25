@@ -2,7 +2,7 @@
 
 import base64
 from datetime import datetime
-from unittest.mock import ANY, AsyncMock, MagicMock
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -15,8 +15,13 @@ from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
 
 @pytest.mark.asyncio
-async def test_regenerate_back_cover_success():
+@patch("backoffice.features.ebook.regeneration.domain.usecases.regenerate_back_cover.CoverCompositor")
+@patch("backoffice.features.ebook.regeneration.domain.usecases.regenerate_back_cover.ThemeRepository")
+async def test_regenerate_back_cover_success(_mock_theme_repo, _mock_compositor):
     """Test successful back cover regeneration."""
+    # Make compositor pass through back cover data unchanged
+    _mock_compositor.return_value.apply_back_cover_overlays.side_effect = lambda back_cover_data, **kwargs: back_cover_data
+
     # Arrange
     ebook_id = 1
     fake_ebook = Ebook(

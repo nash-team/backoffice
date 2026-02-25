@@ -37,6 +37,16 @@ class PromptBlocksModel(BaseModel):
         return v.strip()
 
 
+class BackCoverConfigModel(BaseModel):
+    """Back cover overlay configuration"""
+
+    preview_pages: list[int] = Field(..., min_length=2, max_length=2, description="Indices of 2 content pages to show as previews")
+    tagline: str = Field(..., min_length=1, description="Bold tagline text")
+    description: str = Field(..., min_length=1, description="Description paragraph")
+    author: str = Field(..., min_length=1, description="Author name")
+    publisher: str = Field(..., min_length=1, description="Publisher name")
+
+
 class CoverTemplateModel(BaseModel):
     """Cover template configuration"""
 
@@ -64,6 +74,7 @@ class ThemeProfileModel(BaseModel):
     cover_footer_image: str = Field(..., min_length=1, description="Path to cover footer PNG (transparent)")
     cover_templates: dict[str, CoverTemplateModel] = Field(..., min_length=1)
     coloring_page_templates: dict[str, ColoringPageTemplateModel] = Field(default_factory=dict)
+    back_cover: BackCoverConfigModel | None = None
 
     @field_validator("id")
     @classmethod
@@ -103,6 +114,17 @@ class PromptBlocks:
 
 
 @dataclass
+class BackCoverConfig:
+    """Domain entity for back cover overlay configuration"""
+
+    preview_pages: list[int]
+    tagline: str
+    description: str
+    author: str
+    publisher: str
+
+
+@dataclass
 class ThemeProfile:
     """Domain entity for complete theme profile"""
 
@@ -112,6 +134,7 @@ class ThemeProfile:
     blocks: PromptBlocks
     cover_title_image: str
     cover_footer_image: str
+    back_cover: BackCoverConfig | None = None
 
     @classmethod
     def from_model(cls, model: ThemeProfileModel) -> "ThemeProfile":
@@ -123,6 +146,16 @@ class ThemeProfile:
         default_cover = model.cover_templates["default"]
         if not default_cover.prompt_blocks:
             raise ValueError(f"Theme {model.id}: default cover template must have prompt_blocks")
+
+        back_cover = None
+        if model.back_cover:
+            back_cover = BackCoverConfig(
+                preview_pages=model.back_cover.preview_pages,
+                tagline=model.back_cover.tagline,
+                description=model.back_cover.description,
+                author=model.back_cover.author,
+                publisher=model.back_cover.publisher,
+            )
 
         return cls(
             id=model.id,
@@ -141,6 +174,7 @@ class ThemeProfile:
             ),
             cover_title_image=model.cover_title_image,
             cover_footer_image=model.cover_footer_image,
+            back_cover=back_cover,
         )
 
 

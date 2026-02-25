@@ -196,6 +196,13 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
             barcode_margin_inches=kdp_config.barcode_margin,
         )
 
+        # Step 3b: Apply back cover overlays (preview images + text)
+        back_cover_data = self.cover_compositor.apply_back_cover_overlays(
+            back_cover_data=back_cover_data,
+            theme_profile=theme_profile,
+            content_pages=pages_data,
+        )
+
         # Step 4: Assemble PDF
         logger.info("\n📋 Step 4/4: Assembling PDF...")
         output_path = self._generate_output_path(request)
@@ -350,7 +357,7 @@ class ColoringBookStrategy(EbookGenerationStrategyPort):
 
             base_prompt = f"""Coloring book cover. {illustration_style}, {mood}.
 
-Scene: {blocks['subject']}, {blocks['environment']}
+Scene: {blocks["subject"]}, {blocks["environment"]}
 
 Colors to use: {colors_str}, {accents_str}
 Do NOT use: {forbidden_str}, turquoise, cyan
