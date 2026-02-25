@@ -3,31 +3,29 @@
 ## Executive Summary
 
 - **Project Name**: Ebook Generator - Amazon KDP Coloring Books
-- **Vision**: Enable anyone to publish professional coloring books on Amazon without manual illustration
-- **Mission**: Democratize coloring book creation by automating the entire production workflow from concept to KDP-ready PDF
+- **Vision**: Streamline our coloring book production pipeline for Amazon KDP
+- **Mission**: Automate the entire production workflow from concept to KDP-ready PDF so the team can focus on theme selection and quality
 
 ### Full Description
 
-This backoffice empowers content creators to generate professional coloring books ready for Amazon KDP (Kindle Direct Publishing) print-on-demand sales. It eliminates the need for manual illustration by automating the complete production workflow: generating themed illustrations, converting to line art suitable for coloring, creating covers with titles, and assembling KDP-compliant PDFs. The system handles quality validation through an editorial workflow.
+This is an **internal tool** built for our team (founders/associates) to generate professional coloring books ready for Amazon KDP (Kindle Direct Publishing) print-on-demand sales. It is **not a commercial product** and has no plans to be commercialized. It automates our complete production workflow: generating themed illustrations, converting to line art suitable for coloring, creating covers with titles, and assembling KDP-compliant PDFs. The system includes an editorial workflow for quality validation before publishing.
 
-**Problem Solved**: Creating a coloring book traditionally requires hiring illustrators, spending weeks on manual work, learning print specifications, and understanding Amazon's technical requirements. This tool reduces that to minutes and requires no artistic or technical expertise.
+**Problem Solved**: Creating a coloring book traditionally requires hiring illustrators, spending weeks on manual work, and learning Amazon's technical requirements. This tool lets our team produce books in minutes instead of weeks.
 
-**User Value**: A non-artist can generate a 24-30 page coloring book about dinosaurs, pirates, or unicorns in under 5 minutes, ready to upload to Amazon for worldwide print-on-demand sales.
+**User Value**: Any team member can generate a 24-100 page coloring book about dinosaurs, pirates, or unicorns in under 5 minutes, ready to upload to Amazon for print-on-demand sales.
 
 ## Context
 
 ### Target Users
 
-**Primary**: Solo entrepreneurs and small publishers wanting to enter the Amazon KDP coloring book market without upfront illustration costs or artistic skills.
-
-**Secondary**: Content creators testing coloring book concepts before investing in professional illustration.
+**Internal team only**: The founders and associates who use this tool to produce and publish coloring books on Amazon KDP. There are no external users and the tool is not intended for commercialization.
 
 ### Business Model
 
-- Generate coloring books for Amazon KDP print-on-demand using free, local AI models
-- Enable rapid iteration and testing of different themes
+- Internal tool for our team's Amazon KDP coloring book business
+- Generate books using free, local AI models (zero per-book cost)
+- Rapid iteration and testing of different themes to find what sells
 - Support both children's (simple) and adult (detailed) markets
-- Zero per-book generation costs (fully local processing)
 
 ### Core Domain
 
@@ -64,7 +62,7 @@ This backoffice empowers content creators to generate professional coloring book
 **Book Generation (Happy Path)**
 - Creator enters book theme (e.g., "pirate adventure")
 - Creator selects audience (children vs adults - determines complexity)
-- Creator specifies page count (24-30 pages)
+- Creator specifies page count (24-100 pages)
 - System generates full-color cover with title
 - System generates all content pages as line art for coloring
 - System generates back cover (line art version)
@@ -104,30 +102,22 @@ This backoffice empowers content creators to generate professional coloring book
 
 ### Personas
 
-**1. The Entrepreneur (Primary)**
-- Solo creator testing the coloring book market
-- No artistic skills or illustration budget
-- Wants to validate book concepts quickly
-- Benefits from zero per-book generation costs
-- Goal: Launch 5-10 books on Amazon to test market demand
+**1. Team Member (Creator)**
+- One of the founders/associates
+- Creates new coloring books by choosing themes and parameters
+- Reviews generated output and iterates on quality
+- Goal: Produce sellable coloring books quickly and at scale
 
-**2. The Content Publisher (Secondary)**
-- Small publishing business creating multiple book series
-- Has editorial standards for brand consistency
-- Publishes regularly (multiple books per week)
-- Scales production without per-book costs
-- Goal: Scale coloring book production while maintaining quality
-
-**3. The Editorial Reviewer (Internal)**
+**2. Team Member (Reviewer)**
+- Same team members, wearing the reviewer hat
 - Validates quality before publication approval
 - Checks line art clarity, theme consistency, text removal
-- Provides feedback on rejections
 - Regenerates elements when needed (back cover or specific pages)
-- Goal: Maintain brand reputation by ensuring only quality books reach customers
+- Goal: Ensure only quality books reach Amazon customers
 
 ### Journey 1: First-Time Book Creation
 
-**Context**: An entrepreneur discovers the platform and wants to create their first coloring book.
+**Context**: A team member creates their first coloring book with the tool.
 
 **Steps**:
 1. User accesses dashboard (sees stats: 0 books created)
@@ -137,7 +127,7 @@ This backoffice empowers content creators to generate professional coloring book
    - Author: "Jane Smith"
    - Theme: "dinosaurs"
    - Audience: "children" (simple, thick lines)
-   - Pages: 24 (minimum for KDP)
+   - Pages: 24-100 (configured in config/business/limits.yaml)
    - Seed: (optional - left empty for random)
 4. User submits → system shows "Generating... 2-5 minutes"
 5. User waits (can close browser, generation continues)
@@ -155,7 +145,7 @@ This backoffice empowers content creators to generate professional coloring book
 
 ### Journey 2: Quality Review & Selective Regeneration
 
-**Context**: A reviewer examines a newly generated book and finds a quality issue on one specific page.
+**Context**: A team member reviews a newly generated book and finds a quality issue on one specific page.
 
 **Steps**:
 1. Reviewer accesses dashboard → sees 3 books in DRAFT status
@@ -177,63 +167,63 @@ This backoffice empowers content creators to generate professional coloring book
 
 ### Journey 3: Portfolio Management
 
-**Context**: A publisher manages multiple books and analyzes quality patterns.
+**Context**: The team manages their portfolio of books and analyzes quality patterns.
 
 **Steps**:
-1. Publisher accesses dashboard → sees 12 books total
-2. Publisher reviews book status distribution:
+1. Team member accesses dashboard → sees 12 books total
+2. Reviews book status distribution:
    - APPROVED: 8 books
    - REJECTED: 3 books
    - DRAFT: 1 book
-3. Publisher filters by "APPROVED only"
-4. Publisher reviews approved books to identify successful themes
-5. Publisher identifies: Dinosaurs (3 books) and Ocean Life (2 books) have highest approval rate
-6. Publisher decides to expand successful themes
-7. Publisher creates 3 more dinosaur-themed books
-8. Publisher maintains consistent style using seed values
+3. Filters by "APPROVED only"
+4. Reviews approved books to identify successful themes
+5. Identifies: Dinosaurs (3 books) and Ocean Life (2 books) have highest approval rate
+6. Decides to expand successful themes
+7. Creates 3 more dinosaur-themed books
+8. Maintains consistent style using seed values
 
-**Success Criteria**: Publisher identifies quality patterns and scales production of successful themes.
+**Success Criteria**: Team identifies quality patterns and scales production of successful themes.
 
 ### Journey 4: Rapid Theme Testing
 
-**Context**: An entrepreneur wants to test which themes sell better on Amazon.
+**Context**: The team wants to test which themes sell better on Amazon.
 
 **Steps**:
-1. Creator decides to test 3 themes: dinosaurs, pirates, unicorns
+1. Team member decides to test 3 themes: dinosaurs, pirates, unicorns
 2. Creator generates all 3 books (same day):
    - Book A: "Dinosaur Adventures" - 24 pages, children audience
    - Book B: "Pirate Treasures" - 24 pages, children audience
    - Book C: "Magical Unicorns" - 24 pages, children audience
 3. All 3 books use seed values for reproducibility
-4. Creator reviews all 3 PDFs → approves all
-5. Creator downloads KDP interior PDFs for all 3
-6. Creator uploads all 3 to Amazon KDP
-7. After 2 weeks, creator checks Amazon sales
-8. Dinosaurs book sells best → creator decides to create "Dinosaurs Vol 2"
-9. Creator uses same seed + different prompt for consistent style
-10. Creator expands dinosaur series to 5 books
+4. Reviews all 3 PDFs → approves all
+5. Downloads KDP interior PDFs for all 3
+6. Uploads all 3 to Amazon KDP
+7. After 2 weeks, checks Amazon sales
+8. Dinosaurs book sells best → decides to create "Dinosaurs Vol 2"
+9. Uses same seed + different prompt for consistent style
+10. Expands dinosaur series to 5 books
 
 **Success Criteria**: Fast iteration enables market testing, seed values ensure series consistency.
 
 ### Journey 5: Testing KDP Requirements with Page Completion
 
-**Context**: A creator wants to test KDP export quickly with minimal generation time.
+**Context**: A team member wants to test KDP export quickly with minimal generation time.
 
 **Steps**:
-1. Creator generates short test book with only 3 content pages
-2. Creator uses "Complete Pages" feature to add blank pages to reach 24 interior pages
+1. Generates short test book with only 3 content pages
+2. Uses "Complete Pages" feature to add blank pages to reach 24 interior pages
 3. System adds 21 blank white pages between last content page and back cover
 4. System reassembles PDF with all 26 total pages (cover + 24 interior + back cover)
-5. Creator previews KDP interior export (24 interior pages only)
-6. Creator verifies export meets KDP specifications
-7. Creator approves book and downloads KDP interior manuscript
-8. Creator successfully uploads to Amazon KDP
+5. Previews KDP interior export (24 interior pages only)
+6. Verifies export meets KDP specifications
+7. Approves book and downloads KDP interior manuscript
+8. Successfully uploads to Amazon KDP
 
-**Success Criteria**: Creator can test KDP export workflow without waiting for full book generation.
+**Success Criteria**: Team can test KDP export workflow without waiting for full book generation.
 
 ```mermaid
 graph TD
-    A[Creator Login] --> B[Dashboard]
+    A[Login] --> B[Dashboard]
     B --> C{Choose Action}
 
     C -->|New Book| D[Enter Theme & Details]
@@ -276,7 +266,7 @@ graph TD
 - Trim size: 8.0" × 10.0" (203mm × 254mm)
 - Bleed: 0.125" (3.175mm) on all sides
 - Resolution: 300 DPI minimum for print quality
-- Page count: 24-30 pages minimum (KDP requires 24 interior pages)
+- Page count: 24-100 pages (configured in config/business/limits.yaml, KDP requires 24 interior pages minimum)
 - File format: PDF
 - Interior manuscript: Content pages only (no cover/back cover)
 
@@ -324,7 +314,7 @@ graph TD
 
 ## Success Metrics
 
-### Creator Value
+### Team Value
 - Time saved: 24-page book in 5 minutes vs weeks of manual work
 - Zero generation costs: Fully local processing with free AI models
 - No artistic skills required: AI handles all illustration
@@ -339,6 +329,6 @@ graph TD
 
 ### Business Viability
 - KDP compliance: 100% of approved books must meet Amazon specs
-- Iteration speed: Enable testing 5+ themes per day per creator
+- Iteration speed: Enable testing 5+ themes per day
 - Theme discovery: Identify successful patterns through rapid testing
 - Export flexibility: Support both full book and interior-only manuscript formats
