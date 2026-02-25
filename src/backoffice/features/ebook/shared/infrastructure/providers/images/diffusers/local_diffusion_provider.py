@@ -324,7 +324,7 @@ class LocalDiffusionImageProvider(CoverGenerationPort, ContentPageGenerationPort
 
             # DEBUG: Save raw image to /tmp for inspection
             if is_bw:
-                debug_path = "/tmp/debug_raw_sdxl.png"
+                debug_path = "/tmp/debug_raw_sdxl.png"  # noqa: S108 — debug output
                 image.save(debug_path)
                 logger.info(f"[DEBUG] Saved raw SDXL image to {debug_path} - CHECK THIS FILE!")
 

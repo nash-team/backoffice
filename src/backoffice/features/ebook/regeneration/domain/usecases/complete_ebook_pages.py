@@ -10,6 +10,7 @@ from backoffice.features.ebook.regeneration.domain.services.regeneration_service
     RegenerationService,
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.ebook.shared.domain.services.ebook_validator import EbookValidator
@@ -54,7 +55,8 @@ class CompleteEbookPagesUseCase:
         ebook = await self.ebook_repository.get_by_id(ebook_id)
         ebook = EbookValidator.validate_exists(ebook, ebook_id)
         EbookValidator.validate_structure(ebook)
-        assert ebook.structure_json is not None  # Guaranteed by validate_structure
+        if ebook.structure_json is None:  # pragma: no cover — guaranteed by validator
+            raise DomainError(code=ErrorCode.VALIDATION_ERROR, message="Ebook has no structure data", actionable_hint="Regenerate the ebook first")
         pages_meta = ebook.structure_json["pages_meta"]
         total_pages = len(pages_meta)
 
@@ -104,7 +106,8 @@ class CompleteEbookPagesUseCase:
         pages_meta.append(back_cover)
 
         # 9. Update ebook structure and page count
-        assert ebook.structure_json is not None  # Still valid from initial validation
+        if ebook.structure_json is None:  # pragma: no cover — guaranteed by validator
+            raise DomainError(code=ErrorCode.VALIDATION_ERROR, message="Ebook has no structure data", actionable_hint="Regenerate the ebook first")
         ebook.structure_json["pages_meta"] = pages_meta
         ebook.page_count = len(pages_meta)
 

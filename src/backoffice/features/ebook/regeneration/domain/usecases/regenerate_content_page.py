@@ -11,6 +11,7 @@ from backoffice.features.ebook.regeneration.domain.services.regeneration_service
 )
 from backoffice.features.ebook.shared.domain.entities.ebook import Ebook
 from backoffice.features.ebook.shared.domain.entities.generation_request import ColorMode, ImageSpec
+from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.assembly_port import AssembledPage
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.ebook.shared.domain.services.ebook_validator import EbookValidator
@@ -72,8 +73,8 @@ class RegenerateContentPageUseCase:
         # Validate ebook (exists + DRAFT status + has structure)
         ebook = await self.ebook_repository.get_by_id(ebook_id)
         ebook = EbookValidator.validate_for_approval(ebook, ebook_id)
-        # Assert structure_json is valid (guaranteed by validator)
-        assert ebook.structure_json is not None
+        if ebook.structure_json is None:  # pragma: no cover — guaranteed by validator
+            raise DomainError(code=ErrorCode.VALIDATION_ERROR, message="Ebook has no structure data", actionable_hint="Regenerate the ebook first")
 
         pages_meta = ebook.structure_json["pages_meta"]
 

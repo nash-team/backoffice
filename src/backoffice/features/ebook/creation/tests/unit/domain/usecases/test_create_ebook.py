@@ -65,7 +65,7 @@ class FakeGenerationStrategy:
     def __init__(
         self,
         should_fail: bool = False,
-        pdf_path: str = "/tmp/fake_ebook.pdf",
+        pdf_path: str = "/tmp/fake_ebook.pdf",  # noqa: S108 — test fake
         page_count: int = 5,
     ):
         self.should_fail = should_fail

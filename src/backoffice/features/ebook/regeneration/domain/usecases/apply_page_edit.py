@@ -72,8 +72,8 @@ class ApplyPageEditUseCase:
         # Allows DRAFT or APPROVED (will reset to DRAFT after edit)
         ebook = await self.ebook_repository.get_by_id(ebook_id)
         ebook = EbookValidator.validate_for_regeneration(ebook, ebook_id)
-        # Assert structure_json is valid (guaranteed by validator)
-        assert ebook.structure_json is not None
+        if ebook.structure_json is None:  # pragma: no cover — guaranteed by validator
+            raise DomainError(code=ErrorCode.VALIDATION_ERROR, message="Ebook has no structure data", actionable_hint="Regenerate the ebook first")
 
         pages_meta = ebook.structure_json["pages_meta"]
 

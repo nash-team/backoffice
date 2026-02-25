@@ -221,7 +221,7 @@ class TestCoverCompositorPathValidation:
     def test_rejects_absolute_paths(self) -> None:
         """Test that absolute paths outside allowed dirs are rejected."""
         assert not CoverCompositor._validate_overlay_path("/etc/passwd")
-        assert not CoverCompositor._validate_overlay_path("/tmp/evil.png")
+        assert not CoverCompositor._validate_overlay_path("/tmp/evil.png")  # noqa: S108
 
     def test_rejects_path_traversal(self) -> None:
         """Test that path traversal attempts are rejected."""

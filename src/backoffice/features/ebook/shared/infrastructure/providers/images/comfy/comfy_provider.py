@@ -107,7 +107,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         p = {"prompt": prompt, "client_id": self.client_id}
         data = json.dumps(p).encode("utf-8")
         req = urllib.request.Request(f"http://{self.comfy_url}/prompt", data=data)
-        return json.loads(urllib.request.urlopen(req).read())
+        return json.loads(urllib.request.urlopen(req).read())  # noqa: S310 — local ComfyUI server
 
     def get_image(self, filename, subfolder, folder_type):
         data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
@@ -194,7 +194,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         req = urllib.request.Request(f"http://{self.comfy_url}", method="GET")
         ping: bool = False
         try:
-            urllib.request.urlopen(req).read()
+            urllib.request.urlopen(req).read()  # noqa: S310 — local ComfyUI server
             ping = True
         except URLError:
             pass
@@ -299,7 +299,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                     result_bytes = image_data
                     # save image
                     image = Image.open(BytesIO(image_data))
-                    image.save(f"/tmp/test-{node_id}-{seed}.png")
+                    image.save(f"/tmp/test-{node_id}-{seed}.png")  # noqa: S108 — debug output
 
             logger.info(f"✅ Generated cover (COMFY): {len(result_bytes)} bytes")
             return result_bytes
@@ -363,7 +363,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         # if this is the flux-2 workflow
         if self.workflow.get("63", None):
             # put the seed for random prompts
-            prompt_seed = random.randint(0, 2048)
+            prompt_seed = random.randint(0, 2048)  # noqa: S311 — not cryptographic
             self.workflow["63"]["inputs"]["seed"] = prompt_seed
             self.workflow["63"]["inputs"]["text"] = prompt
         else:
@@ -385,7 +385,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                     result_bytes = image_data
                     # save image
                     image = Image.open(io.BytesIO(image_data))
-                    image.save(f"/tmp/test-{node_id}-{seed}.png")
+                    image.save(f"/tmp/test-{node_id}-{seed}.png")  # noqa: S108 — debug output
 
             logger.info(f"✅ Generated page (COMFY): {len(result_bytes)} bytes")
             return result_bytes
@@ -460,7 +460,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         self.workflow["67"]["inputs"]["image"] = cover_b64
 
         # 2. Generate seed
-        seed = random.randint(1, 2**31 - 1)
+        seed = random.randint(1, 2**31 - 1)  # noqa: S311 — not cryptographic
         self.workflow["25"]["inputs"]["noise_seed"] = seed
 
         # 3. Modify workflow prompt (by default "remove text") by the "editing" prompt

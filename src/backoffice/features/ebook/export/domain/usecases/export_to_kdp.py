@@ -109,8 +109,8 @@ class ExportToKDPUseCase:
         logger.info(f"✅ KDP export completed: {len(kdp_pdf_bytes)} bytes")
 
         # 7. Visual validation against KDP template
-        # Assert page_count is set (guaranteed by KdpExportValidator.validate_for_export)
-        assert ebook.page_count is not None
+        if ebook.page_count is None:  # pragma: no cover — guaranteed by validator
+            raise DomainError(code=ErrorCode.VALIDATION_ERROR, message="Ebook has no page count", actionable_hint="Regenerate the ebook first")
         await self._validate_cover_against_template(
             back_cover_bytes=back_cover_bytes,
             front_cover_bytes=front_cover_bytes,
