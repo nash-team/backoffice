@@ -3,6 +3,7 @@
 import logging
 from io import BytesIO
 from pathlib import Path
+from typing import cast
 
 from PIL import Image, ImageDraw, ImageFont
 from PIL.Image import Image as PILImage
@@ -55,8 +56,7 @@ def load_font_safe(font_path: str, size: int, fallback: str = "DejaVuSans.ttf") 
         except OSError as e2:
             # Ultimate fallback: default PIL font
             logger.warning(f"⚠️ Fallback {fallback} also failed: {e2}, using default PIL font")
-            default_font: FreeTypeFont = ImageFont.load_default()  # type: ignore[assignment]
-            return default_font
+            return cast(FreeTypeFont, ImageFont.load_default())
 
 
 def generate_spine(

@@ -15,6 +15,7 @@ back_cover:
   description: "Offrez à votre enfant un livre de coloriage dinosaures spécialement conçu pour les enfants dès 4 ans. Avec 100 pages de dessins simples, amusants et adaptés aux petites mains, ce livre permet de colorier tout en développant créativité et concentration."
   author: "C.Waterton"
   publisher: "Darkwaters"
+  isbn: "9781234567897"  # TODO: replace with real purchased ISBN
 
 # ==========================================
 # COVER TEMPLATES (colorful, full-bleed)

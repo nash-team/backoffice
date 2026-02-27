@@ -41,6 +41,7 @@ class KDPAssemblyProvider:
         back_cover_bytes: bytes,
         front_cover_bytes: bytes,
         kdp_config: KDPExportConfig,
+        isbn: str | None = None,
     ) -> bytes:
         """Assemble KDP-ready PDF with back, spine, and front.
 
@@ -139,6 +140,7 @@ class KDPAssemblyProvider:
             image_includes_bleeds=True,
             bleed_size_inches=kdp_config.bleed_size,
             has_right_bleed=False,  # NO right bleed - spine comes right after
+            isbn=isbn,
         )
         back_img = color_utils.ensure_rgb(Image.open(BytesIO(back_with_barcode)))
 

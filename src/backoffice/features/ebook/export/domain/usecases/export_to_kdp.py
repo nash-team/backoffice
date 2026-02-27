@@ -1,6 +1,9 @@
 """Use case for exporting ebook to Amazon KDP format."""
 
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
 
 from backoffice.features.ebook.export.domain.events.kdp_export_generated_event import (
     KDPExportGeneratedEvent,
@@ -20,6 +23,9 @@ from backoffice.features.ebook.shared.domain.errors.error_taxonomy import Domain
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
+if TYPE_CHECKING:
+    from backoffice.features.ebook.shared.infrastructure.adapters.theme_repository import ThemeRepository
+
 logger = logging.getLogger(__name__)
 
 
@@ -32,6 +38,7 @@ class ExportToKDPUseCase:
         event_bus: EventBus,
         image_provider: ImageProviderProtocol | None = None,
         kdp_assembly_provider: KDPAssemblyProviderProtocol | None = None,
+        theme_repository: ThemeRepository | None = None,
     ):
         """Initialize export to KDP use case.
 
@@ -40,11 +47,13 @@ class ExportToKDPUseCase:
             event_bus: Event bus for publishing domain events
             image_provider: Optional image provider (uses OpenRouter if None)
             kdp_assembly_provider: Optional KDP assembly provider (uses default if None)
+            theme_repository: Optional theme repository for ISBN lookup (uses default if None)
         """
         self.ebook_repository = ebook_repository
         self.event_bus = event_bus
         self.image_provider = image_provider
         self.kdp_assembly_provider = kdp_assembly_provider
+        self.theme_repository = theme_repository
         logger.info("ExportToKDPUseCase initialized")
 
     async def execute(
@@ -97,6 +106,9 @@ class ExportToKDPUseCase:
         logger.info("Extracting existing back cover from ebook structure...")
         back_cover_bytes = await self._get_back_cover_bytes(ebook)
 
+        # 5b. Extract ISBN from theme config (if available)
+        isbn = self._get_isbn_from_theme(ebook.theme_id)
+
         # 6. Assemble KDP PDF (back + spine + front)
         logger.info("Assembling KDP paperback PDF...")
         kdp_pdf_bytes = await self.kdp_assembly_provider.assemble_kdp_paperback(
@@ -104,6 +116,7 @@ class ExportToKDPUseCase:
             back_cover_bytes=back_cover_bytes,
             front_cover_bytes=front_cover_bytes,
             kdp_config=kdp_config,
+            isbn=isbn,
         )
 
         logger.info(f"✅ KDP export completed: {len(kdp_pdf_bytes)} bytes")
@@ -129,6 +142,36 @@ class ExportToKDPUseCase:
         )
 
         return kdp_pdf_bytes
+
+    def _get_isbn_from_theme(self, theme_id: str | None) -> str | None:
+        """Extract ISBN from the theme configuration.
+
+        Args:
+            theme_id: Theme identifier, or None if no theme is set
+
+        Returns:
+            ISBN-13 string (digits only) if found, None otherwise
+        """
+        if not theme_id:
+            return None
+
+        try:
+            if not self.theme_repository:
+                from backoffice.features.ebook.shared.infrastructure.adapters.theme_repository import (
+                    ThemeRepository as _ThemeRepository,
+                )
+
+                self.theme_repository = _ThemeRepository()
+
+            theme_profile = self.theme_repository.get_theme_by_id(theme_id)
+            if theme_profile and theme_profile.back_cover and theme_profile.back_cover.isbn:
+                isbn = theme_profile.back_cover.isbn
+                logger.info(f"ISBN found in theme '{theme_id}': {isbn}")
+                return isbn
+        except Exception as e:
+            logger.warning(f"Could not load theme for ISBN: {e}")
+
+        return None
 
     async def _get_front_cover_bytes(self, ebook: Ebook) -> bytes:
         """Extract front cover from ebook structure or bytes."""

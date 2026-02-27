@@ -45,6 +45,27 @@ class BackCoverConfigModel(BaseModel):
     description: str = Field(..., min_length=1, description="Description paragraph")
     author: str = Field(..., min_length=1, description="Author name")
     publisher: str = Field(..., min_length=1, description="Publisher name")
+    isbn: str | None = Field(default=None, description="ISBN-13 for EAN barcode on back cover")
+
+    @field_validator("isbn")
+    @classmethod
+    def validate_isbn_13(cls, v: str | None) -> str | None:
+        """Validate ISBN-13: 13 digits, 978/979 prefix, valid check digit."""
+        if v is None:
+            return None
+        digits = v.replace("-", "").replace(" ", "")
+        if len(digits) != 13:
+            raise ValueError("ISBN must be exactly 13 digits")
+        if not digits.isdigit():
+            raise ValueError("ISBN must contain only digits (and optional hyphens)")
+        if not digits.startswith(("978", "979")):
+            raise ValueError("ISBN-13 must start with 978 or 979")
+        # ISBN-13 check digit algorithm: alternate weights 1 and 3
+        total = sum(int(d) * (1 if i % 2 == 0 else 3) for i, d in enumerate(digits[:12]))
+        expected_check = (10 - (total % 10)) % 10
+        if int(digits[12]) != expected_check:
+            raise ValueError(f"Invalid ISBN-13 check digit: expected {expected_check}, got {digits[12]}")
+        return digits  # Store normalized (digits only)
 
 
 class CoverTemplateModel(BaseModel):
@@ -122,6 +143,7 @@ class BackCoverConfig:
     description: str
     author: str
     publisher: str
+    isbn: str | None = None
 
 
 @dataclass
@@ -155,6 +177,7 @@ class ThemeProfile:
                 description=model.back_cover.description,
                 author=model.back_cover.author,
                 publisher=model.back_cover.publisher,
+                isbn=model.back_cover.isbn,
             )
 
         return cls(

@@ -7,6 +7,7 @@ from PIL import Image
 
 from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.barcode_utils import (
     add_barcode_space,
+    generate_ean13_barcode,
 )
 
 
@@ -155,3 +156,69 @@ def test_add_barcode_space_exact_kdp_compliance():
 
     left_of_rectangle = result_img.getpixel((1870, 2300))  # Left of barcode
     assert left_of_rectangle != (255, 255, 255), "Area left of barcode should not be white"
+
+
+# ---------------------------------------------------------------------------
+# EAN-13 barcode generation tests
+# ---------------------------------------------------------------------------
+
+
+class TestGenerateEAN13Barcode:
+    """Tests for generate_ean13_barcode function."""
+
+    def test_valid_isbn_generates_barcode(self) -> None:
+        barcode_img = generate_ean13_barcode("9781234567897")
+        assert barcode_img.size == (600, 360)
+        assert barcode_img.mode == "RGB"
+
+    def test_custom_dimensions(self) -> None:
+        barcode_img = generate_ean13_barcode("9781234567897", target_width_px=300, target_height_px=180)
+        assert barcode_img.size == (300, 180)
+
+    def test_barcode_has_black_bars(self) -> None:
+        """Barcode should contain both dark bars and white spaces."""
+        barcode_img = generate_ean13_barcode("9781234567897")
+        # Scan horizontal line across barcode for both dark and white pixels
+        has_dark = False
+        has_white = False
+        for x in range(50, 550, 5):
+            px = barcode_img.getpixel((x, 150))
+            if px[0] < 50 and px[1] < 50 and px[2] < 50:
+                has_dark = True
+            if px[0] > 200 and px[1] > 200 and px[2] > 200:
+                has_white = True
+            if has_dark and has_white:
+                break
+        assert has_dark and has_white, "Barcode should have both dark bars and white spaces"
+
+    def test_invalid_isbn_raises_value_error(self) -> None:
+        with pytest.raises(ValueError, match="Failed to generate barcode"):
+            generate_ean13_barcode("invalid")
+
+
+class TestAddBarcodeSpaceWithISBN:
+    """Tests for add_barcode_space with ISBN parameter."""
+
+    def test_with_isbn_renders_barcode(self, sample_cover_image: bytes) -> None:
+        """With ISBN, barcode zone should contain non-white pixels."""
+        result_bytes = add_barcode_space(sample_cover_image, isbn="9781234567897")
+        result_img = Image.open(BytesIO(result_bytes))
+
+        # Scan barcode area for non-white pixels
+        found_non_white = False
+        for x in range(1900, 2400, 20):
+            for y in range(2150, 2450, 20):
+                pixel = result_img.getpixel((x, y))
+                if pixel != (255, 255, 255):
+                    found_non_white = True
+                    break
+            if found_non_white:
+                break
+        assert found_non_white, "Barcode area should contain barcode bars (non-white pixels)"
+
+    def test_without_isbn_stays_white(self, sample_cover_image: bytes) -> None:
+        """Without ISBN, barcode zone should be plain white (backward compat)."""
+        result_bytes = add_barcode_space(sample_cover_image)
+        result_img = Image.open(BytesIO(result_bytes))
+        center_barcode = result_img.getpixel((2100, 2300))
+        assert center_barcode == (255, 255, 255), "Without ISBN, barcode area should be white"

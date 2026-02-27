@@ -10,6 +10,7 @@ from PIL import Image
 
 from backoffice.features.ebook.shared.domain.entities.theme_profile import BackCoverConfig
 from backoffice.features.ebook.shared.domain.services.cover_compositor import (
+    BACK_COVER_BARCODE_MARGIN_PX,
     BACK_COVER_CREDITS_BOTTOM_PX,
     BACK_COVER_PREVIEW_TOP_PX,
     FOOTER_BOTTOM_PADDING_PX,
@@ -518,3 +519,51 @@ class TestBackCoverCompositor:
 
         # Should be identical bytes (no processing)
         assert result == base
+
+    def test_back_cover_barcode_rendered_when_isbn_present(self) -> None:
+        """Test that barcode is rendered at bottom-right when ISBN is in config."""
+        compositor = CoverCompositor()
+        cover_size = 2626
+        base = _make_png(cover_size, cover_size, "white")
+        config = _make_back_cover_config()
+        config.isbn = "9781234567897"
+        profile = _FakeThemeProfile(back_cover=config)
+
+        result = compositor.apply_back_cover_overlays(
+            back_cover_data=base,
+            theme_profile=profile,  # type: ignore[arg-type]
+            content_pages=[_make_png(100, 100, "gray"), _make_png(100, 100, "gray")],
+        )
+
+        result_img = Image.open(io.BytesIO(result))
+        # Check barcode zone (bottom-right) has non-white pixels
+        barcode_center_x = cover_size - BACK_COVER_BARCODE_MARGIN_PX - 300
+        barcode_center_y = cover_size - BACK_COVER_BARCODE_MARGIN_PX - 180
+        found_non_white = False
+        for dx in range(-50, 50, 10):
+            pixel = result_img.getpixel((barcode_center_x + dx, barcode_center_y))
+            if pixel[0] < 240 or pixel[1] < 240 or pixel[2] < 240:
+                found_non_white = True
+                break
+        assert found_non_white, "Expected barcode pixels (non-white) in barcode zone"
+
+    def test_back_cover_no_barcode_when_isbn_absent(self) -> None:
+        """Test that barcode zone stays clear when ISBN is None."""
+        compositor = CoverCompositor()
+        cover_size = 2626
+        base = _make_png(cover_size, cover_size, "white")
+        config = _make_back_cover_config()
+        # isbn is None by default
+        profile = _FakeThemeProfile(back_cover=config)
+
+        result = compositor.apply_back_cover_overlays(
+            back_cover_data=base,
+            theme_profile=profile,  # type: ignore[arg-type]
+            content_pages=[_make_png(100, 100, "gray"), _make_png(100, 100, "gray")],
+        )
+
+        result_img = Image.open(io.BytesIO(result))
+        barcode_x = int(cover_size * 0.90)
+        barcode_y = int(cover_size * 0.95)
+        pixel = result_img.getpixel((barcode_x, barcode_y))
+        assert pixel[0] > 240 and pixel[1] > 240 and pixel[2] > 240, f"Expected barcode zone to be clear (white) without ISBN, got {pixel}"

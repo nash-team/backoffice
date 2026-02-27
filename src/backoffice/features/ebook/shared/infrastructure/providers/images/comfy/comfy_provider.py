@@ -13,7 +13,7 @@ from io import BytesIO
 from pathlib import Path
 from urllib.error import URLError
 
-import websocket  # type: ignore[import-not-found]
+import websocket
 from PIL import Image, ImageDraw
 
 from backoffice.features.ebook.regeneration.domain.events.content_page_regenerating_status_event import ContentPageRegeneratingStatusEvent

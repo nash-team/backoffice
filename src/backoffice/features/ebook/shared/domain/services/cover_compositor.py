@@ -68,6 +68,11 @@ BACK_COVER_TEXT_LINE_SPACING = 12  # extra pixels between lines
 BACK_COVER_TEXT_BACKDROP_COLOR = (255, 255, 255, 180)  # white, 70% opacity
 BACK_COVER_TEXT_BACKDROP_PADDING_PX = 30
 
+# Barcode zone dimensions (must match barcode_utils KDP specs)
+BACK_COVER_BARCODE_WIDTH_INCHES = 2.0
+BACK_COVER_BARCODE_HEIGHT_INCHES = 1.2
+BACK_COVER_BARCODE_MARGIN_PX = 75  # 0.25" @ 300 DPI
+
 
 # Allowed base directories for overlay images (relative to project root)
 _ALLOWED_OVERLAY_PREFIXES = ("config/branding/",)
@@ -210,7 +215,7 @@ class CoverCompositor:
         ratio = min(max_width / image.width, max_height / image.height)
         new_width = int(image.width * ratio)
         new_height = int(image.height * ratio)
-        return image.resize((new_width, new_height), Image.LANCZOS)
+        return image.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
     # ------------------------------------------------------------------
     # Back cover overlays
@@ -340,6 +345,10 @@ class CoverCompositor:
             cover_width=cover_width,
         )
 
+        # --- Zone 4: Barcode (bottom-right, optional) ---
+        if config.isbn:
+            self._draw_barcode(base, config.isbn, cover_width, cover_height)
+
         output = io.BytesIO()
         base.save(output, format="PNG")
         logger.info("Back cover overlays applied successfully")
@@ -405,6 +414,51 @@ class CoverCompositor:
             logger.info(f"Preview {i} placed at ({x}, {y}), size={fitted.size}")
 
         return y + max_actual_height
+
+    def _draw_barcode(
+        self,
+        base: Image.Image,
+        isbn: str,
+        cover_width: int,
+        cover_height: int,
+    ) -> None:
+        """Draw EAN-13 barcode at bottom-right of back cover.
+
+        Position matches KDP barcode space specs: 2.0" x 1.2" with 0.25" margin.
+
+        Args:
+            base: Base image to draw on (modified in place)
+            isbn: ISBN-13 string (validated, digits only)
+            cover_width: Cover width in pixels
+            cover_height: Cover height in pixels
+        """
+        from backoffice.features.ebook.shared.domain.entities.ebook import inches_to_px
+        from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.barcode_utils import (
+            generate_ean13_barcode,
+        )
+
+        rect_w = inches_to_px(BACK_COVER_BARCODE_WIDTH_INCHES)
+        rect_h = inches_to_px(BACK_COVER_BARCODE_HEIGHT_INCHES)
+        margin = BACK_COVER_BARCODE_MARGIN_PX
+
+        x = cover_width - rect_w - margin
+        y = cover_height - rect_h - margin
+
+        try:
+            barcode_img = generate_ean13_barcode(
+                isbn=isbn,
+                target_width_px=rect_w,
+                target_height_px=rect_h,
+            )
+            # Draw white background first
+            draw = ImageDraw.Draw(base)
+            draw.rectangle((x, y, x + rect_w, y + rect_h), fill=(255, 255, 255, 255))
+            # Paste barcode (convert to RGBA for alpha compositing)
+            barcode_rgba = barcode_img.convert("RGBA")
+            base.paste(barcode_rgba, (x, y), barcode_rgba)
+            logger.info(f"Barcode drawn at ({x}, {y}) for ISBN {isbn}")
+        except ValueError as e:
+            logger.warning(f"Could not render barcode for ISBN {isbn}: {e}")
 
     @staticmethod
     def _round_corners(image: Image.Image, radius: int) -> Image.Image:

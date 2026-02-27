@@ -14,6 +14,7 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     EbookStatus,
     KDPExportConfig,
 )
+from backoffice.features.ebook.shared.domain.entities.theme_profile import BackCoverConfig, ThemeProfile
 from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 
@@ -52,6 +53,7 @@ class FakeKDPAssemblyProvider:
         back_cover_bytes: bytes,
         front_cover_bytes: bytes,
         kdp_config: KDPExportConfig,
+        isbn: str | None = None,
     ) -> bytes:
         """Fake assembly - returns fake PDF bytes."""
         self.call_count += 1
@@ -59,6 +61,7 @@ class FakeKDPAssemblyProvider:
         self.last_config = kdp_config
         self.last_front_cover_bytes = front_cover_bytes
         self.last_back_cover_bytes = back_cover_bytes
+        self.last_isbn = isbn
 
         if self.should_fail:
             raise DomainError(
@@ -80,6 +83,41 @@ class FakeImageProvider:
     async def remove_text_from_image(self, image_bytes: bytes) -> bytes:
         self.call_count += 1
         return image_bytes  # Return same image
+
+
+class FakeThemeRepository:
+    """Fake theme repository for testing ISBN lookup."""
+
+    def __init__(self, themes: dict[str, ThemeProfile] | None = None):
+        self._themes = themes or {}
+
+    def get_theme_by_id(self, theme_id: str) -> ThemeProfile:
+        if theme_id not in self._themes:
+            raise ValueError(f"Theme '{theme_id}' not found")
+        return self._themes[theme_id]
+
+
+def _make_theme_profile(theme_id: str = "dinosaurs", isbn: str | None = None) -> ThemeProfile:
+    """Create a minimal ThemeProfile for testing."""
+    from backoffice.features.ebook.shared.domain.entities.theme_profile import Palette, PromptBlocks
+
+    back_cover = BackCoverConfig(
+        preview_pages=[0, 1],
+        tagline="Test tagline",
+        description="Test description",
+        author="Test Author",
+        publisher="Test Publisher",
+        isbn=isbn,
+    )
+    return ThemeProfile(
+        id=theme_id,
+        label="Dinosaurs",
+        palette=Palette(base=["#FF0000"], accents_allowed=[], forbidden_keywords=[]),
+        blocks=PromptBlocks(subject="dinos", environment="forest", tone="fun", positives=["cute"], negatives=["scary"]),
+        cover_title_image="config/branding/themes/assets/title.png",
+        cover_footer_image="config/branding/themes/assets/footer.png",
+        back_cover=back_cover,
+    )
 
 
 # === Fixtures ===
@@ -302,3 +340,62 @@ class TestExportToKDPUseCase:
 
         assert exc_info.value.code == ErrorCode.VALIDATION_ERROR
         assert "at least 2 pages" in str(exc_info.value.message)
+
+    async def test_export_passes_isbn_from_theme_to_assembly(self, ebook_repository, event_bus, fake_image_provider):
+        """Test that ISBN from theme config is passed to KDP assembly provider."""
+        # Arrange
+        fake_kdp = FakeKDPAssemblyProvider()
+        theme = _make_theme_profile(theme_id="dinosaurs", isbn="9781234567897")
+        fake_theme_repo = FakeThemeRepository(themes={"dinosaurs": theme})
+        use_case = ExportToKDPUseCase(
+            ebook_repository=ebook_repository,
+            event_bus=event_bus,
+            image_provider=fake_image_provider,
+            kdp_assembly_provider=fake_kdp,
+            theme_repository=fake_theme_repo,
+        )
+        ebook = _create_sample_ebook(status=EbookStatus.APPROVED)
+        ebook.theme_id = "dinosaurs"
+        ebook_repository.add_ebook(ebook)
+
+        # Act
+        await use_case.execute(ebook_id=1)
+
+        # Assert
+        assert fake_kdp.last_isbn == "9781234567897"
+
+    async def test_export_no_isbn_when_theme_has_no_isbn(self, ebook_repository, event_bus, fake_image_provider):
+        """Test that ISBN is None when theme has no ISBN configured."""
+        # Arrange
+        fake_kdp = FakeKDPAssemblyProvider()
+        theme = _make_theme_profile(theme_id="dinosaurs", isbn=None)
+        fake_theme_repo = FakeThemeRepository(themes={"dinosaurs": theme})
+        use_case = ExportToKDPUseCase(
+            ebook_repository=ebook_repository,
+            event_bus=event_bus,
+            image_provider=fake_image_provider,
+            kdp_assembly_provider=fake_kdp,
+            theme_repository=fake_theme_repo,
+        )
+        ebook = _create_sample_ebook(status=EbookStatus.APPROVED)
+        ebook.theme_id = "dinosaurs"
+        ebook_repository.add_ebook(ebook)
+
+        # Act
+        await use_case.execute(ebook_id=1)
+
+        # Assert
+        assert fake_kdp.last_isbn is None
+
+    async def test_export_no_isbn_when_no_theme_id(self, use_case, ebook_repository, fake_kdp_provider):
+        """Test that ISBN is None when ebook has no theme_id."""
+        # Arrange
+        ebook = _create_sample_ebook(status=EbookStatus.APPROVED)
+        ebook.theme_id = None
+        ebook_repository.add_ebook(ebook)
+
+        # Act
+        await use_case.execute(ebook_id=1)
+
+        # Assert
+        assert fake_kdp_provider.last_isbn is None

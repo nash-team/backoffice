@@ -71,6 +71,7 @@ class KDPAssemblyProviderProtocol(Protocol):
         back_cover_bytes: bytes,
         front_cover_bytes: bytes,
         kdp_config: KDPExportConfig,
+        isbn: str | None = None,
     ) -> bytes:
         """Assemble a KDP paperback PDF.
 
@@ -79,6 +80,7 @@ class KDPAssemblyProviderProtocol(Protocol):
             back_cover_bytes: Back cover image bytes
             front_cover_bytes: Front cover image bytes
             kdp_config: KDP export configuration
+            isbn: Optional ISBN-13 for EAN barcode rendering on back cover
 
         Returns:
             PDF bytes ready for KDP upload

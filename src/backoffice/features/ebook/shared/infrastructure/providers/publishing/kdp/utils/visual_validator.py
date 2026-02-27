@@ -7,8 +7,10 @@ against official Amazon KDP templates by overlaying the template.
 import logging
 from io import BytesIO
 from pathlib import Path
+from typing import cast
 
 from PIL import Image, ImageDraw, ImageFont
+from PIL.ImageFont import FreeTypeFont
 
 from backoffice.features.ebook.shared.domain.entities.ebook import (
     KDPExportConfig,
@@ -212,7 +214,7 @@ def _add_measurement_annotations(img: Image.Image) -> Image.Image:
         font_small = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 30)
     except OSError as e:
         logger.warning(f"Font not found, using default: {e}")
-        font = ImageFont.load_default()  # type: ignore[assignment]
+        font = cast(FreeTypeFont, ImageFont.load_default())
         font_small = font
 
     # Text color with outline for visibility
