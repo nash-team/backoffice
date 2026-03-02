@@ -40,13 +40,14 @@ logger = logging.getLogger(__name__)
 
 KDP_SAFE_ZONE_INCHES = 0.25
 KDP_BLEED_INCHES = 0.125
-COVER_DPI = 300
+# COVER_DPI = 300
+COVER_DPI = 120
 
 PADDING_PX = 90  # title distance from top edge (76px minimum)
 FOOTER_BOTTOM_PADDING_PX = 76  # footer distance from bottom edge (76px minimum)
 
 TITLE_MAX_HEIGHT_RATIO = 0.25  # title occupies at most 25% of cover height
-FOOTER_MAX_HEIGHT_RATIO = 0.20  # footer occupies at most 20% of cover height
+FOOTER_MAX_HEIGHT_RATIO = 0.1  # footer occupies at most 10% of cover height
 
 # ---------------------------------------------------------------------------
 # Back cover overlay constants
@@ -59,8 +60,10 @@ BACK_COVER_PREVIEW_BORDER_RADIUS_PX = 20  # corner radius for preview images
 BACK_COVER_TEXT_TOP_MARGIN_PX = 60  # gap between previews and text zone
 BACK_COVER_CREDITS_BOTTOM_PX = 200  # distance from bottom for credits (above barcode zone)
 BACK_COVER_FONT_DIR = "config/branding/fonts"
-BACK_COVER_TAGLINE_FONT_SIZE = 60
-BACK_COVER_DESCRIPTION_FONT_SIZE = 40
+# BACK_COVER_TAGLINE_FONT_SIZE = 60
+BACK_COVER_TAGLINE_FONT_SIZE = 28
+# BACK_COVER_DESCRIPTION_FONT_SIZE = 40
+BACK_COVER_DESCRIPTION_FONT_SIZE = 20
 BACK_COVER_CREDITS_FONT_SIZE = 36
 BACK_COVER_TEXT_LINE_SPACING = 12  # extra pixels between lines
 
@@ -325,7 +328,7 @@ class CoverCompositor:
         author_text = f"Auteur : {config.author}"
         publisher_text = f"Editions : {config.publisher}"
 
-        self._draw_text_centered(
+        self._draw_text_left(
             draw,
             author_text,
             credits_y,
@@ -335,7 +338,7 @@ class CoverCompositor:
             cover_width=cover_width,
         )
         credits_y += self._get_font_line_height(credits_font) + BACK_COVER_TEXT_LINE_SPACING
-        self._draw_text_centered(
+        self._draw_text_left(
             draw,
             publisher_text,
             credits_y,
@@ -437,8 +440,8 @@ class CoverCompositor:
             generate_ean13_barcode,
         )
 
-        rect_w = inches_to_px(BACK_COVER_BARCODE_WIDTH_INCHES)
-        rect_h = inches_to_px(BACK_COVER_BARCODE_HEIGHT_INCHES)
+        rect_w = inches_to_px(BACK_COVER_BARCODE_WIDTH_INCHES, COVER_DPI)
+        rect_h = inches_to_px(BACK_COVER_BARCODE_HEIGHT_INCHES, COVER_DPI)
         margin = BACK_COVER_BARCODE_MARGIN_PX
 
         x = cover_width - rect_w - margin
@@ -587,6 +590,43 @@ class CoverCompositor:
             bbox = font.getbbox(line)
             text_width = bbox[2] - bbox[0]
             x = (cover_width - text_width) // 2
+            draw.text((x, y), line, font=font, fill=fill)
+            y += line_height + BACK_COVER_TEXT_LINE_SPACING
+
+        return y
+
+    def _draw_text_left(
+            self,
+            draw: ImageDraw.ImageDraw,
+            text: str,
+            y: int,
+            font: ImageFont.FreeTypeFont,
+            fill: tuple[int, int, int] | tuple[int, int, int, int],
+            max_width: int,
+            cover_width: int,
+    ) -> int:
+        """Draw left aligned text, wrapping if needed.
+
+        Args:
+            draw: ImageDraw instance
+            text: Text to draw
+            y: Starting Y position
+            font: Font to use
+            fill: Text color (RGB or RGBA)
+            max_width: Maximum text width in pixels
+            cover_width: Total cover width for centering
+
+        Returns:
+            Y position after the last line
+        """
+        lines = self._wrap_text(text, font, max_width)
+        line_height = self._get_font_line_height(font)
+
+        for line in lines:
+            bbox = font.getbbox(line)
+            text_width = bbox[2] - bbox[0]
+            # x = (cover_width - text_width) // 2
+            x = PADDING_PX
             draw.text((x, y), line, font=font, fill=fill)
             y += line_height + BACK_COVER_TEXT_LINE_SPACING
 
