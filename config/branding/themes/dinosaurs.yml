@@ -10,7 +10,8 @@ cover_title_image: "config/branding/themes/assets/dinosaurs/cover_title.png"
 cover_footer_image: "config/branding/assets/cover_footer.png"
 
 back_cover:
-  preview_pages: [27, 87]
+  preview_pages: [0, 1]
+#  preview_pages: [27, 87]
   tagline: "Des heures de coloriage et d'aventures préhistoriques !"
   description: "Offrez à votre enfant un livre de coloriage dinosaures spécialement conçu pour les enfants dès 4 ans. Avec 100 pages de dessins simples, amusants et adaptés aux petites mains, ce livre permet de colorier tout en développant créativité et concentration."
   author: "C.Waterton"
@@ -51,7 +52,7 @@ cover_templates:
       steps: "25"
 
   "comfy":
-    prompt: "Vibrant children's book cover: cute majestic T-Rex dinosaur in lush jungle with tropical plants and distant volcano. Professional, glossy, kid-friendly, without text, no letters, no words."
+    prompt: "Vibrant children's book cover illustration without any text or title: cute majestic T-Rex dinosaur in lush jungle with tropical plants and distant volcano. Professional, glossy, kid-friendly."
 
     workflow_params:
       "clip_g_suffix": "vibrant colors, professional children's book, glossy, high quality, warm inviting"

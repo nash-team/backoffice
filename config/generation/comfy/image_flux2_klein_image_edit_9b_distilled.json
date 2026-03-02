@@ -206,7 +206,7 @@
   },
   "75:74": {
     "inputs": {
-      "text": "clean illustration, \nremove UI elements.\nremove texts and elements containing texts.\nremove typography. Make the whole image a bit blurry and in gray shades",
+      "text": "clean illustration, \nremove UI elements.\nremove texts and elements containing texts.\nremove typography.",
       "clip": [
         "75:71",
         0

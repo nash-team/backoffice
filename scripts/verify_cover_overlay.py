@@ -53,7 +53,7 @@ def _create_test_cover(width: int, height: int) -> Image.Image:
     # Draw safe zone rectangle (red dashed)
     padding = PADDING_PX
     draw.rectangle(
-        [padding, padding, width - padding, height - padding],
+        (padding, padding, width - padding, height - padding),
         outline="#ff4444",
         width=2,
     )
@@ -61,13 +61,13 @@ def _create_test_cover(width: int, height: int) -> Image.Image:
     # Draw overlay zones (where title/footer will land)
     # Title zone: top
     draw.rectangle(
-        [padding, padding, width - padding, padding + height // 4],
+        (padding, padding, width - padding, padding + height // 4),
         outline="#ffaa00",
         width=3,
     )
     # Footer zone: bottom
     draw.rectangle(
-        [padding, height - padding - height // 6, width - padding, height - padding],
+        (padding, height - padding - height // 6, width - padding, height - padding),
         outline="#ffaa00",
         width=3,
     )
@@ -180,7 +180,7 @@ def verify_overlay(
 
     # Draw safe zone boundary on result
     draw.rectangle(
-        [PADDING_PX, PADDING_PX, width - PADDING_PX, height - PADDING_PX],
+        (PADDING_PX, PADDING_PX, width - PADDING_PX, height - PADDING_PX),
         outline="#ff000088",
         width=1,
     )
@@ -196,7 +196,7 @@ def verify_overlay(
             tw, th = max_w, int(th * ratio)
         tx = (width - tw) // 2
         ty = PADDING_PX
-        draw.rectangle([tx, ty, tx + tw, ty + th], outline="#00ff00", width=2)
+        draw.rectangle((tx, ty, tx + tw, ty + th), outline="#00ff00", width=2)
         draw.text((tx + 3, ty + th + 3), f"title: ({tx},{ty}) {tw}x{th}", fill="#00ff00", font=font_debug)
 
     if footer_path and Path(footer_path).exists():
@@ -208,7 +208,7 @@ def verify_overlay(
             fw, fh = max_w, int(fh * ratio)
         fx = (width - fw) // 2
         fy = height - PADDING_PX - fh
-        draw.rectangle([fx, fy, fx + fw, fy + fh], outline="#00ff00", width=2)
+        draw.rectangle((fx, fy, fx + fw, fy + fh), outline="#00ff00", width=2)
         draw.text((fx + 3, fy - 15), f"footer: ({fx},{fy}) {fw}x{fh}", fill="#00ff00", font=font_debug)
 
     # Save

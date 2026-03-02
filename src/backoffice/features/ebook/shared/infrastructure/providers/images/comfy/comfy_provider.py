@@ -674,7 +674,9 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
 
         # 2. Generate seed
         seed = random.randint(1, 2**31 - 1)
-        self.workflow["25"]["inputs"]["noise_seed"] = seed
+        self.workflow["75:73"]["inputs"]["noise_seed"] = seed
+
+        #######
 
         # 3. Modify workflow prompt (by default "remove text") by the "editing" prompt
         #    ONLY if editing_prompt is not None
