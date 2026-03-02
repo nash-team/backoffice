@@ -301,7 +301,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
     def queue_prompt(self, prompt):
         p = {"prompt": prompt, "client_id": self.client_id}
         data = json.dumps(p).encode("utf-8")
-        req = urllib.request.Request(f"http://{self.comfy_url}/prompt", data=data)
+        req = urllib.request.Request(f"http://{self.comfy_url}/prompt", data=data) # noqa: S310
         return json.loads(urllib.request.urlopen(req).read())
 
     def get_image(self, filename, subfolder, folder_type):
@@ -403,7 +403,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         req = urllib.request.Request(f"http://{self.comfy_url}", method="GET")
         ping: bool = False
         try:
-            urllib.request.urlopen(req).read()
+            urllib.request.urlopen(req).read() # noqa: S310
             ping = True
         except URLError:
             pass
