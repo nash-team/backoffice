@@ -2,7 +2,7 @@ id: dinosaurs
 label: "Dinosaurs"
 
 palette:
-  base: ["#35654d", "#6a8f49", "#e0b46b"]
+  base: ["#35654d", "#6a8f49", "#e0b46b", "#558736", "#f9ce03"] # last two ones are respectively spine background color and spine text color
   accents_allowed: ["#ffd166"]
   forbidden_keywords: ["rainbow", "neon", "pastel gradient"]
 

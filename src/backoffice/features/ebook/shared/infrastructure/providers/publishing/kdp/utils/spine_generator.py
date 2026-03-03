@@ -63,6 +63,7 @@ def generate_spine(
     front_cover_bytes: bytes,
     spine_width_px: int,
     spine_height_px: int,  # trim_height + 2*bleed
+    spine_colors: list,
     page_count: int,
     paper_type: str,
     title: str,
@@ -77,6 +78,7 @@ def generate_spine(
         front_cover_bytes: Front cover for dominant color extraction
         spine_width_px: Spine width in pixels
         spine_height_px: Spine height in pixels (includes bleed top/bottom)
+        spine_colors: Spine colors
         page_count: Number of pages (for text eligibility)
         paper_type: Paper type for spine width calculation
         title: Book title
@@ -90,7 +92,8 @@ def generate_spine(
     if can_text:
         if reason:  # Borderline warning
             logger.warning(reason)
-        spine_img = create_spine_with_text(spine_width_px, spine_height_px, title, author)
+        spine_img = create_spine_with_text(spine_width_px, spine_height_px,
+                                           spine_colors, title, author)
     else:
         logger.info(f"Tranche sans texte: {reason}")
         # Gradient from front cover dominant color
@@ -105,23 +108,24 @@ def generate_spine(
     return buffer.getvalue()
 
 
-def create_spine_with_text(width: int, height: int, title: str, author: str) -> PILImage:
+def create_spine_with_text(width: int, height: int, spine_colors: list, title: str, author: str) -> PILImage:
     """Create spine with vertical text.
 
     Args:
         width: Spine width in pixels
         height: Spine height in pixels (trim + 2*bleed)
+        spine_colors: Spine colors
         title: Book title
         author: Author name
 
     Returns:
         RGB image (KDP requirement)
     """
-    font = load_font_safe(get_font_path("PlayfairDisplay-Bold.ttf"), 24)
+    font = load_font_safe(get_font_path("PlayfairDisplay-Bold.ttf"), 28)
 
     # Create text on horizontal image, then rotate 90°
     temp_text = f"{title}  •  {author}"
-    temp_img = Image.new("RGB", (height, width), (255, 255, 255))
+    temp_img = Image.new("RGB", (height, width), spine_colors[0] if spine_colors else (255, 255, 255))
     temp_draw = ImageDraw.Draw(temp_img)
 
     bbox = temp_draw.textbbox((0, 0), temp_text, font=font)
@@ -142,7 +146,8 @@ def create_spine_with_text(width: int, height: int, title: str, author: str) -> 
         logger.error(f"Texte spine trop proche du bord bas: bottom_margin={bottom_margin}, min={min_margin_px}")
         raise ValueError("Texte spine trop proche du bord bas")
 
-    temp_draw.text((x, y), temp_text, fill=(0, 0, 0), font=font)
+    # temp_draw.text((x, y), temp_text, fill=(249, 206, 3), font=font)
+    temp_draw.text((x, y), temp_text, fill=spine_colors[1] if spine_colors else (0,0,0), font=font)
 
     # Rotate -90° (clockwise)
     return temp_img.rotate(-90, expand=True)

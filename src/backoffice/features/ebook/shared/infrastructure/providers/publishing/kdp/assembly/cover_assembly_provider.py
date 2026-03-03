@@ -42,6 +42,8 @@ class KDPAssemblyProvider:
         front_cover_bytes: bytes,
         kdp_config: KDPExportConfig,
         isbn: str | None = None,
+        spine_colors: list = None
+
     ) -> bytes:
         """Assemble KDP-ready PDF with back, spine, and front.
 
@@ -83,6 +85,7 @@ class KDPAssemblyProvider:
             front_cover_bytes=front_cover_bytes,
             spine_width_px=spine_width_px,
             spine_height_px=spine_height_px,
+            spine_colors=spine_colors,
             page_count=ebook.page_count,
             paper_type=kdp_config.paper_type,
             title=ebook.title,
@@ -132,17 +135,6 @@ class KDPAssemblyProvider:
         back_buffer = BytesIO()
         # Use PNG format (RGB mode for KDP)
         back_img.save(back_buffer, format="PNG")
-        back_with_barcode = barcode_utils.add_barcode_space(
-            back_buffer.getvalue(),
-            barcode_width_inches=kdp_config.barcode_width,
-            barcode_height_inches=kdp_config.barcode_height,
-            barcode_margin_inches=kdp_config.barcode_margin,
-            image_includes_bleeds=True,
-            bleed_size_inches=kdp_config.bleed_size,
-            has_right_bleed=False,  # NO right bleed - spine comes right after
-            isbn=isbn,
-        )
-        back_img = color_utils.ensure_rgb(Image.open(BytesIO(back_with_barcode)))
 
         # Paste back (position 0)
         full_cover.paste(back_img, (0, 0))
@@ -156,6 +148,10 @@ class KDPAssemblyProvider:
         # 6. Save as PNG with DPI (RGB mode for KDP)
         cover_buffer = BytesIO()
         full_cover.save(cover_buffer, format="PNG", dpi=(300, 300))
+
+        # DEBUG
+        full_cover.save("/tmp/full_cover.png", format="PNG")
+
         cover_tiff_bytes = cover_buffer.getvalue()
 
         # 7. ✅ Convert to PDF with img2pdf (preserves RGB - KDP will convert to CMYK for print)

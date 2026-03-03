@@ -19,6 +19,7 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
     Ebook,
     KDPExportConfig,
 )
+from backoffice.features.ebook.shared.domain.entities.theme_profile import ThemeProfile
 from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.ebook_port import EbookPort
 from backoffice.features.shared.infrastructure.events.event_bus import EventBus
@@ -109,6 +110,12 @@ class ExportToKDPUseCase:
         # 5b. Extract ISBN from theme config (if available)
         isbn = self._get_isbn_from_theme(ebook.theme_id)
 
+        # 5c retrieve spine colors from theme config
+        spine_colors = self._get_spine_colors_from_theme(ebook.theme_id)
+
+        if not spine_colors:
+            spine_colors = ["#FFFFFF", "#000000"]
+
         # 6. Assemble KDP PDF (back + spine + front)
         logger.info("Assembling KDP paperback PDF...")
         kdp_pdf_bytes = await self.kdp_assembly_provider.assemble_kdp_paperback(
@@ -117,6 +124,7 @@ class ExportToKDPUseCase:
             front_cover_bytes=front_cover_bytes,
             kdp_config=kdp_config,
             isbn=isbn,
+            spine_colors=spine_colors
         )
 
         logger.info(f"✅ KDP export completed: {len(kdp_pdf_bytes)} bytes")
@@ -152,6 +160,42 @@ class ExportToKDPUseCase:
         Returns:
             ISBN-13 string (digits only) if found, None otherwise
         """
+        try:
+            theme_profile = self._get_theme_profile(theme_id)
+            if theme_profile and theme_profile.back_cover and theme_profile.back_cover.isbn:
+                isbn = theme_profile.back_cover.isbn
+                logger.info(f"ISBN found in theme '{theme_id}': {isbn}")
+                return isbn
+        except Exception as e:
+            logger.warning(f"Could not load theme for ISBN: {e}")
+
+        return None
+
+    def _get_spine_colors_from_theme(self, theme_id: str | None) -> list | None:
+        """Extract Spine color from the theme configuration. it is based on the
+        theme palette (the last 2 ones : spine background color and spine text color).
+
+        Args:
+            theme_id: Theme identifier, or None if no theme is set
+
+        Returns:
+            Spine colors tuple: first one is spine background color and
+            second one is spine text color, None otherwise
+        """
+        try:
+            theme_profile = self._get_theme_profile(theme_id)
+            if (theme_profile and theme_profile.palette and theme_profile.palette.base
+                    and len(theme_profile.palette.base)>=2):
+
+                spine_colors = theme_profile.palette.base[-2:]
+                logger.info(f"Spine colors found in theme '{theme_id}': {spine_colors}")
+                return spine_colors
+        except Exception as e:
+            logger.warning(f"Could not load theme for spine colors: {e}")
+
+        return None
+
+    def _get_theme_profile(self, theme_id: str | None) -> ThemeProfile | None:
         if not theme_id:
             return None
 
@@ -164,12 +208,11 @@ class ExportToKDPUseCase:
                 self.theme_repository = _ThemeRepository()
 
             theme_profile = self.theme_repository.get_theme_by_id(theme_id)
-            if theme_profile and theme_profile.back_cover and theme_profile.back_cover.isbn:
-                isbn = theme_profile.back_cover.isbn
-                logger.info(f"ISBN found in theme '{theme_id}': {isbn}")
-                return isbn
+
+            if theme_profile:
+                return theme_profile
         except Exception as e:
-            logger.warning(f"Could not load theme for ISBN: {e}")
+            logger.warning(f"Could not load theme : {e}")
 
         return None
 
