@@ -57,7 +57,7 @@ def generate_ean13_barcode(
                 "module_height": 22.0,
                 "quiet_zone": 4.0,
                 "font_size": 10,
-                "text_distance": 3.0,
+                "text_distance": 5.0,
                 "dpi": dpi,
                 "write_text": True,
             },
