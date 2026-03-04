@@ -40,7 +40,7 @@ class WeasyPrintAssemblyProvider(AssemblyPort):
             DomainError: If assembly fails
         """
         try:
-            logger.info(f"Assembling PDF: 1 cover + {len(pages)} pages")
+            logger.info(f"Assembling PDF: covers + {len(pages)} pages")
 
             # Build HTML with embedded images
             html_content = self._build_html(cover, pages)
