@@ -93,6 +93,10 @@ class KDPExportConfig:
 
     trim_size: tuple[float, float] = field(default_factory=lambda: _config.get_kdp_trim_size())
     bleed_size: float = field(default_factory=lambda: _config.get_kdp_bleed())
+    top_margin_size: float = field(default_factory=lambda: _config.get_kdp_top_margin())
+    bottom_margin_size: float = field(default_factory=lambda: _config.get_kdp_bottom_margin())
+    side_margin_size: float = field(default_factory=lambda: _config.get_kdp_side_margin())
+    gutter_margin_size: float = field(default_factory=lambda: _config.get_kdp_gutter())
     paper_type: str = field(default_factory=lambda: _config.get_default_paper_type())
     include_barcode: bool = field(default_factory=lambda: _config.get_default_include_barcode())
     cover_finish: str = field(default_factory=lambda: _config.get_default_cover_finish())
@@ -115,13 +119,23 @@ class KDPExportConfig:
 
 
 # KDP utility functions
-def calculate_spine_width(page_count: int, paper_type: str) -> float:
+def calculate_spine_width(page_count: int, paper_type: str, gutter: float) -> tuple[float, float]:
     """Calculate spine width in inches according to KDP formulas.
 
     Formula loaded from config/kdp/specifications.yaml
     """
+    # equation is Spine width = Spine Safe Area Width + Spine Margin * 2
+    #                           0.1 + 2*0.0625
+    # Spine Safe Area width = page_count * formula
+    #           for instance (https://kdp.amazon.com/cover-calculator) :
+    #           => 0.105 (Spine Safe Area width) = 102 * formula
+    #           => formula = 0.105 / 102 => 0.00102941176471
+
     formula = _config.get_spine_formula(paper_type)
-    return page_count * formula
+    spine_width = page_count * formula
+    spine_safe_area_width = spine_width - 2 * gutter
+
+    return spine_width, spine_safe_area_width
 
 
 # Spine width constants (from config/kdp/specifications.yaml)
@@ -136,7 +150,7 @@ def can_have_spine_text(page_count: int, paper_type: str) -> tuple[bool, str]:
     Returns:
         (can_have_text, reason_or_warning)
     """
-    spine_width = calculate_spine_width(page_count, paper_type)
+    spine_width = calculate_spine_width(page_count, paper_type, _config.get_kdp_gutter())[0]
 
     if spine_width < MIN_SPINE_WIDTH_FOR_TEXT:
         return False, f'Tranche trop étroite ({spine_width:.4f}")'
@@ -148,5 +162,5 @@ def can_have_spine_text(page_count: int, paper_type: str) -> tuple[bool, str]:
 
 
 def inches_to_px(inches: float, dpi: int = 300) -> int:
-    """Convert inches to pixels, rounded to even number."""
-    return round(inches * dpi / 2) * 2
+    """Convert inches to pixels."""
+    return round(inches * dpi)

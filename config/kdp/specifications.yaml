@@ -35,12 +35,12 @@ formats:
       width: 8.5
       height: 8.5
     bleed_inches: 0.125
+    margins:
+      top_inches: 0.125
+      bottom_inches: 0.125
+      side_inches: 0.125
+      gutter_inches: 0.0625 # spine width margin
     dpi: 300
-    margins_inches:
-      top: 0.5
-      bottom: 0.5
-      inner: 0.625
-      outer: 0.5
 
 # Spine calculations
 spine:
@@ -131,6 +131,6 @@ export:
 # ColorDream defaults
 defaults:
   format: "square_format"
-  paper_type: "standard_color"  # Standard Color (60lb) - matches KDP template spine calc
+  paper_type: "white"  # Black and White (55lb) - matches KDP template spine calc
   cover_finish: "glossy"
   include_barcode: true

@@ -85,6 +85,26 @@ class ConfigLoader:
         specs = self.load_kdp_specifications()
         return cast(float, specs["formats"][format_name]["bleed_inches"])
 
+    def get_kdp_top_margin(self, format_name: str = "square_format") -> float:
+        """Get KDP top margin size in inches."""
+        specs = self.load_kdp_specifications()
+        return cast(float, specs["formats"][format_name]["margins"]["top_inches"])
+
+    def get_kdp_bottom_margin(self, format_name: str = "square_format") -> float:
+        """Get KDP bottom margin size in inches."""
+        specs = self.load_kdp_specifications()
+        return cast(float, specs["formats"][format_name]["margins"]["bottom_inches"])
+
+    def get_kdp_side_margin(self, format_name: str = "square_format") -> float:
+        """Get KDP side margin size in inches."""
+        specs = self.load_kdp_specifications()
+        return cast(float, specs["formats"][format_name]["margins"]["side_inches"])
+
+    def get_kdp_gutter(self, format_name: str = "square_format") -> float:
+        """Get KDP gutter margin size in inches."""
+        specs = self.load_kdp_specifications()
+        return cast(float, specs["formats"][format_name]["margins"]["gutter_inches"])
+
     def get_kdp_dpi(self, format_name: str = "square_format") -> int:
         """Get KDP DPI requirement."""
         specs = self.load_kdp_specifications()

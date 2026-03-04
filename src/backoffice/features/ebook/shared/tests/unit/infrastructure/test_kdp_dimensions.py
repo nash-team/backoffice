@@ -15,16 +15,16 @@ from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.ut
 def test_spine_width_calculations():
     """Test spine width formulas for different paper types."""
     # Premium color
-    assert calculate_spine_width(100, "premium_color") == pytest.approx(0.2347, rel=1e-4)
+    assert calculate_spine_width(100, "premium_color", 0.0625)[0] == pytest.approx(0.2347, rel=1e-4)
 
     # Standard color
-    assert calculate_spine_width(100, "standard_color") == pytest.approx(0.2252, rel=1e-4)
+    assert calculate_spine_width(100, "standard_color", 0.0625)[0] == pytest.approx(0.2252, rel=1e-4)
 
     # White paper
-    assert calculate_spine_width(100, "white") == pytest.approx(0.2252, rel=1e-4)
+    assert calculate_spine_width(100, "white", 0.0625)[0] == pytest.approx(0.2252, rel=1e-4)
 
     # Cream paper
-    assert calculate_spine_width(100, "cream") == pytest.approx(0.25, rel=1e-4)
+    assert calculate_spine_width(100, "cream", 0.0625)[0] == pytest.approx(0.25, rel=1e-4)
 
 
 def test_can_have_spine_text_edge_cases():

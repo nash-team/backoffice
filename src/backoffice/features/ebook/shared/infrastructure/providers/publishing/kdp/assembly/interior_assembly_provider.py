@@ -72,10 +72,10 @@ class KDPInteriorAssemblyProvider:
         bleed_px = inches_to_px(kdp_config.bleed_size)
 
         # Interior pages have bleed on all 4 sides
-        page_width_px = trim_width_px + 2 * bleed_px
-        page_height_px = trim_height_px + 2 * bleed_px
+        page_width_px = inches_to_px(kdp_config.trim_size[0] + 2*kdp_config.side_margin_size) # bleed included in trim_size
+        page_height_px = inches_to_px(kdp_config.trim_size[1] + kdp_config.top_margin_size + kdp_config.bottom_margin_size)
 
-        logger.info(f"KDP interior dimensions: trim={trim_width_px}x{trim_height_px}px, with bleed={page_width_px}x{page_height_px}px")
+        logger.info(f"KDP interior dimensions: trim={trim_width_px}x{trim_height_px}px, with margin={page_width_px}x{page_height_px}px")
 
         # 3. Extract interior pages (exclude first and last - cover and back cover)
         interior_pages = pages_meta[1:-1]
@@ -94,8 +94,8 @@ class KDPInteriorAssemblyProvider:
             pages_to_add = min_pages_required - len(interior_pages)
             logger.info(f"⚠️ Interior has {len(interior_pages)} pages (< {min_pages_required}), adding {pages_to_add} blank page(s) for KDP compliance")
 
-            # Generate blank white page (2626x2626 for 8.5" + bleed @ 300 DPI)
-            blank_img = Image.new("RGB", (2626, 2626), (255, 255, 255))
+            # Generate blank white page (2626x2626 for 8.5 (bleed included)" + margin @ 300 DPI)
+            blank_img = Image.new("RGB", (page_width_px, page_height_px), (255, 255, 255))
             buffer = BytesIO()
             blank_img.save(buffer, format="PNG")
             blank_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")

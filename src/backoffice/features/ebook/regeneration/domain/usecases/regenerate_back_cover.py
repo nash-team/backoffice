@@ -87,11 +87,15 @@ class RegenerateBackCoverUseCase:
         logger.info("🔄 Creating back cover (same image without text)...")
 
         # Load KDP config for barcode dimensions
-        from backoffice.features.ebook.shared.domain.entities.ebook import KDPExportConfig
+        from backoffice.features.ebook.shared.domain.entities.ebook import KDPExportConfig, inches_to_px
 
         kdp_config = KDPExportConfig()
 
-        page_spec = ImageSpec(width_px=2626, height_px=2626, format="PNG", dpi=300, color_mode=ColorMode.COLOR, ebook_id=ebook_id, page_index=0)
+        page_width = inches_to_px(kdp_config.trim_size[0] + 2*kdp_config.side_margin_size)
+        page_height = inches_to_px(kdp_config.trim_size[0] + kdp_config.top_margin_size + kdp_config.bottom_margin_size)
+
+        page_spec = ImageSpec(width_px=page_width, height_px=page_height, format="PNG", dpi=300,
+                              color_mode=ColorMode.COLOR, ebook_id=ebook_id, page_index=0)
 
         back_cover_data = await self.cover_service.cover_port.remove_text_from_cover(
             image_bytes=front_cover_bytes,

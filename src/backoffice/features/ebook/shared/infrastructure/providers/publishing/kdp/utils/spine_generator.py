@@ -61,8 +61,8 @@ def load_font_safe(font_path: str, size: int, fallback: str = "DejaVuSans.ttf") 
 
 def generate_spine(
     front_cover_bytes: bytes,
-    spine_width_px: int,
-    spine_height_px: int,  # trim_height + 2*bleed
+    spine_width_px: int, # spine_safe_area width + 2 * gutter
+    spine_height_px: int,  # spine_safe_area height + 2*bleed + top_margin + bottom margin
     spine_colors: list,
     page_count: int,
     paper_type: str,
@@ -75,7 +75,9 @@ def generate_spine(
     KDP will convert to CMYK automatically for print.
 
     Args:
-        front_cover_bytes: Front cover for dominant color extraction
+        front_cover_bytes: Front cover for dominant color extraction (in case spine is not possible)
+        top_margin_px: top margin (for trim)
+        bottom_margin_px: bottom margin (for trim)
         spine_width_px: Spine width in pixels
         spine_height_px: Spine height in pixels (includes bleed top/bottom)
         spine_colors: Spine colors

@@ -9,6 +9,14 @@ palette:
 cover_title_image: "config/branding/themes/assets/christmas-creepy-cute/cover_title.png"
 cover_footer_image: "config/branding/assets/cover_footer.png"
 
+back_cover:
+  preview_pages: [0, 1]
+  tagline: "Des heures de coloriage et d'aventures !"
+  description: "Offrez à votre enfant un livre de coloriage spécialement conçu pour les enfants dès 4 ans. Avec 100 pages de dessins simples, amusants et adaptés aux petites mains, ce livre permet de colorier tout en développant créativité et concentration."
+  author: "C.Waterton"
+  publisher: "Darkwaters"
+  isbn: "9781234567897"  # TODO: replace with real purchased ISBN
+
 # ==========================================
 # COVER TEMPLATES (colorful, full-bleed)
 # ==========================================

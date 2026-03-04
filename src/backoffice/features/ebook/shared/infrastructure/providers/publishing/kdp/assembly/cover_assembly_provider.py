@@ -15,7 +15,6 @@ from backoffice.features.ebook.shared.domain.entities.ebook import (
 )
 from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils import (
-    barcode_utils,
     color_utils,
     spine_generator,
 )
@@ -52,6 +51,8 @@ class KDPAssemblyProvider:
             back_cover_bytes: Back cover image bytes (RGB PNG/JPEG)
             front_cover_bytes: Front cover image bytes (RGB PNG/JPEG)
             kdp_config: KDP export configuration
+            isbn: ISBN that should be used
+            spine_colors: Colors that should be used for spine (background and text)
 
         Returns:
             PDF bytes ready for KDP upload (RGB mode - KDP will convert to CMYK)
@@ -59,9 +60,10 @@ class KDPAssemblyProvider:
         Raises:
             DomainError: If assembly fails or requirements not met
         """
-        # 1. Calculate dimensions (rounded to even)
-        trim_width_px = inches_to_px(kdp_config.trim_size[0])
-        trim_height_px = inches_to_px(kdp_config.trim_size[1])
+        # 1. Calculate dimensions (rounded to even) https://kdp.amazon.com/cover-calculator
+        front_cover_width_px = inches_to_px(kdp_config.trim_size[0])
+        front_cover_height_px = inches_to_px(kdp_config.trim_size[1])
+
         bleed_px = inches_to_px(kdp_config.bleed_size)
 
         # Validate page_count is present
@@ -72,21 +74,29 @@ class KDPAssemblyProvider:
                 actionable_hint="Regenerate the ebook to populate page_count",
             )
 
-        spine_width_inches = calculate_spine_width(ebook.page_count, kdp_config.paper_type)
-        spine_width_px = inches_to_px(spine_width_inches)
+        spine_width_inches, spine_safe_area_inches = calculate_spine_width(ebook.page_count + 1, # legal page to consider
+                                                        kdp_config.paper_type,
+                                                        kdp_config.gutter_margin_size)
 
-        # ✅ Spine height includes bleed top/bottom
-        spine_height_px = trim_height_px + 2 * bleed_px
+        spine_dimensions_inches = (spine_width_inches,
+                                   kdp_config.trim_size[1] + kdp_config.top_margin_size + kdp_config.bottom_margin_size)
+        spine_dimensions_px = (inches_to_px(spine_dimensions_inches[0]), inches_to_px(spine_dimensions_inches[1]))
+        spine_safe_area_dimensions_inches = (spine_safe_area_inches,
+                                             kdp_config.trim_size[1]-2*kdp_config.bleed_size - kdp_config.top_margin_size + kdp_config.bottom_margin_size)
+        spine_safe_area_dimensions_px = (inches_to_px(spine_safe_area_dimensions_inches[0]), inches_to_px(spine_safe_area_dimensions_inches[1]))
 
-        logger.info(f"KDP dimensions: trim={trim_width_px}x{trim_height_px}px, bleed={bleed_px}px, spine={spine_width_px}px")
+        logger.info(f"KDP Spine dimensions: {spine_dimensions_inches[0]:.6f}x{spine_dimensions_inches[1]:.6f} inches => {spine_dimensions_px[0]}x{spine_dimensions_px[1]}px, bleed={kdp_config.bleed_size} inches => {bleed_px}px")
+        logger.info(f"KDP Spine safe area: {spine_safe_area_dimensions_inches[0]:.6f}x{spine_safe_area_dimensions_inches[1]:.6f} inches ({spine_safe_area_dimensions_px[0]}x{spine_safe_area_dimensions_px[1]}px)")
+
+        logger.info(f"KDP front cover dimensions: trim={kdp_config.trim_size[0]:.6f}x{kdp_config.trim_size[1]:.6f} ({front_cover_width_px}x{front_cover_height_px}px), bleed={bleed_px}px")
 
         # 2. Generate spine (RGB format - KDP requirement)
         spine_bytes = spine_generator.generate_spine(
             front_cover_bytes=front_cover_bytes,
-            spine_width_px=spine_width_px,
-            spine_height_px=spine_height_px,
+            spine_width_px=spine_dimensions_px[0],
+            spine_height_px=spine_dimensions_px[1],
             spine_colors=spine_colors,
-            page_count=ebook.page_count,
+            page_count=ebook.page_count + 1, # legal page to add
             paper_type=kdp_config.paper_type,
             title=ebook.title,
             author=ebook.author,
@@ -97,10 +107,14 @@ class KDPAssemblyProvider:
         spine_img = color_utils.ensure_rgb(Image.open(BytesIO(spine_bytes)))
         front_img = color_utils.ensure_rgb(Image.open(BytesIO(front_cover_bytes)))
 
-        # 4. ✅ Validate dimensions
-        expected_back = (trim_width_px + bleed_px, trim_height_px + 2 * bleed_px)
-        expected_spine = (spine_width_px, trim_height_px + 2 * bleed_px)
-        expected_front = (trim_width_px + bleed_px, trim_height_px + 2 * bleed_px)
+        # 4. ✅ Validate dimensions (front_cover_width and front_cover_height already include bleed)
+        expected_back = (inches_to_px(kdp_config.trim_size[0] + kdp_config.side_margin_size),
+                         inches_to_px(kdp_config.trim_size[1] + kdp_config.top_margin_size + kdp_config.bottom_margin_size))
+
+        expected_spine = (spine_dimensions_px[0], spine_dimensions_px[1])
+
+        expected_front = (inches_to_px(kdp_config.trim_size[0] + kdp_config.side_margin_size),
+                          inches_to_px(kdp_config.trim_size[1] + kdp_config.top_margin_size + kdp_config.bottom_margin_size))
 
         if back_img.size != expected_back:
             # Back may need resizing (same as front cover)
@@ -121,8 +135,8 @@ class KDPAssemblyProvider:
             front_img = front_img.resize(expected_front, Image.Resampling.LANCZOS)
 
         # 5. Assemble horizontally
-        total_width = bleed_px + trim_width_px + spine_width_px + trim_width_px + bleed_px
-        total_height = trim_height_px + 2 * bleed_px
+        total_width = 2*inches_to_px(kdp_config.trim_size[0]) + spine_dimensions_px[0] + 2*inches_to_px(kdp_config.side_margin_size)
+        total_height = inches_to_px(kdp_config.trim_size[1]) + inches_to_px(kdp_config.top_margin_size + kdp_config.bottom_margin_size)
 
         logger.info(f"Full cover dimensions: {total_width}x{total_height}px")
 
@@ -140,17 +154,17 @@ class KDPAssemblyProvider:
         full_cover.paste(back_img, (0, 0))
 
         # Paste spine
-        full_cover.paste(spine_img, (bleed_px + trim_width_px, 0))
+        full_cover.paste(spine_img, (inches_to_px(kdp_config.trim_size[0]) + inches_to_px(kdp_config.side_margin_size), 0))
 
         # Paste front
-        full_cover.paste(front_img, (bleed_px + trim_width_px + spine_width_px, 0))
+        full_cover.paste(front_img, (inches_to_px(kdp_config.trim_size[0]) + inches_to_px(kdp_config.side_margin_size) + spine_dimensions_px[0], 0))
 
         # 6. Save as PNG with DPI (RGB mode for KDP)
         cover_buffer = BytesIO()
         full_cover.save(cover_buffer, format="PNG", dpi=(300, 300))
 
         # DEBUG
-        full_cover.save("/tmp/full_cover.png", format="PNG")
+        full_cover.save("/tmp/full_cover.png", format="PNG", dpi=(300, 300))
 
         cover_tiff_bytes = cover_buffer.getvalue()
 
@@ -159,7 +173,7 @@ class KDPAssemblyProvider:
         pdf_bytes = cast(bytes, img2pdf.convert([cover_tiff_bytes], layout_fun=layout))
 
         # 8. Validate KDP requirements
-        self._validate_kdp_requirements(ebook.page_count, kdp_config)
+        self._validate_kdp_requirements(ebook.page_count + 1, kdp_config)
 
         logger.info(f"✅ KDP PDF assembled: {len(pdf_bytes)} bytes")
         return pdf_bytes

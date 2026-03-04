@@ -66,7 +66,7 @@ def assemble_full_kdp_cover(
         raise ValueError(f"Front cover must be {expected_size}, got {front.size}")
 
     # Calculate spine width in inches
-    spine_width_inches = calculate_spine_width(page_count, config.paper_type)
+    spine_width_inches = calculate_spine_width(page_count, config.paper_type, config.gutter_margin_size)[0]
     spine_width_px = inches_to_px(spine_width_inches)
 
     # Calculate full cover dimensions @ 300 DPI
