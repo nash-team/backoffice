@@ -90,6 +90,7 @@ class ThemeProfileModel(BaseModel):
 
     id: str = Field(..., min_length=1, pattern=r"^[a-z0-9_-]+$", description="Theme identifier")
     label: str = Field(..., min_length=1, description="Human-readable theme name")
+    title: str | None = Field(default=None, description="Book title for legal page (defaults to label)")
     palette: PaletteModel
     cover_title_image: str = Field(..., min_length=1, description="Path to cover title PNG (transparent)")
     cover_footer_image: str = Field(..., min_length=1, description="Path to cover footer PNG (transparent)")
@@ -156,6 +157,7 @@ class ThemeProfile:
     blocks: PromptBlocks
     cover_title_image: str
     cover_footer_image: str
+    title: str | None = None
     back_cover: BackCoverConfig | None = None
 
     @classmethod
@@ -197,6 +199,7 @@ class ThemeProfile:
             ),
             cover_title_image=model.cover_title_image,
             cover_footer_image=model.cover_footer_image,
+            title=model.title,
             back_cover=back_cover,
         )
 

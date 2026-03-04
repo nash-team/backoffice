@@ -230,6 +230,22 @@ class ConfigLoader:
         specs = self.load_kdp_specifications()
         return cast(float, specs["cover"]["barcode"]["margin_inches"])
 
+    # Publishing / Legal
+    def load_legal_config(self) -> dict[str, Any]:
+        """Load legal/copyright page configuration."""
+        return self._load_yaml("publishing/legal.yaml")
+
+    def get_font_path(self, font_name: str) -> Path:
+        """Get absolute path to a font file in config/branding/fonts/.
+
+        Args:
+            font_name: Font filename (e.g., 'Poppins-Bold.ttf')
+
+        Returns:
+            Absolute path to the font file
+        """
+        return self.config_dir / "branding" / "fonts" / font_name
+
     # Business limits
     def load_business_limits(self) -> dict[str, Any]:
         """Load business constraints (pages, formats, etc.)."""

@@ -3,16 +3,21 @@
 import base64
 import logging
 from io import BytesIO
+from typing import Any
 
 import img2pdf
 from PIL import Image
 
+from backoffice.config.loader import get_config_loader
 from backoffice.features.ebook.shared.domain.entities.ebook import (
     Ebook,
     KDPExportConfig,
     inches_to_px,
 )
 from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
+from backoffice.features.ebook.shared.infrastructure.providers.publishing.kdp.utils.legal_page_generator import (
+    generate_legal_page,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -110,8 +115,14 @@ class KDPInteriorAssemblyProvider:
             new_total = len(interior_pages)
             logger.info(f"✅ Added {pages_to_add} blank page(s), new total: {new_total} interior pages")
 
+        # 3c. Generate legal/copyright page and prepend
+        legal_page_bytes = self._generate_legal_page(ebook, page_width_px, page_height_px)
+        processed_images: list[bytes] = []
+        if legal_page_bytes:
+            processed_images.append(legal_page_bytes)
+            logger.info("Legal/copyright page prepended to interior")
+
         # 4. Process each interior page
-        processed_images = []
         for idx, page_meta in enumerate(interior_pages, start=1):
             page_number = page_meta.get("page_number", idx)
             logger.info(f"Processing interior page {idx}/{len(interior_pages)} (page_number={page_number})")
@@ -142,10 +153,47 @@ class KDPInteriorAssemblyProvider:
         pdf_bytes = bytes(img2pdf.convert(processed_images, layout_fun=layout))
 
         # 6. Validate KDP requirements
-        self._validate_kdp_interior_requirements(len(interior_pages), kdp_config)
+        total_interior_pages = len(processed_images)
+        self._validate_kdp_interior_requirements(total_interior_pages, kdp_config)
 
-        logger.info(f"✅ KDP interior PDF assembled: {len(pdf_bytes)} bytes ({len(interior_pages)} pages)")
+        logger.info(f"✅ KDP interior PDF assembled: {len(pdf_bytes)} bytes ({total_interior_pages} pages)")
         return pdf_bytes
+
+    def _generate_legal_page(self, ebook: Ebook, page_width_px: int, page_height_px: int) -> bytes | None:
+        """Generate legal/copyright page from theme and legal config.
+
+        Returns PNG bytes or None if theme has no title.
+        """
+        if not ebook.theme_id:
+            logger.info("No theme_id on ebook, skipping legal page")
+            return None
+
+        try:
+            from backoffice.features.ebook.shared.infrastructure.adapters.theme_repository import (
+                ThemeRepository as _ThemeRepository,
+            )
+
+            theme_repo = _ThemeRepository()
+            theme = theme_repo.get_theme_by_id(ebook.theme_id)
+        except Exception as e:
+            logger.warning(f"Could not load theme for legal page: {e}")
+            return None
+
+        title = theme.title or theme.label
+        isbn = theme.back_cover.isbn if theme.back_cover else None
+
+        config_loader = get_config_loader()
+        legal_config: dict[str, Any] = config_loader.load_legal_config()
+        font_dir = config_loader.config_dir / "branding" / "fonts"
+
+        return generate_legal_page(
+            title=title,
+            isbn=isbn,
+            legal_config=legal_config,
+            page_width_px=page_width_px,
+            page_height_px=page_height_px,
+            font_dir=font_dir,
+        )
 
     def _validate_kdp_interior_requirements(self, page_count: int, config: KDPExportConfig):
         """Validate KDP interior requirements.

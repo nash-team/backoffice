@@ -1,5 +1,6 @@
 id: dinosaurs
 label: "Dinosaurs"
+title: "Coloro Dino"
 
 palette:
   base: ["#35654d", "#6a8f49", "#e0b46b", "#558736", "#f9ce03"] # last two ones are respectively spine background color and spine text color
