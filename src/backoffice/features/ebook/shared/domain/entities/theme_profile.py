@@ -65,7 +65,7 @@ class BackCoverConfigModel(BaseModel):
         expected_check = (10 - (total % 10)) % 10
         if int(digits[12]) != expected_check:
             raise ValueError(f"Invalid ISBN-13 check digit: expected {expected_check}, got {digits[12]}")
-        return digits  # Store normalized (digits only)
+        return v  # Store string version (not only digits only)
 
 
 class CoverTemplateModel(BaseModel):

@@ -1,5 +1,5 @@
 """Use case for adding AI-generated coloring pages to an existing ebook."""
-
+import asyncio
 import base64
 import logging
 from dataclasses import dataclass
@@ -152,6 +152,8 @@ class AddNewPagesUseCase:
 
             logger.info(f"Generating page {page_number} with prompt: {prompt[:80]}...")
 
+            await asyncio.sleep(0.1)
+
             # Generate page
             page_data = await self.page_service.generate_single_page(
                 prompt=prompt,
@@ -159,6 +161,8 @@ class AddNewPagesUseCase:
                 seed=None,  # Random seed for variety
                 workflow_params=workflow_params,
             )
+
+            await asyncio.sleep(0.1)
 
             # Add to pages_meta (include prompt for edit modal)
             pages_meta.append(

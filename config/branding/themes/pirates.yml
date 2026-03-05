@@ -1,5 +1,6 @@
 id: pirates
 label: "Pirates"
+title: "Coloro Pirates"
 
 palette:
   base: ["#8b4513", "#2f4f4f", "#b8860b"]
@@ -8,6 +9,14 @@ palette:
 
 cover_title_image: "config/branding/themes/assets/pirates/cover_title.png"
 cover_footer_image: "config/branding/assets/cover_footer.png"
+
+back_cover:
+  preview_pages: [0, 1]
+  tagline: "Des heures de coloriage et d'aventures de pirates !"
+  description: "Offrez à votre enfant un livre de coloriage pirates spécialement conçu pour les enfants dès 4 ans. Avec 100 pages de dessins simples, amusants et adaptés aux petites mains, ce livre permet de colorier tout en développant créativité et concentration."
+  author: "C.Waterton"
+  publisher: "Darkwaters"
+  isbn: "9781234567897"  # TODO: replace with real purchased ISBN
 
 # ==========================================
 # COVER TEMPLATES (colorful, full-bleed)
@@ -36,14 +45,14 @@ cover_templates:
 
   diffusers:
     # Compact prompt for SDXL/CLIP (max 77 tokens)
-    prompt: "Vibrant children's book cover, friendly cartoon pirate with treasure chest, ship deck, ocean waves, professional glossy illustration, kid-friendly, high detail"
+    prompt: "Vibrant children's book cover illustration, friendly cartoon pirate with treasure chest, ship deck, ocean waves, professional glossy illustration, kid-friendly, high detail"
     workflow_params:
       negative_prompt: "text, mockup, border, scary, violence, dark, low quality, watermark"
       guidance_scale: "7.0"
       steps: "25"
 
   "comfy":
-    prompt: "Vibrant children's book cover: friendly cartoon pirate with treasure chest on ship deck with ocean waves. Professional, glossy, kid-friendly, adventurous, without text, no letters, no words."
+    prompt: "Vibrant children's book cover illustration without any text, nor title: friendly cartoon pirate with treasure chest on a big beautiful pirate ship with ocean waves on the background. Professional, glossy, kid-friendly, adventurous."
 
     workflow_params:
       "clip_g_suffix": "vibrant colors, professional children's book, glossy, high quality, warm inviting, adventurous"
@@ -250,7 +259,7 @@ _shared_quality_settings: &shared_quality_settings |
 # Audience-specific quality profiles
 _quality_children: &quality_children
   prefix: |
-    Children's coloring book page featuring a single main pirate character centered.
+    Children's coloring book illustration featuring a single main pirate character centered.
     Clean black and white line art with bold outlines:
   suffix: |
     Simple friendly face with expressive features, smooth clean surfaces.
@@ -306,5 +315,5 @@ coloring_page_templates:
 
     workflow_params:
       # Note: Flux 2 ignores negative prompts, quality comes from positive descriptions
-      "clip_g_suffix": "children's coloring book illustration, clean line art, friendly pirate adventure style"
+      "clip_g_suffix": "children's coloring book illustration, clean line art, friendly pirate adventure style, without text"
       "qwen_prompt": "Clean black and white lineart with bold outlines"

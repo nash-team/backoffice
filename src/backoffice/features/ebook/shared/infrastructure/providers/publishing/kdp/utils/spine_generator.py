@@ -123,7 +123,7 @@ def create_spine_with_text(width: int, height: int, spine_colors: list, title: s
     Returns:
         RGB image (KDP requirement)
     """
-    font = load_font_safe(get_font_path("PlayfairDisplay-Bold.ttf"), 28)
+    font = load_font_safe(get_font_path("PlayfairDisplay-Bold.ttf"), 36)
 
     # Create text on horizontal image, then rotate 90°
     temp_text = f"{title}  •  {author}"
@@ -148,8 +148,8 @@ def create_spine_with_text(width: int, height: int, spine_colors: list, title: s
         logger.error(f"Texte spine trop proche du bord bas: bottom_margin={bottom_margin}, min={min_margin_px}")
         raise ValueError("Texte spine trop proche du bord bas")
 
-    # temp_draw.text((x, y), temp_text, fill=(249, 206, 3), font=font)
-    temp_draw.text((x, y), temp_text, fill=spine_colors[1] if spine_colors else (0,0,0), font=font)
+    # use middle-baseline anchor
+    temp_draw.text((x, width // 2), temp_text, anchor="lm", fill=spine_colors[1] if spine_colors else (0,0,0), font=font)
 
     # Rotate -90° (clockwise)
     return temp_img.rotate(-90, expand=True)

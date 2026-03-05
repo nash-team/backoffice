@@ -60,9 +60,7 @@ BACK_COVER_PREVIEW_BORDER_RADIUS_PX = 20  # corner radius for preview images
 BACK_COVER_TEXT_TOP_MARGIN_PX = 60  # gap between previews and text zone
 BACK_COVER_CREDITS_BOTTOM_PX = 200  # distance from bottom for credits (above barcode zone)
 BACK_COVER_FONT_DIR = "config/branding/fonts"
-# BACK_COVER_TAGLINE_FONT_SIZE = 60
 BACK_COVER_TAGLINE_FONT_SIZE = 28
-# BACK_COVER_DESCRIPTION_FONT_SIZE = 40
 BACK_COVER_DESCRIPTION_FONT_SIZE = 20
 BACK_COVER_CREDITS_FONT_SIZE = 36
 BACK_COVER_TEXT_LINE_SPACING = 12  # extra pixels between lines
@@ -350,7 +348,8 @@ class CoverCompositor:
 
         # --- Zone 4: Barcode (bottom-right, optional) ---
         if config.isbn:
-            self._draw_barcode(base, config.isbn, cover_width, cover_height)
+            isbn = config.isbn.replace("-", "")
+            self._draw_barcode(base, isbn, cover_width, cover_height)
 
         output = io.BytesIO()
         base.save(output, format="PNG")

@@ -67,6 +67,8 @@ class ContentPageGenerationService:
         Raises:
             DomainError: If generation or validation fails
         """
+        await asyncio.sleep(0.1) # let others have a little time to avoid deadlock
+
         logger.info("🎨 Generating single content page")
 
         # Auto-generate seed if not provided (ensures unique images each time)

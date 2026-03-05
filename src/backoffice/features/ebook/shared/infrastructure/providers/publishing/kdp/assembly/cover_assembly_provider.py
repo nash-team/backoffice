@@ -163,7 +163,7 @@ class KDPAssemblyProvider:
         cover_buffer = BytesIO()
         full_cover.save(cover_buffer, format="PNG", dpi=(300, 300))
 
-        # DEBUG
+        # save the image of the full cover in temp folder
         full_cover.save("/tmp/full_cover.png", format="PNG", dpi=(300, 300))
 
         cover_tiff_bytes = cover_buffer.getvalue()
