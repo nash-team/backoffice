@@ -1,0 +1,38 @@
+---
+paths:
+  - "**/*.py"
+  - "presentation/templates/**/*.html"
+---
+
+## Database Query Optimization
+
+- Prevent N+1 query problems
+- Use appropriate SQLAlchemy loading strategies
+- Index frequently queried columns
+- Batch database operations when possible
+
+```python
+# Good - eager loading relationships
+query.options(joinedload(EbookModel.author))
+```
+
+## Template Performance
+
+- Minimize template context data
+- Use template caching where appropriate
+- Optimize Jinja2 template inheritance
+- Lazy load heavy template components
+
+## Response Times
+
+- Database connection pooling configured
+- Static file caching enabled
+- Minimize HTMX payload sizes
+- Async operations for I/O tasks
+
+## Memory Management
+
+- Close database sessions properly
+- Clean up temporary files
+- Limit file upload sizes
+- Monitor memory usage patterns
