@@ -5,7 +5,7 @@
 @pyproject.toml
 
 ### Core Framework
-- Python 3.11
+- Python 3.13
 - FastAPI 0
 - Pydantic 2
 - Uvicorn (ASGI server)
@@ -76,6 +76,34 @@ Located at @features/ebook/shared/infrastructure/providers/publishing/kdp/
   - Color Utils → @color_utils.py (RGB→CMYK with ICC profiles)
   - Visual Validator → @visual_validator.py
 
+## Frontend
+
+@frontend/package.json
+
+### Core Framework
+- React 19
+- Vite 7 (build tool + dev server, port 3000)
+- TypeScript 5 (strict mode)
+
+### State Management & Routing
+- Redux Toolkit 2
+- React Redux 9
+- React Router 7 (client-side routing)
+
+### Styling
+- Tailwind CSS 4 (Vite plugin)
+
+### Testing
+- Vitest 3 (jsdom environment)
+
+### Code Quality
+- ESLint 9
+
+### Architecture & Patterns
+- Hexagonal (Ports & Adapters) — mirrors backend
+- Feature-Based (Screaming Architecture)
+- Chicago-style testing (fakes over mocks)
+
 ## Data Flow Architecture
 
 ```mermaid
@@ -120,11 +148,12 @@ graph LR
 ### Chicago-style Testing
 - Fakes (simplified real implementations) instead of mocks
 - Located at @features/ebook/shared/tests/unit/fakes/
-- Examples: `FakeCoverPort` (returns valid PNG), `FakePagePort`, `FakeAssemblyPort`
+- Examples: `FakeCoverPort` (returns valid PNG bytes), `FakePagePort` (returns valid PNG bytes), `FakeAssemblyPort`
 
 ## Security & Authentication
-- JWT (authentication tokens)
+- Google OAuth 2.0 (authentication via session cookies, NOT JWT)
+- `AuthMiddleware` checks session cookie (`backoffice_session`)
+- Public routes: `/login`, `/auth/*`, `/static/*`, `/healthz`, `/__test__/`, `/assets/`
 - Pydantic (input validation)
 - SQLAlchemy ORM (SQL injection prevention)
 - Bandit security rules (ruff S rules)
-- No authentication (internal backoffice tool)

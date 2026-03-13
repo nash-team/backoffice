@@ -18,7 +18,7 @@ from backoffice.features.shared.presentation.routes.templates import templates
 # Type alias for dependency injection
 RepositoryFactoryDep = Annotated[RepositoryFactory, Depends(get_repository_factory)]
 
-router = APIRouter(prefix="/api/dashboard", tags=["Ebook Listing"])
+router = APIRouter(prefix="/htmx/dashboard", tags=["Ebook Listing (HTMX)"])
 logger = logging.getLogger(__name__)
 
 

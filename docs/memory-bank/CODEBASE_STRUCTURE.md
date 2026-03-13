@@ -39,7 +39,7 @@ src/backoffice/
 │   │   │   ├── infrastructure/
 │   │   │   │   └── event_handlers/    # Event subscribers
 │   │   │   ├── presentation/
-│   │   │   │   ├── routes/            # form_routes.py
+│   │   │   │   ├── routes/            # form_routes.py, api.py (JSON API for React)
 │   │   │   │   └── templates/partials/ # enhanced_ebook_form.html
 │   │   │   ├── public/
 │   │   │   │   └── events/            # Public event definitions
@@ -53,7 +53,7 @@ src/backoffice/
 │   │   │   ├── infrastructure/
 │   │   │   │   └── event_handlers/
 │   │   │   ├── presentation/
-│   │   │   │   ├── routes/
+│   │   │   │   ├── routes/            # api.py (JSON API for React)
 │   │   │   │   └── templates/partials/ # stats.html, validation_buttons.html
 │   │   │   └── tests/
 │   │   │       ├── unit/
@@ -64,7 +64,7 @@ src/backoffice/
 │   │   │   │   ├── entities/          # Feature-specific entities
 │   │   │   │   └── usecases/          # GetEbooksUseCase
 │   │   │   ├── presentation/
-│   │   │   │   ├── routes/
+│   │   │   │   ├── routes/            # api.py (JSON API for React)
 │   │   │   │   └── templates/
 │   │   │   │       ├── ebook_detail.html
 │   │   │   │       └── partials/      # ebooks_table.html, ebooks_table_row.html, pagination.html
@@ -213,7 +213,7 @@ features/<feature_name>/
     └── e2e/
 ```
 
-## Frontend
+## Frontend (HTMX/Jinja2)
 
 ### Naming Conventions
 
@@ -259,6 +259,55 @@ features/
 - **Static Files**: Served from `features/shared/presentation/static/`
 - **Template Includes**: Use relative paths within feature (e.g., `{% include "partials/stats.html" %}`)
 
+## Frontend (React)
+
+### Folder Structure
+
+```
+frontend/
+├── src/
+│   ├── app/                    # App setup (store, router, hooks)
+│   ├── features/
+│   │   └── ebooks/             # Feature-based (mirrors backend)
+│   │       ├── domain/
+│   │       │   ├── entities/   # ebook.ts (Ebook, FormConfig, ThemeOption, AudienceOption)
+│   │       │   ├── ports/      # ebook-gateway.ts, export-gateway.ts, regeneration-gateway.ts
+│   │       │   └── usecases/   # ebook-usecases.ts, export-usecases.ts, regeneration-usecases.ts
+│   │       ├── infrastructure/ # http-ebook-gateway.ts, http-export-gateway.ts, http-regeneration-gateway.ts
+│   │       ├── presentation/
+│   │       │   ├── pages/      # DashboardPage, EbookDetailPage
+│   │       │   └── components/ # ActionToolbar, CreateEbookModal, EbookTable, KdpCoverPreviewModal, PageEditModal, PageGrid, PaginationControls
+│   │       ├── store/
+│   │       │   ├── slices/     # ebook-slice.ts, regeneration-slice.ts
+│   │       │   └── selectors/  # ebook-selectors.ts
+│   │       └── tests/unit/     # Co-located unit tests
+│   ├── shared/
+│   │   ├── components/         # AppLayout, Modal, ProgressBar, Sidebar, Toast
+│   │   ├── hooks/              # useFileDownload, useRegenWebSocket
+│   │   └── styles/             # theme.css (Tailwind custom theme)
+│   └── tests/fakes/            # FakeEbookGateway, FakeExportGateway, FakeRegenerationGateway
+├── dist/                       # Build output (served by FastAPI in production)
+├── package.json
+├── vite.config.ts
+├── vitest.config.ts
+└── eslint.config.js
+```
+
+### Naming Conventions
+
+- **Component files**: `PascalCase.tsx` (e.g., `CreateEbookModal.tsx`)
+- **Utility/hook files**: `kebab-case.ts` (e.g., `use-file-download.ts`)
+- **Domain files**: `kebab-case.ts` (e.g., `ebook-gateway.ts`, `ebook-usecases.ts`)
+- **Test files**: `*.test.ts` (e.g., `ebook-usecases.test.ts`)
+- **Fakes**: `fake-noun-gateway.ts` (e.g., `fake-ebook-gateway.ts`)
+
+### Code Organization Principles
+
+- Feature-based structure mirroring backend screaming architecture
+- Hexagonal: `presentation → domain ← infrastructure`
+- Gateway injection via Redux Toolkit `thunk.extraArgument`
+- Shared components only if used by 2+ features
+
 ## Configuration
 
 - **Root Config Files**:
@@ -287,4 +336,6 @@ features/
 - **Generation Config**: `config/generation/` @path
   - `models.yaml` - AI model configuration
   - `comfy/` - ComfyUI workflow definitions (cover, coloring pages, text removal)
+- **Frontend Config**: `frontend/vite.config.ts` @path
+  - Tests: `frontend/vitest.config.ts` @path
 - **Database Config**: `src/backoffice/features/shared/infrastructure/database.py` @path

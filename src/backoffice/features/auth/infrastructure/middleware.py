@@ -22,6 +22,7 @@ PUBLIC_PATHS = [
     "/static",
     "/healthz",
     "/__test__",
+    "/assets/",
 ]
 
 

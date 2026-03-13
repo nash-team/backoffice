@@ -320,11 +320,10 @@ async def get_page_data(
 
         pages_meta = ebook.structure_json["pages_meta"]
 
-        # Validate page index (allow cover and content pages, not back cover)
-        if page_index < 0 or page_index >= len(pages_meta) - 1:
+        if page_index < 0 or page_index >= len(pages_meta):
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid page index {page_index}. Must be between 0 and {len(pages_meta) - 2}",
+                detail=f"Invalid page index {page_index}. Must be between 0 and {len(pages_meta) - 1}",
             )
 
         page = pages_meta[page_index]

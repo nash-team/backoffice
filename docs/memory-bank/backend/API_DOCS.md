@@ -13,7 +13,7 @@
 - **Routes Location**: @src/backoffice/features/*/presentation/routes/
 - **Base URL**: http://127.0.0.1:8001
 - **API Docs**: http://127.0.0.1:8001/docs
-- **Format**: REST + HTMX partials
+- **Format**: REST + HTMX partials + JSON API (React SPA)
 - **Protocol**: HTTP
 - **Response Types**: JSON, HTML (Jinja2 templates), PDF, PNG
 
@@ -152,6 +152,44 @@
   - Returns: JSON with success, ebook_id, preview_url
 - `GET /api/ebooks/{ebook_id}/pages/{page_index}/data` - Get page data (image + prompt)
   - Returns: JSON with image_base64, prompt, title (for on-demand loading)
+
+### JSON API Routes (React SPA)
+
+> Pure JSON endpoints for the React frontend. Coexist with HTMX routes above.
+
+#### Ebook Listing JSON API
+
+**Prefix**: `/api`
+**Tag**: Ebook API
+**Source**: @src/backoffice/features/ebook/listing/presentation/routes/api.py
+
+- `GET /api/ebooks` - List ebooks (paginated JSON)
+  - Query params: `status` (draft|approved|rejected), `page`, `size`
+  - Returns: `{items, total, page, per_page, total_pages}`
+- `GET /api/ebooks/{ebook_id}` - Ebook detail (JSON, includes `pages_meta` without base64 image_data)
+
+#### Ebook Lifecycle JSON API
+
+**Prefix**: `/api`
+**Tag**: Ebook Lifecycle API
+**Source**: @src/backoffice/features/ebook/lifecycle/presentation/routes/api.py
+
+- `GET /api/stats` - Stats by status (JSON: `{draft, approved, rejected}`)
+- `PUT /api/ebooks/{ebook_id}/approve` - Approve ebook (JSON response)
+  - Emits: `EbookApprovedEvent`
+- `PUT /api/ebooks/{ebook_id}/reject` - Reject ebook (JSON response)
+  - Emits: `EbookRejectedEvent`
+
+#### Ebook Creation JSON API
+
+**Prefix**: `/api`
+**Tag**: Ebook Creation API
+**Source**: @src/backoffice/features/ebook/creation/presentation/routes/api.py
+
+- `POST /api/ebooks` - Create coloring book (JSON body)
+  - Body: `CreateEbookBody` - `{title?, theme, audience, num_pages=8, preview_mode=false}`
+  - Returns: `{id, title, status, num_pages, created_at}`
+  - Emits: `EbookCreatedEvent`
 
 ## Request/Response Formats
 

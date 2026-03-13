@@ -201,9 +201,9 @@
      */
     function getApiEndpoint(action) {
         if (isCover) {
-            return `/api/ebooks/${currentEbookId}/cover/${action}`;
+            return `/htmx/ebooks/${currentEbookId}/cover/${action}`;
         } else {
-            return `/api/ebooks/${currentEbookId}/pages/${currentPageIndex}/${action}`;
+            return `/htmx/ebooks/${currentEbookId}/pages/${currentPageIndex}/${action}`;
         }
     }
 

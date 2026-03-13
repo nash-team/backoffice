@@ -13,6 +13,7 @@ from backoffice.features.auth.presentation.routes import router as auth_router
 from backoffice.features.ebook.creation.presentation.routes import (
     router as ebook_creation_router,
 )
+from backoffice.features.ebook.creation.presentation.routes.api import router as ebook_creation_api_router
 from backoffice.features.ebook.creation.presentation.routes.form_routes import (
     router as ebook_form_router,
 )
@@ -20,11 +21,14 @@ from backoffice.features.ebook.export.presentation.routes import router as ebook
 from backoffice.features.ebook.lifecycle.presentation.routes import (
     router as ebook_lifecycle_router,
 )
+from backoffice.features.ebook.lifecycle.presentation.routes.api import router as ebook_lifecycle_api_router
 from backoffice.features.ebook.listing.presentation.routes import router as ebook_listing_router
+from backoffice.features.ebook.listing.presentation.routes.api import router as ebook_listing_api_router
 from backoffice.features.ebook.regeneration.domain.events.content_page_regenerating_status_event import ContentPageRegeneratingStatusEvent
 from backoffice.features.ebook.regeneration.presentation.routes import (
     router as ebook_regeneration_router,
 )
+from backoffice.features.ebook.regeneration.presentation.routes.api import router as ebook_regeneration_api_router
 from backoffice.features.shared.infrastructure.events import event_bus_singleton
 from backoffice.features.shared.infrastructure.events.event_handler import EventHandler
 from backoffice.features.shared.presentation.routes.templates import templates
@@ -88,15 +92,27 @@ app.mount(
 )
 
 
+FRONTEND_DIST = BASE_DIR.parent.parent.parent / "frontend" / "dist"
+_SPA_ENABLED = FRONTEND_DIST.exists()
+
+
 @app.get("/")
 async def dashboard_page(request: Request):
-    """Serve the main dashboard page."""
+    """Serve React SPA if built, otherwise fallback to Jinja2 dashboard."""
+    if _SPA_ENABLED:
+        from fastapi.responses import FileResponse
+
+        return FileResponse(FRONTEND_DIST / "index.html")
     return templates.TemplateResponse("dashboard.html", {"request": request})
+
+
+logger = logging.getLogger(__name__)
 
 
 @app.websocket("/api/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
-    loop_condition = True
+    await manager.connect(websocket)
+    logger.info(f"WS connection established with {client_id}")
 
     class NewStatusHandler(EventHandler[ContentPageRegeneratingStatusEvent]):
         async def handle(self, event: ContentPageRegeneratingStatusEvent) -> None:
@@ -113,19 +129,11 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
     event_bus_singleton.get_event_bus().subscribe(ContentPageRegeneratingStatusEvent, NewStatusHandler())
 
     try:
-        await manager.connect(websocket)
-        print(f"WS Connection established with {client_id}")
-
-        while loop_condition:
-            # if event_bus_singleton.get_event_bus().nb_handlers() == 0:
-            #     break
-
+        while True:
             await asyncio.sleep(0.1)
-            # data = await websocket.receive_json()
-        #     await websocket.send_json({"message": "test"})
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        print(f"Websocket for {client_id} disconnected.")
+        logger.info(f"WebSocket for {client_id} disconnected.")
 
 
 @app.get("/healthz")
@@ -178,14 +186,32 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-# Register all feature routes
+# JSON API routes — static paths first, then dynamic {ebook_id} routes last
+app.include_router(ebook_creation_api_router)  # /api/ebooks/form-config, POST /api/ebooks
+app.include_router(ebook_lifecycle_api_router)  # /api/stats, /api/ebooks/{id}/approve|reject
+app.include_router(ebook_export_router)  # /api/ebooks/{id}/pdf, export-kdp, kdp-cover-preview
+app.include_router(ebook_regeneration_api_router)  # /api/ebooks/{id}/regenerate, complete-pages, add-pages
+app.include_router(ebook_listing_api_router)  # /api/ebooks, /api/ebooks/{id} (catch-all last)
+
+# HTMX / Jinja2 routes (legacy, under /htmx/ prefix)
 app.include_router(auth_router)
 app.include_router(ebook_form_router)
 app.include_router(ebook_listing_router)
 app.include_router(ebook_creation_router)
 app.include_router(ebook_lifecycle_router)
-app.include_router(ebook_export_router)
 app.include_router(ebook_regeneration_router)
+
+# Serve React SPA static assets + catch-all (if built)
+if _SPA_ENABLED:
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="spa-assets")
+
+    @app.get("/{full_path:path}")
+    async def spa_catch_all(request: Request, full_path: str = ""):
+        """Catch-all: serve React SPA index.html for client-side routing."""
+        from fastapi.responses import FileResponse
+
+        return FileResponse(FRONTEND_DIST / "index.html")
+
 
 if __name__ == "__main__":
     import uvicorn

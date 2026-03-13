@@ -54,6 +54,7 @@ class FakeKDPAssemblyProvider:
         front_cover_bytes: bytes,
         kdp_config: KDPExportConfig,
         isbn: str | None = None,
+        spine_colors: list | None = None,
     ) -> bytes:
         """Fake assembly - returns fake PDF bytes."""
         self.call_count += 1
@@ -62,6 +63,7 @@ class FakeKDPAssemblyProvider:
         self.last_front_cover_bytes = front_cover_bytes
         self.last_back_cover_bytes = back_cover_bytes
         self.last_isbn = isbn
+        self.last_spine_colors = spine_colors
 
         if self.should_fail:
             raise DomainError(

@@ -118,13 +118,9 @@ class ExportToKDPUseCase:
 
         # 6. Assemble KDP PDF (back + spine + front)
         logger.info("Assembling KDP paperback PDF...")
+        assert self.kdp_assembly_provider is not None  # guaranteed by lazy init above
         kdp_pdf_bytes = await self.kdp_assembly_provider.assemble_kdp_paperback(
-            ebook=ebook,
-            back_cover_bytes=back_cover_bytes,
-            front_cover_bytes=front_cover_bytes,
-            kdp_config=kdp_config,
-            isbn=isbn,
-            spine_colors=spine_colors
+            ebook=ebook, back_cover_bytes=back_cover_bytes, front_cover_bytes=front_cover_bytes, kdp_config=kdp_config, isbn=isbn, spine_colors=spine_colors
         )
 
         logger.info(f"✅ KDP export completed: {len(kdp_pdf_bytes)} bytes")
@@ -184,9 +180,7 @@ class ExportToKDPUseCase:
         """
         try:
             theme_profile = self._get_theme_profile(theme_id)
-            if (theme_profile and theme_profile.palette and theme_profile.palette.base
-                    and len(theme_profile.palette.base)>=2):
-
+            if theme_profile and theme_profile.palette and theme_profile.palette.base and len(theme_profile.palette.base) >= 2:
                 spine_colors = theme_profile.palette.base[-2:]
                 logger.info(f"Spine colors found in theme '{theme_id}': {spine_colors}")
                 return spine_colors

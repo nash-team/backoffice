@@ -48,7 +48,7 @@ from backoffice.features.shared.infrastructure.events.event_bus import EventBus
 RepositoryFactoryDep = Annotated[RepositoryFactory, Depends(get_repository_factory)]
 
 # Main router that aggregates all regeneration routes
-router = APIRouter(prefix="/api/ebooks", tags=["Ebook Regeneration"])
+router = APIRouter(prefix="/htmx/ebooks", tags=["Ebook Regeneration (HTMX)"])
 logger = logging.getLogger(__name__)
 
 # Include sub-routers (they don't have prefix, will use main router's prefix)

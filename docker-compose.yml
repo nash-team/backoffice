@@ -7,9 +7,9 @@ services:
       POSTGRES_PASSWORD: dev_password
       POSTGRES_DB: backoffice_dev
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d backoffice_dev -U backoffice"]
       interval: 5s
@@ -35,6 +35,7 @@ services:
     environment:
       # Database (psycopg2 for Alembic, asyncpg for app runtime)
       DATABASE_URL: postgresql://backoffice:dev_password@postgres:5432/backoffice_dev
+      POSTGRES_PORT: ${POSTGRES_PORT:-5433}
 
       # API Keys (override with .env file)
       GEMINI_API_KEY: ${GEMINI_API_KEY:-your_gemini_key_here}

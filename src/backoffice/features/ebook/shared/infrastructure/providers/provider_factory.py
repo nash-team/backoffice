@@ -107,8 +107,15 @@ class ProviderFactory:
                 lora_weight=model_mapping.lora_weight,
             )
 
+        elif model_mapping.provider == "fake":
+            from backoffice.features.ebook.shared.infrastructure.providers.images.fake.fake_image_provider import (
+                FakeImageProvider,
+            )
+
+            provider = FakeImageProvider(model=model_mapping.model)
+
         else:
-            raise ValueError(f"Unknown cover provider: {model_mapping.provider}. Supported: openrouter, gemini, comfy, diffusers")
+            raise ValueError(f"Unknown cover provider: {model_mapping.provider}. Supported: openrouter, gemini, comfy, diffusers, fake")
 
         # Cache and return
         ProviderFactory._cover_provider_cache[cache_key] = provider
@@ -179,8 +186,15 @@ class ProviderFactory:
                 lora_weight=model_mapping.lora_weight,
             )
 
+        elif model_mapping.provider == "fake":
+            from backoffice.features.ebook.shared.infrastructure.providers.images.fake.fake_image_provider import (
+                FakeImageProvider,
+            )
+
+            provider = FakeImageProvider(model=model_mapping.model)
+
         else:
-            raise ValueError(f"Unknown content page provider: {model_mapping.provider}. Supported: openrouter, gemini, comfy, diffusers")
+            raise ValueError(f"Unknown content page provider: {model_mapping.provider}. Supported: openrouter, gemini, comfy, diffusers, fake")
 
         # Cache and return
         ProviderFactory._page_provider_cache[cache_key] = provider
@@ -243,8 +257,15 @@ class ProviderFactory:
 
             provider = GeminiImageProvider(model=model_mapping.model)
 
+        elif model_mapping.provider == "fake":
+            from backoffice.features.ebook.shared.infrastructure.providers.images.fake.fake_image_provider import (
+                FakeImageProvider,
+            )
+
+            provider = FakeImageProvider(model=model_mapping.model)
+
         else:
-            raise ValueError(f"Unknown image edit provider: {model_mapping.provider}. Supported: openrouter, gemini, comfy")
+            raise ValueError(f"Unknown image edit provider: {model_mapping.provider}. Supported: openrouter, gemini, comfy, fake")
 
         # Cache and return
         ProviderFactory._edit_provider_cache[cache_key] = provider

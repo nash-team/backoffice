@@ -106,6 +106,8 @@ class RegenerateCoverUseCase:
             format="PNG",
             dpi=300,
             color_mode=ColorMode.COLOR,
+            ebook_id=ebook_id,
+            page_index=0,
         )
 
         cover_data = await self.cover_service.generate_cover(

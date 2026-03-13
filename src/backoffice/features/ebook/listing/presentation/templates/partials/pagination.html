@@ -12,7 +12,7 @@
             <li class="page-item {{ 'disabled' if not pagination.has_previous else '' }}">
                 {% if pagination.has_previous %}
                     <button class="page-link"
-                            hx-get="/api/dashboard/ebooks?page={{ pagination.previous_page }}&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
+                            hx-get="/htmx/dashboard/ebooks?page={{ pagination.previous_page }}&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
                             hx-target="#ebooksTableContainer"
                             hx-swap="innerHTML"
                             hx-indicator="#paginationSpinner"
@@ -34,7 +34,7 @@
             {% if start_page > 1 %}
                 <li class="page-item">
                     <button class="page-link"
-                            hx-get="/api/dashboard/ebooks?page=1&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
+                            hx-get="/htmx/dashboard/ebooks?page=1&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
                             hx-target="#ebooksTableContainer"
                             hx-swap="innerHTML"
                             hx-indicator="#paginationSpinner"
@@ -58,7 +58,7 @@
                         </span>
                     {% else %}
                         <button class="page-link"
-                                hx-get="/api/dashboard/ebooks?page={{ page_num }}&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
+                                hx-get="/htmx/dashboard/ebooks?page={{ page_num }}&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
                                 hx-target="#ebooksTableContainer"
                                 hx-swap="innerHTML"
                                 hx-indicator="#paginationSpinner"
@@ -78,7 +78,7 @@
                 {% endif %}
                 <li class="page-item">
                     <button class="page-link"
-                            hx-get="/api/dashboard/ebooks?page={{ pagination.total_pages }}&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
+                            hx-get="/htmx/dashboard/ebooks?page={{ pagination.total_pages }}&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
                             hx-target="#ebooksTableContainer"
                             hx-swap="innerHTML"
                             hx-indicator="#paginationSpinner"
@@ -92,7 +92,7 @@
             <li class="page-item {{ 'disabled' if not pagination.has_next else '' }}">
                 {% if pagination.has_next %}
                     <button class="page-link"
-                            hx-get="/api/dashboard/ebooks?page={{ pagination.next_page }}&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
+                            hx-get="/htmx/dashboard/ebooks?page={{ pagination.next_page }}&size={{ pagination.page_size }}{% if current_status %}&status={{ current_status }}{% endif %}"
                             hx-target="#ebooksTableContainer"
                             hx-swap="innerHTML"
                             hx-indicator="#paginationSpinner"

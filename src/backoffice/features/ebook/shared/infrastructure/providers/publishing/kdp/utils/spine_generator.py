@@ -92,8 +92,7 @@ def generate_spine(
     if can_text:
         if reason:  # Borderline warning
             logger.warning(reason)
-        spine_img = create_spine_with_text(spine_width_px, spine_height_px,
-                                           spine_colors, title, author)
+        spine_img = create_spine_with_text(spine_width_px, spine_height_px, spine_colors, title, author)
     else:
         logger.info(f"Tranche sans texte: {reason}")
         # Gradient from front cover dominant color
@@ -147,7 +146,7 @@ def create_spine_with_text(width: int, height: int, spine_colors: list, title: s
         raise ValueError("Texte spine trop proche du bord bas")
 
     # temp_draw.text((x, y), temp_text, fill=(249, 206, 3), font=font)
-    temp_draw.text((x, y), temp_text, fill=spine_colors[1] if spine_colors else (0,0,0), font=font)
+    temp_draw.text((x, y), temp_text, fill=spine_colors[1] if spine_colors else (0, 0, 0), font=font)
 
     # Rotate -90° (clockwise)
     return temp_img.rotate(-90, expand=True)

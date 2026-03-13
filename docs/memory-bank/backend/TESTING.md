@@ -13,7 +13,7 @@
 
 - **Approach**: Chicago-style (fakes over mocks)
 - **Test Types**:
-  - **Unit Tests (300)**: Fast, isolated, use fakes, no I/O (~27s total)
+  - **Unit Tests (331)**: Fast, isolated, use fakes, no I/O (~27s total)
   - **Integration Tests (40)**: Real PostgreSQL via testcontainers (currently disabled - fixture import issue)
   - **E2E Tests (1)**: Minimal smoke test with Playwright (health check only)
 
@@ -29,7 +29,7 @@
 ## Test Execution
 
 - `make test` - Run unit tests from all features + fixtures (~27s)
-- `make test-unit` - Same as above (300 tests)
+- `make test-unit` - Same as above (331 tests)
 - `make test-integration` - Integration tests (disabled - requires Docker + testcontainers)
 - `make test-smoke` - E2E smoke test with Playwright (health check)
 - `make test-e2e` - All E2E tests (chromium, screenshots on failure)
@@ -49,7 +49,7 @@
 
 Located in `@features/ebook/shared/tests/unit/fakes/`:
 - **FakeCoverPort**: Configurable cover generation (succeed, fail_quality, fail_unavailable). Returns valid PNG bytes.
-- **FakePagePort**: Content page generation
+- **FakePagePort**: Content page generation. Returns valid PNG bytes (Pillow-generated with gradient pattern, unique per call).
 - **FakeAssemblyPort**: PDF assembly
 - **FakeFileStoragePort**: File storage operations
 - **FakeImageEditPort**: Image editing operations
@@ -144,7 +144,7 @@ Use markers to categorize tests (@pytest.ini):
 ## Quality Gates
 
 - **Pre-commit**: All hooks must pass before commit
-- **Unit tests**: Must pass (300 tests, ~27s)
+- **Unit tests**: Must pass (331 tests, ~27s)
 - **Smoke test**: Must pass (E2E health check)
 - **Coverage**: No explicit target (focus on critical paths)
 - **Type checking**: mypy excludes test files (@pyproject.toml)

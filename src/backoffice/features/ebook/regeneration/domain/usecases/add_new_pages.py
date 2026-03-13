@@ -120,15 +120,6 @@ class AddNewPagesUseCase:
             themes_directory=theme_repo.themes_directory,
         )
 
-        # Page spec for B&W coloring pages
-        page_spec = ImageSpec(
-            width_px=2626,
-            height_px=2626,
-            format="PNG",
-            dpi=300,
-            color_mode=ColorMode.BLACK_WHITE,
-        )
-
         # 7. Extract back cover to re-add after new pages
         back_cover = pages_meta.pop()
 
@@ -139,6 +130,17 @@ class AddNewPagesUseCase:
         for i in range(count):
             page_index = current_interior + i  # 0-based index for new pages
             page_number = last_page_number + i + 1
+
+            # Page spec with ebook_id/page_index for progress tracking
+            page_spec = ImageSpec(
+                width_px=2626,
+                height_px=2626,
+                format="PNG",
+                dpi=300,
+                color_mode=ColorMode.BLACK_WHITE,
+                ebook_id=ebook_id,
+                page_index=page_number,
+            )
 
             # Build prompt for this page
             prompt = build_page_prompt_from_yaml(

@@ -1,6 +1,6 @@
 {% if ebook.status.value == 'DRAFT' %}
 <button class="btn btn-sm btn-success"
-        hx-put="/api/dashboard/ebooks/{{ ebook.id }}/approve"
+        hx-put="/htmx/dashboard/ebooks/{{ ebook.id }}/approve"
         hx-target="#ebook-row-{{ ebook.id }}"
         hx-swap="outerHTML"
         hx-indicator="#approveSpinner-{{ ebook.id }}"
@@ -11,7 +11,7 @@
     <span class="button-content"><i class="fas fa-check me-1"></i>Approuver</span>
 </button>
 <button class="btn btn-sm btn-danger"
-        hx-put="/api/dashboard/ebooks/{{ ebook.id }}/reject"
+        hx-put="/htmx/dashboard/ebooks/{{ ebook.id }}/reject"
         hx-target="#ebook-row-{{ ebook.id }}"
         hx-swap="outerHTML"
         hx-indicator="#rejectSpinner-{{ ebook.id }}"

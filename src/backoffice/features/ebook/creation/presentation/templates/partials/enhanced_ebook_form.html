@@ -3,7 +3,7 @@
 
 <form id="ebookForm"
       data-testid="ebook-form"
-      hx-post="/api/ebooks"
+      hx-post="/htmx/ebooks"
       hx-target="#ebooksTableContainer"
       hx-swap="innerHTML"
       hx-disabled-elt="#createBtn"
@@ -123,7 +123,7 @@
       <button type="submit"
               class="btn btn-info d-inline-flex align-items-center gap-2"
               data-testid="preview-btn"
-              hx-post="/api/ebooks"
+              hx-post="/htmx/ebooks"
               hx-target="#ebooksTableContainer"
               hx-swap="innerHTML"
               hx-vals='{"preview_mode": "true"}'
@@ -135,7 +135,7 @@
       <button type="submit"
               class="btn btn-primary d-inline-flex align-items-center gap-2"
               data-testid="create-btn"
-              hx-post="/api/ebooks"
+              hx-post="/htmx/ebooks"
               hx-target="#ebooksTableContainer"
               hx-swap="innerHTML"
               hx-vals='{"preview_mode": "false"}'

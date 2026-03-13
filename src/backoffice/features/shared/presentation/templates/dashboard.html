@@ -13,7 +13,7 @@
     <div class="row mb-4"
          id="stats-section"
          data-testid="stats-section"
-         hx-get="/api/dashboard/stats"
+         hx-get="/htmx/dashboard/stats"
          hx-trigger="load, ebookCreated from:body"
          hx-swap="innerHTML">
         <!-- Les statistiques seront chargées dynamiquement par HTMX -->
@@ -26,7 +26,7 @@
                 <h5 class="mb-0 me-3">Liste des Ebooks</h5>
                 <button id="newEbookBtn" type="button" class="btn btn-primary btn-sm"
                         data-testid="new-ebook-btn"
-                        hx-get="/api/dashboard/ebooks/new"
+                        hx-get="/htmx/dashboard/ebooks/new"
                         hx-target="#previewModal .modal-body"
                         hx-trigger="click"
                         hx-on:htmx:after-request="
@@ -47,7 +47,7 @@
             <div class="btn-group" role="group" aria-label="Filtres d'ebooks">
                 <button id="filterAllBtn" type="button" class="btn btn-outline-secondary active filter-btn"
                         data-testid="filter-all-btn"
-                        hx-get="/api/dashboard/ebooks"
+                        hx-get="/htmx/dashboard/ebooks"
                         hx-target="#ebooksTableContainer"
                         hx-swap="innerHTML"
                         hx-indicator="#filterAllSpinner"
@@ -58,7 +58,7 @@
                 </button>
                 <button id="filterDraftBtn" type="button" class="btn btn-outline-secondary filter-btn"
                         data-testid="filter-draft-btn"
-                        hx-get="/api/dashboard/ebooks?status=draft"
+                        hx-get="/htmx/dashboard/ebooks?status=draft"
                         hx-target="#ebooksTableContainer"
                         hx-swap="innerHTML"
                         hx-indicator="#filterDraftSpinner"
@@ -69,7 +69,7 @@
                 </button>
                 <button id="filterApprovedBtn" type="button" class="btn btn-outline-secondary filter-btn"
                         data-testid="filter-approved-btn"
-                        hx-get="/api/dashboard/ebooks?status=approved"
+                        hx-get="/htmx/dashboard/ebooks?status=approved"
                         hx-target="#ebooksTableContainer"
                         hx-swap="innerHTML"
                         hx-indicator="#filterApprovedSpinner"
@@ -80,7 +80,7 @@
                 </button>
                 <button id="filterRejectedBtn" type="button" class="btn btn-outline-secondary filter-btn"
                         data-testid="filter-rejected-btn"
-                        hx-get="/api/dashboard/ebooks?status=rejected"
+                        hx-get="/htmx/dashboard/ebooks?status=rejected"
                         hx-target="#ebooksTableContainer"
                         hx-swap="innerHTML"
                         hx-indicator="#filterRejectedSpinner"
@@ -93,7 +93,7 @@
         </div>
         <div class="card-body">
             <div id="ebooksTableContainer"
-                 hx-get="/api/dashboard/ebooks"
+                 hx-get="/htmx/dashboard/ebooks"
                  hx-trigger="load"
                  hx-swap="innerHTML">
                 <!-- Content will be loaded dynamically -->

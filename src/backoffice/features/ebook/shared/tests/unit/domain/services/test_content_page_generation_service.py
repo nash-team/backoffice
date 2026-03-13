@@ -49,7 +49,7 @@ class TestContentPageGenerationService:
         # Assert
         assert len(results) == 3
         assert fake_port.call_count == 3
-        assert all(len(page) > 8000 for page in results)  # Each page has unique suffix
+        assert all(len(page) > 1000 for page in results)  # Each page is a valid PNG
 
     @pytest.mark.asyncio
     async def test_generate_pages_uses_cache(self):

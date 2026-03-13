@@ -205,7 +205,7 @@
                                     {% set interior_pages = (ebook.structure_json.pages_meta|length - 2) if ebook.structure_json and ebook.structure_json.pages_meta else 0 %}
                                     {% if interior_pages > 0 and interior_pages < 24 %}
                                     <button class="btn btn-outline-info w-100 mb-2"
-                                            hx-post="/api/ebooks/{{ ebook.id }}/complete-pages"
+                                            hx-post="/htmx/ebooks/{{ ebook.id }}/complete-pages"
                                             hx-indicator="#completePagesSpinner"
                                             hx-disabled-elt="this"
                                             hx-on::after-request="
@@ -242,7 +242,7 @@
                                                    value="1"
                                                    placeholder="Nb pages">
                                             <button class="btn btn-primary"
-                                                    hx-post="/api/ebooks/{{ ebook.id }}/add-pages"
+                                                    hx-post="/htmx/ebooks/{{ ebook.id }}/add-pages"
                                                     hx-ext="json-enc"
                                                     hx-indicator="#addPagesSpinner"
                                                     hx-disabled-elt="this"
@@ -274,7 +274,7 @@
                                         <!-- Cover: Regenerate + Edit buttons -->
                                         <div class="btn-group w-100" role="group" aria-label="Cover actions">
                                             <button class="btn btn-outline-warning"
-                                                    hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
+                                                    hx-post="/htmx/ebooks/{{ ebook.id }}/pages/regenerate"
                                                     hx-vals='{"page_type": "cover"}'
                                                     hx-ext="json-enc"
                                                     hx-indicator="#regenerateCoverSpinner"
@@ -303,7 +303,7 @@
                                         </div>
 
                                         <button class="btn btn-outline-warning"
-                                                hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
+                                                hx-post="/htmx/ebooks/{{ ebook.id }}/pages/regenerate"
                                                 hx-vals='{"page_type": "back_cover"}'
                                                 hx-ext="json-enc"
                                                 hx-indicator="#regenerateBackSpinner"
@@ -364,7 +364,7 @@
                                                 </div>
                                                 <button type="button"
                                                         class="btn btn-warning btn-sm w-100"
-                                                        hx-post="/api/ebooks/{{ ebook.id }}/pages/regenerate"
+                                                        hx-post="/htmx/ebooks/{{ ebook.id }}/pages/regenerate"
                                                         hx-ext="json-enc"
                                                         hx-indicator="#regenerateSelectedSpinner"
                                                         hx-disabled-elt="this"
@@ -414,7 +414,7 @@
                                     {% if ebook.status.value == 'DRAFT' %}
                                     <div class="d-grid gap-2">
                                         <button class="btn btn-success"
-                                                hx-put="/api/dashboard/ebooks/{{ ebook.id }}/approve"
+                                                hx-put="/htmx/dashboard/ebooks/{{ ebook.id }}/approve"
                                                 hx-indicator="#approveSpinner"
                                                 hx-disabled-elt="this"
                                                 hx-on::after-request="
@@ -430,7 +430,7 @@
                                         </button>
 
                                         <button class="btn btn-danger"
-                                                hx-put="/api/dashboard/ebooks/{{ ebook.id }}/reject"
+                                                hx-put="/htmx/dashboard/ebooks/{{ ebook.id }}/reject"
                                                 hx-indicator="#rejectSpinner"
                                                 hx-disabled-elt="this"
                                                 hx-confirm="Êtes-vous sûr de vouloir rejeter cet ebook ?"
@@ -448,7 +448,7 @@
                                     </div>
                                     {% elif ebook.status.value == 'APPROVED' %}
                                     <button class="btn btn-outline-danger w-100"
-                                            hx-put="/api/dashboard/ebooks/{{ ebook.id }}/reject"
+                                            hx-put="/htmx/dashboard/ebooks/{{ ebook.id }}/reject"
                                             hx-confirm="Êtes-vous sûr de vouloir rejeter cet ebook approuvé ?"
                                             hx-on::after-request="
                                                 if(event.detail.successful) {
@@ -511,7 +511,7 @@
         buttonElement.disabled = true;
 
         try {
-            const response = await fetch(`/api/ebooks/${EBOOK_ID}/pages/${pageIndex}/data`);
+            const response = await fetch(`/htmx/ebooks/${EBOOK_ID}/pages/${pageIndex}/data`);
             if (!response.ok) {
                 const error = await response.json();
                 throw new Error(error.detail || 'Erreur lors du chargement');

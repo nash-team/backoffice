@@ -1,4 +1,5 @@
 """Local Stable Diffusion provider (100% FREE, runs locally, no API token needed)."""
+
 import asyncio
 import base64
 import json
@@ -13,13 +14,10 @@ from io import BytesIO
 from pathlib import Path
 from urllib.error import URLError
 
-from backoffice.features.ebook.regeneration.domain.events.content_page_regenerating_status_event import \
-    ContentPageRegeneratingStatusEvent
-from backoffice.features.shared.infrastructure.events import event_bus_singleton
-
 import websocket
 from PIL import Image, ImageDraw
 
+from backoffice.features.ebook.regeneration.domain.events.content_page_regenerating_status_event import ContentPageRegeneratingStatusEvent
 from backoffice.features.ebook.shared.domain.entities.generation_request import ImageSpec
 from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.content_page_generation_port import (
@@ -27,6 +25,7 @@ from backoffice.features.ebook.shared.domain.ports.content_page_generation_port 
 )
 from backoffice.features.ebook.shared.domain.ports.cover_generation_port import CoverGenerationPort
 from backoffice.features.ebook.shared.domain.ports.image_edit_port import ImageEditPort
+from backoffice.features.shared.infrastructure.events import event_bus_singleton
 
 logger = logging.getLogger(__name__)
 
@@ -116,162 +115,52 @@ logger = logging.getLogger(__name__)
 nodes_steps_edit: dict = {
     "nb_total_steps": 24,
     "nodes": {
-        "9": {
-            "max": 1,
-            "value": 1
-        },
-        "99": {
-            "max": 1,
-            "value": 1
-        },
-        "100": {
-            "max": 1,
-            "value": 1
-        },
-        "101": {
-            "max": 1,
-            "value": 1
-        },
-        "75:61": {
-            "max": 1,
-            "value": 1
-        },
-        "75:64": {
-            "max": 4,
-            "value": 1
-        },
-        "75:65": {
-            "max": 1,
-            "value": 1
-        },
-        "75:73": {
-            "max": 1,
-            "value": 1
-        },
-        "75:70": {
-            "max": 1,
-            "value": 1
-        },
-        "75:71": {
-            "max": 1,
-            "value": 1
-        },
-        "75:72": {
-            "max": 1,
-            "value": 1
-        },
-        "75:66": {
-            "max": 1,
-            "value": 1
-        },
-        "75:80": {
-            "max": 1,
-            "value": 1
-        },
-        "75:63": {
-            "max": 1,
-            "value": 1
-        },
-        "75:62": {
-            "max": 1,
-            "value": 1
-        },
-        "75:74": {
-            "max": 1,
-            "value": 1
-        },
-        "75:82": {
-            "max": 1,
-            "value": 1
-        },
-        "75:81": {
-            "max": 1,
-            "value": 1
-        },
-        "75:79:76": {
-            "max": 1,
-            "value": 1
-        },
-        "75:79:78": {
-            "max": 1,
-            "value": 1
-        },
-        "75:79:77": {
-            "max": 1,
-            "value": 1
-        }
-    }
+        "9": {"max": 1, "value": 1},
+        "99": {"max": 1, "value": 1},
+        "100": {"max": 1, "value": 1},
+        "101": {"max": 1, "value": 1},
+        "75:61": {"max": 1, "value": 1},
+        "75:64": {"max": 4, "value": 1},
+        "75:65": {"max": 1, "value": 1},
+        "75:73": {"max": 1, "value": 1},
+        "75:70": {"max": 1, "value": 1},
+        "75:71": {"max": 1, "value": 1},
+        "75:72": {"max": 1, "value": 1},
+        "75:66": {"max": 1, "value": 1},
+        "75:80": {"max": 1, "value": 1},
+        "75:63": {"max": 1, "value": 1},
+        "75:62": {"max": 1, "value": 1},
+        "75:74": {"max": 1, "value": 1},
+        "75:82": {"max": 1, "value": 1},
+        "75:81": {"max": 1, "value": 1},
+        "75:79:76": {"max": 1, "value": 1},
+        "75:79:78": {"max": 1, "value": 1},
+        "75:79:77": {"max": 1, "value": 1},
+    },
 }
 
 nodes_steps_generate: dict = {
-                "nb_total_steps": 35,
-                "nodes": {
-                    "6": {
-                        "max": 1.0,
-                        "value": 1.0
-                    },
-                    "8": {
-                        "max": 1.0,
-                        "value": 1.0
-                    },
-                    "9": {
-                        "max": 1.0,
-                        "value": 1.0
-                    },
-                    "10": {
-                        "max": 1,
-                        "value": 1
-                    },
-                    "13": {
-                        "max": 20,
-                        "value": 20
-                    },
-                    "16": {
-                        "max": 1,
-                        "value": 1
-                    },
-                    "22": {
-                        "max": 1.0,
-                        "value": 1.0
-                    },
-                    "25": {
-                        "max": 1.0,
-                        "value": 1.0
-                    },
-                    "26": {
-                        "max": 1.0,
-                        "value": 1.0
-                    },
-                    "38": {
-                        "max": 1.0,
-                        "value": 1.0
-                    },
-                    "47": {
-                        "max": 1.0,
-                        "value": 1.0
-                    },
-                    "48": {
-                        "max": 1.0,
-                        "value": 1.0
-                    },
-                    "62": {
-                        "max": 1.0,
-                        "value": 1.0
-                    },
-                    "63": {
-                        "max": 1.0,
-                        "value": 1.0
-                    },
-                    "64": {
-                        "max": 1.0,
-                        "value": 1.0
-                    },
-                    "66": {
-                        "max": 1.0,
-                        "value": 1.0
-                    }
-                }
-            }
+    "nb_total_steps": 35,
+    "nodes": {
+        "6": {"max": 1.0, "value": 1.0},
+        "8": {"max": 1.0, "value": 1.0},
+        "9": {"max": 1.0, "value": 1.0},
+        "10": {"max": 1, "value": 1},
+        "13": {"max": 20, "value": 20},
+        "16": {"max": 1, "value": 1},
+        "22": {"max": 1.0, "value": 1.0},
+        "25": {"max": 1.0, "value": 1.0},
+        "26": {"max": 1.0, "value": 1.0},
+        "38": {"max": 1.0, "value": 1.0},
+        "47": {"max": 1.0, "value": 1.0},
+        "48": {"max": 1.0, "value": 1.0},
+        "62": {"max": 1.0, "value": 1.0},
+        "63": {"max": 1.0, "value": 1.0},
+        "64": {"max": 1.0, "value": 1.0},
+        "66": {"max": 1.0, "value": 1.0},
+    },
+}
+
 
 class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPort):
     """Local Stable Diffusion provider using Comfy (100% FREE, no API).
@@ -301,7 +190,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
     def queue_prompt(self, prompt):
         p = {"prompt": prompt, "client_id": self.client_id}
         data = json.dumps(p).encode("utf-8")
-        req = urllib.request.Request(f"http://{self.comfy_url}/prompt", data=data) # noqa: S310
+        req = urllib.request.Request(f"http://{self.comfy_url}/prompt", data=data)  # noqa: S310
         return json.loads(urllib.request.urlopen(req).read())
 
     def get_image(self, filename, subfolder, folder_type):
@@ -320,13 +209,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
 
         nb_total_steps = workflow_nodes_steps["nb_total_steps"]
 
-        await self.event_bus.publish(ContentPageRegeneratingStatusEvent(
-            page_index=spec.page_index,
-            ebook_id=spec.ebook_id,
-            status=0,
-            nb_total_steps=nb_total_steps,
-            current_step=None
-        ))
+        await self.event_bus.publish(ContentPageRegeneratingStatusEvent(page_index=spec.page_index, ebook_id=spec.ebook_id, status=0, nb_total_steps=nb_total_steps, current_step=None))
 
         while True:
             out = ws.recv()
@@ -350,35 +233,27 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                         value = message["data"]["nodes"][node_progress]["value"]
                         state = message["data"]["nodes"][node_progress]["state"]
 
-                        if state == 'finished' or state == 'running':
+                        if state == "finished" or state == "running":
                             finished_step_count += value
-
-
 
                     status = finished_step_count * 100 / nb_total_steps
 
-                    await self.event_bus.publish(ContentPageRegeneratingStatusEvent(
-                        page_index=spec.page_index,
-                        ebook_id=spec.ebook_id,
-                        status=int(status),
-                        state=workflow_state,
-                        nb_total_steps=nb_total_steps,
-                        current_step=finished_step_count
-                    ))
+                    await self.event_bus.publish(
+                        ContentPageRegeneratingStatusEvent(
+                            page_index=spec.page_index, ebook_id=spec.ebook_id, status=int(status), state=workflow_state, nb_total_steps=nb_total_steps, current_step=finished_step_count
+                        )
+                    )
 
                 if message["type"] == "executing":
                     data = message["data"]
                     if data["node"] is None and data["prompt_id"] == prompt_id:
                         status = 100
                         workflow_state = "finished"
-                        await self.event_bus.publish(ContentPageRegeneratingStatusEvent(
-                            page_index=spec.page_index,
-                            ebook_id=spec.ebook_id,
-                            status=int(status),
-                            state=workflow_state,
-                            nb_total_steps=nb_total_steps,
-                            current_step=finished_step_count
-                        ))
+                        await self.event_bus.publish(
+                            ContentPageRegeneratingStatusEvent(
+                                page_index=spec.page_index, ebook_id=spec.ebook_id, status=int(status), state=workflow_state, nb_total_steps=nb_total_steps, current_step=finished_step_count
+                            )
+                        )
 
                         break  # Execution is done
             else:
@@ -403,7 +278,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         req = urllib.request.Request(f"http://{self.comfy_url}", method="GET")
         ping: bool = False
         try:
-            urllib.request.urlopen(req).read() # noqa: S310
+            urllib.request.urlopen(req).read()  # noqa: S310
             ping = True
         except URLError:
             pass
@@ -498,8 +373,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
         try:
             comfy_ws = websocket.WebSocket()
             comfy_ws.connect(f"ws://{self.comfy_url}/ws?clientId={self.client_id}")
-            images = await self.get_images(comfy_ws, self.workflow,
-                                           spec, nodes_steps_generate)
+            images = await self.get_images(comfy_ws, self.workflow, spec, nodes_steps_generate)
 
             result_bytes = None
 
@@ -611,7 +485,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 context={"provider": "comfy", "model": self.model, "error": str(e)},
             ) from e
 
-    async def remove_text_from_cover(self, image_bytes: bytes, spec: ImageSpec ,barcode_width_inches: float = 2.0, barcode_height_inches: float = 1.2, barcode_margin_inches: float = 0.25) -> bytes:
+    async def remove_text_from_cover(self, image_bytes: bytes, spec: ImageSpec, barcode_width_inches: float = 2.0, barcode_height_inches: float = 1.2, barcode_margin_inches: float = 0.25) -> bytes:
         logger.info("🗑️  Removing text from cover (COMFY): returning cover without text elements ...")
 
         return await self.edit_image(image_bytes, spec=spec, barcode_width_inches=barcode_width_inches, barcode_height_inches=barcode_height_inches, barcode_margin_inches=barcode_margin_inches)
@@ -708,6 +582,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                 image_received = False
                 for image_data in images[node_id]:
                     import io
+
                     from PIL import Image
 
                     # save image to disk first
@@ -717,7 +592,7 @@ class ComfyProvider(CoverGenerationPort, ContentPageGenerationPort, ImageEditPor
                     # open saved image (/tmp folder)
                     image = Image.open(f"/tmp/test-{node_id}-{seed}.png")
                     img_byte_arr = io.BytesIO()
-                    image.save(img_byte_arr, format='PNG')
+                    image.save(img_byte_arr, format="PNG")
                     img_byte_arr = img_byte_arr.getvalue()
                     result_bytes = img_byte_arr
                     os.remove(f"/tmp/test-{node_id}-{seed}.png")

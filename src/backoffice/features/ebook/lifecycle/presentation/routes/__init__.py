@@ -26,7 +26,7 @@ from backoffice.features.shared.presentation.routes.templates import templates
 
 RepositoryFactoryDep = Annotated[RepositoryFactory, Depends(get_repository_factory)]
 
-router = APIRouter(prefix="/api/dashboard", tags=["Ebook Lifecycle"])
+router = APIRouter(prefix="/htmx/dashboard", tags=["Ebook Lifecycle (HTMX)"])
 logger = logging.getLogger(__name__)
 
 

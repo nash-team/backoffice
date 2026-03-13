@@ -427,12 +427,13 @@ class TestBackCoverCompositor:
         )
 
         result_img = Image.open(io.BytesIO(result))
-        center_x = cover_size // 2
+        # Credits are drawn left-aligned at x = PADDING_PX
+        scan_x = PADDING_PX + 20
         # Check credits zone: near BACK_COVER_CREDITS_BOTTOM_PX from bottom
         credits_y = cover_size - BACK_COVER_CREDITS_BOTTOM_PX
         found_credits_pixel = False
         for y in range(credits_y, min(credits_y + 100, cover_size)):
-            pixel = result_img.getpixel((center_x, y))
+            pixel = result_img.getpixel((scan_x, y))
             if pixel[0] < 50 and pixel[1] < 50 and pixel[2] < 50:
                 found_credits_pixel = True
                 break
@@ -536,9 +537,21 @@ class TestBackCoverCompositor:
         )
 
         result_img = Image.open(io.BytesIO(result))
-        # Check barcode zone (bottom-right) has non-white pixels
-        barcode_center_x = cover_size - BACK_COVER_BARCODE_MARGIN_PX - 300
-        barcode_center_y = cover_size - BACK_COVER_BARCODE_MARGIN_PX - 180
+        # Barcode rect: inches_to_px(2.0, 120)=240 wide, inches_to_px(1.2, 120)=144 tall
+        # Position: x = 2626 - 240 - 75 = 2311, y = 2626 - 144 - 75 = 2407
+        from backoffice.features.ebook.shared.domain.entities.ebook import inches_to_px
+        from backoffice.features.ebook.shared.domain.services.cover_compositor import (
+            BACK_COVER_BARCODE_HEIGHT_INCHES,
+            BACK_COVER_BARCODE_WIDTH_INCHES,
+            COVER_DPI,
+        )
+
+        rect_w = inches_to_px(BACK_COVER_BARCODE_WIDTH_INCHES, COVER_DPI)
+        rect_h = inches_to_px(BACK_COVER_BARCODE_HEIGHT_INCHES, COVER_DPI)
+        barcode_x = cover_size - rect_w - BACK_COVER_BARCODE_MARGIN_PX
+        barcode_y = cover_size - rect_h - BACK_COVER_BARCODE_MARGIN_PX
+        barcode_center_x = barcode_x + rect_w // 2
+        barcode_center_y = barcode_y + rect_h // 2
         found_non_white = False
         for dx in range(-50, 50, 10):
             pixel = result_img.getpixel((barcode_center_x + dx, barcode_center_y))

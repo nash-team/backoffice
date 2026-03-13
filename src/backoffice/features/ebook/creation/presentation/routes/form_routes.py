@@ -9,7 +9,7 @@ from fastapi import APIRouter, Request, Response
 from backoffice.config import ConfigLoader
 from backoffice.features.shared.presentation.routes.templates import templates
 
-router = APIRouter(prefix="/api/dashboard", tags=["Ebook Creation Forms"])
+router = APIRouter(prefix="/htmx/dashboard", tags=["Ebook Creation Forms (HTMX)"])
 logger = logging.getLogger(__name__)
 
 

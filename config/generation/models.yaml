@@ -6,6 +6,9 @@
 # Supported Providers:
 #   - openrouter: Unified API for multiple models (OpenRouter.ai)
 #   - gemini: Google Gemini Direct API (AI Studio)
+#   - comfy: Local ComfyUI (workflow-based, 100% free, requires GPU)
+#   - diffusers: Local HuggingFace diffusers (SDXL + LoRA)
+#   - fake: Placeholder images with Pillow (instant, zero cost, for UI testing)
 #
 # Configuration per image type (cover, coloring_page)
 
@@ -13,118 +16,72 @@ models:
   # ========================================
   # COVER GENERATION
   # ========================================
-  # Purpose: Full-color, vibrant cover illustration
-  # Requirements: High quality, child-friendly style, fast generation
-  # Current: Gemini 2.5 Flash via OpenRouter ($0.04/image)
-
   cover:
-#    provider: openrouter
-#    model: google/gemini-2.5-flash-image-preview
+    # --- ACTIVE: Fake provider for local testing ---
+    provider: fake
+    model: fake-cover
 
-    # Alternative Options:
-    # ---------------------
+    # --- ComfyUI (FREE, best quality, requires GPU) ---
+    #provider: comfy
+    #model: cover-page-workflow-flux-2.json
 
-    # Option 1: Gemini Direct (same quality, requires GEMINI_API_KEY)
+    # --- Gemini Direct (free tier, requires GEMINI_API_KEY) ---
     #provider: gemini
     #model: gemini-2.5-flash-image
 
-    # Option 2: FLUX.1-schnell via OpenRouter (highest quality, $0.003/image)
+    # --- OpenRouter ($0.04/image) ---
     #provider: openrouter
-    #model: black-forest-labs/flux-schnell
+    #model: google/gemini-2.5-flash-image-preview
 
-    # Option 3: Comfy (FREE, best quality, 17GB disk, 32GB RAM)
-    provider: comfy
-    model: cover-page-workflow-flux-2.json
-#    provider: comfy
-#    model: cover-page-workflow-z-image.json
-
-#    provider: diffusers
-#    model: "stabilityai/stable-diffusion-xl-base-1.0"
-
-    # Optional enhancements
-#    controlnet: null          # no controlnet for covers
-#    lora: null                # optional: local path or HF ID
-#    lora_weight: 0.7
-
+  # ========================================
+  # EDITING PAGE
+  # ========================================
   editing_page:
-    provider: comfy
-#   model: edit-image-flux-2.json
-    model: image_flux2_klein_image_edit_9b_distilled.json
+    provider: fake
+    model: fake-edit
 
+    #provider: comfy
+    #model: image_flux2_klein_image_edit_9b_distilled.json
 
   # ========================================
   # CONTENT PAGE GENERATION (Coloring Pages)
   # ========================================
-  # Purpose: Black & white line art for coloring
-  # Requirements: Clean lines, simple shapes, age-appropriate detail
-  # Current: Gemini Direct (professional line art quality)
-
   coloring_page:
-#    provider: gemini
-#    model: gemini-2.5-flash-image
+    # --- ACTIVE: Fake provider for local testing ---
+    provider: fake
+    model: fake-page
 
-    # Alternative Options:
-    # ---------------------
+    # --- ComfyUI (FREE, best quality, requires GPU) ---
+    #provider: comfy
+    #model: coloring-page-workflow-flux-2.json
 
-    # Option 1: Gemini via OpenRouter (same model, unified billing)
-    #provider: openrouter
-    #model: google/gemini-2.5-flash-image-preview
+    # --- Gemini Direct (free tier) ---
+    #provider: gemini
+    #model: gemini-2.5-flash-image
 
-    # Option 2: Comfy (FREE, best quality, 17GB disk, 32GB RAM)
-    provider: comfy
-    model: coloring-page-workflow-flux-2.json
-#    provider: comfy
-#    model: coloring-page-workflow-z-image.json
-
-    # ===== BEST FREE LOCAL SETUP =====
-#    provider: diffusers
-
-    # SDXL base (or use a fine-tuned checkpoint for better line art)
-    # Options:
-    #   - stabilityai/stable-diffusion-xl-base-1.0  (default, general purpose)
-#    model: "stabilityai/stable-diffusion-xl-base-1.0"
-
-    # ControlNet: NOT YET SUPPORTED (txt2img only for now)
-    # controlnet: "diffusers/controlnet-canny-sdxl-1.0"
-
-    # LoRA for coloring book style (ColoringBook Redmond - trigger: ColoringBookAF)
-#    lora: "config/generation/loras/ColoringBookRedmond-ColoringBook-ColoringBookAF.safetensors"
-#    lora_weight: 0.8
+    # --- Diffusers SDXL + LoRA (FREE, local GPU) ---
+    #provider: diffusers
+    #model: "stabilityai/stable-diffusion-xl-base-1.0"
+    #lora: "config/generation/loras/ColoringBookRedmond-ColoringBook-ColoringBookAF.safetensors"
+    #lora_weight: 0.8
 
 
 # ========================================
-# PROVIDER CONFIGURATION NOTES
+# QUICK SWITCH GUIDE
 # ========================================
 #
-# OpenRouter (provider: openrouter)
-# ----------------------------------
-# - Requires: OPENROUTER_API_KEY in .env
-# - Base URL: OPENROUTER_BASE_URL in .env (default: https://openrouter.ai/api/v1)
-# - Models: google/gemini-*, black-forest-labs/flux-*, etc.
-# - Pricing: Pay-per-use, varies by model ($0.003 - $0.04/image)
-# - Docs: https://openrouter.ai/docs
+# To switch providers, comment out the active block and uncomment the desired one.
 #
-# Gemini Direct (provider: gemini)
-# ---------------------------------
-# - Requires: GEMINI_API_KEY in .env
-# - Models: gemini-2.5-flash-image, gemini-2.0-flash-exp-image, etc.
-# - Pricing: Free tier available, then pay-per-use
-# - Note: Not available in all countries via AI Studio
-# - Docs: https://ai.google.dev/gemini-api/docs
-
-
-# ========================================
-# QUICK START EXAMPLES
-# ========================================
+# 1. Local testing (no API, no GPU):
+#    All: provider=fake
 #
-# 1. All Gemini Direct (requires GEMINI_API_KEY):
-#    cover: provider=gemini, model=gemini-2.5-flash-image
-#    coloring_page: provider=gemini, model=gemini-2.5-flash-image
+# 2. ComfyUI (free, needs GPU on localhost:8188):
+#    cover: provider=comfy, model=cover-page-workflow-flux-2.json
+#    coloring_page: provider=comfy, model=coloring-page-workflow-flux-2.json
+#    editing_page: provider=comfy, model=image_flux2_klein_image_edit_9b_distilled.json
 #
-# 2. All OpenRouter (requires OPENROUTER_API_KEY):
-#    cover: provider=openrouter, model=google/gemini-2.5-flash-image-preview
-#    coloring_page: provider=openrouter, model=google/gemini-2.5-flash-image-preview
+# 3. Gemini Direct (free tier, requires GEMINI_API_KEY):
+#    All: provider=gemini, model=gemini-2.5-flash-image
 #
-# 3. Hybrid (best quality/cost balance):
-#    cover: provider=openrouter, model=black-forest-labs/flux-schnell ($0.003)
-#    coloring_page: provider=gemini, model=gemini-2.5-flash-image (free tier)
+# 4. OpenRouter (pay-per-use, requires OPENROUTER_API_KEY):
+#    All: provider=openrouter, model=google/gemini-2.5-flash-image-preview

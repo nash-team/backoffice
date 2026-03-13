@@ -25,7 +25,7 @@
 
 **Test Automation**:
 
-- Unit tests: Run on every push/PR (300 tests, ~27s)
+- Unit tests: Run on every push/PR (331 tests, ~27s)
 - Integration tests: Disabled (fixture import issue)
 - E2E tests: Run on every push/PR (Playwright, Chromium, ~6s)
 
@@ -84,7 +84,8 @@
   1. Clone repository
   2. Copy `.env.example` to `.env` and configure
   3. Run `make setup` (install deps + migrate DB)
-  4. Run `make dev` (start server at http://127.0.0.1:8001)
+  4. Run `make dev` (backend at http://127.0.0.1:8001)
+  5. Full-stack: 2 terminals -- `make dev` (backend) + `make frontend-dev` (frontend)
 
 - **Database Migration Process**:
   1. Generate migration: `alembic revision --autogenerate -m "Description"`
@@ -177,7 +178,8 @@ backoffice/
 ## URLs
 
 **Development:**
-- URL: http://127.0.0.1:8001
+- Backend: http://127.0.0.1:8001
+- Frontend Dev: http://localhost:3000 (Vite dev server, proxies /api to :8001)
 - API Docs: http://127.0.0.1:8001/docs
 - Health Check: http://127.0.0.1:8001/healthz
 - Purpose: Local development (localhost binding for security)
@@ -230,6 +232,19 @@ graph LR
 - **Port**: `PORT` env var (default: `8001`)
 - **Entry Point**: `backoffice.main:app` (FastAPI application)
 
+### CORS Configuration
+
+Configured in @src/backoffice/main.py based on `ENVIRONMENT` env var:
+- Development: localhost:3000, :8000, :8001
+- Staging: staging domain + localhost:3000
+- Production: production domain only
+
+### Frontend Serving
+
+- Production: FastAPI serves `frontend/dist/` as SPA with catch-all route
+- Development: Vite dev server (port 3000) with API proxy to backend (port 8001)
+- Fallback: Jinja2 templates if `frontend/dist/` doesn't exist
+
 ## Development Commands
 
 All commands via `make` → @Makefile
@@ -242,14 +257,20 @@ All commands via `make` → @Makefile
 
 **Run:**
 - `make run` - Start uvicorn dev server at http://127.0.0.1:8001 (with reload)
-- `make dev` - Run migrations then start server
+- `make dev` - Run migrations then start server (backend only)
+
+**Frontend:**
+- `make frontend-install` - npm install in frontend/
+- `make frontend-build` - npm run build (output: frontend/dist)
+- `make frontend-dev` - Vite dev server on port 3000
+- `make frontend-test` - Vitest unit tests
 
 **Database:**
 - `make db-migrate` - Run Alembic migrations (`alembic upgrade head`)
 - `make db-status` - Show current migration status and history (`alembic current && alembic history`)
 
 **Testing:**
-- `make test` - Run unit tests only (300 tests, ~27s) - excludes integration/E2E
+- `make test` - Run unit tests only (331 tests, ~27s) - excludes integration/E2E
 - `make test-unit` - Unit tests from all features (`pytest src/backoffice/features/*/tests/unit`)
 - `make test-integration` - ⚠️ Currently disabled (fixture import issue, requires Docker + testcontainers)
 - `make test-smoke` - E2E health check smoke test (Playwright, Chromium, ~6s)

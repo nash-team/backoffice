@@ -82,7 +82,7 @@ class KDPAssemblyProviderProtocol(Protocol):
             front_cover_bytes: Front cover image bytes
             kdp_config: KDP export configuration
             isbn: Optional ISBN-13 for EAN barcode rendering on back cover
-            spine_colors: spine colors for background and text  
+            spine_colors: spine colors for background and text
 
         Returns:
             PDF bytes ready for KDP upload

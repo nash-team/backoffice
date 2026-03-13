@@ -3,6 +3,7 @@
 
 .PHONY: help install run clean test test-unit test-e2e db-migrate db-status setup dev \
         lint format typecheck deps deadcode precommit \
+        frontend-install frontend-build frontend-dev \
         docker-build docker-up docker-down docker-logs docker-shell docker-test docker-clean
 
 .DEFAULT_GOAL := help
@@ -45,11 +46,22 @@ setup: ## Full development setup (install + migrate)
 	@echo "Environment ready."
 
 # -------- App --------
-run: ## Start FastAPI development server
+ensure-docker: ## Ensure Docker containers are running
+	@if ! docker compose ps --status running 2>/dev/null | grep -q backoffice_postgres; then \
+		echo "Starting Docker containers..."; \
+		$(MAKE) docker-up; \
+		echo "Waiting for PostgreSQL to be ready..."; \
+		until docker compose exec -T postgres pg_isready -U backoffice >/dev/null 2>&1; do sleep 1; done; \
+		echo "PostgreSQL ready."; \
+	else \
+		echo "Docker containers already running."; \
+	fi
+
+run: ensure-docker ## Start FastAPI development server
 	@echo "Starting dev server on http://$(HOST):$(PORT)"
 	uvicorn $(APP) --host $(HOST) --port $(PORT) --reload
 
-dev: ## Migrate then run
+dev: ensure-docker ## Migrate then run
 	@$(MAKE) db-migrate
 	@$(MAKE) run
 
@@ -108,12 +120,32 @@ deadcode: ## Vulture (dead code)
 precommit: ## Run all pre-commit hooks on all files
 	pre-commit run --all-files
 
+# -------- Frontend (React Pipeline SPA) --------
+frontend-install: ## Install frontend dependencies
+	cd frontend && npm install
+
+frontend-build: ## Build frontend for production
+	cd frontend && npm run build
+
+frontend-dev: ## Start frontend dev server (Vite, port 3000)
+	cd frontend && npm run dev
+
+frontend-test: ## Run frontend unit tests (Vitest)
+	cd frontend && npm test
+
 # -------- Docker --------
+# Auto-detect available postgres port (5433 default, increments if taken)
+define find_free_port
+$(shell port=5433; while lsof -iTCP:$$port -sTCP:LISTEN >/dev/null 2>&1; do port=$$((port + 1)); done; echo $$port)
+endef
+
 docker-build: ## Build Docker images
 	docker compose build
 
-docker-up: ## Start all services (detached)
-	docker compose up -d
+docker-up: ## Start all services (detached, auto-detect free postgres port)
+	@port=$$(port=5433; while lsof -iTCP:$$port -sTCP:LISTEN >/dev/null 2>&1; do port=$$((port + 1)); done; echo $$port); \
+	echo "Using PostgreSQL port: $$port"; \
+	POSTGRES_PORT=$$port docker compose up -d
 
 docker-down: ## Stop all services
 	docker compose down

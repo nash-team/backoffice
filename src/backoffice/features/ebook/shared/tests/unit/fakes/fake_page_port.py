@@ -1,10 +1,30 @@
 """Fake content page generation port for testing."""
 
+import io
+
+from PIL import Image
+
 from backoffice.features.ebook.shared.domain.entities.generation_request import ImageSpec
 from backoffice.features.ebook.shared.domain.errors.error_taxonomy import DomainError, ErrorCode
 from backoffice.features.ebook.shared.domain.ports.content_page_generation_port import (
     ContentPageGenerationPort,
 )
+
+
+def _make_fake_page_png(call_count: int, width: int = 500, height: int = 500) -> bytes:
+    """Create a valid PNG image for testing (> 1KB to pass quality validation).
+
+    Uses a gradient pattern offset by call_count for uniqueness.
+    """
+    img = Image.new("RGB", (width, height))
+    pixels = img.load()
+    offset = call_count * 37
+    for y in range(height):
+        for x in range(width):
+            pixels[x, y] = ((x + offset) % 256, y % 256, (x + y) % 256)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
 
 
 class FakePagePort(ContentPageGenerationPort):
@@ -81,5 +101,5 @@ class FakePagePort(ContentPageGenerationPort):
             # Return image that's too small
             return b"FAKE_PAGE_TOO_SMALL"
 
-        # Return valid fake image (different per call for uniqueness)
-        return b"P" * self.image_size + str(self.call_count).encode()
+        # Return valid PNG image (different per call for uniqueness)
+        return _make_fake_page_png(self.call_count)

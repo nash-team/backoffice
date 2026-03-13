@@ -15,6 +15,7 @@ class ErrorCode(Enum):
     # Provider errors
     COMFY_UNAVAILABLE = "provider.comfy_unavailable"
     MODEL_UNAVAILABLE = "provider.model_unavailable"
+    GENERATION_FAILED = "provider.generation_failed"
     PROVIDER_TIMEOUT = "provider.timeout"
     PROVIDER_RATE_LIMIT = "provider.rate_limit"
     PROVIDER_UNAVAILABLE = "provider.unavailable"

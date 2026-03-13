@@ -596,14 +596,14 @@ class CoverCompositor:
         return y
 
     def _draw_text_left(
-            self,
-            draw: ImageDraw.ImageDraw,
-            text: str,
-            y: int,
-            font: ImageFont.FreeTypeFont,
-            fill: tuple[int, int, int] | tuple[int, int, int, int],
-            max_width: int,
-            cover_width: int,
+        self,
+        draw: ImageDraw.ImageDraw,
+        text: str,
+        y: int,
+        font: ImageFont.FreeTypeFont,
+        fill: tuple[int, int, int] | tuple[int, int, int, int],
+        max_width: int,
+        cover_width: int,
     ) -> int:
         """Draw left aligned text, wrapping if needed.
 

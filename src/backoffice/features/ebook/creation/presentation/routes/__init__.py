@@ -29,70 +29,8 @@ from backoffice.features.shared.presentation.routes.templates import templates
 # Type alias for dependency injection
 RepositoryFactoryDep = Annotated[RepositoryFactory, Depends(get_repository_factory)]
 
-router = APIRouter(prefix="/api/ebooks", tags=["Ebook Creation"])
+router = APIRouter(prefix="/htmx/ebooks", tags=["Ebook Creation (HTMX)"])
 logger = logging.getLogger(__name__)
-
-
-@router.get("/form-config")
-async def get_form_config() -> dict:
-    """Get form configuration (themes and audiences) from YAML files.
-
-    Returns:
-        {
-            "themes": [
-                {"id": "dinosaurs", "label": "Dinosaures", "description": "..."},
-                {"id": "unicorns", "label": "Licornes", "description": "..."},
-                ...
-            ],
-            "audiences": [
-                {"id": "children", "label": "Enfants", "complexity": "simple"},
-                {"id": "adults", "label": "Adultes & Familles", "complexity": "detailed"}
-            ]
-        }
-    """
-    from pathlib import Path
-
-    import yaml
-
-    from backoffice.config import ConfigLoader
-
-    config = ConfigLoader()
-
-    # Load themes from config/branding/themes/ directory
-    themes_dir = Path(__file__).parent.parent.parent.parent.parent.parent.parent / "config" / "branding" / "themes"
-    themes = []
-
-    for theme_file in sorted(themes_dir.glob("*.yml")):
-        # Skip neutral-default (internal fallback)
-        if theme_file.stem == "neutral-default":
-            continue
-
-        with open(theme_file, encoding="utf-8") as f:
-            theme_data = yaml.safe_load(f)
-
-        themes.append(
-            {
-                "id": theme_file.stem,
-                "label": theme_data.get("label", theme_file.stem.capitalize()),
-                "description": theme_data.get("description", ""),
-            }
-        )
-
-    # Load audiences from config
-    audiences_config = config.load_audiences()
-    audiences = []
-
-    for audience_id, audience_data in audiences_config["audiences"].items():
-        audiences.append(
-            {
-                "id": audience_id,
-                "label": audience_data["label"],
-                "complexity": audience_data["style"]["complexity"],
-                "benefits": audience_data.get("benefits", []),
-            }
-        )
-
-    return {"themes": themes, "audiences": audiences}
 
 
 @router.post("")

@@ -14,7 +14,7 @@ class ModelMapping(BaseModel):
     - controlnet/lora/lora_weight are only valid for diffusers provider
     """
 
-    provider: Literal["openrouter", "gemini", "comfy", "diffusers"] = Field(..., description="Image generation provider")
+    provider: Literal["openrouter", "gemini", "comfy", "diffusers", "fake"] = Field(..., description="Image generation provider")
     model: str = Field(
         ...,
         min_length=1,

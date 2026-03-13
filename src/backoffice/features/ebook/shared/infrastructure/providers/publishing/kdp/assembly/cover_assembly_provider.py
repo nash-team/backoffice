@@ -36,14 +36,7 @@ class KDPAssemblyProvider:
     """
 
     async def assemble_kdp_paperback(
-        self,
-        ebook: Ebook,
-        back_cover_bytes: bytes,
-        front_cover_bytes: bytes,
-        kdp_config: KDPExportConfig,
-        isbn: str | None = None,
-        spine_colors: list = None
-
+        self, ebook: Ebook, back_cover_bytes: bytes, front_cover_bytes: bytes, kdp_config: KDPExportConfig, isbn: str | None = None, spine_colors: list | None = None
     ) -> bytes:
         """Assemble KDP-ready PDF with back, spine, and front.
 
@@ -85,7 +78,7 @@ class KDPAssemblyProvider:
             front_cover_bytes=front_cover_bytes,
             spine_width_px=spine_width_px,
             spine_height_px=spine_height_px,
-            spine_colors=spine_colors,
+            spine_colors=spine_colors or [],
             page_count=ebook.page_count,
             paper_type=kdp_config.paper_type,
             title=ebook.title,
