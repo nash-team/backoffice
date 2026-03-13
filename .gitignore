@@ -58,6 +58,7 @@ scripts/
 # AIDD framework (installed via CLI, not project code)
 .aidd/
 aidd/
+aidd-docs/
 aidd-generated/
 *.safetensors
 /postgres_data/
