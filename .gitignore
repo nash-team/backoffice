@@ -55,14 +55,9 @@ storage/
 
 # Scripts
 scripts/
-# <AIDD-PRIVACY>
-#
-# You might want to ignore the following files and directories:
-#
-aidd* # AIDD installation folder
+# AIDD framework (installed via CLI, not project code)
+.aidd/
 aidd/
-aidd-docs/
 aidd-generated/
-
-# </AIDD-PRIVACY>*.safetensors
+*.safetensors
 /postgres_data/
