@@ -4,7 +4,7 @@ import logging
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import RedirectResponse
+from starlette.responses import JSONResponse, RedirectResponse
 
 from backoffice.features.auth.infrastructure.session import (
     SESSION_COOKIE_NAME,
@@ -41,8 +41,12 @@ class AuthMiddleware(BaseHTTPMiddleware):
         session_token = request.cookies.get(SESSION_COOKIE_NAME)
         logger.info(f"[AuthMiddleware] Path: {path}, Cookie present: {bool(session_token)}")
 
+        is_api = path.startswith("/api/")
+
         if not session_token:
             logger.info("[AuthMiddleware] No session cookie, redirecting to login")
+            if is_api:
+                return JSONResponse(status_code=401, content={"detail": "Not authenticated"})
             return RedirectResponse(url="/login", status_code=302)
 
         # Verify session token
@@ -52,9 +56,13 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if session_data is None:
             # Session expired or invalid
             logger.info("[AuthMiddleware] Session invalid/expired, redirecting to login")
-            response = RedirectResponse(url="/login?error=session_expired", status_code=302)
-            response.delete_cookie(key=SESSION_COOKIE_NAME)
-            return response
+            if is_api:
+                api_response = JSONResponse(status_code=401, content={"detail": "Session expired"})
+                api_response.delete_cookie(key=SESSION_COOKIE_NAME)
+                return api_response
+            redirect_response = RedirectResponse(url="/login?error=session_expired", status_code=302)
+            redirect_response.delete_cookie(key=SESSION_COOKIE_NAME)
+            return redirect_response
 
         # Session valid, continue
         return await call_next(request)

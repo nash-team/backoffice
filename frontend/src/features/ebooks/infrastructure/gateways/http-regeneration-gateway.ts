@@ -9,20 +9,20 @@ import type {
   RegenerateResult,
   RegenerationGateway,
 } from '../../domain/ports/regeneration-gateway'
+import { authFetch } from '../../../../shared/utils/auth-fetch'
 
 export class HttpRegenerationGateway implements RegenerationGateway {
   private readonly baseUrl = '/api/ebooks'
 
   async getPageData(ebookId: number, pageIndex: number): Promise<PageData> {
-    const res = await fetch(`${this.baseUrl}/${ebookId}/pages/${pageIndex}/data`, { credentials: 'include' })
+    const res = await authFetch(`${this.baseUrl}/${ebookId}/pages/${pageIndex}/data`)
     if (!res.ok) throw new Error(`Failed to get page data: ${res.status}`)
     return res.json()
   }
 
   async previewRegenerate(ebookId: number, pageIndex: number, customPrompt?: string, currentImage?: string): Promise<RegenerateResult> {
-    const res = await fetch(`${this.baseUrl}/${ebookId}/pages/${pageIndex}/preview-regenerate`, {
+    const res = await authFetch(`${this.baseUrl}/${ebookId}/pages/${pageIndex}/preview-regenerate`, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ custom_prompt: customPrompt, current_image_base64: currentImage }),
     })
@@ -31,9 +31,8 @@ export class HttpRegenerationGateway implements RegenerationGateway {
   }
 
   async editPage(ebookId: number, pageIndex: number, editPrompt: string, currentImage?: string): Promise<EditResult> {
-    const res = await fetch(`${this.baseUrl}/${ebookId}/pages/${pageIndex}/edit`, {
+    const res = await authFetch(`${this.baseUrl}/${ebookId}/pages/${pageIndex}/edit`, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ edit_prompt: editPrompt, current_image_base64: currentImage }),
     })
@@ -42,9 +41,8 @@ export class HttpRegenerationGateway implements RegenerationGateway {
   }
 
   async applyEdit(ebookId: number, pageIndex: number, imageBase64: string, prompt?: string): Promise<ApplyResult> {
-    const res = await fetch(`${this.baseUrl}/${ebookId}/pages/${pageIndex}/apply-edit`, {
+    const res = await authFetch(`${this.baseUrl}/${ebookId}/pages/${pageIndex}/apply-edit`, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image_base64: imageBase64, page_index: pageIndex, prompt }),
     })
@@ -53,9 +51,8 @@ export class HttpRegenerationGateway implements RegenerationGateway {
   }
 
   async previewRegenerateCover(ebookId: number, customPrompt?: string, currentImage?: string): Promise<RegenerateResult> {
-    const res = await fetch(`${this.baseUrl}/${ebookId}/cover/preview-regenerate`, {
+    const res = await authFetch(`${this.baseUrl}/${ebookId}/cover/preview-regenerate`, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ custom_prompt: customPrompt, current_image_base64: currentImage }),
     })
@@ -64,9 +61,8 @@ export class HttpRegenerationGateway implements RegenerationGateway {
   }
 
   async editCover(ebookId: number, editPrompt: string, currentImage?: string): Promise<EditResult> {
-    const res = await fetch(`${this.baseUrl}/${ebookId}/cover/edit`, {
+    const res = await authFetch(`${this.baseUrl}/${ebookId}/cover/edit`, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ edit_prompt: editPrompt, current_image_base64: currentImage }),
     })
@@ -75,9 +71,8 @@ export class HttpRegenerationGateway implements RegenerationGateway {
   }
 
   async applyCoverEdit(ebookId: number, imageBase64: string, prompt?: string): Promise<ApplyResult> {
-    const res = await fetch(`${this.baseUrl}/${ebookId}/cover/apply-edit`, {
+    const res = await authFetch(`${this.baseUrl}/${ebookId}/cover/apply-edit`, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image_base64: imageBase64, prompt }),
     })
@@ -86,9 +81,8 @@ export class HttpRegenerationGateway implements RegenerationGateway {
   }
 
   async regenerate(ebookId: number, pageType: PageType, pageIndices?: number[]): Promise<BulkRegenerateResult> {
-    const res = await fetch(`${this.baseUrl}/${ebookId}/regenerate`, {
+    const res = await authFetch(`${this.baseUrl}/${ebookId}/regenerate`, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ page_type: pageType, page_indices: pageIndices }),
     })
@@ -97,18 +91,16 @@ export class HttpRegenerationGateway implements RegenerationGateway {
   }
 
   async completePages(ebookId: number, targetPages = 24): Promise<CompletePagesResult> {
-    const res = await fetch(`${this.baseUrl}/${ebookId}/complete-pages?target_pages=${targetPages}`, {
+    const res = await authFetch(`${this.baseUrl}/${ebookId}/complete-pages?target_pages=${targetPages}`, {
       method: 'POST',
-      credentials: 'include',
     })
     if (!res.ok) throw new Error(`Failed to complete pages: ${res.status}`)
     return res.json()
   }
 
   async addPages(ebookId: number, count: number): Promise<AddPagesResult> {
-    const res = await fetch(`${this.baseUrl}/${ebookId}/add-pages`, {
+    const res = await authFetch(`${this.baseUrl}/${ebookId}/add-pages`, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ count }),
     })
